@@ -1,14 +1,13 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { X, Send, Plus, History, ChevronRight, Bot, Clock, Search, ChevronLeft } from "lucide-react"
+import { X, Send, Plus, History, ChevronRight, Bot, Clock, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { useMobile } from "@/hooks/use-mobile"
 import {
   mockConversations,
   suggestedQuestions,
@@ -32,7 +31,6 @@ export function KapAIAssistant({ onNavigate }: KapAIAssistantProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const isMobile = useMobile()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -45,26 +43,10 @@ export function KapAIAssistant({ onNavigate }: KapAIAssistantProps) {
   }, [currentConversation?.messages, currentView])
 
   useEffect(() => {
-    if (isOpen && inputRef.current && !isMobile) {
+    if (isOpen && inputRef.current) {
       inputRef.current.focus()
     }
-  }, [isOpen, currentView, isMobile])
-
-  // Handle mobile back button behavior
-  useEffect(() => {
-    if (isMobile && isOpen) {
-      const handlePopState = () => {
-        setIsOpen(false)
-      }
-
-      window.history.pushState(null, "", window.location.href)
-      window.addEventListener("popstate", handlePopState)
-
-      return () => {
-        window.removeEventListener("popstate", handlePopState)
-      }
-    }
-  }, [isMobile, isOpen])
+  }, [isOpen, currentView])
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return
@@ -205,362 +187,290 @@ export function KapAIAssistant({ onNavigate }: KapAIAssistantProps) {
     return date.toLocaleDateString()
   }
 
-  const handleClose = () => {
-    setIsOpen(false)
-    if (isMobile) {
-      window.history.back()
-    }
-  }
-
   return (
     <>
-      {/* Floating Button - Responsive */}
+      {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed ${isMobile ? "bottom-4 right-4 h-12 w-12" : "bottom-6 right-6 h-14 w-14"} rounded-full shadow-lg transition-all duration-300 z-50 ${
+        className={`fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg transition-all duration-300 z-50 ${
           isOpen ? "scale-0" : "scale-100 hover:scale-110"
         } bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 border-2 border-primary/20`}
         size="icon"
       >
         <div className="relative">
-          <Bot className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} text-white`} />
+          <Bot className="h-6 w-6 text-white" />
           <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse" />
         </div>
       </Button>
 
-      {/* Chat Interface - Responsive */}
+      {/* Chat Interface */}
       {isOpen && (
-        <div
-          className={`fixed z-50 ${isMobile ? "inset-0 bg-background" : "bottom-6 right-6 w-96 h-[600px] rounded-lg"}`}
-        >
-          <Card
-            className={`${
-              isMobile ? "h-full w-full rounded-none border-0" : "h-full shadow-2xl border-2 border-primary/20"
-            } bg-card`}
-          >
-            {/* Header - Mobile Optimized */}
-            <CardHeader
-              className={`${isMobile ? "pb-2 pt-4" : "pb-3"} bg-gradient-to-r from-primary to-accent text-white ${
-                isMobile ? "rounded-none" : "rounded-t-lg"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {/* Mobile Back Button */}
-                  {isMobile && currentView !== "new" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-white hover:bg-white/20"
-                      onClick={() => setCurrentView("new")}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Avatar className={`${isMobile ? "h-7 w-7" : "h-8 w-8"} border-2 border-white/20`}>
-                    <AvatarFallback className="bg-white/20 text-white font-bold">K</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className={`${isMobile ? "text-sm" : "text-sm"} font-semibold`}>
-                      {kapPersonality.name}
-                    </CardTitle>
-                    <p className={`${isMobile ? "text-xs" : "text-xs"} text-white/80`}>{kapPersonality.title}</p>
-                  </div>
+        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 border-2 border-primary/20 bg-card">
+          {/* Header */}
+          <CardHeader className="pb-3 bg-gradient-to-r from-primary to-accent text-white rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-8 w-8 border-2 border-white/20">
+                  <AvatarFallback className="bg-white/20 text-white font-bold">K</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-sm font-semibold">{kapPersonality.name}</CardTitle>
+                  <p className="text-xs text-white/80">{kapPersonality.title}</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {!isMobile && currentView !== "conversations" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-white hover:bg-white/20"
-                      onClick={() => setCurrentView("conversations")}
-                    >
-                      <History className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {!isMobile && currentView !== "new" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-white hover:bg-white/20"
-                      onClick={handleNewConversation}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
+              </div>
+              <div className="flex items-center space-x-2">
+                {currentView !== "conversations" && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-white hover:bg-white/20"
-                    onClick={handleClose}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className={`p-0 ${isMobile ? "h-[calc(100vh-80px)]" : "h-[calc(100%-80px)]"} flex flex-col`}>
-              {/* Mobile Navigation Tabs */}
-              {isMobile && (
-                <div className="flex border-b bg-muted/30">
-                  <Button
-                    variant={currentView === "new" ? "default" : "ghost"}
-                    className="flex-1 rounded-none h-12"
-                    onClick={() => setCurrentView("new")}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    New
-                  </Button>
-                  <Button
-                    variant={currentView === "conversations" ? "default" : "ghost"}
-                    className="flex-1 rounded-none h-12"
                     onClick={() => setCurrentView("conversations")}
                   >
-                    <History className="h-4 w-4 mr-2" />
-                    History
+                    <History className="h-4 w-4" />
                   </Button>
+                )}
+                {currentView !== "new" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white hover:bg-white/20"
+                    onClick={handleNewConversation}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-white hover:bg-white/20"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0 h-[calc(100%-80px)] flex flex-col">
+            {/* Conversations List View */}
+            {currentView === "conversations" && (
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search conversations..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
-              )}
-
-              {/* Conversations List View - Mobile Optimized */}
-              {currentView === "conversations" && (
-                <div className="flex flex-col h-full">
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-b`}>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search conversations..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`pl-10 ${isMobile ? "h-10" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  <ScrollArea className={`flex-1 ${isMobile ? "p-3" : "p-4"}`}>
-                    <div className={`space-y-${isMobile ? "2" : "3"}`}>
-                      {filteredConversations.map((conversation) => (
-                        <Card
-                          key={conversation.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors border-border active:bg-muted/70"
-                          onClick={() => handleConversationSelect(conversation)}
-                        >
-                          <CardContent className={`${isMobile ? "p-3" : "p-3"}`}>
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className={`font-medium ${isMobile ? "text-sm" : "text-sm"} truncate`}>
-                                  {conversation.title}
-                                </h4>
-                                <p className={`${isMobile ? "text-xs" : "text-xs"} text-muted-foreground mt-1`}>
-                                  {conversation.messages.length} messages
-                                </p>
-                                <div className={`flex items-center space-x-2 ${isMobile ? "mt-1" : "mt-2"}`}>
-                                  <Badge variant="outline" className="text-xs">
-                                    {conversation.category}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {formatTime(conversation.updatedAt)}
-                                  </span>
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-
-              {/* New Conversation View - Mobile Optimized */}
-              {currentView === "new" && (
-                <div className="flex flex-col h-full">
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-b`}>
-                    <h3 className={`font-semibold ${isMobile ? "text-lg" : "text-lg"}`}>Hi! I'm Kap 👋</h3>
-                    <p className={`${isMobile ? "text-sm" : "text-sm"} text-muted-foreground mt-1`}>
-                      Your Level 9 Backend Engineer assistant. How can I help you today?
-                    </p>
-                  </div>
-
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-b`}>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search suggestions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`pl-10 ${isMobile ? "h-10" : ""}`}
-                      />
-                    </div>
-                  </div>
-
-                  <ScrollArea className={`flex-1 ${isMobile ? "p-3" : "p-4"}`}>
-                    <div className={`space-y-${isMobile ? "2" : "3"}`}>
-                      <h4 className={`font-medium ${isMobile ? "text-sm" : "text-sm"} text-muted-foreground`}>
-                        Suggested Questions
-                      </h4>
-                      {filteredSuggestions.map((suggestion) => (
-                        <Card
-                          key={suggestion.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors border-border active:bg-muted/70"
-                          onClick={() => handleSuggestedQuestion(suggestion)}
-                        >
-                          <CardContent className={`${isMobile ? "p-3" : "p-3"}`}>
-                            <div className="flex items-center space-x-3">
-                              <span className={`${isMobile ? "text-lg" : "text-lg"}`}>{suggestion.icon}</span>
-                              <div className="flex-1">
-                                <p className={`${isMobile ? "text-sm" : "text-sm"} font-medium`}>
-                                  {suggestion.question}
-                                </p>
-                                <Badge variant="outline" className="text-xs mt-1">
-                                  {suggestion.category}
-                                </Badge>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-
-                  {/* Quick Input - Mobile Optimized */}
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-t bg-background`}>
-                    <div className="flex space-x-2">
-                      <Input
-                        ref={inputRef}
-                        placeholder="Ask me anything..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage(message)}
-                        className={`flex-1 ${isMobile ? "h-10" : ""}`}
-                      />
-                      <Button
-                        onClick={() => handleSendMessage(message)}
-                        disabled={!message.trim()}
-                        size="icon"
-                        className={`bg-primary hover:bg-primary/90 ${isMobile ? "h-10 w-10" : ""}`}
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-3">
+                    {filteredConversations.map((conversation) => (
+                      <Card
+                        key={conversation.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors border-border"
+                        onClick={() => handleConversationSelect(conversation)}
                       >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {conversation.messages.length} messages
+                              </p>
+                              <div className="flex items-center space-x-2 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {conversation.category}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {formatTime(conversation.updatedAt)}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {/* New Conversation View */}
+            {currentView === "new" && (
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold text-lg">Hi! I'm Kap 👋</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your Level 9 Backend Engineer assistant. How can I help you today?
+                  </p>
+                </div>
+
+                <div className="p-4 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search suggestions..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* Chat View - Mobile Optimized */}
-              {currentView === "chat" && currentConversation && (
-                <div className="flex flex-col h-full">
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-b`}>
-                    <h3 className={`font-semibold ${isMobile ? "text-sm" : "text-sm"} truncate`}>
-                      {currentConversation.title}
-                    </h3>
-                    <p className={`${isMobile ? "text-xs" : "text-xs"} text-muted-foreground`}>
-                      {currentConversation.messages.length} messages • {formatTime(currentConversation.updatedAt)}
-                    </p>
-                  </div>
-
-                  <ScrollArea className={`flex-1 ${isMobile ? "p-3" : "p-4"}`}>
-                    <div className={`space-y-${isMobile ? "3" : "4"}`}>
-                      {currentConversation.messages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className={`${isMobile ? "max-w-[85%]" : "max-w-[80%]"} rounded-lg ${
-                              isMobile ? "p-3" : "p-3"
-                            } ${msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-                          >
-                            <div className="flex items-start space-x-2">
-                              {msg.sender === "kap" && (
-                                <Avatar className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`}>
-                                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                                    K
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              <div className="flex-1">
-                                <p
-                                  className={`${isMobile ? "text-sm" : "text-sm"} whitespace-pre-wrap leading-relaxed`}
-                                >
-                                  {msg.content}
-                                </p>
-                                <p
-                                  className={`${isMobile ? "text-xs" : "text-xs"} mt-1 ${
-                                    msg.sender === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
-                                  }`}
-                                >
-                                  {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                </p>
-                              </div>
-                              {msg.sender === "user" && (
-                                <Avatar className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`}>
-                                  <AvatarFallback className="bg-muted text-muted-foreground text-xs">U</AvatarFallback>
-                                </Avatar>
-                              )}
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground">Suggested Questions</h4>
+                    {filteredSuggestions.map((suggestion) => (
+                      <Card
+                        key={suggestion.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors border-border"
+                        onClick={() => handleSuggestedQuestion(suggestion)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-lg">{suggestion.icon}</span>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{suggestion.question}</p>
+                              <Badge variant="outline" className="text-xs mt-1">
+                                {suggestion.category}
+                              </Badge>
                             </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           </div>
-                        </div>
-                      ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
 
-                      {isTyping && (
-                        <div className="flex justify-start">
-                          <div
-                            className={`bg-muted rounded-lg ${isMobile ? "p-3" : "p-3"} ${
-                              isMobile ? "max-w-[85%]" : "max-w-[80%]"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <Avatar className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`}>
+                {/* Quick Input */}
+                <div className="p-4 border-t">
+                  <div className="flex space-x-2">
+                    <Input
+                      ref={inputRef}
+                      placeholder="Ask me anything..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage(message)}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => handleSendMessage(message)}
+                      disabled={!message.trim()}
+                      size="icon"
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Chat View */}
+            {currentView === "chat" && currentConversation && (
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold text-sm truncate">{currentConversation.title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {currentConversation.messages.length} messages • {formatTime(currentConversation.updatedAt)}
+                  </p>
+                </div>
+
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-4">
+                    {currentConversation.messages.map((msg) => (
+                      <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[80%] rounded-lg p-3 ${
+                            msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2">
+                            {msg.sender === "kap" && (
+                              <Avatar className="h-6 w-6">
                                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                                   K
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                                <div
-                                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.1s" }}
-                                />
-                                <div
-                                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.2s" }}
-                                />
-                              </div>
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                              <p
+                                className={`text-xs mt-1 ${
+                                  msg.sender === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
+                                }`}
+                              >
+                                {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </div>
+                            {msg.sender === "user" && (
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="bg-muted text-muted-foreground text-xs">U</AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+                          <div className="flex items-center space-x-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="bg-primary text-primary-foreground text-xs">K</AvatarFallback>
+                            </Avatar>
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                              <div
+                                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              />
+                              <div
+                                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              />
                             </div>
                           </div>
                         </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
 
-                  {/* Message Input - Mobile Optimized */}
-                  <div className={`${isMobile ? "p-3" : "p-4"} border-t bg-background`}>
-                    <div className="flex space-x-2">
-                      <Input
-                        ref={inputRef}
-                        placeholder="Type your message..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage(message)}
-                        className={`flex-1 ${isMobile ? "h-10" : ""}`}
-                      />
-                      <Button
-                        onClick={() => handleSendMessage(message)}
-                        disabled={!message.trim() || isTyping}
-                        size="icon"
-                        className={`bg-primary hover:bg-primary/90 ${isMobile ? "h-10 w-10" : ""}`}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
+                {/* Message Input */}
+                <div className="p-4 border-t">
+                  <div className="flex space-x-2">
+                    <Input
+                      ref={inputRef}
+                      placeholder="Type your message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage(message)}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => handleSendMessage(message)}
+                      disabled={!message.trim() || isTyping}
+                      size="icon"
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </>
   )
