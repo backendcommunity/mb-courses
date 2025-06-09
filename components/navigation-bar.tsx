@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Sparkles,
   Star,
+  Menu,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +38,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { getUser } from "@/lib/data"
 import { routes } from "@/lib/routes"
+import { useMobile } from "@/hooks/use-mobile"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 interface NavigationBarProps {
   onNavigate: (path: string) => void
@@ -46,6 +49,8 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isExploreOpen, setIsExploreOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const isMobile = useMobile()
   const user = getUser()
 
   // Mock subscription data
@@ -146,189 +151,298 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
     setIsNotificationsOpen(false)
   }
 
+  const MobileMenu = () => (
+    <div className="space-y-4 p-4">
+      {/* Search */}
+      <form onSubmit={handleSearch} className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 h-10"
+        />
+      </form>
+
+      {/* Quick Links */}
+      <div className="space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.courses)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <BookOpen className="mr-2 h-4 w-4" />
+          Courses
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.projects)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <Code className="mr-2 h-4 w-4" />
+          Projects
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.project30)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <Sparkles className="mr-2 h-4 w-4" />
+          Project30
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.community)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <Users className="mr-2 h-4 w-4" />
+          Community
+        </Button>
+      </div>
+
+      {/* User Actions */}
+      <div className="border-t pt-4 space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.profile)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <User className="mr-2 h-4 w-4" />
+          Profile
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate(routes.settings)
+            setIsMobileMenuOpen(false)
+          }}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center px-6">
-        {/* Left Section - Logo and Explore */}
-        <div className="flex items-center space-x-6">
-          {/* MasteringBackend Logo */}
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate(routes.dashboard)}>
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">MB</span>
-            </div>
+      <div className="flex h-16 items-center px-4 md:px-6">
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="mr-2 md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80">
+              <MobileMenu />
+            </SheetContent>
+          </Sheet>
+        )}
+
+        {/* Logo */}
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate(routes.dashboard)}>
+          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">MB</span>
+          </div>
+          {!isMobile && (
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               MasteringBackend
             </span>
-          </div>
+          )}
+        </div>
 
-          {/* Explore Dropdown */}
-          <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item">
-                Explore
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[1200px] p-0 mt-2 border-border bg-popover" align="start" side="bottom">
-              <div className="p-8 space-y-8">
-                {/* Level Sections */}
-                <div className="grid grid-cols-3 gap-6">
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Beginner Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
+        {/* Desktop Explore Button */}
+        {!isMobile && (
+          <div className="ml-6">
+            <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item">
+                  Explore
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[1200px] p-0 mt-2 border-border bg-popover" align="start" side="bottom">
+                <div className="p-8 space-y-8">
+                  {/* Level Sections */}
+                  <div className="grid grid-cols-3 gap-6">
+                    <Card className="relative overflow-hidden border-border card-hover">
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
+                        <img
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="Beginner Level"
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      </div>
+                      <CardContent className="relative z-10 p-6 text-white">
+                        <h3 className="text-xl font-bold mb-2">Beginner Level</h3>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=beginner`)
+                            setIsExploreOpen(false)
+                          }}
+                        >
+                          Explore
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="relative overflow-hidden border-border card-hover">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent">
+                        <img
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="Intermediate Level"
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      </div>
+                      <CardContent className="relative z-10 p-6 text-white">
+                        <h3 className="text-xl font-bold mb-2">Intermediate Level</h3>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=intermediate`)
+                            setIsExploreOpen(false)
+                          }}
+                        >
+                          Explore
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="relative overflow-hidden border-border card-hover">
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent to-purple-600">
+                        <img
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="Advanced Level"
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      </div>
+                      <CardContent className="relative z-10 p-6 text-white">
+                        <h3 className="text-xl font-bold mb-2">Advanced Level</h3>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=advanced`)
+                            setIsExploreOpen(false)
+                          }}
+                        >
+                          Explore
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Skill Guides */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Explore foundational content and tools to help you understand, learn, and improve at the skills
+                      involved in trending industry roles.
+                    </p>
+                    <div className="grid grid-cols-5 gap-4">
+                      {skillGuides.map((skill) => (
+                        <Card
+                          key={skill.name}
+                          className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?skill=${skill.name.toLowerCase()}`)
+                            setIsExploreOpen(false)
+                          }}
+                        >
+                          <CardContent className="p-4 flex items-center space-x-3">
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${skill.color}`}
+                            >
+                              {skill.icon}
+                            </div>
+                            <span className="font-medium">{skill.name}</span>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">Beginner Level</h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=beginner`)
-                          setIsExploreOpen(false)
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  </div>
 
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Intermediate Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">Intermediate Level</h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=intermediate`)
-                          setIsExploreOpen(false)
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent to-purple-600">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Advanced Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">Advanced Level</h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=advanced`)
-                          setIsExploreOpen(false)
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Skill Guides */}
-                <div>
-                  <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Explore foundational content and tools to help you understand, learn, and improve at the skills
-                    involved in trending industry roles.
-                  </p>
-                  <div className="grid grid-cols-5 gap-4">
-                    {skillGuides.map((skill) => (
-                      <Card
-                        key={skill.name}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?skill=${skill.name.toLowerCase()}`)
-                          setIsExploreOpen(false)
-                        }}
-                      >
-                        <CardContent className="p-4 flex items-center space-x-3">
-                          <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${skill.color}`}
-                          >
-                            {skill.icon}
+                  {/* Roadmaps */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
+                    <div className="grid grid-cols-5 gap-4">
+                      {roadmaps.map((roadmap) => (
+                        <Card
+                          key={roadmap.id}
+                          className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
+                          onClick={() => {
+                            onNavigate(routes.roadmapDetail(roadmap.id))
+                            setIsExploreOpen(false)
+                          }}
+                        >
+                          <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                            <img
+                              src={roadmap.image || "/placeholder.svg"}
+                              alt={roadmap.title}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                          <span className="font-medium">{skill.name}</span>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          <CardContent className="p-3">
+                            <Badge variant="secondary" className="text-xs mb-2">
+                              {roadmap.category}
+                            </Badge>
+                            <h4 className="font-medium text-sm leading-tight">{roadmap.title}</h4>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
-                {/* Roadmaps */}
-                <div>
-                  <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
-                  <div className="grid grid-cols-5 gap-4">
-                    {roadmaps.map((roadmap) => (
-                      <Card
-                        key={roadmap.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
-                        onClick={() => {
-                          onNavigate(routes.roadmapDetail(roadmap.id))
-                          setIsExploreOpen(false)
-                        }}
-                      >
-                        <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                          <img
-                            src={roadmap.image || "/placeholder.svg"}
-                            alt={roadmap.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <CardContent className="p-3">
-                          <Badge variant="secondary" className="text-xs mb-2">
-                            {roadmap.category}
-                          </Badge>
-                          <h4 className="font-medium text-sm leading-tight">{roadmap.title}</h4>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+        {/* Desktop Search Bar */}
+        {!isMobile && (
+          <div className="flex-1 max-w-2xl mx-8">
+            <form onSubmit={handleSearch} className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search courses, projects, or ask anything..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 h-10 bg-muted/50 border-border focus-visible:ring-primary focus-visible:border-primary"
+              />
+            </form>
+          </div>
+        )}
 
-        {/* Center Section - Search Bar */}
-        <div className="flex-1 max-w-2xl mx-8">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search courses, projects, or ask anything..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-10 bg-muted/50 border-border focus-visible:ring-primary focus-visible:border-primary"
-            />
-          </form>
-        </div>
-
-        {/* Right Section - Theme Toggle, Subscription Status, XP, Notifications and Profile */}
-        <div className="ml-auto flex items-center space-x-4">
+        {/* Right Section */}
+        <div className="ml-auto flex items-center space-x-2 md:space-x-4">
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Subscription Status */}
-          {subscription.plan !== "Free" && (
+          {/* Subscription Status - Hidden on mobile */}
+          {!isMobile && subscription.plan !== "Free" && (
             <Button
               variant="outline"
               size="sm"
@@ -340,7 +454,7 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
             </Button>
           )}
 
-          {/* XP Balance */}
+          {/* XP Balance - Compact on mobile */}
           <Button
             variant="ghost"
             size="sm"
@@ -348,7 +462,8 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
             onClick={() => onNavigate(routes.xpStore)}
           >
             <Gift className="h-4 w-4 mr-1" />
-            {subscription.xpBalance.toLocaleString()} XP
+            <span className="hidden sm:inline">{subscription.xpBalance.toLocaleString()} XP</span>
+            <span className="sm:hidden">{Math.round(subscription.xpBalance / 1000)}k</span>
           </Button>
 
           {/* Notifications */}
@@ -416,7 +531,7 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full nav-item">
-                <Avatar className="h-10 w-10 border-2 border-border">
+                <Avatar className="h-8 w-8 md:h-10 md:w-10 border-2 border-border">
                   <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
                     {user.name
