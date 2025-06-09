@@ -4,291 +4,252 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import {
-  BookOpen,
-  Code,
-  Trophy,
-  Users,
-  Calendar,
-  TrendingUp,
-  Play,
-  CheckCircle,
-  Clock,
-  Star,
-  Target,
-  Zap,
-} from "lucide-react"
+import { BookOpen, Code, Trophy, Users, Zap, Calendar, Star, TrendingUp } from "lucide-react"
+import { routes } from "@/lib/routes"
 
 interface DashboardContentProps {
   onNavigate: (path: string) => void
 }
 
 export function DashboardContent({ onNavigate }: DashboardContentProps) {
-  const stats = [
-    {
-      title: "Courses Completed",
-      value: "12",
-      change: "+2 this month",
-      icon: BookOpen,
-      color: "text-blue-600",
-    },
-    {
-      title: "Projects Built",
-      value: "8",
-      change: "+3 this month",
-      icon: Code,
-      color: "text-green-600",
-    },
-    {
-      title: "XP Earned",
-      value: "2,450",
-      change: "+340 this week",
-      icon: Trophy,
-      color: "text-yellow-600",
-    },
-    {
-      title: "Study Streak",
-      value: "15 days",
-      change: "Keep it up!",
-      icon: TrendingUp,
-      color: "text-purple-600",
-    },
-  ]
-
-  const recentActivity = [
-    {
-      type: "course",
-      title: "Completed Node.js Fundamentals",
-      time: "2 hours ago",
-      icon: CheckCircle,
-      color: "text-green-600",
-    },
-    {
-      type: "project",
-      title: "Started REST API Project",
-      time: "1 day ago",
-      icon: Play,
-      color: "text-blue-600",
-    },
-    {
-      type: "quiz",
-      title: "Aced JavaScript Quiz",
-      time: "2 days ago",
-      icon: Star,
-      color: "text-yellow-600",
-    },
-    {
-      type: "bootcamp",
-      title: "Joined Full-Stack Bootcamp",
-      time: "3 days ago",
-      icon: Users,
-      color: "text-purple-600",
-    },
-  ]
-
-  const quickActions = [
-    {
-      title: "Continue Learning",
-      description: "Resume your current course",
-      action: () => onNavigate("/dashboard/courses"),
-      icon: BookOpen,
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
-    {
-      title: "Start Project",
-      description: "Build something new",
-      action: () => onNavigate("/dashboard/projects"),
-      icon: Code,
-      color: "bg-green-500 hover:bg-green-600",
-    },
-    {
-      title: "Take Interview",
-      description: "Practice your skills",
-      action: () => onNavigate("/dashboard/interviews"),
-      icon: Target,
-      color: "bg-purple-500 hover:bg-purple-600",
-    },
-    {
-      title: "Join Community",
-      description: "Connect with others",
-      action: () => onNavigate("/dashboard/community"),
-      icon: Users,
-      color: "bg-orange-500 hover:bg-orange-600",
-    },
-  ]
-
-  const currentGoals = [
-    {
-      title: "Complete React Mastery",
-      progress: 75,
-      target: "End of month",
-      color: "bg-blue-500",
-    },
-    {
-      title: "Build 3 Projects",
-      progress: 66,
-      target: "This quarter",
-      color: "bg-green-500",
-    },
-    {
-      title: "Earn 5000 XP",
-      progress: 49,
-      target: "This month",
-      color: "bg-purple-500",
-    },
-  ]
-
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Welcome Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Welcome back! 👋</h1>
-        <p className="text-muted-foreground text-sm md:text-base">Ready to continue your backend mastery journey?</p>
+    <div className="p-6 space-y-6 bg-background">
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Welcome back, Developer! 👋
+        </h1>
+        <p className="text-muted-foreground">Continue your backend mastery journey</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground">{stat.title}</p>
-                    <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.change}</p>
-                  </div>
-                  <Icon className={`h-6 w-6 md:h-8 md:w-8 ${stat.color}`} />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+      {/* Quick Stats - Clean card design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card className="border-border bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">XP Points</CardTitle>
+            <Zap className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">2,847</div>
+            <p className="text-xs text-muted-foreground">+180 from last week</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Courses Completed</CardTitle>
+            <BookOpen className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">12</div>
+            <p className="text-xs text-muted-foreground">3 in progress</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Projects Built</CardTitle>
+            <Code className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">8</div>
+            <p className="text-xs text-muted-foreground">2 this month</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Streak</CardTitle>
+            <Trophy className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">15 days</div>
+            <p className="text-xs text-muted-foreground">Keep it up!</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
-              <CardDescription>Jump into your learning journey</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {quickActions.map((action, index) => {
-                  const Icon = action.icon
-                  return (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="h-auto p-4 justify-start hover:shadow-md transition-all"
-                      onClick={action.action}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        <div className={`p-2 rounded-lg ${action.color} text-white`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium text-sm">{action.title}</p>
-                          <p className="text-xs text-muted-foreground">{action.description}</p>
-                        </div>
-                      </div>
-                    </Button>
-                  )
-                })}
+      {/* Continue Learning Section - Clean layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border bg-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Continue Learning
+            </CardTitle>
+            <CardDescription>Pick up where you left off</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Node.js Advanced Concepts</h4>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  In Progress
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+              <Progress value={68} className="h-2" />
+              <p className="text-sm text-muted-foreground">Chapter 8: Event Loop Deep Dive</p>
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => onNavigate(routes.courseWatch("nodejs-advanced", "event-loop"))}
+              >
+                Continue
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>Your latest achievements and progress</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => {
-                  const Icon = activity.icon
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <Icon className={`h-5 w-5 ${activity.color}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{activity.title}</p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {activity.type}
-                      </Badge>
-                    </div>
-                  )
-                })}
+        <Card className="border-border bg-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5 text-accent" />
+              Current Project
+            </CardTitle>
+            <CardDescription>Your active project</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">E-commerce API</h4>
+                <Badge variant="outline" className="border-accent/30 text-accent">
+                  Day 12/30
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Goals & Progress */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Current Goals
-              </CardTitle>
-              <CardDescription>Track your learning objectives</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {currentGoals.map((goal, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-medium">{goal.title}</p>
-                    <span className="text-xs text-muted-foreground">{goal.progress}%</span>
-                  </div>
-                  <Progress value={goal.progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">{goal.target}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Upcoming
-              </CardTitle>
-              <CardDescription>Don't miss these events</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 rounded-lg border border-dashed border-muted-foreground/25">
-                <p className="text-sm font-medium">Live Coding Session</p>
-                <p className="text-xs text-muted-foreground">Tomorrow at 2:00 PM</p>
-              </div>
-              <div className="p-3 rounded-lg border border-dashed border-muted-foreground/25">
-                <p className="text-sm font-medium">Project Deadline</p>
-                <p className="text-xs text-muted-foreground">In 3 days</p>
-              </div>
-              <div className="p-3 rounded-lg border border-dashed border-muted-foreground/25">
-                <p className="text-sm font-medium">Bootcamp Week 2</p>
-                <p className="text-xs text-muted-foreground">Next Monday</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Progress value={40} className="h-2" />
+              <p className="text-sm text-muted-foreground">Building authentication system</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-accent/30 text-accent hover:bg-accent/10"
+                onClick={() => onNavigate(routes.project30Detail("ecommerce-api"))}
+              >
+                Continue Building
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Quick Actions - Minimal design */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Jump into your learning journey</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2 border-border hover:bg-primary/5 hover:border-primary/30"
+              onClick={() => onNavigate(routes.courses)}
+            >
+              <BookOpen className="h-6 w-6 text-primary" />
+              Browse Courses
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2 border-border hover:bg-accent/5 hover:border-accent/30"
+              onClick={() => onNavigate(routes.project30)}
+            >
+              <Calendar className="h-6 w-6 text-accent" />
+              30-Day Projects
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2 border-border hover:bg-yellow-500/5 hover:border-yellow-500/30"
+              onClick={() => onNavigate(routes.lands)}
+            >
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              MB Lands
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2 border-border hover:bg-green-500/5 hover:border-green-500/30"
+              onClick={() => onNavigate(routes.community)}
+            >
+              <Users className="h-6 w-6 text-green-500" />
+              Community
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity - Clean list design */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm">Completed quiz: "Database Indexing Strategies"</p>
+                <p className="text-xs text-muted-foreground">2 hours ago</p>
+              </div>
+              <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
+                +50 XP
+              </Badge>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm">Started new course: "Microservices Architecture"</p>
+                <p className="text-xs text-muted-foreground">1 day ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm">Deployed project: "Real-time Chat App"</p>
+                <p className="text-xs text-muted-foreground">3 days ago</p>
+              </div>
+              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                +200 XP
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Achievements - Clean grid layout */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-yellow-500" />
+            Recent Achievements
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+              <Trophy className="h-8 w-8 text-yellow-500" />
+              <div>
+                <p className="font-medium">Code Warrior</p>
+                <p className="text-sm text-muted-foreground">Complete 10 coding challenges</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <BookOpen className="h-8 w-8 text-primary" />
+              <div>
+                <p className="font-medium">Knowledge Seeker</p>
+                <p className="text-sm text-muted-foreground">Complete 5 courses</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-green-500/5 border border-green-500/20 rounded-lg">
+              <Users className="h-8 w-8 text-green-500" />
+              <div>
+                <p className="font-medium">Community Helper</p>
+                <p className="text-sm text-muted-foreground">Help 10 community members</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

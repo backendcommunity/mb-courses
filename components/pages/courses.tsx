@@ -87,21 +87,21 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
+    <div className="flex-1 space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Courses</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
           <p className="text-muted-foreground">Master backend development with our comprehensive course library</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div className="flex gap-2">
           {subscription.plan === "Free" && (
-            <Button className="w-full sm:w-auto" onClick={() => onNavigate("/dashboard/subscription-plans")}>
+            <Button onClick={() => onNavigate("/dashboard/subscription-plans")}>
               <Crown className="mr-2 h-4 w-4" />
               Upgrade to Pro
             </Button>
           )}
-          <Button variant="outline" className="w-full sm:w-auto">
+          <Button variant="outline">
             <BookOpen className="mr-2 h-4 w-4" />
             Browse All Courses
           </Button>
@@ -112,7 +112,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       {subscription.plan === "Free" && (
         <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Crown className="h-8 w-8 text-[#F2C94C]" />
                 <div>
@@ -122,44 +122,40 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   </p>
                 </div>
               </div>
-              <Button className="w-full md:w-auto" onClick={() => onNavigate("/dashboard/subscription-plans")}>
-                Upgrade Now
-              </Button>
+              <Button onClick={() => onNavigate("/dashboard/subscription-plans")}>Upgrade Now</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1 max-w-full md:max-w-sm">
+      <div className="flex gap-4">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search courses..." className="pl-8" />
         </div>
-        <div className="grid grid-cols-2 md:flex gap-4">
-          <Select>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="nodejs">Node.js</SelectItem>
-              <SelectItem value="database">Database</SelectItem>
-              <SelectItem value="api">API Design</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Levels</SelectItem>
+            <SelectItem value="beginner">Beginner</SelectItem>
+            <SelectItem value="intermediate">Intermediate</SelectItem>
+            <SelectItem value="advanced">Advanced</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="nodejs">Node.js</SelectItem>
+            <SelectItem value="database">Database</SelectItem>
+            <SelectItem value="api">API Design</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Course Grid */}
@@ -279,7 +275,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                           Get Access
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
+                      <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Get Access to {course.title}</DialogTitle>
                           <DialogDescription>Choose how you'd like to access this course</DialogDescription>

@@ -1,10 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar } from "@/components/ui/calendar"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   Dialog,
   DialogContent,
@@ -19,6 +22,7 @@ import {
   Trophy,
   Target,
   Clock,
+  Users,
   Video,
   CheckCircle2,
   Play,
@@ -29,11 +33,17 @@ import {
   Crown,
   Gift,
   CreditCard,
+  Code2,
   Database,
   Globe,
+  Shield,
+  Zap,
+  FileText,
+  Settings,
+  Smartphone,
+  Cloud,
 } from "lucide-react"
 import { useAppStore } from "@/lib/store"
-import { useState } from "react"
 
 interface Project30PageProps {
   courseId?: string
@@ -100,10 +110,344 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           status: project30Data.enrolled ? "completed" : "locked",
           icon: <Database className="h-4 w-4" />,
         },
-        // ... other days
+        {
+          day: 3,
+          title: "User Registration API",
+          description: "Build user registration with validation",
+          duration: "35 min",
+          technologies: ["Express", "bcrypt", "Joi"],
+          difficulty: "Beginner",
+          xpReward: 75,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Users className="h-4 w-4" />,
+        },
+        {
+          day: 4,
+          title: "Authentication System",
+          description: "Implement JWT-based authentication",
+          duration: "40 min",
+          technologies: ["JWT", "bcrypt", "Middleware"],
+          difficulty: "Intermediate",
+          xpReward: 100,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Shield className="h-4 w-4" />,
+        },
+        {
+          day: 5,
+          title: "CRUD Operations",
+          description: "Build complete CRUD API for blog posts",
+          duration: "45 min",
+          technologies: ["Express", "MongoDB", "REST"],
+          difficulty: "Intermediate",
+          xpReward: 100,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <FileText className="h-4 w-4" />,
+        },
+        {
+          day: 6,
+          title: "Input Validation",
+          description: "Add comprehensive input validation and sanitization",
+          duration: "30 min",
+          technologies: ["Joi", "express-validator"],
+          difficulty: "Intermediate",
+          xpReward: 75,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <CheckCircle2 className="h-4 w-4" />,
+        },
+        {
+          day: 7,
+          title: "Error Handling",
+          description: "Implement global error handling middleware",
+          duration: "35 min",
+          technologies: ["Express", "Error Middleware"],
+          difficulty: "Intermediate",
+          xpReward: 75,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Settings className="h-4 w-4" />,
+        },
       ],
     },
-    // ... other weeks
+    {
+      week: 2,
+      title: "Intermediate APIs",
+      description: "Build more complex API features",
+      days: [
+        {
+          day: 8,
+          title: "File Upload Service",
+          description: "Handle file uploads with Multer and cloud storage",
+          duration: "40 min",
+          technologies: ["Multer", "Cloudinary", "Sharp"],
+          difficulty: "Intermediate",
+          xpReward: 100,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Cloud className="h-4 w-4" />,
+        },
+        {
+          day: 9,
+          title: "Email Service",
+          description: "Send emails with Nodemailer and templates",
+          duration: "35 min",
+          technologies: ["Nodemailer", "Handlebars"],
+          difficulty: "Intermediate",
+          xpReward: 85,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Globe className="h-4 w-4" />,
+        },
+        {
+          day: 10,
+          title: "Password Reset Flow",
+          description: "Implement secure password reset functionality",
+          duration: "45 min",
+          technologies: ["JWT", "Nodemailer", "Crypto"],
+          difficulty: "Intermediate",
+          xpReward: 100,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Shield className="h-4 w-4" />,
+        },
+        {
+          day: 11,
+          title: "API Rate Limiting",
+          description: "Protect your API with rate limiting",
+          duration: "30 min",
+          technologies: ["express-rate-limit", "Redis"],
+          difficulty: "Intermediate",
+          xpReward: 75,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Zap className="h-4 w-4" />,
+        },
+        {
+          day: 12,
+          title: "Search & Pagination",
+          description: "Add search functionality and pagination",
+          duration: "40 min",
+          technologies: ["MongoDB", "Aggregation"],
+          difficulty: "Intermediate",
+          xpReward: 100,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <Database className="h-4 w-4" />,
+        },
+        {
+          day: 13,
+          title: "API Documentation",
+          description: "Document your API with Swagger/OpenAPI",
+          duration: "35 min",
+          technologies: ["Swagger", "OpenAPI"],
+          difficulty: "Beginner",
+          xpReward: 75,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+        {
+          day: 14,
+          title: "Testing Setup",
+          description: "Write unit and integration tests",
+          duration: "50 min",
+          technologies: ["Jest", "Supertest"],
+          difficulty: "Intermediate",
+          xpReward: 125,
+          status: project30Data.enrolled ? "completed" : "locked",
+          icon: <CheckCircle2 className="h-4 w-4" />,
+        },
+      ],
+    },
+    {
+      week: 3,
+      title: "Real-time & Advanced",
+      description: "Build real-time features and advanced APIs",
+      days: [
+        {
+          day: 15,
+          title: "Real-time Chat API",
+          description: "Build WebSocket-based chat with rooms",
+          duration: "50 min",
+          technologies: ["Socket.io", "Redis"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: project30Data.enrolled ? "in-progress" : "locked",
+          icon: <Globe className="h-4 w-4" />,
+        },
+        {
+          day: 16,
+          title: "Push Notifications",
+          description: "Implement push notifications service",
+          duration: "40 min",
+          technologies: ["FCM", "Web Push"],
+          difficulty: "Advanced",
+          xpReward: 125,
+          status: "locked",
+          icon: <Smartphone className="h-4 w-4" />,
+        },
+        {
+          day: 17,
+          title: "Payment Integration",
+          description: "Integrate Stripe payment processing",
+          duration: "45 min",
+          technologies: ["Stripe", "Webhooks"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+        {
+          day: 18,
+          title: "GraphQL API",
+          description: "Build a GraphQL API with Apollo Server",
+          duration: "55 min",
+          technologies: ["GraphQL", "Apollo"],
+          difficulty: "Advanced",
+          xpReward: 175,
+          status: "locked",
+          icon: <Code2 className="h-4 w-4" />,
+        },
+        {
+          day: 19,
+          title: "Caching Strategy",
+          description: "Implement Redis caching for performance",
+          duration: "40 min",
+          technologies: ["Redis", "Cache Patterns"],
+          difficulty: "Advanced",
+          xpReward: 125,
+          status: "locked",
+          icon: <Zap className="h-4 w-4" />,
+        },
+        {
+          day: 20,
+          title: "Background Jobs",
+          description: "Process background tasks with Bull Queue",
+          duration: "45 min",
+          technologies: ["Bull", "Redis", "Cron"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <Settings className="h-4 w-4" />,
+        },
+        {
+          day: 21,
+          title: "Microservices Basics",
+          description: "Split monolith into microservices",
+          duration: "60 min",
+          technologies: ["Docker", "API Gateway"],
+          difficulty: "Advanced",
+          xpReward: 175,
+          status: "locked",
+          icon: <Globe className="h-4 w-4" />,
+        },
+      ],
+    },
+    {
+      week: 4,
+      title: "Production & Deployment",
+      description: "Deploy and scale your applications",
+      days: [
+        {
+          day: 22,
+          title: "Docker Containerization",
+          description: "Containerize your Node.js application",
+          duration: "45 min",
+          technologies: ["Docker", "Docker Compose"],
+          difficulty: "Intermediate",
+          xpReward: 125,
+          status: "locked",
+          icon: <Cloud className="h-4 w-4" />,
+        },
+        {
+          day: 23,
+          title: "CI/CD Pipeline",
+          description: "Set up automated deployment pipeline",
+          duration: "50 min",
+          technologies: ["GitHub Actions", "Docker"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <Settings className="h-4 w-4" />,
+        },
+        {
+          day: 24,
+          title: "AWS Deployment",
+          description: "Deploy to AWS with EC2 and RDS",
+          duration: "55 min",
+          technologies: ["AWS", "EC2", "RDS"],
+          difficulty: "Advanced",
+          xpReward: 175,
+          status: "locked",
+          icon: <Cloud className="h-4 w-4" />,
+        },
+        {
+          day: 25,
+          title: "Monitoring & Logging",
+          description: "Add application monitoring and logging",
+          duration: "40 min",
+          technologies: ["Winston", "Morgan", "PM2"],
+          difficulty: "Intermediate",
+          xpReward: 125,
+          status: "locked",
+          icon: <Target className="h-4 w-4" />,
+        },
+        {
+          day: 26,
+          title: "Security Hardening",
+          description: "Implement security best practices",
+          duration: "45 min",
+          technologies: ["Helmet", "CORS", "Security"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <Shield className="h-4 w-4" />,
+        },
+        {
+          day: 27,
+          title: "Performance Optimization",
+          description: "Optimize API performance and database queries",
+          duration: "50 min",
+          technologies: ["Indexing", "Query Optimization"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <Zap className="h-4 w-4" />,
+        },
+        {
+          day: 28,
+          title: "Load Balancing",
+          description: "Scale with load balancers and clustering",
+          duration: "45 min",
+          technologies: ["Nginx", "PM2 Cluster"],
+          difficulty: "Advanced",
+          xpReward: 150,
+          status: "locked",
+          icon: <Globe className="h-4 w-4" />,
+        },
+      ],
+    },
+    {
+      week: 5,
+      title: "Final Projects",
+      description: "Build comprehensive final projects",
+      days: [
+        {
+          day: 29,
+          title: "E-commerce API",
+          description: "Build a complete e-commerce backend",
+          duration: "90 min",
+          technologies: ["All Previous", "Stripe", "Inventory"],
+          difficulty: "Expert",
+          xpReward: 250,
+          status: "locked",
+          icon: <Globe className="h-4 w-4" />,
+        },
+        {
+          day: 30,
+          title: "Social Media API",
+          description: "Create a social media platform backend",
+          duration: "90 min",
+          technologies: ["All Previous", "Real-time", "Media"],
+          difficulty: "Expert",
+          xpReward: 250,
+          status: "locked",
+          icon: <Users className="h-4 w-4" />,
+        },
+      ],
+    },
   ]
 
   const dailyLessons = [
@@ -117,7 +461,26 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
       xpReward: 100,
       thumbnail: "/placeholder.svg?height=120&width=200",
     },
-    // ... other lessons
+    {
+      day: 16,
+      title: "File Upload Service",
+      description: "Create a secure file upload service with image processing",
+      duration: "28 minutes",
+      technologies: ["Node.js", "Multer", "Sharp"],
+      status: "locked",
+      xpReward: 85,
+      thumbnail: "/placeholder.svg?height=120&width=200",
+    },
+    {
+      day: 14,
+      title: "JWT Authentication System",
+      description: "Implement secure JWT-based authentication with refresh tokens",
+      duration: "35 minutes",
+      technologies: ["Node.js", "JWT", "bcrypt"],
+      status: project30Data.enrolled ? "completed" : "locked",
+      xpReward: 75,
+      thumbnail: "/placeholder.svg?height=120&width=200",
+    },
   ]
 
   const leaderboard = [
@@ -136,7 +499,30 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
       unlocked: true,
       progress: 100,
     },
-    // ... other achievements
+    {
+      id: "2",
+      title: "API Master",
+      description: "Complete 10 API lessons",
+      icon: "🚀",
+      unlocked: true,
+      progress: 100,
+    },
+    {
+      id: "3",
+      title: "Halfway Hero",
+      description: "Reach day 15",
+      icon: "⭐",
+      unlocked: true,
+      progress: 100,
+    },
+    {
+      id: "4",
+      title: "Final Sprint",
+      description: "Complete the last 5 days",
+      icon: "🏆",
+      unlocked: false,
+      progress: 0,
+    },
   ]
 
   const handlePurchase = (method: "subscription" | "individual" | "xp") => {
@@ -185,13 +571,13 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
   }
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
+    <div className="flex-1 space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2">
             <PlayCircle className="h-6 w-6 text-[#F2C94C]" />
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Project30</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Project30</h1>
             <Badge variant="outline" className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20">
               Day {project30Data.currentDay}
             </Badge>
@@ -207,31 +593,24 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="w-full md:w-auto"
-            onClick={() => onNavigate(`/dashboard/project30/${courseId}/leaderboard`)}
-          >
+          <Button variant="outline" onClick={() => onNavigate(`/dashboard/project30/${courseId}/leaderboard`)}>
             <Trophy className="mr-2 h-4 w-4" />
             Leaderboard
           </Button>
           {project30Data.enrolled ? (
-            <Button
-              className="w-full md:w-auto"
-              onClick={() => onNavigate(`/dashboard/project30/day/${project30Data.currentDay}`)}
-            >
+            <Button onClick={() => onNavigate(`/dashboard/project30/day/${project30Data.currentDay}`)}>
               <Play className="mr-2 h-4 w-4" />
               Today's Lesson
             </Button>
           ) : (
             <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
               <DialogTrigger asChild>
-                <Button className="w-full md:w-auto">
+                <Button>
                   <Lock className="mr-2 h-4 w-4" />
                   Get Access
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Get Access to Project30</DialogTitle>
                   <DialogDescription>Choose how you'd like to access this 30-day challenge</DialogDescription>
@@ -299,7 +678,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
       {!project30Data.enrolled && (
         <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Lock className="h-8 w-8 text-[#F2C94C]" />
                 <div>
@@ -309,16 +688,14 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   </p>
                 </div>
               </div>
-              <Button className="w-full md:w-auto" onClick={() => setShowPaymentDialog(true)}>
-                Get Access
-              </Button>
+              <Button onClick={() => setShowPaymentDialog(true)}>Get Access</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Progress Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-[#F2C94C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Day</CardTitle>
@@ -374,7 +751,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
       {/* Main Content */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex-nowrap">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -652,7 +1029,289 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           </div>
         </TabsContent>
 
-        {/* Other tabs content would go here */}
+        <TabsContent value="curriculum" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>30-Day Curriculum</CardTitle>
+              <CardDescription>Complete curriculum breakdown with weekly themes and daily projects</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {curriculum.map((week) => (
+                  <AccordionItem key={week.week} value={`week-${week.week}`}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center justify-between w-full mr-4">
+                        <div className="text-left">
+                          <h3 className="font-semibold">
+                            Week {week.week}: {week.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{week.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{week.days.length} days</Badge>
+                          <Badge variant="secondary">
+                            {week.days.reduce((total, day) => total + day.xpReward, 0)} XP
+                          </Badge>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 pt-4">
+                        {week.days.map((day) => (
+                          <div
+                            key={day.day}
+                            className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors ${
+                              project30Data.enrolled && day.status !== "locked"
+                                ? "hover:bg-muted/50 cursor-pointer"
+                                : "opacity-60"
+                            }`}
+                            onClick={() => {
+                              if (project30Data.enrolled && day.status !== "locked") {
+                                onNavigate(`/dashboard/project30/day/${day.day}`)
+                              } else if (!project30Data.enrolled) {
+                                setShowPaymentDialog(true)
+                              }
+                            }}
+                          >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                              {getStatusIcon(day.status)}
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-muted-foreground">Day {day.day}</span>
+                                <Badge className={getDifficultyColor(day.difficulty)} variant="outline">
+                                  {day.difficulty}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {day.xpReward} XP
+                                </Badge>
+                              </div>
+                              <h4 className="font-medium">{day.title}</h4>
+                              <p className="text-sm text-muted-foreground">{day.description}</p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {day.duration}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {day.icon}
+                                  <span>{day.technologies.join(", ")}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {project30Data.enrolled && day.status !== "locked" ? (
+                              <ChevronRight className="h-4 w-4" />
+                            ) : !project30Data.enrolled ? (
+                              <Lock className="h-4 w-4 text-gray-400" />
+                            ) : (
+                              <Lock className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Course Calendar</CardTitle>
+                <CardDescription>Track your daily progress</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project30Data.enrolled ? (
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md border"
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2">Calendar Locked</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Get access to track your daily progress</p>
+                    <Button onClick={() => setShowPaymentDialog(true)}>Unlock Calendar</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Calendar Legend</CardTitle>
+                <CardDescription>Understanding your progress</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded bg-green-500"></div>
+                  <span className="text-sm">Completed Lessons</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded bg-blue-500"></div>
+                  <span className="text-sm">Current Day</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded bg-gray-300"></div>
+                  <span className="text-sm">Upcoming Lessons</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded bg-red-500"></div>
+                  <span className="text-sm">Missed Lessons</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="achievements" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievements</CardTitle>
+              <CardDescription>Unlock badges as you progress through Project30</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {project30Data.enrolled ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {achievements.map((achievement) => (
+                    <div
+                      key={achievement.id}
+                      className={`flex items-center space-x-4 rounded-lg border p-4 ${
+                        achievement.unlocked ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className="text-2xl">{achievement.icon}</div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{achievement.title}</h3>
+                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                        {!achievement.unlocked && (
+                          <div className="mt-2">
+                            <Progress value={achievement.progress} className="h-2" />
+                          </div>
+                        )}
+                      </div>
+                      {achievement.unlocked && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">Achievements Locked</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Get access to unlock achievements and track your progress
+                  </p>
+                  <Button onClick={() => setShowPaymentDialog(true)}>Unlock Achievements</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="community" className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-[#F2C94C]" />
+                  Top Performers
+                </CardTitle>
+                <CardDescription>See how you rank against other participants</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project30Data.enrolled ? (
+                  <div className="space-y-3">
+                    {leaderboard.map((entry) => (
+                      <div
+                        key={entry.rank}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          entry.name === "You" ? "bg-[#F2C94C]/10 border border-[#F2C94C]/20" : "bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+                            #{entry.rank}
+                          </div>
+                          <div>
+                            <p className="font-medium">{entry.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {entry.lessons} lessons • {entry.streak} day streak
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{entry.xp} XP</p>
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => onNavigate(`/dashboard/project30/${courseId}/leaderboard`)}
+                    >
+                      View Full Leaderboard
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2">Leaderboard Locked</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Get access to compete with other learners</p>
+                    <Button onClick={() => setShowPaymentDialog(true)}>Join Competition</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-[#13AECE]" />
+                  Community Stats
+                </CardTitle>
+                <CardDescription>Project30 community insights</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Participants</span>
+                  <span className="font-semibold">{project30Data.totalParticipants.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Active Today</span>
+                  <span className="font-semibold">847</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Projects Built</span>
+                  <span className="font-semibold">15,420</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Completion Rate</span>
+                  <span className="font-semibold">73%</span>
+                </div>
+                {project30Data.enrolled ? (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => onNavigate("/dashboard/project30/community")}
+                  >
+                    Join Community Discussion
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full" onClick={() => setShowPaymentDialog(true)}>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Unlock Community Access
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   )
