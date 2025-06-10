@@ -1,17 +1,12 @@
 "use client"
 
-import dynamic from "next/dynamic"
-
-// Dynamically import the Dashboard component with no SSR
-const Dashboard = dynamic(() => import("../../dashboard"), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  ),
-})
+import { DashboardLayout } from "@/components/dashboard-layout"
+import { DashboardContent } from "@/components/dashboard-content"
 
 export default function DashboardPage() {
-  return <Dashboard />
+  return (
+    <DashboardLayout>
+      <DashboardContent />
+    </DashboardLayout>
+  )
 }

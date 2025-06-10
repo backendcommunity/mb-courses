@@ -1,28 +1,33 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { NavigationBar } from "@/components/navigation-bar"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { useMobile } from "@/hooks/use-mobile"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  currentPath: string
-  onNavigate: (path: string) => void
 }
 
-export function DashboardLayout({ children, currentPath, onNavigate }: DashboardLayoutProps) {
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const pathname = usePathname()
+  const router = useRouter()
   const { isMobile } = useMobile()
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
+
+  const handleNavigate = (path: string) => {
+    router.push(path)
+  }
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
     if (isMobile) {
       setSidebarOpen(false)
     }
-  }, [currentPath, isMobile])
+  }, [pathname, isMobile])
 
   // Update sidebar state when screen size changes
   useEffect(() => {
@@ -41,7 +46,7 @@ export function DashboardLayout({ children, currentPath, onNavigate }: Dashboard
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } fixed md:relative md:translate-x-0 z-40 transition-transform duration-300 ease-in-out`}
       >
-        <DashboardSidebar currentPath={currentPath} onNavigate={onNavigate} isMobile={isMobile} />
+        <DashboardSidebar currentPath={pathname} onNavigate={handleNavigate} isMobile={isMobile} />
       </div>
 
       {/* Overlay for mobile sidebar */}
@@ -51,7 +56,7 @@ export function DashboardLayout({ children, currentPath, onNavigate }: Dashboard
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:ml-72">
-        <NavigationBar onNavigate={onNavigate} onMenuToggle={toggleSidebar} isMobile={isMobile} />
+        <NavigationBar onNavigate={handleNavigate} onMenuToggle={toggleSidebar} isMobile={isMobile} />
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
