@@ -39,17 +39,16 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { getUser } from "@/lib/data"
 import { routes } from "@/lib/routes"
 import { useMobile } from "@/hooks/use-mobile"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 interface NavigationBarProps {
   onNavigate: (path: string) => void
+  onMenuToggle?: () => void
 }
 
-export function NavigationBar({ onNavigate }: NavigationBarProps) {
+export function NavigationBar({ onNavigate, onMenuToggle }: NavigationBarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isExploreOpen, setIsExploreOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const isMobile = useMobile()
   const user = getUser()
 
@@ -151,111 +150,15 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
     setIsNotificationsOpen(false)
   }
 
-  const MobileMenu = () => (
-    <div className="space-y-4 p-4">
-      {/* Search */}
-      <form onSubmit={handleSearch} className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 h-10"
-        />
-      </form>
-
-      {/* Quick Links */}
-      <div className="space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.courses)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <BookOpen className="mr-2 h-4 w-4" />
-          Courses
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.projects)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <Code className="mr-2 h-4 w-4" />
-          Projects
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.project30)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          Project30
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.community)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <Users className="mr-2 h-4 w-4" />
-          Community
-        </Button>
-      </div>
-
-      {/* User Actions */}
-      <div className="border-t pt-4 space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.profile)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <User className="mr-2 h-4 w-4" />
-          Profile
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => {
-            onNavigate(routes.settings)
-            setIsMobileMenuOpen(false)
-          }}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
-      </div>
-    </div>
-  )
-
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-6">
         {/* Mobile Menu Button */}
         {isMobile && (
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-2 md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80">
-              <MobileMenu />
-            </SheetContent>
-          </Sheet>
+          <Button variant="ghost" size="icon" className="mr-2" onClick={onMenuToggle}>
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
         )}
 
         {/* Logo */}
@@ -420,21 +323,19 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
           </div>
         )}
 
-        {/* Desktop Search Bar */}
-        {!isMobile && (
-          <div className="flex-1 max-w-2xl mx-8">
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search courses, projects, or ask anything..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 h-10 bg-muted/50 border-border focus-visible:ring-primary focus-visible:border-primary"
-              />
-            </form>
-          </div>
-        )}
+        {/* Search Bar - Full on desktop, hidden on mobile */}
+        <div className={`${isMobile ? "hidden" : "flex-1 max-w-2xl mx-8"}`}>
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search courses, projects, or ask anything..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 h-10 bg-muted/50 border-border focus-visible:ring-primary focus-visible:border-primary"
+            />
+          </form>
+        </div>
 
         {/* Right Section */}
         <div className="ml-auto flex items-center space-x-2 md:space-x-4">
@@ -612,6 +513,22 @@ export function NavigationBar({ onNavigate }: NavigationBarProps) {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Mobile Search Bar - Only visible on mobile */}
+      {isMobile && (
+        <div className="px-4 pb-3">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 h-10 bg-muted/50 border-border focus-visible:ring-primary focus-visible:border-primary"
+            />
+          </form>
+        </div>
+      )}
     </nav>
   )
 }
