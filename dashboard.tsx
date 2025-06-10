@@ -1,6 +1,5 @@
 "use client"
-
-import { useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { DashboardContent } from "@/components/dashboard-content"
 import { CoursesPage } from "@/components/pages/courses"
@@ -67,145 +66,141 @@ import { SettingsPage } from "@/components/pages/settings"
 import { routes } from "@/lib/routes"
 
 export default function Dashboard() {
-  const [currentPath, setCurrentPath] = useState(routes.dashboard)
+  const router = useRouter()
+  const pathname = usePathname()
 
   const handleNavigate = (path: string) => {
-    console.log("Navigating to:", path)
-    setCurrentPath(path)
+    router.push(path)
   }
 
   const renderContent = () => {
-    console.log("Current path:", currentPath)
+    console.log("Current path:", pathname)
 
     // Profile
-    if (currentPath === "/dashboard/profile") {
+    if (pathname === "/dashboard/profile") {
       return <ProfilePage onNavigate={handleNavigate} />
     }
 
     // Settings
-    if (currentPath === "/dashboard/settings") {
+    if (pathname === "/dashboard/settings") {
       return <SettingsPage onNavigate={handleNavigate} />
     }
 
     // XP Store
-    if (currentPath === "/dashboard/xp-store") {
+    if (pathname === "/dashboard/xp-store") {
       return <XpRedemptionPage onNavigate={handleNavigate} />
     }
 
     // Courses
-    if (currentPath === routes.courses) {
+    if (pathname === routes.courses) {
       return <CoursesPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.includes("/preview")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.includes("/preview")) {
+      const courseId = pathname.split("/")[3]
       return <CoursePreviewPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.includes("/watch/")) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/courses/") && pathname.includes("/watch/")) {
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const chapterId = parts[5]
       return <CourseWatchPage courseId={courseId} chapterId={chapterId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/courses/") &&
-      currentPath.includes("/quizzes/") &&
-      currentPath.split("/").length === 6
+      pathname.startsWith("/dashboard/courses/") &&
+      pathname.includes("/quizzes/") &&
+      pathname.split("/").length === 6
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const quizId = parts[5]
       return <CourseQuizPage courseId={courseId} quizId={quizId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.endsWith("/quizzes")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.endsWith("/quizzes")) {
+      const courseId = pathname.split("/")[3]
       return <CourseQuizzesPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/courses/") &&
-      currentPath.includes("/exercises/") &&
-      currentPath.split("/").length === 6
+      pathname.startsWith("/dashboard/courses/") &&
+      pathname.includes("/exercises/") &&
+      pathname.split("/").length === 6
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const exerciseId = parts[5]
       return <CourseExercisePage courseId={courseId} exerciseId={exerciseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.endsWith("/exercises")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.endsWith("/exercises")) {
+      const courseId = pathname.split("/")[3]
       return <CourseExercisesPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/courses/") &&
-      currentPath.includes("/playgrounds/") &&
-      currentPath.split("/").length === 6
+      pathname.startsWith("/dashboard/courses/") &&
+      pathname.includes("/playgrounds/") &&
+      pathname.split("/").length === 6
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const playgroundId = parts[5]
       return <CoursePlaygroundPage courseId={courseId} playgroundId={playgroundId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.endsWith("/playgrounds")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.endsWith("/playgrounds")) {
+      const courseId = pathname.split("/")[3]
       return <CoursePlaygroundsPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/courses/") &&
-      currentPath.includes("/projects/") &&
-      currentPath.split("/").length === 6
+      pathname.startsWith("/dashboard/courses/") &&
+      pathname.includes("/projects/") &&
+      pathname.split("/").length === 6
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const projectId = parts[5]
       return <CourseProjectPage courseId={courseId} projectId={projectId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.endsWith("/projects")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.endsWith("/projects")) {
+      const courseId = pathname.split("/")[3]
       return <CourseProjectsPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.endsWith("/certificate")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.endsWith("/certificate")) {
+      const courseId = pathname.split("/")[3]
       return <CourseCertificatePage courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/courses/") && currentPath.split("/").length === 4) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/courses/") && pathname.split("/").length === 4) {
+      const courseId = pathname.split("/")[3]
       return <CourseDetailPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
     // Roadmaps
-    if (currentPath === routes.roadmaps) {
+    if (pathname === routes.roadmaps) {
       return <RoadmapsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/roadmaps/") && currentPath.endsWith("/watch")) {
-      const roadmapId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/roadmaps/") && pathname.endsWith("/watch")) {
+      const roadmapId = pathname.split("/")[3]
       return <RoadmapWatchPage roadmapId={roadmapId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/roadmaps/") && currentPath.includes("/video/")) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/roadmaps/") && pathname.includes("/video/")) {
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const videoId = parts[5]
       return <RoadmapVideoWatchPage roadmapId={roadmapId} videoId={videoId} onNavigate={handleNavigate} />
     }
 
-    if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.includes("/watch/")
-    ) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/roadmaps/") && pathname.includes("/courses/") && pathname.includes("/watch/")) {
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       const chapterId = parts[7]
@@ -220,12 +215,12 @@ export default function Dashboard() {
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.includes("/quizzes/") &&
-      currentPath.split("/").length === 8
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.includes("/quizzes/") &&
+      pathname.split("/").length === 8
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       const quizId = parts[7]
@@ -235,23 +230,23 @@ export default function Dashboard() {
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.endsWith("/quizzes")
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.endsWith("/quizzes")
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       return <RoadmapCourseQuizzesPage roadmapId={roadmapId} courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.includes("/exercises/") &&
-      currentPath.split("/").length === 8
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.includes("/exercises/") &&
+      pathname.split("/").length === 8
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       const exerciseId = parts[7]
@@ -266,23 +261,23 @@ export default function Dashboard() {
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.endsWith("/exercises")
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.endsWith("/exercises")
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       return <RoadmapCourseExercisesPage roadmapId={roadmapId} courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.includes("/playgrounds/") &&
-      currentPath.split("/").length === 8
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.includes("/playgrounds/") &&
+      pathname.split("/").length === 8
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       const playgroundId = parts[7]
@@ -297,23 +292,23 @@ export default function Dashboard() {
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.endsWith("/playgrounds")
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.endsWith("/playgrounds")
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       return <RoadmapCoursePlaygroundsPage roadmapId={roadmapId} courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.includes("/projects/") &&
-      currentPath.split("/").length === 8
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.includes("/projects/") &&
+      pathname.split("/").length === 8
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       const projectId = parts[7]
@@ -328,124 +323,124 @@ export default function Dashboard() {
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.endsWith("/projects")
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.endsWith("/projects")
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       return <RoadmapCourseProjectsPage roadmapId={roadmapId} courseId={courseId} onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/roadmaps/") &&
-      currentPath.includes("/courses/") &&
-      currentPath.split("/").length === 6
+      pathname.startsWith("/dashboard/roadmaps/") &&
+      pathname.includes("/courses/") &&
+      pathname.split("/").length === 6
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const roadmapId = parts[3]
       const courseId = parts[5]
       return <RoadmapCoursePreviewPage roadmapId={roadmapId} courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/roadmaps/") && currentPath.split("/").length === 4) {
-      const roadmapId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/roadmaps/") && pathname.split("/").length === 4) {
+      const roadmapId = pathname.split("/")[3]
       return <RoadmapDetailPage roadmapId={roadmapId} onNavigate={handleNavigate} />
     }
 
     // Learning Paths
-    if (currentPath === routes.paths) {
+    if (pathname === routes.paths) {
       return <LearningPathsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/paths/") && currentPath.endsWith("/continue")) {
-      const pathId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/paths/") && pathname.endsWith("/continue")) {
+      const pathId = pathname.split("/")[3]
       return <LearningPathContinuePage pathId={pathId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/paths/") && currentPath.includes("/watch/")) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/paths/") && pathname.includes("/watch/")) {
+      const parts = pathname.split("/")
       const pathId = parts[3]
       const stepId = parts[5]
       return <PathContentWatchPage pathId={pathId} stepId={stepId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/paths/") && currentPath.split("/").length === 4) {
-      const pathId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/paths/") && pathname.split("/").length === 4) {
+      const pathId = pathname.split("/")[3]
       return <LearningPathDetailPage pathId={pathId} onNavigate={handleNavigate} />
     }
 
     // Bootcamps
-    if (currentPath === routes.bootcamps) {
+    if (pathname === routes.bootcamps) {
       return <BootcampsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/bootcamps/") && currentPath.endsWith("/dashboard")) {
-      const bootcampId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/bootcamps/") && pathname.endsWith("/dashboard")) {
+      const bootcampId = pathname.split("/")[3]
       return <BootcampDashboardPage bootcampId={bootcampId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/bootcamps/") && currentPath.includes("/week/")) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/bootcamps/") && pathname.includes("/week/")) {
+      const parts = pathname.split("/")
       const bootcampId = parts[3]
       const weekId = parts[5]
       return <BootcampWeekPage bootcampId={bootcampId} weekId={weekId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/bootcamps/") && currentPath.split("/").length === 4) {
-      const bootcampId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/bootcamps/") && pathname.split("/").length === 4) {
+      const bootcampId = pathname.split("/")[3]
       return <BootcampDetailPage bootcampId={bootcampId} onNavigate={handleNavigate} />
     }
 
     // Project30
-    if (currentPath === routes.project30) {
+    if (pathname === routes.project30) {
       return <Project30ListingPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/project30/") && currentPath.includes("/day/")) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/project30/") && pathname.includes("/day/")) {
+      const parts = pathname.split("/")
       const courseId = parts[3]
       const dayNumber = parts[5]
       return <Project30DayPage courseId={courseId} dayNumber={dayNumber} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/project30/") && currentPath.endsWith("/community")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/project30/") && pathname.endsWith("/community")) {
+      const courseId = pathname.split("/")[3]
       return <Project30CommunityPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/project30/") && currentPath.endsWith("/leaderboard")) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/project30/") && pathname.endsWith("/leaderboard")) {
+      const courseId = pathname.split("/")[3]
       return <Project30LeaderboardPage courseId={courseId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/project30/") && currentPath.split("/").length === 4) {
-      const courseId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/project30/") && pathname.split("/").length === 4) {
+      const courseId = pathname.split("/")[3]
       return <Project30Page courseId={courseId} onNavigate={handleNavigate} />
     }
 
     // Projects
-    if (currentPath === routes.projects) {
+    if (pathname === routes.projects) {
       return <ProjectsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/projects/") && currentPath.split("/").length === 4) {
-      const projectId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/projects/") && pathname.split("/").length === 4) {
+      const projectId = pathname.split("/")[3]
       return <ProjectDetailPage projectId={projectId} onNavigate={handleNavigate} />
     }
 
     // MB Lands
-    if (currentPath === routes.lands) {
+    if (pathname === routes.lands) {
       return <LandsPage onNavigate={handleNavigate} />
     }
 
     if (
-      currentPath.startsWith("/dashboard/lands/") &&
-      currentPath.includes("/stages/") &&
-      currentPath.includes("/challenges/")
+      pathname.startsWith("/dashboard/lands/") &&
+      pathname.includes("/stages/") &&
+      pathname.includes("/challenges/")
     ) {
-      const parts = currentPath.split("/")
+      const parts = pathname.split("/")
       const landId = parts[3]
       const stageId = parts[5]
       const challengeId = parts[7]
@@ -454,81 +449,77 @@ export default function Dashboard() {
       )
     }
 
-    if (
-      currentPath.startsWith("/dashboard/lands/") &&
-      currentPath.includes("/stages/") &&
-      currentPath.split("/").length === 6
-    ) {
-      const parts = currentPath.split("/")
+    if (pathname.startsWith("/dashboard/lands/") && pathname.includes("/stages/") && pathname.split("/").length === 6) {
+      const parts = pathname.split("/")
       const landId = parts[3]
       const stageId = parts[5]
       return <StageDetailPage landId={landId} stageId={stageId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/lands/") && currentPath.split("/").length === 4) {
-      const landId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/lands/") && pathname.split("/").length === 4) {
+      const landId = pathname.split("/")[3]
       return <LandDetailPage landId={landId} onNavigate={handleNavigate} />
     }
 
     // Interviews
-    if (currentPath === routes.interviews) {
+    if (pathname === routes.interviews) {
       return <InterviewsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/interviews/") && currentPath.endsWith("/project")) {
-      const interviewId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/interviews/") && pathname.endsWith("/project")) {
+      const interviewId = pathname.split("/")[3]
       return <InterviewProjectPage interviewId={interviewId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/interviews/") && currentPath.endsWith("/algorithm")) {
-      const interviewId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/interviews/") && pathname.endsWith("/algorithm")) {
+      const interviewId = pathname.split("/")[3]
       return <InterviewAlgorithmPage interviewId={interviewId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/interviews/") && currentPath.endsWith("/results")) {
-      const interviewId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/interviews/") && pathname.endsWith("/results")) {
+      const interviewId = pathname.split("/")[3]
       return <InterviewResultsPage interviewId={interviewId} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/interviews/") && currentPath.split("/").length === 4) {
-      const interviewId = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/interviews/") && pathname.split("/").length === 4) {
+      const interviewId = pathname.split("/")[3]
       return <InterviewDetailPage interviewId={interviewId} onNavigate={handleNavigate} />
     }
 
     // Mock Interviews
-    if (currentPath === routes.mockInterviews) {
+    if (pathname === routes.mockInterviews) {
       return <MockInterviewsPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/mock-interviews/") && currentPath.endsWith("/results")) {
-      const id = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/mock-interviews/") && pathname.endsWith("/results")) {
+      const id = pathname.split("/")[3]
       return <MockInterviewResultsPage interviewId={id} onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/mock-interviews/") && currentPath.split("/").length === 4) {
-      const id = currentPath.split("/")[3]
+    if (pathname.startsWith("/dashboard/mock-interviews/") && pathname.split("/").length === 4) {
+      const id = pathname.split("/")[3]
       return <MockInterviewSessionPage interviewId={id} onNavigate={handleNavigate} />
     }
 
     // Community
-    if (currentPath === routes.community) {
+    if (pathname === routes.community) {
       return <CommunityPage onNavigate={handleNavigate} />
     }
 
     // Subscription & Billing
-    if (currentPath === routes.subscriptionPlans) {
+    if (pathname === routes.subscriptionPlans) {
       return <SubscriptionPlansPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath === routes.subscriptionManagement) {
+    if (pathname === routes.subscriptionManagement) {
       return <SubscriptionManagementPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath === routes.billing) {
+    if (pathname === routes.billing) {
       return <SubscriptionManagementPage onNavigate={handleNavigate} />
     }
 
-    if (currentPath.startsWith("/dashboard/checkout")) {
+    if (pathname.startsWith("/dashboard/checkout")) {
       return <CheckoutPage onNavigate={handleNavigate} />
     }
 
@@ -537,7 +528,7 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout currentPath={currentPath} onNavigate={handleNavigate}>
+    <DashboardLayout currentPath={pathname} onNavigate={handleNavigate}>
       {renderContent()}
     </DashboardLayout>
   )
