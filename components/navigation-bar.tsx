@@ -17,6 +17,8 @@ import {
   TrendingUp,
   Sparkles,
   Menu,
+  Star,
+  CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -250,40 +252,52 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.profile)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.profile)} className="dropdown-item">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.courses)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.courses)} className="dropdown-item">
                   <BookOpen className="mr-2 h-4 w-4" />
                   <span>My Courses</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.projects)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.projects)} className="dropdown-item">
                   <Code className="mr-2 h-4 w-4" />
                   <span>My Projects</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.roadmaps)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.roadmaps)} className="dropdown-item">
                   <TrendingUp className="mr-2 h-4 w-4" />
                   <span>Roadmaps</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.project30)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.project30)} className="dropdown-item">
                   <Sparkles className="mr-2 h-4 w-4" />
                   <span>Project30</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.community)} className="dropdown-item">
                   <Users className="mr-2 h-4 w-4" />
                   <span>Community</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionManagement)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionManagement)} className="dropdown-item">
                   <Crown className="mr-2 h-4 w-4" />
                   <span>Subscription</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.settings)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionPlans)} className="dropdown-item">
+                  <Star className="mr-2 h-4 w-4" />
+                  <span>Plans</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate(routes.billing)} className="dropdown-item">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Billing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate(routes.xpStore)} className="dropdown-item">
+                  <Gift className="mr-2 h-4 w-4" />
+                  <span>XP Store</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate(routes.settings)} className="dropdown-item">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.logout)}>
+                <DropdownMenuItem onClick={() => onNavigate(routes.logout)} className="dropdown-item">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

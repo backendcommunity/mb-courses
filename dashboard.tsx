@@ -1,54 +1,37 @@
 "use client"
 
-import { useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { DashboardContent } from "@/components/dashboard-content"
-import { CoursesPage } from "@/components/pages/courses"
-import { BootcampsPage } from "@/components/pages/bootcamps"
-import { LearningPathsPage } from "@/components/pages/learning-paths"
-import { RoadmapsPage } from "@/components/pages/roadmaps"
-import { ProjectsPage } from "@/components/pages/projects"
-import { Project30Page } from "@/components/pages/project30"
-import { InterviewsPage } from "@/components/pages/interviews"
-import { CommunityPage } from "@/components/pages/community"
-import { routes } from "@/lib/routes"
+import type React from "react"
+import { useState, useEffect } from "react"
 
-export default function Dashboard() {
-  const [currentPath, setCurrentPath] = useState(routes.dashboard)
+const Dashboard: React.FC = () => {
+  const [currentPath, setCurrentPath] = useState<string>("/")
 
-  const handleNavigate = (path: string) => {
-    console.log("Navigating to:", path)
-    setCurrentPath(path)
-  }
+  useEffect(() => {
+    // Set initial path from URL if available
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname
+      setCurrentPath(path)
 
-  const renderContent = () => {
-    if (currentPath === routes.dashboard) {
-      return <DashboardContent onNavigate={handleNavigate} />
-    } else if (currentPath === routes.courses || currentPath.startsWith(routes.courses)) {
-      return <CoursesPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.bootcamps || currentPath.startsWith(routes.bootcamps)) {
-      return <BootcampsPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.paths || currentPath.startsWith(routes.paths)) {
-      return <LearningPathsPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.roadmaps || currentPath.startsWith(routes.roadmaps)) {
-      return <RoadmapsPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.projects || currentPath.startsWith(routes.projects)) {
-      return <ProjectsPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.project30 || currentPath.startsWith(routes.project30)) {
-      return <Project30Page onNavigate={handleNavigate} />
-    } else if (currentPath === routes.interviews || currentPath.startsWith(routes.interviews)) {
-      return <InterviewsPage onNavigate={handleNavigate} />
-    } else if (currentPath === routes.community || currentPath.startsWith(routes.community)) {
-      return <CommunityPage onNavigate={handleNavigate} />
+      // Handle browser back/forward navigation
+      const handlePopState = () => {
+        setCurrentPath(window.location.pathname)
+      }
+
+      window.addEventListener("popstate", handlePopState)
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState)
+      }
     }
-
-    // Default to dashboard
-    return <DashboardContent onNavigate={handleNavigate} />
-  }
+  }, [])
 
   return (
-    <DashboardLayout currentPath={currentPath} onNavigate={handleNavigate}>
-      {renderContent()}
-    </DashboardLayout>
+    <div>
+      <h1>Dashboard</h1>
+      <p>Current Path: {currentPath}</p>
+      {/* Add navigation or content based on the current path */}
+    </div>
   )
 }
+
+export default Dashboard
