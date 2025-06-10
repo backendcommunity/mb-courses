@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useState } from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { NavigationBar } from "@/components/navigation-bar"
+import { useMobile } from "@/hooks/use-mobile"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -14,57 +14,44 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, currentPath, onNavigate }: DashboardLayoutProps) {
-  const [isMobile, setIsMobile] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const isMobile = useMobile()
 
-  // Detect mobile on client side
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+  const handleMenuToggle = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
 
-    // Initial check
-    checkMobile()
-
-    // Add event listener
-    window.addEventListener("resize", checkMobile)
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
-
-  // Close sidebar when navigating on mobile
   const handleNavigate = (path: string) => {
     onNavigate(path)
+    // Close sidebar on mobile after navigation
     if (isMobile) {
-      setIsSidebarOpen(false)
+      setSidebarOpen(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col w-full">
-      {/* Mobile Sidebar Drawer */}
-      {isMobile && (
-        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-          <SheetContent side="left" className="p-0 w-[280px] max-w-[80vw]">
-            <DashboardSidebar currentPath={currentPath} onNavigate={handleNavigate} isMobile={true} />
-          </SheetContent>
-        </Sheet>
+    <div className="min-h-screen flex w-full bg-background">
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Navigation Bar */}
-      <NavigationBar onNavigate={onNavigate} onMenuToggle={() => setIsSidebarOpen(true)} isMobile={isMobile} />
+      {/* Sidebar */}
+      <div
+        className={`${
+          isMobile
+            ? `fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out ${
+                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : "w-72 flex-shrink-0"
+        }`}
+      >
+        <DashboardSidebar currentPath={currentPath} onNavigate={handleNavigate} isMobile={isMobile} />
+      </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar - Only shown on desktop */}
-        {!isMobile && (
-          <div className="hidden md:block w-64 flex-shrink-0">
-            <DashboardSidebar currentPath={currentPath} onNavigate={onNavigate} isMobile={false} />
-          </div>
-        )}
-
-        {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <NavigationBar onNavigate={handleNavigate} onMenuToggle={handleMenuToggle} isMobile={isMobile} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>

@@ -105,3 +105,35 @@ export const routes = {
   // Auth
   logout: "/logout",
 }
+
+// Helper function to check if a path matches a route pattern
+export const matchesRoute = (currentPath: string, routePattern: string): boolean => {
+  if (currentPath === routePattern) return true
+
+  // Handle dynamic routes
+  const currentSegments = currentPath.split("/").filter(Boolean)
+  const patternSegments = routePattern.split("/").filter(Boolean)
+
+  if (currentSegments.length !== patternSegments.length) return false
+
+  return patternSegments.every((segment, index) => {
+    if (segment.startsWith(":")) return true // Dynamic segment
+    return segment === currentSegments[index]
+  })
+}
+
+// Helper function to extract parameters from a route
+export const extractRouteParams = (currentPath: string, routePattern: string): Record<string, string> => {
+  const currentSegments = currentPath.split("/").filter(Boolean)
+  const patternSegments = routePattern.split("/").filter(Boolean)
+  const params: Record<string, string> = {}
+
+  patternSegments.forEach((segment, index) => {
+    if (segment.startsWith(":")) {
+      const paramName = segment.slice(1)
+      params[paramName] = currentSegments[index]
+    }
+  })
+
+  return params
+}

@@ -27,118 +27,74 @@
 
 @layer base {
   :root {
-    /* Light theme with #13AECE as primary accent */
-    --background: 0 0% 100%; /* #ffffff - pure white background */
-    --foreground: 222.2 84% 4.9%; /* #0f172a - dark text */
-
-    /* Card and surface colors */
-    --card: 0 0% 100%; /* #ffffff - white cards */
-    --card-foreground: 222.2 84% 4.9%; /* #0f172a - dark text on cards */
-
-    /* Popover colors */
-    --popover: 0 0% 100%; /* #ffffff - white popover */
-    --popover-foreground: 222.2 84% 4.9%; /* #0f172a - dark text on popover */
-
-    /* Primary colors - #13AECE brand blue */
-    --primary: 190 83% 44%; /* #13AECE - brand blue */
-    --primary-foreground: 210 40% 98%; /* #f8fafc - white text on blue */
-
-    /* Secondary colors - light gray */
-    --secondary: 210 40% 96%; /* #f1f5f9 - light gray background */
-    --secondary-foreground: 222.2 84% 4.9%; /* #0f172a - dark text on light gray */
-
-    /* Muted colors */
-    --muted: 210 40% 96%; /* #f1f5f9 - muted background */
-    --muted-foreground: 215.4 16.3% 46.9%; /* #64748b - muted text */
-
-    /* Accent colors - lighter variation of #13AECE */
-    --accent: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --accent-foreground: 210 40% 98%; /* #f8fafc - white text on accent */
-
-    /* Destructive colors */
-    --destructive: 0 84.2% 60.2%; /* #ef4444 - red */
-    --destructive-foreground: 210 40% 98%; /* #f8fafc - white text on red */
-
-    /* Border and input colors */
-    --border: 214.3 31.8% 91.4%; /* #e2e8f0 - light borders */
-    --input: 214.3 31.8% 91.4%; /* #e2e8f0 - input borders */
-    --ring: 190 83% 44%; /* #13AECE - focus ring */
-
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-
-    /* Chart colors - #13AECE-based palette for light theme */
-    --chart-1: 190 83% 44%; /* #13AECE - primary brand blue */
-    --chart-2: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --chart-3: 190 83% 34%; /* #0F8BA8 - darker brand blue */
-    --chart-4: 190 83% 64%; /* #4AC5E8 - very light brand blue */
-    --chart-5: 190 83% 24%; /* #0A6B85 - very dark brand blue */
-
-    /* Masteringbackend Brand Colors for light theme */
-    --mb-deep-blue: 190 83% 24%; /* #0A6B85 - very dark brand blue */
-    --mb-blue: 190 83% 44%; /* #13AECE - primary brand blue */
-    --mb-light-blue: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --mb-dark-blue: 190 83% 34%; /* #0F8BA8 - darker brand blue */
-    --mb-very-light-blue: 190 83% 64%; /* #4AC5E8 - very light brand blue */
-    --mb-very-dark-blue: 190 83% 14%; /* #064C5F - extremely dark brand blue */
-    --mb-light-gray: 210 40% 98%; /* #f8fafc - very light gray */
-    --mb-sidebar: 210 40% 98%; /* #f8fafc - light sidebar */
-    --mb-card: 0 0% 100%; /* #ffffff - white cards */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Gaming-inspired dark theme with #13AECE as primary accent */
-    --background: 222 30% 12%; /* #171B26 - deep navy background */
-    --foreground: 210 40% 98%; /* #f8fafc - light text */
-
-    /* Card and surface colors - slightly lighter navy */
-    --card: 222 25% 16%; /* #1E2330 - card background */
-    --card-foreground: 210 40% 98%; /* #f8fafc - card text */
-
-    /* Popover colors */
-    --popover: 222 25% 16%; /* #1E2330 - popover background */
-    --popover-foreground: 210 40% 98%; /* #f8fafc - popover text */
-
-    /* Primary colors - #13AECE brand blue */
-    --primary: 190 83% 44%; /* #13AECE - brand blue */
-    --primary-foreground: 210 40% 98%; /* #f8fafc - white text on blue */
-
-    /* Secondary colors - slightly lighter than background */
-    --secondary: 222 20% 20%; /* #252A37 - secondary background */
-    --secondary-foreground: 210 40% 98%; /* #f8fafc - secondary text */
-
-    /* Muted colors */
-    --muted: 222 20% 20%; /* #252A37 - muted background */
-    --muted-foreground: 215 20.2% 75%; /* #b4bcd0 - muted text */
-
-    /* Accent colors - variations of #13AECE */
-    --accent: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --accent-foreground: 210 40% 98%; /* #f8fafc - white text on accent */
-
-    /* Destructive colors - complementary red */
-    --destructive: 0 84% 60%; /* #EF4444 - vibrant red */
-    --destructive-foreground: 210 40% 98%; /* #f8fafc - white text on red */
-
-    /* Border and input colors */
-    --border: 222 30% 22%; /* #2A3042 - subtle borders */
-    --input: 222 30% 22%; /* #2A3042 - input borders */
-    --ring: 190 83% 54%; /* #2BB8D8 - focus ring (lighter brand blue) */
-
-    /* Chart colors - #13AECE-based palette */
-    --chart-1: 190 83% 44%; /* #13AECE - primary brand blue */
-    --chart-2: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --chart-3: 190 83% 34%; /* #0F8BA8 - darker brand blue */
-    --chart-4: 190 83% 64%; /* #4AC5E8 - very light brand blue */
-    --chart-5: 190 83% 24%; /* #0A6B85 - very dark brand blue */
-
-    /* Gaming-inspired brand colors - all based on #13AECE */
-    --mb-deep-blue: 222 30% 12%; /* #171B26 - main background */
-    --mb-blue: 190 83% 44%; /* #13AECE - primary brand blue */
-    --mb-light-blue: 190 83% 54%; /* #2BB8D8 - lighter brand blue */
-    --mb-dark-blue: 190 83% 34%; /* #0F8BA8 - darker brand blue */
-    --mb-very-light-blue: 190 83% 64%; /* #4AC5E8 - very light brand blue */
-    --mb-very-dark-blue: 190 83% 24%; /* #0A6B85 - very dark brand blue */
-    --mb-sidebar: 222 35% 10%; /* #131722 - darker sidebar */
-    --mb-card: 222 25% 16%; /* #1E2330 - card background */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 94.1%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -596,4 +552,45 @@ body {
 /* Improve scrolling on mobile */
 * {
   -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Ensure touch targets are at least 44px */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve scrolling on iOS */
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent zoom on input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Custom scrollbar for better mobile experience */
+.overflow-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 2px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
 }
