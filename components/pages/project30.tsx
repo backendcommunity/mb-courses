@@ -58,7 +58,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
   // Mock subscription data
   const subscription = {
-    plan: "Pro", // Free, Pro, Enterprise
+    plan: "Pro",
     status: "active",
     xpBalance: 2450,
   }
@@ -78,10 +78,9 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
     nextDeadline: "23:45:12",
     instructor: "Sarah Johnson",
     price: 49.99,
-    enrolled: subscription.plan !== "Free", // Auto-enrolled if subscribed
+    enrolled: subscription.plan !== "Free",
   }
 
-  // Complete 30-day curriculum
   const curriculum = [
     {
       week: 1,
@@ -541,7 +540,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
   }
 
   const getXPCost = (price: number) => {
-    return Math.round(price * 50) // 1 dollar = 50 XP
+    return Math.round(price * 50)
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -571,63 +570,72 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <PlayCircle className="h-6 w-6 text-[#F2C94C]" />
-            <h1 className="text-3xl font-bold tracking-tight">Project30</h1>
-            <Badge variant="outline" className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20">
+            <PlayCircle className="h-5 w-5 md:h-6 md:w-6 text-[#F2C94C]" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Project30</h1>
+            <Badge variant="outline" className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20 text-xs">
               Day {project30Data.currentDay}
             </Badge>
             {subscription.plan !== "Free" && (
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-xs">
                 <Crown className="mr-1 h-3 w-3" />
                 Included
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Learn to build 30 projects in 30 days with step-by-step video tutorials.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => onNavigate(`/dashboard/project30/${courseId}/leaderboard`)}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onNavigate(`/dashboard/project30/${courseId}/leaderboard`)}
+            className="w-full sm:w-auto"
+          >
             <Trophy className="mr-2 h-4 w-4" />
             Leaderboard
           </Button>
           {project30Data.enrolled ? (
-            <Button onClick={() => onNavigate(`/dashboard/project30/day/${project30Data.currentDay}`)}>
+            <Button
+              onClick={() => onNavigate(`/dashboard/project30/day/${project30Data.currentDay}`)}
+              className="w-full sm:w-auto"
+            >
               <Play className="mr-2 h-4 w-4" />
               Today's Lesson
             </Button>
           ) : (
             <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Lock className="mr-2 h-4 w-4" />
                   Get Access
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Get Access to Project30</DialogTitle>
-                  <DialogDescription>Choose how you'd like to access this 30-day challenge</DialogDescription>
+                  <DialogTitle className="text-base md:text-lg">Get Access to Project30</DialogTitle>
+                  <DialogDescription className="text-sm">
+                    Choose how you'd like to access this 30-day challenge
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handlePurchase("subscription")}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                       <div className="flex items-center gap-3">
-                        <Crown className="h-8 w-8 text-[#F2C94C]" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold">Upgrade to Pro</h3>
-                          <p className="text-sm text-muted-foreground">
+                        <Crown className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm md:text-base">Upgrade to Pro</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">
                             Get unlimited access to all Project30 challenges
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">$39.99/mo</div>
+                          <div className="font-bold text-sm md:text-base">$39.99/mo</div>
                           <div className="text-xs text-muted-foreground">Best value</div>
                         </div>
                       </div>
@@ -635,15 +643,17 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   </Card>
 
                   <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handlePurchase("individual")}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                       <div className="flex items-center gap-3">
-                        <CreditCard className="h-8 w-8 text-[#13AECE]" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold">Buy This Challenge</h3>
-                          <p className="text-sm text-muted-foreground">One-time purchase for lifetime access</p>
+                        <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-[#13AECE] flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm md:text-base">Buy This Challenge</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            One-time purchase for lifetime access
+                          </p>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">${project30Data.price}</div>
+                          <div className="font-bold text-sm md:text-base">${project30Data.price}</div>
                           <div className="text-xs text-muted-foreground">One-time</div>
                         </div>
                       </div>
@@ -651,15 +661,17 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   </Card>
 
                   <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handlePurchase("xp")}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 md:p-4">
                       <div className="flex items-center gap-3">
-                        <Gift className="h-8 w-8 text-[#EB5757]" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold">Redeem with XP</h3>
-                          <p className="text-sm text-muted-foreground">Use your earned XP points</p>
+                        <Gift className="h-6 w-6 md:h-8 md:w-8 text-[#EB5757] flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm md:text-base">Redeem with XP</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">Use your earned XP points</p>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{getXPCost(project30Data.price).toLocaleString()} XP</div>
+                          <div className="font-bold text-sm md:text-base">
+                            {getXPCost(project30Data.price).toLocaleString()} XP
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             Balance: {subscription.xpBalance.toLocaleString()} XP
                           </div>
@@ -678,31 +690,35 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
       {!project30Data.enrolled && (
         <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Lock className="h-8 w-8 text-[#F2C94C]" />
+                <Lock className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold">Unlock Project30 Challenge</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold text-sm md:text-base">Unlock Project30 Challenge</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Get access to 30 days of hands-on project building with expert guidance
                   </p>
                 </div>
               </div>
-              <Button onClick={() => setShowPaymentDialog(true)}>Get Access</Button>
+              <Button onClick={() => setShowPaymentDialog(true)} className="w-full md:w-auto">
+                Get Access
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Progress Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-[#F2C94C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Day</CardTitle>
-            <CalendarIcon className="h-4 w-4 text-[#F2C94C]" />
+            <CardTitle className="text-xs md:text-sm font-medium">Current Day</CardTitle>
+            <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 text-[#F2C94C]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{project30Data.enrolled ? project30Data.currentDay : "—"}/30</div>
+            <div className="text-lg md:text-2xl font-bold">
+              {project30Data.enrolled ? project30Data.currentDay : "—"}/30
+            </div>
             <p className="text-xs text-muted-foreground">
               {project30Data.enrolled
                 ? `${project30Data.totalDays - project30Data.currentDay} days remaining`
@@ -713,22 +729,24 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
         <Card className="border-l-4 border-l-[#13AECE]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Instructor</CardTitle>
-            <BookOpen className="h-4 w-4 text-[#13AECE]" />
+            <CardTitle className="text-xs md:text-sm font-medium">Instructor</CardTitle>
+            <BookOpen className="h-3 w-3 md:h-4 md:w-4 text-[#13AECE]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{project30Data.instructor}</div>
+            <div className="text-lg md:text-2xl font-bold">{project30Data.instructor}</div>
             <p className="text-xs text-muted-foreground">Senior Backend Engineer</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-[#EB5757]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lessons Completed</CardTitle>
-            <Video className="h-4 w-4 text-[#EB5757]" />
+            <CardTitle className="text-xs md:text-sm font-medium">Lessons Completed</CardTitle>
+            <Video className="h-3 w-3 md:h-4 md:w-4 text-[#EB5757]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{project30Data.enrolled ? project30Data.completedLessons : "—"}</div>
+            <div className="text-lg md:text-2xl font-bold">
+              {project30Data.enrolled ? project30Data.completedLessons : "—"}
+            </div>
             <p className="text-xs text-muted-foreground">
               {project30Data.enrolled ? "93% completion rate" : "Start learning"}
             </p>
@@ -737,11 +755,13 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
         <Card className="border-l-4 border-l-[#347474]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leaderboard Rank</CardTitle>
-            <Trophy className="h-4 w-4 text-[#347474]" />
+            <CardTitle className="text-xs md:text-sm font-medium">Leaderboard Rank</CardTitle>
+            <Trophy className="h-3 w-3 md:h-4 md:w-4 text-[#347474]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{project30Data.enrolled ? `#${project30Data.rank}` : "—"}</div>
+            <div className="text-lg md:text-2xl font-bold">
+              {project30Data.enrolled ? `#${project30Data.rank}` : "—"}
+            </div>
             <p className="text-xs text-muted-foreground">
               {project30Data.enrolled ? `of ${project30Data.totalParticipants} participants` : "Join to compete"}
             </p>
@@ -751,12 +771,22 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
       {/* Main Content */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="community">Community</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+          <TabsTrigger value="overview" className="text-xs md:text-sm">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="curriculum" className="text-xs md:text-sm">
+            Curriculum
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="text-xs md:text-sm">
+            Calendar
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs md:text-sm">
+            Achievements
+          </TabsTrigger>
+          <TabsTrigger value="community" className="text-xs md:text-sm">
+            Community
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -764,11 +794,13 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           {project30Data.enrolled ? (
             <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-[#F2C94C]" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Target className="h-4 w-4 md:h-5 md:w-5 text-[#F2C94C]" />
                   Today's Lesson - Day {project30Data.currentDay}
                 </CardTitle>
-                <CardDescription>Watch today's video to learn how to build a new project</CardDescription>
+                <CardDescription className="text-sm">
+                  Watch today's video to learn how to build a new project
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -780,20 +812,20 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                         className="w-full h-auto object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <PlayCircle className="h-12 w-12 text-white opacity-80" />
+                        <PlayCircle className="h-8 w-8 md:h-12 md:w-12 text-white opacity-80" />
                       </div>
                     </div>
                     <div className="w-full md:w-2/3">
-                      <h3 className="font-semibold text-lg">{dailyLessons[0].title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{dailyLessons[0].description}</p>
+                      <h3 className="font-semibold text-base md:text-lg">{dailyLessons[0].title}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1">{dailyLessons[0].description}</p>
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                      <div className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground mt-3">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
+                          <Clock className="h-3 w-3 md:h-4 md:w-4" />
                           {dailyLessons[0].duration}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4" />
+                          <Star className="h-3 w-3 md:h-4 md:w-4" />
                           {dailyLessons[0].xpReward} XP
                         </div>
                       </div>
@@ -821,11 +853,13 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           ) : (
             <Card className="bg-gradient-to-r from-gray-100 to-gray-50 border-gray-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-gray-500" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Lock className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
                   Project30 Challenge Preview
                 </CardTitle>
-                <CardDescription>Get access to unlock 30 days of project-based learning</CardDescription>
+                <CardDescription className="text-sm">
+                  Get access to unlock 30 days of project-based learning
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -837,20 +871,20 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                         className="w-full h-auto object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <Lock className="h-12 w-12 text-white" />
+                        <Lock className="h-8 w-8 md:h-12 md:w-12 text-white" />
                       </div>
                     </div>
                     <div className="w-full md:w-2/3">
-                      <h3 className="font-semibold text-lg">{dailyLessons[0].title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{dailyLessons[0].description}</p>
+                      <h3 className="font-semibold text-base md:text-lg">{dailyLessons[0].title}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1">{dailyLessons[0].description}</p>
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                      <div className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground mt-3">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
+                          <Clock className="h-3 w-3 md:h-4 md:w-4" />
                           {dailyLessons[0].duration}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4" />
+                          <Star className="h-3 w-3 md:h-4 md:w-4" />
                           {dailyLessons[0].xpReward} XP
                         </div>
                       </div>
@@ -877,25 +911,25 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           {/* Recent Lessons */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Lessons</CardTitle>
-              <CardDescription>Your latest Project30 lessons</CardDescription>
+              <CardTitle className="text-base md:text-lg">Recent Lessons</CardTitle>
+              <CardDescription className="text-sm">Your latest Project30 lessons</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {dailyLessons.map((lesson) => (
                   <div key={lesson.day} className="flex items-center space-x-4 rounded-lg border p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-muted flex-shrink-0">
                       {lesson.status === "completed" ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                       ) : lesson.status === "in-progress" ? (
-                        <Play className="h-5 w-5 text-blue-600" />
+                        <Play className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                       ) : (
-                        <Lock className="h-5 w-5 text-gray-400" />
+                        <Lock className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
                       )}
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <p className="text-xs md:text-sm font-medium">
                           Day {lesson.day}: {lesson.title}
                         </p>
                         <Badge
@@ -906,7 +940,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                                 ? "secondary"
                                 : "outline"
                           }
-                          className="text-xs"
+                          className="text-xs w-fit"
                         >
                           {lesson.status === "completed"
                             ? "Completed"
@@ -928,6 +962,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                           ? onNavigate(`/dashboard/project30/day/${lesson.day}`)
                           : setShowPaymentDialog(true)
                       }
+                      className="flex-shrink-0"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -941,13 +976,13 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Progress Overview</CardTitle>
+                <CardTitle className="text-base md:text-lg">Progress Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {project30Data.enrolled ? (
                   <>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-xs md:text-sm">
                         <span>Overall Progress</span>
                         <span>{Math.round((project30Data.currentDay / project30Data.totalDays) * 100)}%</span>
                       </div>
@@ -955,7 +990,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-xs md:text-sm">
                         <span>Completion Rate</span>
                         <span>{Math.round((project30Data.completedLessons / project30Data.currentDay) * 100)}%</span>
                       </div>
@@ -967,12 +1002,14 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   </>
                 ) : (
                   <div className="text-center py-8">
-                    <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">Unlock Your Progress</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <Lock className="h-8 w-8 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2 text-sm md:text-base">Unlock Your Progress</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4">
                       Get access to track your daily progress and compete with others
                     </p>
-                    <Button onClick={() => setShowPaymentDialog(true)}>Get Access</Button>
+                    <Button onClick={() => setShowPaymentDialog(true)} className="w-full md:w-auto">
+                      Get Access
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -980,47 +1017,57 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Course Stats</CardTitle>
+                <CardTitle className="text-base md:text-lg">Course Stats</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {project30Data.enrolled ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Total XP Earned</span>
-                      <span className="font-semibold">{project30Data.totalXP.toLocaleString()}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Total XP Earned</span>
+                      <span className="font-semibold text-sm md:text-base">
+                        {project30Data.totalXP.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Average XP/Day</span>
-                      <span className="font-semibold">
+                      <span className="text-xs md:text-sm text-muted-foreground">Average XP/Day</span>
+                      <span className="font-semibold text-sm md:text-base">
                         {Math.round(project30Data.totalXP / project30Data.completedLessons)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Best Streak</span>
-                      <span className="font-semibold">{project30Data.streak} days</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Best Streak</span>
+                      <span className="font-semibold text-sm md:text-base">{project30Data.streak} days</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Days Remaining</span>
-                      <span className="font-semibold">{project30Data.totalDays - project30Data.currentDay}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Days Remaining</span>
+                      <span className="font-semibold text-sm md:text-base">
+                        {project30Data.totalDays - project30Data.currentDay}
+                      </span>
                     </div>
                   </>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Course Price</span>
-                      <span className="font-semibold">${project30Data.price}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Course Price</span>
+                      <span className="font-semibold text-sm md:text-base">${project30Data.price}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">XP Cost</span>
-                      <span className="font-semibold">{getXPCost(project30Data.price).toLocaleString()} XP</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">XP Cost</span>
+                      <span className="font-semibold text-sm md:text-base">
+                        {getXPCost(project30Data.price).toLocaleString()} XP
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Your XP Balance</span>
-                      <span className="font-semibold">{subscription.xpBalance.toLocaleString()} XP</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Your XP Balance</span>
+                      <span className="font-semibold text-sm md:text-base">
+                        {subscription.xpBalance.toLocaleString()} XP
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Total Participants</span>
-                      <span className="font-semibold">{project30Data.totalParticipants.toLocaleString()}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Total Participants</span>
+                      <span className="font-semibold text-sm md:text-base">
+                        {project30Data.totalParticipants.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -1032,8 +1079,10 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
         <TabsContent value="curriculum" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>30-Day Curriculum</CardTitle>
-              <CardDescription>Complete curriculum breakdown with weekly themes and daily projects</CardDescription>
+              <CardTitle className="text-base md:text-lg">30-Day Curriculum</CardTitle>
+              <CardDescription className="text-sm">
+                Complete curriculum breakdown with weekly themes and daily projects
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
@@ -1042,14 +1091,16 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center justify-between w-full mr-4">
                         <div className="text-left">
-                          <h3 className="font-semibold">
+                          <h3 className="font-semibold text-sm md:text-base">
                             Week {week.week}: {week.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground">{week.description}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{week.description}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{week.days.length} days</Badge>
-                          <Badge variant="secondary">
+                          <Badge variant="outline" className="text-xs">
+                            {week.days.length} days
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
                             {week.days.reduce((total, day) => total + day.xpReward, 0)} XP
                           </Badge>
                         </div>
@@ -1060,7 +1111,7 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                         {week.days.map((day) => (
                           <div
                             key={day.day}
-                            className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors ${
+                            className={`flex items-center space-x-4 rounded-lg border p-3 md:p-4 transition-colors ${
                               project30Data.enrolled && day.status !== "locked"
                                 ? "hover:bg-muted/50 cursor-pointer"
                                 : "opacity-60"
@@ -1073,22 +1124,24 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                               }
                             }}
                           >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                            <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-muted flex-shrink-0">
                               {getStatusIcon(day.status)}
                             </div>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-muted-foreground">Day {day.day}</span>
-                                <Badge className={getDifficultyColor(day.difficulty)} variant="outline">
+                            <div className="flex-1 space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs md:text-sm font-medium text-muted-foreground">
+                                  Day {day.day}
+                                </span>
+                                <Badge className={`${getDifficultyColor(day.difficulty)} text-xs`} variant="outline">
                                   {day.difficulty}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
                                   {day.xpReward} XP
                                 </Badge>
                               </div>
-                              <h4 className="font-medium">{day.title}</h4>
-                              <p className="text-sm text-muted-foreground">{day.description}</p>
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <h4 className="font-medium text-sm md:text-base">{day.title}</h4>
+                              <p className="text-xs md:text-sm text-muted-foreground">{day.description}</p>
+                              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {day.duration}
@@ -1100,11 +1153,11 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                               </div>
                             </div>
                             {project30Data.enrolled && day.status !== "locked" ? (
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0" />
                             ) : !project30Data.enrolled ? (
-                              <Lock className="h-4 w-4 text-gray-400" />
+                              <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
                             ) : (
-                              <Lock className="h-4 w-4 text-gray-400" />
+                              <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
                             )}
                           </div>
                         ))}
@@ -1118,11 +1171,11 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Course Calendar</CardTitle>
-                <CardDescription>Track your daily progress</CardDescription>
+                <CardTitle className="text-base md:text-lg">Course Calendar</CardTitle>
+                <CardDescription className="text-sm">Track your daily progress</CardDescription>
               </CardHeader>
               <CardContent>
                 {project30Data.enrolled ? (
@@ -1130,14 +1183,18 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    className="rounded-md border"
+                    className="rounded-md border w-full"
                   />
                 ) : (
                   <div className="text-center py-8">
-                    <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">Calendar Locked</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Get access to track your daily progress</p>
-                    <Button onClick={() => setShowPaymentDialog(true)}>Unlock Calendar</Button>
+                    <Lock className="h-8 w-8 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2 text-sm md:text-base">Calendar Locked</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4">
+                      Get access to track your daily progress
+                    </p>
+                    <Button onClick={() => setShowPaymentDialog(true)} className="w-full md:w-auto">
+                      Unlock Calendar
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -1145,25 +1202,25 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
             <Card>
               <CardHeader>
-                <CardTitle>Calendar Legend</CardTitle>
-                <CardDescription>Understanding your progress</CardDescription>
+                <CardTitle className="text-base md:text-lg">Calendar Legend</CardTitle>
+                <CardDescription className="text-sm">Understanding your progress</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded bg-green-500"></div>
-                  <span className="text-sm">Completed Lessons</span>
+                  <span className="text-xs md:text-sm">Completed Lessons</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded bg-blue-500"></div>
-                  <span className="text-sm">Current Day</span>
+                  <span className="text-xs md:text-sm">Current Day</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded bg-gray-300"></div>
-                  <span className="text-sm">Upcoming Lessons</span>
+                  <span className="text-xs md:text-sm">Upcoming Lessons</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded bg-red-500"></div>
-                  <span className="text-sm">Missed Lessons</span>
+                  <span className="text-xs md:text-sm">Missed Lessons</span>
                 </div>
               </CardContent>
             </Card>
@@ -1173,8 +1230,8 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
         <TabsContent value="achievements" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Achievements</CardTitle>
-              <CardDescription>Unlock badges as you progress through Project30</CardDescription>
+              <CardTitle className="text-base md:text-lg">Achievements</CardTitle>
+              <CardDescription className="text-sm">Unlock badges as you progress through Project30</CardDescription>
             </CardHeader>
             <CardContent>
               {project30Data.enrolled ? (
@@ -1182,32 +1239,36 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   {achievements.map((achievement) => (
                     <div
                       key={achievement.id}
-                      className={`flex items-center space-x-4 rounded-lg border p-4 ${
+                      className={`flex items-center space-x-4 rounded-lg border p-3 md:p-4 ${
                         achievement.unlocked ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <div className="text-2xl">{achievement.icon}</div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{achievement.title}</h3>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                      <div className="text-xl md:text-2xl">{achievement.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm md:text-base">{achievement.title}</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">{achievement.description}</p>
                         {!achievement.unlocked && (
                           <div className="mt-2">
                             <Progress value={achievement.progress} className="h-2" />
                           </div>
                         )}
                       </div>
-                      {achievement.unlocked && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                      {achievement.unlocked && (
+                        <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-green-600 flex-shrink-0" />
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Achievements Locked</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <Trophy className="h-8 w-8 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2 text-sm md:text-base">Achievements Locked</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-4">
                     Get access to unlock achievements and track your progress
                   </p>
-                  <Button onClick={() => setShowPaymentDialog(true)}>Unlock Achievements</Button>
+                  <Button onClick={() => setShowPaymentDialog(true)} className="w-full md:w-auto">
+                    Unlock Achievements
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -1215,14 +1276,14 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
         </TabsContent>
 
         <TabsContent value="community" className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-[#F2C94C]" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Trophy className="h-4 w-4 md:h-5 md:w-5 text-[#F2C94C]" />
                   Top Performers
                 </CardTitle>
-                <CardDescription>See how you rank against other participants</CardDescription>
+                <CardDescription className="text-sm">See how you rank against other participants</CardDescription>
               </CardHeader>
               <CardContent>
                 {project30Data.enrolled ? (
@@ -1235,18 +1296,18 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+                          <div className="flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-full bg-muted text-xs md:text-sm font-semibold">
                             #{entry.rank}
                           </div>
                           <div>
-                            <p className="font-medium">{entry.name}</p>
+                            <p className="font-medium text-sm md:text-base">{entry.name}</p>
                             <p className="text-xs text-muted-foreground">
                               {entry.lessons} lessons • {entry.streak} day streak
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">{entry.xp} XP</p>
+                          <p className="font-semibold text-sm md:text-base">{entry.xp} XP</p>
                         </div>
                       </div>
                     ))}
@@ -1260,10 +1321,14 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">Leaderboard Locked</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Get access to compete with other learners</p>
-                    <Button onClick={() => setShowPaymentDialog(true)}>Join Competition</Button>
+                    <Users className="h-8 w-8 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2 text-sm md:text-base">Leaderboard Locked</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4">
+                      Get access to compete with other learners
+                    </p>
+                    <Button onClick={() => setShowPaymentDialog(true)} className="w-full md:w-auto">
+                      Join Competition
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -1271,28 +1336,30 @@ export function Project30Page({ courseId = "backend-fundamentals", onNavigate }:
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-[#13AECE]" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Users className="h-4 w-4 md:h-5 md:w-5 text-[#13AECE]" />
                   Community Stats
                 </CardTitle>
-                <CardDescription>Project30 community insights</CardDescription>
+                <CardDescription className="text-sm">Project30 community insights</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Total Participants</span>
-                  <span className="font-semibold">{project30Data.totalParticipants.toLocaleString()}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Total Participants</span>
+                  <span className="font-semibold text-sm md:text-base">
+                    {project30Data.totalParticipants.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Active Today</span>
-                  <span className="font-semibold">847</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Active Today</span>
+                  <span className="font-semibold text-sm md:text-base">847</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Projects Built</span>
-                  <span className="font-semibold">15,420</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Projects Built</span>
+                  <span className="font-semibold text-sm md:text-base">15,420</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Completion Rate</span>
-                  <span className="font-semibold">73%</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Completion Rate</span>
+                  <span className="font-semibold text-sm md:text-base">73%</span>
                 </div>
                 {project30Data.enrolled ? (
                   <Button

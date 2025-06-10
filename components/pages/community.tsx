@@ -96,21 +96,24 @@ export function CommunityPage() {
   ]
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Community</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Community</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Connect with fellow backend engineers, share knowledge, and grow together
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 w-full sm:w-auto justify-center"
+          >
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             24 Online
           </Badge>
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Post
           </Button>
@@ -118,85 +121,96 @@ export function CommunityPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">Total Members</CardTitle>
+            <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
+            <div className="text-lg md:text-2xl font-bold">2,847</div>
             <p className="text-xs text-muted-foreground">+127 this month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Discussions</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">Active Discussions</CardTitle>
+            <MessageSquare className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
+            <div className="text-lg md:text-2xl font-bold">156</div>
             <p className="text-xs text-muted-foreground">+23 today</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Knowledge Shared</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">Knowledge Shared</CardTitle>
+            <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-lg md:text-2xl font-bold">1,234</div>
             <p className="text-xs text-muted-foreground">Posts & answers</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Stories</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">Success Stories</CardTitle>
+            <Award className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">89</div>
+            <div className="text-lg md:text-2xl font-bold">89</div>
             <p className="text-xs text-muted-foreground">Job placements</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Feed */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           <Tabs defaultValue="feed" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="feed">Latest</TabsTrigger>
-              <TabsTrigger value="trending">Trending</TabsTrigger>
-              <TabsTrigger value="questions">Questions</TabsTrigger>
-              <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+              <TabsTrigger value="feed" className="text-xs md:text-sm">
+                Latest
+              </TabsTrigger>
+              <TabsTrigger value="trending" className="text-xs md:text-sm">
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="questions" className="text-xs md:text-sm">
+                Questions
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs md:text-sm">
+                Achievements
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="feed" className="space-y-4">
               {/* Create Post */}
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex gap-3">
-                    <Avatar>
+                    <Avatar className="h-8 w-8 md:h-10 md:w-10">
                       <AvatarImage src="/placeholder.svg?height=40&width=40" />
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-3">
-                      <Textarea placeholder="Share your backend engineering journey, ask questions, or help others..." />
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                      <Textarea
+                        placeholder="Share your backend engineering journey, ask questions, or help others..."
+                        className="min-h-[80px] md:min-h-[100px] text-sm md:text-base"
+                      />
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted text-xs">
                             #question
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted text-xs">
                             #achievement
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted text-xs">
                             #help
                           </Badge>
                         </div>
-                        <Button>Post</Button>
+                        <Button className="w-full sm:w-auto">Post</Button>
                       </div>
                     </div>
                   </div>
@@ -206,10 +220,10 @@ export function CommunityPage() {
               {/* Posts */}
               {posts.map((post) => (
                 <Card key={post.id}>
-                  <CardContent className="pt-6">
+                  <CardContent className="pt-4 md:pt-6">
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
-                        <Avatar>
+                        <Avatar className="h-8 w-8 md:h-10 md:w-10">
                           <AvatarImage src={post.avatar || "/placeholder.svg"} />
                           <AvatarFallback>
                             {post.author
@@ -218,17 +232,17 @@ export function CommunityPage() {
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{post.author}</h3>
-                            <span className="text-sm text-muted-foreground">{post.timestamp}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <h3 className="font-semibold text-sm md:text-base">{post.author}</h3>
+                            <span className="text-xs md:text-sm text-muted-foreground">{post.timestamp}</span>
                           </div>
-                          <h4 className="font-medium mt-1">{post.title}</h4>
+                          <h4 className="font-medium mt-1 text-sm md:text-base">{post.title}</h4>
                         </div>
                       </div>
 
-                      <div className="pl-12">
-                        <p className="text-sm whitespace-pre-line">{post.content}</p>
+                      <div className="pl-0 md:pl-12">
+                        <p className="text-xs md:text-sm whitespace-pre-line">{post.content}</p>
 
                         <div className="flex flex-wrap gap-2 mt-3">
                           {post.tags.map((tag) => (
@@ -238,17 +252,17 @@ export function CommunityPage() {
                           ))}
                         </div>
 
-                        <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-                          <Button variant="ghost" size="sm">
-                            <Heart className="mr-2 h-4 w-4" />
+                        <div className="flex items-center gap-2 md:gap-4 mt-4 pt-4 border-t">
+                          <Button variant="ghost" size="sm" className="text-xs md:text-sm">
+                            <Heart className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
                             {post.likes}
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <MessageSquare className="mr-2 h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="text-xs md:text-sm">
+                            <MessageSquare className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
                             {post.comments}
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Share className="mr-2 h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="text-xs md:text-sm">
+                            <Share className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
                             Share
                           </Button>
                         </div>
@@ -262,7 +276,9 @@ export function CommunityPage() {
             <TabsContent value="trending">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Trending posts will appear here</p>
+                  <p className="text-center text-muted-foreground text-sm md:text-base">
+                    Trending posts will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -270,7 +286,9 @@ export function CommunityPage() {
             <TabsContent value="questions">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Community questions will appear here</p>
+                  <p className="text-center text-muted-foreground text-sm md:text-base">
+                    Community questions will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -278,7 +296,9 @@ export function CommunityPage() {
             <TabsContent value="achievements">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Member achievements will appear here</p>
+                  <p className="text-center text-muted-foreground text-sm md:text-base">
+                    Member achievements will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -286,13 +306,13 @@ export function CommunityPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Search */}
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search community..." className="pl-8" />
+                <Input placeholder="Search community..." className="pl-8 text-sm md:text-base" />
               </div>
             </CardContent>
           </Card>
@@ -300,8 +320,8 @@ export function CommunityPage() {
           {/* Upcoming Events */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Calendar className="h-4 w-4 md:h-5 md:w-5" />
                 Upcoming Events
               </CardTitle>
             </CardHeader>
@@ -309,15 +329,17 @@ export function CommunityPage() {
               {events.map((event) => (
                 <div key={event.id} className="space-y-2 p-3 border rounded-lg">
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline">{event.type}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {event.type}
+                    </Badge>
                     <span className="text-xs text-muted-foreground">{event.attendees} attending</span>
                   </div>
-                  <h4 className="font-medium text-sm">{event.title}</h4>
+                  <h4 className="font-medium text-xs md:text-sm">{event.title}</h4>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     {event.date} at {event.time}
                   </div>
-                  <Button size="sm" className="w-full">
+                  <Button size="sm" className="w-full text-xs">
                     Join Event
                   </Button>
                 </div>
@@ -328,8 +350,8 @@ export function CommunityPage() {
           {/* Community Leaderboard */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Award className="h-4 w-4 md:h-5 md:w-5" />
                 Top Contributors
               </CardTitle>
             </CardHeader>
@@ -337,10 +359,10 @@ export function CommunityPage() {
               {leaderboard.map((member) => (
                 <div key={member.rank} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium w-6">{member.badge || `#${member.rank}`}</span>
-                    <span className="text-sm">{member.name}</span>
+                    <span className="text-xs md:text-sm font-medium w-6">{member.badge || `#${member.rank}`}</span>
+                    <span className="text-xs md:text-sm truncate">{member.name}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{member.points} pts</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">{member.points} pts</span>
                 </div>
               ))}
             </CardContent>
@@ -349,23 +371,23 @@ export function CommunityPage() {
           {/* Quick Links */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Links</CardTitle>
+              <CardTitle className="text-base md:text-lg">Quick Links</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start" size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
+              <Button variant="ghost" className="w-full justify-start text-xs md:text-sm" size="sm">
+                <ExternalLink className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 Community Guidelines
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
+              <Button variant="ghost" className="w-full justify-start text-xs md:text-sm" size="sm">
+                <ExternalLink className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 Discord Server
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
+              <Button variant="ghost" className="w-full justify-start text-xs md:text-sm" size="sm">
+                <ExternalLink className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 GitHub Repository
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
+              <Button variant="ghost" className="w-full justify-start text-xs md:text-sm" size="sm">
+                <ExternalLink className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 Resource Library
               </Button>
             </CardContent>
