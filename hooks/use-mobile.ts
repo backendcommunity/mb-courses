@@ -18,3 +18,6 @@ export function useMobile() {
 
   return isMobile
 }
+
+// Export alias for compatibility with shadcn/ui components
+export const useIsMobile = useMobile
