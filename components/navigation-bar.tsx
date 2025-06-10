@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Search,
   Bell,
@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   BookOpen,
+  ChevronDown,
   Code,
   Users,
   Crown,
@@ -17,11 +18,13 @@ import {
   TrendingUp,
   Sparkles,
   Menu,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,31 +32,40 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { getUser } from "@/lib/data"
-import { routes } from "@/lib/routes"
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { getUser } from "@/lib/data";
+import { routes } from "@/lib/routes";
 
 interface NavigationBarProps {
-  onNavigate: (path: string) => void
-  onMenuToggle?: () => void
-  isMobile?: boolean
+  onNavigate: (path: string) => void;
+  onMenuToggle?: () => void;
+  isMobile?: boolean;
 }
 
-export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: NavigationBarProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
+export function NavigationBar({
+  onNavigate,
+  onMenuToggle,
+  isMobile = false,
+}: NavigationBarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
-  const user = getUser()
+  const user = getUser();
 
   // Mock subscription data
   const subscription = {
     plan: "Pro",
     status: "active",
     xpBalance: 2450,
-  }
+  };
 
   const notifications = [
     {
@@ -88,25 +100,88 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
       type: "achievement",
       read: true,
     },
-  ]
+  ];
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const skillGuides = [
+    {
+      name: "Python",
+      icon: "🐍",
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+    },
+    {
+      name: "Ruby",
+      icon: "💎",
+      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    },
+    {
+      name: "Java",
+      icon: "☕",
+      color:
+        "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+    },
+    {
+      name: "GoLang",
+      icon: "🔷",
+      color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
+    },
+    {
+      name: "Node.js",
+      icon: "🟢",
+      color:
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+    },
+  ];
+
+  const roadmaps = [
+    {
+      id: "1",
+      title: "Career Essentials in Generative AI using Ruby",
+      image: "/placeholder.svg?height=120&width=200",
+      category: "Roadmap",
+    },
+    {
+      id: "2",
+      title: "Become Ruby Hero",
+      image: "/placeholder.svg?height=120&width=200",
+      category: "Roadmap",
+    },
+    {
+      id: "3",
+      title: "Full-Stack Development",
+      image: "/placeholder.svg?height=120&width=200",
+      category: "Roadmap",
+    },
+    {
+      id: "4",
+      title: "DevOps Engineering",
+      image: "/placeholder.svg?height=120&width=200",
+      category: "Roadmap",
+    },
+    {
+      id: "5",
+      title: "Cloud Architecture",
+      image: "/placeholder.svg?height=120&width=200",
+      category: "Roadmap",
+    },
+  ];
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery)
+      console.log("Searching for:", searchQuery);
       // Implement search functionality
       if (isMobile) {
-        setShowMobileSearch(false)
+        setShowMobileSearch(false);
       }
     }
-  }
+  };
 
   const handleNotificationClick = (notificationId: string) => {
-    console.log("Clicked notification:", notificationId)
-    setIsNotificationsOpen(false)
-  }
+    console.log("Clicked notification:", notificationId);
+    setIsNotificationsOpen(false);
+  };
 
   return (
     <>
@@ -114,14 +189,22 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
         <div className="flex h-16 items-center px-4">
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Button variant="ghost" size="icon" className="mr-2" onClick={onMenuToggle}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={onMenuToggle}
+            >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           )}
 
           {/* Logo */}
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate(routes.dashboard)}>
+          <div
+            className="flex items-center space-x-2 cursor-pointer md:hidden px-2"
+            onClick={() => onNavigate(routes.dashboard)}
+          >
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">MB</span>
             </div>
@@ -131,6 +214,168 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
               </span>
             )}
           </div>
+
+          {/* Explore Dropdown */}
+          <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item"
+              >
+                Explore
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="lg:w-[1200px]  p-0 mt-2 border-border bg-popover"
+              align="start"
+              side="bottom"
+            >
+              <div className="p-8 space-y-8">
+                {/* Level Sections */}
+                <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
+                  <Card className="relative overflow-hidden border-border card-hover">
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
+                      <img
+                        src="/placeholder.svg?height=200&width=300"
+                        alt="Beginner Level"
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    </div>
+                    <CardContent className="relative z-10 p-6 text-white">
+                      <h3 className="text-xl font-bold mb-2">Beginner Level</h3>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          onNavigate(`${routes.courses}?level=beginner`);
+                          setIsExploreOpen(false);
+                        }}
+                      >
+                        Explore
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="relative overflow-hidden border-border card-hover">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent">
+                      <img
+                        src="/placeholder.svg?height=200&width=300"
+                        alt="Intermediate Level"
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    </div>
+                    <CardContent className="relative z-10 p-6 text-white">
+                      <h3 className="text-xl font-bold mb-2">
+                        Intermediate Level
+                      </h3>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          onNavigate(`${routes.courses}?level=intermediate`);
+                          setIsExploreOpen(false);
+                        }}
+                      >
+                        Explore
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="relative overflow-hidden border-border card-hover">
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent to-purple-600">
+                      <img
+                        src="/placeholder.svg?height=200&width=300"
+                        alt="Advanced Level"
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    </div>
+                    <CardContent className="relative z-10 p-6 text-white">
+                      <h3 className="text-xl font-bold mb-2">Advanced Level</h3>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          onNavigate(`${routes.courses}?level=advanced`);
+                          setIsExploreOpen(false);
+                        }}
+                      >
+                        Explore
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Skill Guides */}
+                <div>
+                  <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Explore foundational content and tools to help you
+                    understand, learn, and improve at the skills involved in
+                    trending industry roles.
+                  </p>
+                  <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
+                    {skillGuides.map((skill) => (
+                      <Card
+                        key={skill.name}
+                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
+                        onClick={() => {
+                          onNavigate(
+                            `${
+                              routes.courses
+                            }?skill=${skill.name.toLowerCase()}`
+                          );
+                          setIsExploreOpen(false);
+                        }}
+                      >
+                        <CardContent className="p-4 flex items-center space-x-3">
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${skill.color}`}
+                          >
+                            {skill.icon}
+                          </div>
+                          <span className="font-medium">{skill.name}</span>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Roadmaps */}
+                <div>
+                  <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
+                  <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
+                    {roadmaps.map((roadmap) => (
+                      <Card
+                        key={roadmap.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
+                        onClick={() => {
+                          onNavigate(routes.roadmapDetail(roadmap.id));
+                          setIsExploreOpen(false);
+                        }}
+                      >
+                        <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                          <img
+                            src={roadmap.image || "/placeholder.svg"}
+                            alt={roadmap.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <CardContent className="p-3">
+                          <Badge variant="secondary" className="text-xs mb-2">
+                            {roadmap.category}
+                          </Badge>
+                          <h4 className="font-medium text-sm leading-tight">
+                            {roadmap.title}
+                          </h4>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Desktop Search Bar */}
           {!isMobile && (
@@ -161,18 +406,47 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
           )}
 
           {/* Right Section */}
-          <div className={`${isMobile ? "" : "ml-auto"} flex items-center space-x-2`}>
+          <div
+            className={`${
+              isMobile ? "" : "ml-auto"
+            } flex items-center space-x-2`}
+          >
             {/* Theme Toggle */}
             <ThemeToggle />
 
+            {/* Subscription Status */}
+            {subscription.plan !== "Free" && !isMobile && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to- hover:from-yellow-400/20 hover:to-yellow-400/20 dark:text-yellow-400"
+                onClick={() => onNavigate(routes.subscriptionManagement)}
+              >
+                <Crown className="h-4 w-4 mr-1" />
+                {subscription.plan}
+              </Button>
+            )}
+
             {/* XP Balance - Compact on mobile */}
-            <Button variant="ghost" size="sm" className="text-primary" onClick={() => onNavigate(routes.xpStore)}>
-              <Gift className="h-4 w-4 mr-1" />
-              <span className={isMobile ? "sr-only" : ""}>{subscription.xpBalance.toLocaleString()} XP</span>
-            </Button>
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => onNavigate(routes.xpStore)}
+              >
+                <Gift className="h-4 w-4 mr-1" />
+                <span className={isMobile ? "sr-only" : ""}>
+                  {subscription.xpBalance.toLocaleString()} XP
+                </span>
+              </Button>
+            )}
 
             {/* Notifications */}
-            <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+            <Popover
+              open={isNotificationsOpen}
+              onOpenChange={setIsNotificationsOpen}
+            >
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
@@ -189,7 +463,9 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
               <PopoverContent className="w-80 p-0" align="end">
                 <div className="p-4 border-b">
                   <h3 className="font-semibold">Notifications</h3>
-                  <p className="text-sm text-muted-foreground">You have {unreadCount} unread notifications</p>
+                  <p className="text-sm text-muted-foreground">
+                    You have {unreadCount} unread notifications
+                  </p>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
                   {notifications.map((notification) => (
@@ -206,18 +482,26 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
                             notification.type === "success"
                               ? "bg-green-500"
                               : notification.type === "info"
-                                ? "bg-primary"
-                                : notification.type === "achievement"
-                                  ? "bg-yellow-500"
-                                  : "bg-purple-500"
+                              ? "bg-primary"
+                              : notification.type === "achievement"
+                              ? "bg-yellow-500"
+                              : "bg-purple-500"
                           }`}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{notification.title}</p>
-                          <p className="text-sm text-muted-foreground">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                          <p className="font-medium text-sm">
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {notification.time}
+                          </p>
                         </div>
-                        {!notification.read && <div className="w-2 h-2 bg-primary rounded-full" />}
+                        {!notification.read && (
+                          <div className="w-2 h-2 bg-primary rounded-full" />
+                        )}
                       </div>
                     </div>
                   ))}
@@ -233,9 +517,15 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
             {/* Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                    <AvatarImage
+                      src={user.avatar || "/placeholder.svg"}
+                      alt={user.name}
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
                       {user.name.charAt(0)}
                     </AvatarFallback>
@@ -245,8 +535,12 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user.name}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -275,7 +569,9 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
                   <span>Community</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionManagement)}>
+                <DropdownMenuItem
+                  onClick={() => onNavigate(routes.subscriptionManagement)}
+                >
                   <Crown className="mr-2 h-4 w-4" />
                   <span>Subscription</span>
                 </DropdownMenuItem>
@@ -310,5 +606,5 @@ export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: Na
         )}
       </nav>
     </>
-  )
+  );
 }
