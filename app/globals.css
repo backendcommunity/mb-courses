@@ -2,29 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add these responsive utilities */
-@layer utilities {
-  .responsive-container {
-    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .responsive-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
-  }
-
-  .responsive-text {
-    @apply text-sm md:text-base;
-  }
-
-  .responsive-heading {
-    @apply text-xl md:text-2xl lg:text-3xl font-bold;
-  }
-
-  .responsive-card {
-    @apply p-3 md:p-4 lg:p-6;
-  }
-}
-
 @layer base {
   :root {
     /* Light theme with #13AECE as primary accent */
@@ -569,72 +546,4 @@
 .dark .notification-dot {
   box-shadow: 0 0 6px 1px rgba(19, 174, 206, 0.5);
   animation: pulse-brand-dark 2s infinite;
-}
-
-/* Ensure proper touch targets on mobile */
-@media (max-width: 767px) {
-  button,
-  .btn,
-  [role="button"],
-  a {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  input,
-  select,
-  textarea {
-    @apply min-h-[44px];
-  }
-}
-
-/* Prevent horizontal overflow on mobile */
-html,
-body {
-  @apply overflow-x-hidden;
-}
-
-/* Improve scrolling on mobile */
-* {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile-specific improvements */
-@media (max-width: 768px) {
-  /* Ensure touch targets are at least 44px */
-  button,
-  a,
-  [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Improve scrolling on iOS */
-  .overflow-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Prevent zoom on input focus */
-  input,
-  select,
-  textarea {
-    font-size: 16px;
-  }
-}
-
-/* Custom scrollbar for better mobile experience */
-.overflow-auto::-webkit-scrollbar {
-  width: 4px;
-}
-
-.overflow-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-auto::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 2px;
-}
-
-.overflow-auto::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
 }

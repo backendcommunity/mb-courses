@@ -1,59 +1,60 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { NavigationBar } from "@/components/navigation-bar"
-import { useMobile } from "@/hooks/use-mobile"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/router"
+import { KapAIAssistant } from "@/components/kap-ai-assistant"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  currentPath: string
-  onNavigate: (path: string) => void
 }
 
-export function DashboardLayout({ children, currentPath, onNavigate }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const isMobile = useMobile()
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const [currentPage, setCurrentPage] = useState("")
+  const router = useRouter()
 
-  const handleMenuToggle = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
-
-  const handleNavigate = (path: string) => {
-    onNavigate(path)
-    // Close sidebar on mobile after navigation
-    if (isMobile) {
-      setSidebarOpen(false)
-    }
-  }
+  useEffect(() => {
+    // Extract the current page from the router's pathname
+    const path = router.pathname.replace("/dashboard/", "")
+    setCurrentPage(path)
+  }, [router.pathname])
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      {/* Mobile Sidebar Overlay */}
-      {isMobile && sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={`${
-          isMobile
-            ? `fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out ${
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
-              }`
-            : "w-72 flex-shrink-0"
-        }`}
-      >
-        <DashboardSidebar currentPath={currentPath} onNavigate={handleNavigate} isMobile={isMobile} />
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar (you can customize this) */}
+      <div className="w-64 bg-gray-200 p-4">
+        <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
+        <ul>
+          <li className="mb-2">
+            <a
+              href="/dashboard/overview"
+              onClick={() => setCurrentPage("overview")}
+              className={`block p-2 rounded hover:bg-gray-300 ${currentPage === "overview" ? "bg-gray-300" : ""}`}
+            >
+              Overview
+            </a>
+          </li>
+          <li className="mb-2">
+            <a
+              href="/dashboard/settings"
+              onClick={() => setCurrentPage("settings")}
+              className={`block p-2 rounded hover:bg-gray-300 ${currentPage === "settings" ? "bg-gray-300" : ""}`}
+            >
+              Settings
+            </a>
+          </li>
+          {/* Add more navigation links as needed */}
+        </ul>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <NavigationBar onNavigate={handleNavigate} onMenuToggle={handleMenuToggle} isMobile={isMobile} />
-        <main className="flex-1 overflow-auto">{children}</main>
+      <div className="flex-1 p-4">
+        <h1 className="text-3xl font-semibold mb-4">{currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}</h1>
+        <div className="bg-white rounded shadow p-4">{children}</div>
       </div>
+      <KapAIAssistant onNavigate={(path) => setCurrentPage(path.replace("/dashboard/", ""))} />
     </div>
   )
 }
+
+export default DashboardLayout

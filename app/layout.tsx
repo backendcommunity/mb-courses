@@ -10,7 +10,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "MasteringBackend - Learn Backend Development",
   description: "Master backend development with comprehensive courses, projects, and hands-on learning paths.",
-  viewport: "width=device-width, initial-scale=1",
     generator: 'v0.dev'
 }
 

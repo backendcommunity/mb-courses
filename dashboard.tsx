@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { NavigationBar } from "@/components/navigation-bar"
 import { DashboardContent } from "@/components/dashboard-content"
 import { CoursesPage } from "@/components/pages/courses"
 import { CourseDetailPage } from "@/components/pages/course-detail"
@@ -67,10 +69,9 @@ import { SettingsPage } from "@/components/pages/settings"
 import { routes } from "@/lib/routes"
 
 export default function Dashboard() {
-  const [currentPath, setCurrentPath] = useState(routes.dashboard)
+  const [currentPath, setCurrentPath] = useState("/dashboard")
 
   const handleNavigate = (path: string) => {
-    console.log("Navigating to:", path)
     setCurrentPath(path)
   }
 
@@ -470,11 +471,12 @@ export default function Dashboard() {
       return <LandDetailPage landId={landId} onNavigate={handleNavigate} />
     }
 
-    // Interviews
+    // Interviews - UPDATED TO USE NEW EDITOR
     if (currentPath === routes.interviews) {
       return <InterviewsPage onNavigate={handleNavigate} />
     }
 
+    // Interview Project Editor - This now uses the new InterviewProjectEditor
     if (currentPath.startsWith("/dashboard/interviews/") && currentPath.endsWith("/project")) {
       const interviewId = currentPath.split("/")[3]
       return <InterviewProjectPage interviewId={interviewId} onNavigate={handleNavigate} />
@@ -537,8 +539,14 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout currentPath={currentPath} onNavigate={handleNavigate}>
-      {renderContent()}
-    </DashboardLayout>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar currentPath={currentPath} onNavigate={handleNavigate} />
+        <div className="flex-1 flex flex-col">
+          <NavigationBar onNavigate={handleNavigate} />
+          <main className="flex-1 overflow-auto">{renderContent()}</main>
+        </div>
+      </div>
+    </SidebarProvider>
   )
 }
