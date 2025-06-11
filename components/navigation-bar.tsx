@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState } from "react";
+import { useState } from "react"
 import {
   Search,
   Bell,
@@ -18,13 +18,13 @@ import {
   TrendingUp,
   Sparkles,
   Menu,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,40 +32,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { getUser } from "@/lib/data";
-import { routes } from "@/lib/routes";
+} from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { getUser } from "@/lib/data"
+import { routes } from "@/lib/routes"
 
 interface NavigationBarProps {
-  onNavigate: (path: string) => void;
-  onMenuToggle?: () => void;
-  isMobile?: boolean;
+  onNavigate: (path: string) => void
+  onMenuToggle?: () => void
+  isMobile?: boolean
 }
 
-export function NavigationBar({
-  onNavigate,
-  onMenuToggle,
-  isMobile = false,
-}: NavigationBarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isExploreOpen, setIsExploreOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
+export function NavigationBar({ onNavigate, onMenuToggle, isMobile = false }: NavigationBarProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isExploreOpen, setIsExploreOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
-  const user = getUser();
+  const user = getUser()
 
   // Mock subscription data
   const subscription = {
     plan: "Pro",
     status: "active",
     xpBalance: 2450,
-  };
+  }
 
   const notifications = [
     {
@@ -100,7 +92,7 @@ export function NavigationBar({
       type: "achievement",
       read: true,
     },
-  ];
+  ]
 
   const skillGuides = [
     {
@@ -116,8 +108,7 @@ export function NavigationBar({
     {
       name: "Java",
       icon: "☕",
-      color:
-        "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+      color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
     },
     {
       name: "GoLang",
@@ -127,10 +118,9 @@ export function NavigationBar({
     {
       name: "Node.js",
       icon: "🟢",
-      color:
-        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
     },
-  ];
+  ]
 
   const roadmaps = [
     {
@@ -163,38 +153,33 @@ export function NavigationBar({
       image: "/placeholder.svg?height=120&width=200",
       category: "Roadmap",
     },
-  ];
+  ]
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
+      console.log("Searching for:", searchQuery)
       // Implement search functionality
       if (isMobile) {
-        setShowMobileSearch(false);
+        setShowMobileSearch(false)
       }
     }
-  };
+  }
 
   const handleNotificationClick = (notificationId: string) => {
-    console.log("Clicked notification:", notificationId);
-    setIsNotificationsOpen(false);
-  };
+    console.log("Clicked notification:", notificationId)
+    setIsNotificationsOpen(false)
+  }
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center px-4">
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-2"
-              onClick={onMenuToggle}
-            >
+            <Button variant="ghost" size="icon" className="mr-2" onClick={onMenuToggle}>
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -218,19 +203,12 @@ export function NavigationBar({
           {/* Explore Dropdown */}
           <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item"
-              >
+              <Button variant="outline" className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item">
                 Explore
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent
-              className="lg:w-[1200px]  p-0 mt-2 border-border bg-popover"
-              align="start"
-              side="bottom"
-            >
+            <PopoverContent className="lg:w-[1200px]  p-0 mt-2 border-border bg-popover" align="start" side="bottom">
               <div className="p-8 space-y-8">
                 {/* Level Sections */}
                 <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
@@ -248,8 +226,8 @@ export function NavigationBar({
                         variant="secondary"
                         size="sm"
                         onClick={() => {
-                          onNavigate(`${routes.courses}?level=beginner`);
-                          setIsExploreOpen(false);
+                          onNavigate(`${routes.courses}?level=beginner`)
+                          setIsExploreOpen(false)
                         }}
                       >
                         Explore
@@ -266,15 +244,13 @@ export function NavigationBar({
                       />
                     </div>
                     <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">
-                        Intermediate Level
-                      </h3>
+                      <h3 className="text-xl font-bold mb-2">Intermediate Level</h3>
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => {
-                          onNavigate(`${routes.courses}?level=intermediate`);
-                          setIsExploreOpen(false);
+                          onNavigate(`${routes.courses}?level=intermediate`)
+                          setIsExploreOpen(false)
                         }}
                       >
                         Explore
@@ -296,8 +272,8 @@ export function NavigationBar({
                         variant="secondary"
                         size="sm"
                         onClick={() => {
-                          onNavigate(`${routes.courses}?level=advanced`);
-                          setIsExploreOpen(false);
+                          onNavigate(`${routes.courses}?level=advanced`)
+                          setIsExploreOpen(false)
                         }}
                       >
                         Explore
@@ -310,9 +286,8 @@ export function NavigationBar({
                 <div>
                   <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
                   <p className="text-muted-foreground mb-6">
-                    Explore foundational content and tools to help you
-                    understand, learn, and improve at the skills involved in
-                    trending industry roles.
+                    Explore foundational content and tools to help you understand, learn, and improve at the skills
+                    involved in trending industry roles.
                   </p>
                   <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
                     {skillGuides.map((skill) => (
@@ -320,12 +295,8 @@ export function NavigationBar({
                         key={skill.name}
                         className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
                         onClick={() => {
-                          onNavigate(
-                            `${
-                              routes.courses
-                            }?skill=${skill.name.toLowerCase()}`
-                          );
-                          setIsExploreOpen(false);
+                          onNavigate(`${routes.courses}?skill=${skill.name.toLowerCase()}`)
+                          setIsExploreOpen(false)
                         }}
                       >
                         <CardContent className="p-4 flex items-center space-x-3">
@@ -350,8 +321,8 @@ export function NavigationBar({
                         key={roadmap.id}
                         className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
                         onClick={() => {
-                          onNavigate(routes.roadmapDetail(roadmap.id));
-                          setIsExploreOpen(false);
+                          onNavigate(routes.roadmapDetail(roadmap.id))
+                          setIsExploreOpen(false)
                         }}
                       >
                         <div className="aspect-video relative overflow-hidden rounded-t-lg">
@@ -365,9 +336,7 @@ export function NavigationBar({
                           <Badge variant="secondary" className="text-xs mb-2">
                             {roadmap.category}
                           </Badge>
-                          <h4 className="font-medium text-sm leading-tight">
-                            {roadmap.title}
-                          </h4>
+                          <h4 className="font-medium text-sm leading-tight">{roadmap.title}</h4>
                         </CardContent>
                       </Card>
                     ))}
@@ -406,11 +375,7 @@ export function NavigationBar({
           )}
 
           {/* Right Section */}
-          <div
-            className={`${
-              isMobile ? "" : "ml-auto"
-            } flex items-center space-x-2`}
-          >
+          <div className={`${isMobile ? "" : "ml-auto"} flex items-center space-x-2`}>
             {/* Theme Toggle */}
             <ThemeToggle />
 
@@ -429,24 +394,14 @@ export function NavigationBar({
 
             {/* XP Balance - Compact on mobile */}
             {!isMobile && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary"
-                onClick={() => onNavigate(routes.xpStore)}
-              >
+              <Button variant="ghost" size="sm" className="text-primary" onClick={() => onNavigate(routes.xpStore)}>
                 <Gift className="h-4 w-4 mr-1" />
-                <span className={isMobile ? "sr-only" : ""}>
-                  {subscription.xpBalance.toLocaleString()} XP
-                </span>
+                <span className={isMobile ? "sr-only" : ""}>{subscription.xpBalance.toLocaleString()} XP</span>
               </Button>
             )}
 
             {/* Notifications */}
-            <Popover
-              open={isNotificationsOpen}
-              onOpenChange={setIsNotificationsOpen}
-            >
+            <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
@@ -463,9 +418,7 @@ export function NavigationBar({
               <PopoverContent className="w-80 p-0" align="end">
                 <div className="p-4 border-b">
                   <h3 className="font-semibold">Notifications</h3>
-                  <p className="text-sm text-muted-foreground">
-                    You have {unreadCount} unread notifications
-                  </p>
+                  <p className="text-sm text-muted-foreground">You have {unreadCount} unread notifications</p>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
                   {notifications.map((notification) => (
@@ -482,26 +435,18 @@ export function NavigationBar({
                             notification.type === "success"
                               ? "bg-green-500"
                               : notification.type === "info"
-                              ? "bg-primary"
-                              : notification.type === "achievement"
-                              ? "bg-yellow-500"
-                              : "bg-purple-500"
+                                ? "bg-primary"
+                                : notification.type === "achievement"
+                                  ? "bg-yellow-500"
+                                  : "bg-purple-500"
                           }`}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">
-                            {notification.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {notification.time}
-                          </p>
+                          <p className="font-medium text-sm">{notification.title}</p>
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
                         </div>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-primary rounded-full" />
-                        )}
+                        {!notification.read && <div className="w-2 h-2 bg-primary rounded-full" />}
                       </div>
                     </div>
                   ))}
@@ -517,15 +462,9 @@ export function NavigationBar({
             {/* Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={user.avatar || "/placeholder.svg"}
-                      alt={user.name}
-                    />
+                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
                       {user.name.charAt(0)}
                     </AvatarFallback>
@@ -535,12 +474,8 @@ export function NavigationBar({
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -569,9 +504,7 @@ export function NavigationBar({
                   <span>Community</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onNavigate(routes.subscriptionManagement)}
-                >
+                <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionManagement)}>
                   <Crown className="mr-2 h-4 w-4" />
                   <span>Subscription</span>
                 </DropdownMenuItem>
@@ -606,5 +539,5 @@ export function NavigationBar({
         )}
       </nav>
     </>
-  );
+  )
 }
