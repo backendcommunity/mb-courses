@@ -2188,3 +2188,13 @@ export const mockPaths = dataStore.learningPaths
 export const mockCourses = dataStore.courses
 export const mockProjects = dataStore.projects
 export const mockRoadmaps = dataStore.roadmaps
+
+// Named exports for direct access to data arrays
+export const courses = dataStore.courses
+export const projects = dataStore.projects
+export const challenges = dataStore.challenges
+export const interviews = dataStore.interviews
+export const bootcamps = dataStore.bootcamps
+export const learningPaths = dataStore.learningPaths
+export const roadmaps = dataStore.roadmaps
+export const user = dataStore.user
