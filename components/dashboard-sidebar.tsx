@@ -265,23 +265,6 @@ export function DashboardSidebar({
             ))}
           </div>
         </div>
-
-        {/* Settings */}
-        <div className="px-3 py-2">
-          <div className="space-y-1">
-            <button
-              onClick={() => onNavigate(routes.settings)}
-              className={`flex w-full items-center gap-2 px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
-                currentPath === routes.settings
-                  ? "bg-primary/15 text-primary"
-                  : ""
-              }`}
-            >
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Footer */}
