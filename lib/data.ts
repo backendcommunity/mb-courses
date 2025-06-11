@@ -1,270 +1,270 @@
 export interface User {
-  id: string
-  name: string
-  email: string
-  avatar: string
-  level: number
-  xp: number
-  xpToNextLevel: number
-  streak: number
-  joinDate: string
-  title: string
-  badges: Badge[]
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+  streak: number;
+  joinDate: string;
+  title: string;
+  badges: Badge[];
 }
 
 export interface Course {
-  id: string
-  title: string
-  description: string
-  instructor: string
-  duration: string
-  level: "Beginner" | "Intermediate" | "Advanced"
-  progress: number
-  thumbnail: string
-  chapters: Chapter[]
-  enrolled: boolean
-  rating: number
-  students: number
-  price: number
-  tags: string[]
-  longDescription?: string
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  duration: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  progress: number;
+  thumbnail: string;
+  chapters: Chapter[];
+  enrolled: boolean;
+  rating: number;
+  students: number;
+  price: number;
+  tags: string[];
+  longDescription?: string;
 }
 
 export interface Chapter {
-  id: string
-  title: string
-  description: string
-  duration: string
-  completed: boolean
-  videos: Video[]
-  quiz?: Quiz
-  exercise?: Exercise
-  playground?: Playground
-  type: "video" | "quiz" | "exercise" | "playground" | "mixed"
-  order: number
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  completed: boolean;
+  videos: Video[];
+  quiz?: Quiz;
+  exercise?: Exercise;
+  playground?: Playground;
+  type: "video" | "quiz" | "exercise" | "playground" | "mixed";
+  order: number;
 }
 
 export interface Video {
-  id: string
-  title: string
-  duration: string
-  completed: boolean
-  videoUrl?: string
-  description: string
-  order: number
+  id: string;
+  title: string;
+  duration: string;
+  completed: boolean;
+  videoUrl?: string;
+  description: string;
+  order: number;
 }
 
 export interface Quiz {
-  id: string
-  title: string
-  description: string
-  questions: QuizQuestion[]
-  timeLimit: number
-  passingScore: number
-  attempts: number
-  maxAttempts: number
-  completed: boolean
-  score?: number
+  id: string;
+  title: string;
+  description: string;
+  questions: QuizQuestion[];
+  timeLimit: number;
+  passingScore: number;
+  attempts: number;
+  maxAttempts: number;
+  completed: boolean;
+  score?: number;
 }
 
 export interface QuizQuestion {
-  id: string
-  question: string
-  type: "multiple-choice" | "true-false" | "fill-blank"
-  options?: string[]
-  correctAnswer: string
-  explanation: string
-  points: number
+  id: string;
+  question: string;
+  type: "multiple-choice" | "true-false" | "fill-blank";
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+  points: number;
 }
 
 export interface Exercise {
-  id: string
-  title: string
-  description: string
-  difficulty: "Easy" | "Medium" | "Hard"
-  language: string
-  starterCode: string
-  solution: string
-  testCases: TestCase[]
-  hints: string[]
-  completed: boolean
-  attempts: number
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  language: string;
+  starterCode: string;
+  solution: string;
+  testCases: TestCase[];
+  hints: string[];
+  completed: boolean;
+  attempts: number;
 }
 
 export interface TestCase {
-  id: string
-  input: string
-  expectedOutput: string
-  description: string
+  id: string;
+  input: string;
+  expectedOutput: string;
+  description: string;
 }
 
 export interface Playground {
-  id: string
-  title: string
-  description: string
-  language: string
-  files: PlaygroundFile[]
-  dependencies: string[]
-  completed: boolean
+  id: string;
+  title: string;
+  description: string;
+  language: string;
+  files: PlaygroundFile[];
+  dependencies: string[];
+  completed: boolean;
 }
 
 export interface PlaygroundFile {
-  id: string
-  name: string
-  content: string
-  language: string
+  id: string;
+  name: string;
+  content: string;
+  language: string;
 }
 
 export interface Project {
-  id: string
-  title: string
-  description: string
-  difficulty: "Easy" | "Medium" | "Hard"
-  estimatedTime: string
-  technologies: string[]
-  status: "Not Started" | "In Progress" | "Completed" | "Submitted"
-  progress: number
-  dueDate?: string
-  thumbnail: string
-  requirements: string[]
-  resources: Resource[]
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  estimatedTime: string;
+  technologies: string[];
+  status: "Not Started" | "In Progress" | "Completed" | "Submitted";
+  progress: number;
+  dueDate?: string;
+  thumbnail: string;
+  requirements: string[];
+  resources: Resource[];
 }
 
 export interface Resource {
-  id: string
-  title: string
-  type: "documentation" | "video" | "article" | "code"
-  url: string
+  id: string;
+  title: string;
+  type: "documentation" | "video" | "article" | "code";
+  url: string;
 }
 
 export interface Challenge {
-  id: string
-  title: string
-  description: string
-  xpReward: number
-  difficulty: "Easy" | "Medium" | "Hard"
-  category: string
-  completed: boolean
-  timeLimit?: string
-  participants: number
+  id: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  difficulty: "Easy" | "Medium" | "Hard";
+  category: string;
+  completed: boolean;
+  timeLimit?: string;
+  participants: number;
 }
 
 export interface Interview {
-  id: string
-  title: string
-  type: "System Design" | "Coding" | "Behavioral" | "Technical"
-  difficulty: "Easy" | "Medium" | "Hard"
-  duration: string
-  score?: number
-  status: "Available" | "In Progress" | "Completed"
-  description: string
-  questions: Question[]
+  id: string;
+  title: string;
+  type: "System Design" | "Coding" | "Behavioral" | "Technical";
+  difficulty: "Easy" | "Medium" | "Hard";
+  duration: string;
+  score?: number;
+  status: "Available" | "In Progress" | "Completed";
+  description: string;
+  questions: Question[];
 }
 
 export interface Question {
-  id: string
-  question: string
-  type: "multiple-choice" | "coding" | "essay"
-  options?: string[]
-  correctAnswer?: string
-  points: number
+  id: string;
+  question: string;
+  type: "multiple-choice" | "coding" | "essay";
+  options?: string[];
+  correctAnswer?: string;
+  points: number;
 }
 
 export interface Badge {
-  id: string
-  name: string
-  description: string
-  icon: string
-  earnedDate: string
-  rarity: "Common" | "Rare" | "Epic" | "Legendary"
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedDate: string;
+  rarity: "Common" | "Rare" | "Epic" | "Legendary";
 }
 
 export interface Bootcamp {
-  id: string
-  title: string
-  description: string
-  duration: string
-  level: "Beginner" | "Intermediate" | "Advanced"
-  price: number
-  startDate: string
-  enrolled: boolean
-  spots: number
-  spotsLeft: number
-  instructor: string
-  rating: number
-  students: number
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  price: number;
+  startDate: string;
+  enrolled: boolean;
+  spots: number;
+  spotsLeft: number;
+  instructor: string;
+  rating: number;
+  students: number;
 }
 
 export interface LearningPath {
-  id: string
-  title: string
-  description: string
-  courses: string[]
-  projects: string[]
-  estimatedTime: string
-  level: string
-  progress: number
-  enrolled: boolean
+  id: string;
+  title: string;
+  description: string;
+  courses: string[];
+  projects: string[];
+  estimatedTime: string;
+  level: string;
+  progress: number;
+  enrolled: boolean;
 }
 
 export interface Roadmap {
-  id: string
-  title: string
-  description: string
-  milestones: Milestone[]
-  timeframe: string
-  difficulty: string
-  currentMilestone: number
-  progress: number
-  enrolled: boolean
-  completedMilestones: number
-  estimatedTime: string
-  longDescription?: string
-  thumbnail?: string
-  instructor?: string
-  level?: string
-  skills?: string[]
-  prerequisites?: string[]
-  started?: boolean
+  id: string;
+  title: string;
+  description: string;
+  milestones: Milestone[];
+  timeframe: string;
+  difficulty: string;
+  currentMilestone: number;
+  progress: number;
+  enrolled: boolean;
+  completedMilestones: number;
+  estimatedTime: string;
+  longDescription?: string;
+  thumbnail?: string;
+  instructor?: string;
+  level?: string;
+  skills?: string[];
+  prerequisites?: string[];
+  started?: boolean;
 }
 
 export interface Milestone {
-  id: string
-  title: string
-  description: string
-  courses: string[]
-  projects: string[]
-  assessments: string[]
-  order: number
-  completed: boolean
-  progress: number
-  duration: string
+  id: string;
+  title: string;
+  description: string;
+  courses: string[];
+  projects: string[];
+  assessments: string[];
+  order: number;
+  completed: boolean;
+  progress: number;
+  duration: string;
 }
 
 export interface RoadmapCourse extends Course {
-  milestoneId: string
-  order: number
-  requiredForProgress: boolean
+  milestoneId: string;
+  order: number;
+  requiredForProgress: boolean;
 }
 
 export interface RoadmapProject extends Project {
-  milestoneId: string
-  order: number
-  requiredForProgress: boolean
+  milestoneId: string;
+  order: number;
+  requiredForProgress: boolean;
 }
 
 export interface RoadmapAssessment {
-  id: string
-  title: string
-  description: string
-  type: "quiz" | "project" | "interview"
-  duration: string
-  milestoneId: string
-  order: number
-  completed: boolean
-  questions?: QuizQuestion[]
-  project?: Project
-  interview?: Interview
+  id: string;
+  title: string;
+  description: string;
+  type: "quiz" | "project" | "interview";
+  duration: string;
+  milestoneId: string;
+  order: number;
+  completed: boolean;
+  questions?: QuizQuestion[];
+  project?: Project;
+  interview?: Interview;
 }
 
 // JSON Data Store - All data stored as simple JavaScript objects
@@ -386,8 +386,10 @@ The course includes hands-on projects, real-world examples, and practical exerci
                   "To slow down development",
                   "To increase memory usage",
                 ],
-                correctAnswer: "To provide reusable solutions to common problems",
-                explanation: "Design patterns provide proven solutions to recurring design problems.",
+                correctAnswer:
+                  "To provide reusable solutions to common problems",
+                explanation:
+                  "Design patterns provide proven solutions to recurring design problems.",
                 points: 25,
               },
               {
@@ -396,7 +398,8 @@ The course includes hands-on projects, real-world examples, and practical exerci
                 type: "true-false" as const,
                 options: ["True", "False"],
                 correctAnswer: "True",
-                explanation: "Node.js runs on a single main thread but uses thread pools for I/O operations.",
+                explanation:
+                  "Node.js runs on a single main thread but uses thread pools for I/O operations.",
                 points: 25,
               },
             ],
@@ -405,7 +408,8 @@ The course includes hands-on projects, real-world examples, and practical exerci
         {
           id: "2",
           title: "Singleton and Factory Patterns",
-          description: "Deep dive into Singleton and Factory patterns with practical examples",
+          description:
+            "Deep dive into Singleton and Factory patterns with practical examples",
           duration: "60 min",
           completed: true,
           type: "mixed" as const,
@@ -416,7 +420,8 @@ The course includes hands-on projects, real-world examples, and practical exerci
               title: "Singleton Pattern Explained",
               duration: "20 min",
               completed: true,
-              description: "Understanding the Singleton pattern and when to use it",
+              description:
+                "Understanding the Singleton pattern and when to use it",
               order: 1,
             },
             {
@@ -439,7 +444,8 @@ The course includes hands-on projects, real-world examples, and practical exerci
           exercise: {
             id: "exercise-1",
             title: "Implement a Database Connection Singleton",
-            description: "Create a singleton class for managing database connections",
+            description:
+              "Create a singleton class for managing database connections",
             difficulty: "Medium" as const,
             language: "javascript",
             starterCode: `class DatabaseConnection {
@@ -486,7 +492,8 @@ module.exports = DatabaseConnection;`,
             testCases: [
               {
                 id: "test1",
-                input: "const db1 = DatabaseConnection.getInstance(); const db2 = DatabaseConnection.getInstance();",
+                input:
+                  "const db1 = DatabaseConnection.getInstance(); const db2 = DatabaseConnection.getInstance();",
                 expectedOutput: "db1 === db2 should be true",
                 description: "Two instances should be the same object",
               },
@@ -503,7 +510,8 @@ module.exports = DatabaseConnection;`,
         {
           id: "3",
           title: "Observer Pattern Implementation",
-          description: "Learn to implement the Observer pattern for event-driven architecture",
+          description:
+            "Learn to implement the Observer pattern for event-driven architecture",
           duration: "50 min",
           completed: true,
           type: "mixed" as const,
@@ -514,7 +522,8 @@ module.exports = DatabaseConnection;`,
               title: "Observer Pattern Concepts",
               duration: "18 min",
               completed: true,
-              description: "Understanding the Observer pattern and its benefits",
+              description:
+                "Understanding the Observer pattern and its benefits",
               order: 1,
             },
             {
@@ -631,7 +640,8 @@ agency.setNews('Breaking: New JavaScript framework released!');`,
           quiz: {
             id: "quiz-2",
             title: "Advanced Patterns Final Quiz",
-            description: "Test your mastery of Singleton, Factory, and Observer patterns",
+            description:
+              "Test your mastery of Singleton, Factory, and Observer patterns",
             timeLimit: 20,
             passingScore: 85,
             attempts: 0,
@@ -640,19 +650,23 @@ agency.setNews('Breaking: New JavaScript framework released!');`,
             questions: [
               {
                 id: "q3",
-                question: "Which pattern ensures only one instance of a class exists?",
+                question:
+                  "Which pattern ensures only one instance of a class exists?",
                 type: "multiple-choice" as const,
                 options: ["Factory", "Observer", "Singleton", "Strategy"],
                 correctAnswer: "Singleton",
-                explanation: "The Singleton pattern restricts instantiation to a single instance.",
+                explanation:
+                  "The Singleton pattern restricts instantiation to a single instance.",
                 points: 20,
               },
               {
                 id: "q4",
-                question: "The Observer pattern is useful for implementing _____ systems.",
+                question:
+                  "The Observer pattern is useful for implementing _____ systems.",
                 type: "fill-blank" as const,
                 correctAnswer: "event-driven",
-                explanation: "Observer pattern is perfect for event-driven architectures.",
+                explanation:
+                  "Observer pattern is perfect for event-driven architectures.",
                 points: 20,
               },
             ],
@@ -663,7 +677,8 @@ agency.setNews('Breaking: New JavaScript framework released!');`,
     {
       id: "2",
       title: "Microservices Architecture",
-      description: "Learn to design and implement scalable microservices using modern tools and practices.",
+      description:
+        "Learn to design and implement scalable microservices using modern tools and practices.",
       instructor: "Michael Chen",
       duration: "12 hours",
       level: "Intermediate" as const,
@@ -687,7 +702,8 @@ By completion, you'll be equipped to design, implement, and maintain production-
         {
           id: "1",
           title: "Microservices Fundamentals",
-          description: "Introduction to microservices architecture and principles",
+          description:
+            "Introduction to microservices architecture and principles",
           duration: "40 min",
           completed: true,
           type: "video" as const,
@@ -698,7 +714,8 @@ By completion, you'll be equipped to design, implement, and maintain production-
               title: "What are Microservices?",
               duration: "20 min",
               completed: true,
-              description: "Understanding microservices vs monolithic architecture",
+              description:
+                "Understanding microservices vs monolithic architecture",
               order: 1,
             },
             {
@@ -714,7 +731,8 @@ By completion, you'll be equipped to design, implement, and maintain production-
         {
           id: "2",
           title: "Service Communication",
-          description: "Learn different ways services communicate in microservices architecture",
+          description:
+            "Learn different ways services communicate in microservices architecture",
           duration: "55 min",
           completed: false,
           type: "mixed" as const,
@@ -740,7 +758,8 @@ By completion, you'll be equipped to design, implement, and maintain production-
           exercise: {
             id: "exercise-2",
             title: "Build a Simple API Gateway",
-            description: "Create an API gateway to route requests to different services",
+            description:
+              "Create an API gateway to route requests to different services",
             difficulty: "Medium" as const,
             language: "javascript",
             starterCode: `const express = require('express');
@@ -802,7 +821,8 @@ app.listen(3000, () => {
     {
       id: "3",
       title: "Database Design Mastery",
-      description: "Complete guide to database design, optimization, and scaling strategies.",
+      description:
+        "Complete guide to database design, optimization, and scaling strategies.",
       instructor: "Emily Rodriguez",
       duration: "10 hours",
       level: "Intermediate" as const,
@@ -827,7 +847,8 @@ By the end of this course, you'll be able to architect database solutions that c
     {
       id: "4",
       title: "System Design Fundamentals",
-      description: "Learn how to design scalable, reliable, and maintainable systems.",
+      description:
+        "Learn how to design scalable, reliable, and maintainable systems.",
       instructor: "Alex Wong",
       duration: "15 hours",
       level: "Advanced" as const,
@@ -849,7 +870,8 @@ By the end of this course, you'll have the skills to design robust distributed s
         {
           id: "1",
           title: "Introduction to System Design",
-          description: "Learn the fundamentals of system design and why it matters",
+          description:
+            "Learn the fundamentals of system design and why it matters",
           duration: "60 min",
           completed: false,
           type: "video" as const,
@@ -876,7 +898,8 @@ By the end of this course, you'll have the skills to design robust distributed s
               title: "Key Components of Distributed Systems",
               duration: "25 min",
               completed: false,
-              description: "Overview of components in modern distributed systems",
+              description:
+                "Overview of components in modern distributed systems",
               order: 3,
             },
           ],
@@ -884,7 +907,8 @@ By the end of this course, you'll have the skills to design robust distributed s
         {
           id: "2",
           title: "Scalability Concepts",
-          description: "Learn how to design systems that can scale to millions of users",
+          description:
+            "Learn how to design systems that can scale to millions of users",
           duration: "90 min",
           completed: false,
           type: "mixed" as const,
@@ -927,20 +951,34 @@ By the end of this course, you'll have the skills to design robust distributed s
             questions: [
               {
                 id: "q1",
-                question: "Which scaling approach involves adding more machines to your pool of resources?",
+                question:
+                  "Which scaling approach involves adding more machines to your pool of resources?",
                 type: "multiple-choice" as const,
-                options: ["Vertical Scaling", "Horizontal Scaling", "Diagonal Scaling", "Perpendicular Scaling"],
+                options: [
+                  "Vertical Scaling",
+                  "Horizontal Scaling",
+                  "Diagonal Scaling",
+                  "Perpendicular Scaling",
+                ],
                 correctAnswer: "Horizontal Scaling",
-                explanation: "Horizontal scaling (scaling out) involves adding more machines to your resource pool.",
+                explanation:
+                  "Horizontal scaling (scaling out) involves adding more machines to your resource pool.",
                 points: 25,
               },
               {
                 id: "q2",
-                question: "Which load balancing algorithm distributes requests based on the current server load?",
+                question:
+                  "Which load balancing algorithm distributes requests based on the current server load?",
                 type: "multiple-choice" as const,
-                options: ["Round Robin", "Least Connections", "IP Hash", "Random"],
+                options: [
+                  "Round Robin",
+                  "Least Connections",
+                  "IP Hash",
+                  "Random",
+                ],
                 correctAnswer: "Least Connections",
-                explanation: "Least Connections routes traffic to the server with the fewest active connections.",
+                explanation:
+                  "Least Connections routes traffic to the server with the fewest active connections.",
                 points: 25,
               },
             ],
@@ -951,7 +989,8 @@ By the end of this course, you'll have the skills to design robust distributed s
     {
       id: "5",
       title: "API Design and Development",
-      description: "Master the art of designing and building robust, scalable APIs.",
+      description:
+        "Master the art of designing and building robust, scalable APIs.",
       instructor: "Maria Garcia",
       duration: "10 hours",
       level: "Intermediate" as const,
@@ -1008,7 +1047,8 @@ By the end of this course, you'll have the skills to design and implement profes
         {
           id: "2",
           title: "Building RESTful APIs",
-          description: "Learn how to implement RESTful APIs with best practices",
+          description:
+            "Learn how to implement RESTful APIs with best practices",
           duration: "90 min",
           completed: false,
           type: "mixed" as const,
@@ -1035,7 +1075,8 @@ By the end of this course, you'll have the skills to design and implement profes
               title: "Implementing CRUD Operations",
               duration: "30 min",
               completed: false,
-              description: "Building Create, Read, Update, Delete functionality",
+              description:
+                "Building Create, Read, Update, Delete functionality",
               order: 3,
             },
           ],
@@ -1127,7 +1168,8 @@ app.listen(3000, () => {
               },
               {
                 id: "test2",
-                input: "POST /posts with { title: 'Test', content: 'Content', author: 'User' }",
+                input:
+                  "POST /posts with { title: 'Test', content: 'Content', author: 'User' }",
                 expectedOutput: "New post object with ID",
                 description: "Should create a new post",
               },
@@ -1183,7 +1225,8 @@ app.listen(3000, () => {
     {
       id: "2",
       title: "Real-time Chat Application",
-      description: "Create a scalable real-time chat application using WebSockets and modern backend technologies.",
+      description:
+        "Create a scalable real-time chat application using WebSockets and modern backend technologies.",
       difficulty: "Hard" as const,
       estimatedTime: "3-4 weeks",
       technologies: ["Node.js", "Socket.io", "Redis", "PostgreSQL"],
@@ -1203,10 +1246,17 @@ app.listen(3000, () => {
     {
       id: "3",
       title: "Microservices Demo Platform",
-      description: "Build a demonstration platform showcasing microservices architecture with multiple services.",
+      description:
+        "Build a demonstration platform showcasing microservices architecture with multiple services.",
       difficulty: "Hard" as const,
       estimatedTime: "4-6 weeks",
-      technologies: ["Node.js", "Docker", "Kubernetes", "API Gateway", "Message Queue"],
+      technologies: [
+        "Node.js",
+        "Docker",
+        "Kubernetes",
+        "API Gateway",
+        "Message Queue",
+      ],
       status: "Not Started" as const,
       progress: 0,
       dueDate: "2024-07-30",
@@ -1237,7 +1287,8 @@ app.listen(3000, () => {
     {
       id: "4",
       title: "Distributed Database System",
-      description: "Design and implement a distributed database system with sharding and replication.",
+      description:
+        "Design and implement a distributed database system with sharding and replication.",
       difficulty: "Hard" as const,
       estimatedTime: "5-7 weeks",
       technologies: ["Go", "Raft Consensus", "gRPC", "Distributed Systems"],
@@ -1274,7 +1325,8 @@ app.listen(3000, () => {
     {
       id: "1",
       title: "Database Optimization Challenge",
-      description: "Optimize slow database queries and improve performance by 50%",
+      description:
+        "Optimize slow database queries and improve performance by 50%",
       xpReward: 250,
       difficulty: "Hard" as const,
       category: "Database",
@@ -1307,7 +1359,8 @@ app.listen(3000, () => {
       questions: [
         {
           id: "1",
-          question: "How would you design the database schema for a URL shortening service?",
+          question:
+            "How would you design the database schema for a URL shortening service?",
           type: "essay" as const,
           points: 25,
         },
@@ -1327,7 +1380,8 @@ app.listen(3000, () => {
       duration: "30 minutes",
       score: 85,
       status: "Completed" as const,
-      description: "Solve algorithmic problems commonly asked in backend interviews",
+      description:
+        "Solve algorithmic problems commonly asked in backend interviews",
       questions: [
         {
           id: "1",
@@ -1343,7 +1397,8 @@ app.listen(3000, () => {
     {
       id: "1",
       title: "Full-Stack Backend Bootcamp",
-      description: "Intensive 12-week program covering Node.js, databases, APIs, and deployment",
+      description:
+        "Intensive 12-week program covering Node.js, databases, APIs, and deployment",
       duration: "12 weeks",
       level: "Intermediate" as const,
       price: 2999,
@@ -1358,7 +1413,8 @@ app.listen(3000, () => {
     {
       id: "2",
       title: "Microservices Mastery Bootcamp",
-      description: "Advanced 8-week bootcamp on microservices architecture and cloud deployment",
+      description:
+        "Advanced 8-week bootcamp on microservices architecture and cloud deployment",
       duration: "8 weeks",
       level: "Advanced" as const,
       price: 3499,
@@ -1387,7 +1443,8 @@ app.listen(3000, () => {
     {
       id: "2",
       title: "DevOps Integration Path",
-      description: "Learn to integrate DevOps practices with backend development",
+      description:
+        "Learn to integrate DevOps practices with backend development",
       courses: ["2", "4"],
       projects: ["3"],
       estimatedTime: "4 months",
@@ -1431,7 +1488,8 @@ app.listen(3000, () => {
     {
       id: "6",
       title: "Cloud Backend Engineer Path",
-      description: "Learn cloud-native backend development with AWS, Azure, and GCP",
+      description:
+        "Learn cloud-native backend development with AWS, Azure, and GCP",
       courses: ["8", "9"],
       projects: ["7", "8"],
       estimatedTime: "6 months",
@@ -1445,7 +1503,8 @@ app.listen(3000, () => {
     {
       id: "1",
       title: "Backend Engineer Career Roadmap",
-      description: "Step-by-step roadmap to advance your backend engineering career",
+      description:
+        "Step-by-step roadmap to advance your backend engineering career",
       thumbnail: "/placeholder.svg?height=200&width=300",
       instructor: "Sarah Johnson",
       level: "Beginner to Advanced",
@@ -1467,7 +1526,11 @@ app.listen(3000, () => {
         "DevOps",
         "Cloud Platforms",
       ],
-      prerequisites: ["Basic JavaScript knowledge", "Understanding of web technologies", "Problem-solving skills"],
+      prerequisites: [
+        "Basic JavaScript knowledge",
+        "Understanding of web technologies",
+        "Problem-solving skills",
+      ],
       longDescription: `This comprehensive roadmap guides you through the journey from a beginner to a senior backend engineer. It's designed to build your skills progressively, focusing on both theoretical knowledge and practical implementation.
 
 You'll start with the fundamentals of backend development, including server-side programming, databases, and API design. As you progress, you'll tackle more advanced topics like system design, microservices architecture, and distributed systems.
@@ -1618,7 +1681,8 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
     {
       id: "3",
       title: "Backend Engineer to Tech Lead",
-      description: "Transition from individual contributor to technical leadership",
+      description:
+        "Transition from individual contributor to technical leadership",
       thumbnail: "/placeholder.svg?height=200&width=300",
       instructor: "Emily Rodriguez",
       level: "Advanced",
@@ -1698,7 +1762,8 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
     {
       id: "a1",
       title: "Backend Fundamentals Assessment",
-      description: "Comprehensive assessment of backend development fundamentals",
+      description:
+        "Comprehensive assessment of backend development fundamentals",
       type: "quiz",
       duration: "45 minutes",
       milestoneId: "m1",
@@ -1711,7 +1776,8 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
           type: "multiple-choice",
           options: ["fs", "http", "path", "express"],
           correctAnswer: "express",
-          explanation: "Express is a third-party framework, not a core Node.js module.",
+          explanation:
+            "Express is a third-party framework, not a core Node.js module.",
           points: 10,
         },
         {
@@ -1743,7 +1809,8 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
       project: {
         id: "p2",
         title: "Microservices Demo",
-        description: "Create a simple microservices architecture with 3 services",
+        description:
+          "Create a simple microservices architecture with 3 services",
         difficulty: "Medium",
         estimatedTime: "2 weeks",
         technologies: ["Node.js", "Docker", "Express", "MongoDB"],
@@ -1775,11 +1842,13 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
         difficulty: "Hard",
         duration: "60 minutes",
         status: "Available",
-        description: "Design a distributed file storage system like Dropbox or Google Drive",
+        description:
+          "Design a distributed file storage system like Dropbox or Google Drive",
         questions: [
           {
             id: "q1",
-            question: "How would you handle file synchronization across multiple devices?",
+            question:
+              "How would you handle file synchronization across multiple devices?",
             type: "essay",
             points: 25,
           },
@@ -1810,18 +1879,30 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
       questions: [
         {
           id: "qa3",
-          question: "Which of the following is NOT a benefit of GraphQL over REST?",
+          question:
+            "Which of the following is NOT a benefit of GraphQL over REST?",
           type: "multiple-choice",
-          options: ["Reduced network requests", "Strongly typed schema", "Better caching", "Client-specified queries"],
+          options: [
+            "Reduced network requests",
+            "Strongly typed schema",
+            "Better caching",
+            "Client-specified queries",
+          ],
           correctAnswer: "Better caching",
-          explanation: "REST actually has better built-in caching mechanisms compared to GraphQL.",
+          explanation:
+            "REST actually has better built-in caching mechanisms compared to GraphQL.",
           points: 10,
         },
         {
           id: "qa4",
           question: "What is the primary purpose of Kubernetes?",
           type: "multiple-choice",
-          options: ["Container creation", "Container orchestration", "Application development", "Database management"],
+          options: [
+            "Container creation",
+            "Container orchestration",
+            "Application development",
+            "Database management",
+          ],
           correctAnswer: "Container orchestration",
           explanation:
             "Kubernetes is a container orchestration platform that automates deployment, scaling, and management of containerized applications.",
@@ -1845,7 +1926,8 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
         difficulty: "Hard",
         duration: "45 minutes",
         status: "Available",
-        description: "Assess your ability to lead technical teams and mentor junior developers",
+        description:
+          "Assess your ability to lead technical teams and mentor junior developers",
         questions: [
           {
             id: "q4",
@@ -1856,13 +1938,15 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
           },
           {
             id: "q5",
-            question: "How would you approach mentoring a junior developer who is struggling with a complex task?",
+            question:
+              "How would you approach mentoring a junior developer who is struggling with a complex task?",
             type: "essay",
             points: 25,
           },
           {
             id: "q6",
-            question: "Describe how you would lead a technical project from conception to delivery",
+            question:
+              "Describe how you would lead a technical project from conception to delivery",
             type: "essay",
             points: 25,
           },
@@ -1932,269 +2016,318 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
       requiredForProgress: true,
     },
   ],
-}
+};
 
 // Helper functions to work with the JSON data store
-export const getUser = () => dataStore.user
-export const getCourses = () => dataStore.courses
-export const getProjects = () => dataStore.projects
-export const getChallenges = () => dataStore.challenges
-export const getInterviews = () => dataStore.interviews
-export const getBootcamps = () => dataStore.bootcamps
-export const getLearningPaths = () => dataStore.learningPaths
-export const getRoadmaps = () => dataStore.roadmaps
-export const getRoadmapAssessments = () => dataStore.roadmapAssessments
-export const getRoadmapCourses = () => dataStore.roadmapCourses
-export const getRoadmapProjects = () => dataStore.roadmapProjects
+export const getUser = () => dataStore.user;
+export const getCourses = () => dataStore.courses;
+export const getProjects = () => dataStore.projects;
+export const getChallenges = () => dataStore.challenges;
+export const getInterviews = () => dataStore.interviews;
+export const getBootcamps = () => dataStore.bootcamps;
+export const getLearningPaths = () => dataStore.learningPaths;
+export const getRoadmaps = () => dataStore.roadmaps;
+export const getRoadmapAssessments = () => dataStore.roadmapAssessments;
+export const getRoadmapCourses = () => dataStore.roadmapCourses;
+export const getRoadmapProjects = () => dataStore.roadmapProjects;
 
-export const getRoadmapById = (id: string) => dataStore.roadmaps.find((r) => r.id === id)
+export const getRoadmapById = (id: string) =>
+  dataStore.roadmaps.find((r) => r.id === id);
 export const getRoadmapMilestones = (roadmapId: string) => {
-  const roadmap = getRoadmapById(roadmapId)
-  return roadmap ? roadmap.milestones : []
-}
+  const roadmap = getRoadmapById(roadmapId);
+  return roadmap ? roadmap.milestones : [];
+};
 
-export const getRoadmapMilestoneById = (roadmapId: string, milestoneId: string) => {
-  const milestones = getRoadmapMilestones(roadmapId)
-  return milestones.find((m) => m.id === milestoneId)
-}
+export const getRoadmapMilestoneById = (
+  roadmapId: string,
+  milestoneId: string
+) => {
+  const milestones = getRoadmapMilestones(roadmapId);
+  return milestones.find((m) => m.id === milestoneId);
+};
 
 export const getRoadmapCoursesByMilestone = (milestoneId: string) => {
-  const roadmapCourses = dataStore.roadmapCourses.filter((rc) => rc.milestoneId === milestoneId)
+  const roadmapCourses = dataStore.roadmapCourses.filter(
+    (rc) => rc.milestoneId === milestoneId
+  );
   return roadmapCourses
     .map((rc) => {
-      const course = dataStore.courses.find((c) => c.id === rc.courseId)
-      return { ...course, milestoneId, order: rc.order, requiredForProgress: rc.requiredForProgress }
+      const course = dataStore.courses.find((c) => c.id === rc.courseId);
+      return {
+        ...course,
+        milestoneId,
+        order: rc.order,
+        requiredForProgress: rc.requiredForProgress,
+      };
     })
-    .filter(Boolean) as RoadmapCourse[]
-}
+    .filter(Boolean) as RoadmapCourse[];
+};
 
 export const getRoadmapProjectsByMilestone = (milestoneId: string) => {
-  const roadmapProjects = dataStore.roadmapProjects.filter((rp) => rp.milestoneId === milestoneId)
+  const roadmapProjects = dataStore.roadmapProjects.filter(
+    (rp) => rp.milestoneId === milestoneId
+  );
   return roadmapProjects
     .map((rp) => {
-      const project = dataStore.projects.find((p) => p.id === rp.projectId)
-      return { ...project, milestoneId, order: rp.order, requiredForProgress: rp.requiredForProgress }
+      const project = dataStore.projects.find((p) => p.id === rp.projectId);
+      return {
+        ...project,
+        milestoneId,
+        order: rp.order,
+        requiredForProgress: rp.requiredForProgress,
+      };
     })
-    .filter(Boolean) as RoadmapProject[]
-}
+    .filter(Boolean) as RoadmapProject[];
+};
 
 export const getRoadmapAssessmentsByMilestone = (milestoneId: string) => {
-  return dataStore.roadmapAssessments.filter((a) => a.milestoneId === milestoneId)
-}
+  return dataStore.roadmapAssessments.filter(
+    (a) => a.milestoneId === milestoneId
+  );
+};
 
-export const getCourseById = (id: string) => dataStore.courses.find((c) => c.id === id)
-export const getProjectById = (id: string) => dataStore.projects.find((p) => p.id === id)
-export const getChallengeById = (id: string) => dataStore.challenges.find((c) => c.id === id)
-export const getInterviewById = (id: string) => dataStore.interviews.find((i) => i.id === id)
-export const getBootcampById = (id: string) => dataStore.bootcamps.find((b) => b.id === id)
-export const getLearningPathById = (id: string) => dataStore.learningPaths.find((lp) => lp.id === id)
+export const getCourseById = (id: string) =>
+  dataStore.courses.find((c) => c.id === id);
+export const getProjectById = (id: string) =>
+  dataStore.projects.find((p) => p.id === id);
+export const getChallengeById = (id: string) =>
+  dataStore.challenges.find((c) => c.id === id);
+export const getInterviewById = (id: string) =>
+  dataStore.interviews.find((i) => i.id === id);
+export const getBootcampById = (id: string) =>
+  dataStore.bootcamps.find((b) => b.id === id);
+export const getLearningPathById = (id: string) =>
+  dataStore.learningPaths.find((lp) => lp.id === id);
 
 export const getCourseChapters = (courseId: string) => {
-  const course = getCourseById(courseId)
-  return course ? course.chapters : []
-}
+  const course = getCourseById(courseId);
+  return course ? course.chapters : [];
+};
 
 export const getCourseChapterById = (courseId: string, chapterId: string) => {
-  const chapters = getCourseChapters(courseId)
-  return chapters.find((c) => c.id === chapterId)
-}
+  const chapters = getCourseChapters(courseId);
+  return chapters.find((c) => c.id === chapterId);
+};
 
 export const getCourseQuizzes = (courseId: string) => {
-  const chapters = getCourseChapters(courseId)
+  const chapters = getCourseChapters(courseId);
   return chapters
     .filter((c) => c.quiz)
     .map((c) => c.quiz)
-    .filter(Boolean) as Quiz[]
-}
+    .filter(Boolean) as Quiz[];
+};
 
 export const getCourseExercises = (courseId: string) => {
-  const chapters = getCourseChapters(courseId)
+  const chapters = getCourseChapters(courseId);
   return chapters
     .filter((c) => c.exercise)
     .map((c) => c.exercise)
-    .filter(Boolean) as Exercise[]
-}
+    .filter(Boolean) as Exercise[];
+};
 
 export const getCoursePlaygrounds = (courseId: string) => {
-  const chapters = getCourseChapters(courseId)
+  const chapters = getCourseChapters(courseId);
   return chapters
     .filter((c) => c.playground)
     .map((c) => c.playground)
-    .filter(Boolean) as Playground[]
-}
+    .filter(Boolean) as Playground[];
+};
 
 export const getCourseProjects = (courseId: string) => {
   // For now, return all projects - in a real app, you'd filter by course
-  return dataStore.projects
-}
+  return dataStore.projects;
+};
 
 export const getQuizById = (courseId: string, quizId: string) => {
-  const quizzes = getCourseQuizzes(courseId)
-  return quizzes.find((q) => q.id === quizId)
-}
+  const quizzes = getCourseQuizzes(courseId);
+  return quizzes.find((q) => q.id === quizId);
+};
 
 export const getExerciseById = (courseId: string, exerciseId: string) => {
-  const exercises = getCourseExercises(courseId)
-  return exercises.find((e) => e.id === exerciseId)
-}
+  const exercises = getCourseExercises(courseId);
+  return exercises.find((e) => e.id === exerciseId);
+};
 
 export const getPlaygroundById = (courseId: string, playgroundId: string) => {
-  const playgrounds = getCoursePlaygrounds(courseId)
-  return playgrounds.find((p) => p.id === playgroundId)
-}
+  const playgrounds = getCoursePlaygrounds(courseId);
+  return playgrounds.find((p) => p.id === playgroundId);
+};
 
 // Update functions (for demo purposes - in a real app, these would update a database)
 export const updateCourseProgress = (courseId: string, progress: number) => {
-  const course = getCourseById(courseId)
+  const course = getCourseById(courseId);
   if (course) {
-    course.progress = progress
+    course.progress = progress;
   }
-}
+};
 
 export const markChapterComplete = (courseId: string, chapterId: string) => {
-  const chapter = getCourseChapterById(courseId, chapterId)
+  const chapter = getCourseChapterById(courseId, chapterId);
   if (chapter) {
-    chapter.completed = true
+    chapter.completed = true;
   }
-}
+};
 
-export const markVideoComplete = (courseId: string, chapterId: string, videoId: string) => {
-  const chapter = getCourseChapterById(courseId, chapterId)
+export const markVideoComplete = (
+  courseId: string,
+  chapterId: string,
+  videoId: string
+) => {
+  const chapter = getCourseChapterById(courseId, chapterId);
   if (chapter) {
-    const video = chapter.videos.find((v) => v.id === videoId)
+    const video = chapter.videos.find((v) => v.id === videoId);
     if (video) {
-      video.completed = true
+      video.completed = true;
     }
   }
-}
+};
 
-export const submitQuizAttempt = (courseId: string, quizId: string, score: number) => {
-  const quiz = getQuizById(courseId, quizId)
+export const submitQuizAttempt = (
+  courseId: string,
+  quizId: string,
+  score: number
+) => {
+  const quiz = getQuizById(courseId, quizId);
   if (quiz) {
-    quiz.attempts += 1
-    quiz.score = score
-    quiz.completed = score >= quiz.passingScore
+    quiz.attempts += 1;
+    quiz.score = score;
+    quiz.completed = score >= quiz.passingScore;
   }
-}
+};
 
-export const submitExerciseAttempt = (courseId: string, exerciseId: string, success: boolean) => {
-  const exercise = getExerciseById(courseId, exerciseId)
+export const submitExerciseAttempt = (
+  courseId: string,
+  exerciseId: string,
+  success: boolean
+) => {
+  const exercise = getExerciseById(courseId, exerciseId);
   if (exercise) {
-    exercise.attempts += 1
+    exercise.attempts += 1;
     if (success) {
-      exercise.completed = true
+      exercise.completed = true;
     }
   }
-}
+};
 
-export const markPlaygroundComplete = (courseId: string, playgroundId: string) => {
-  const playground = getPlaygroundById(courseId, playgroundId)
+export const markPlaygroundComplete = (
+  courseId: string,
+  playgroundId: string
+) => {
+  const playground = getPlaygroundById(courseId, playgroundId);
   if (playground) {
-    playground.completed = true
+    playground.completed = true;
   }
-}
+};
 
-export const updateProjectProgress = (projectId: string, progress: number, status?: Project["status"]) => {
-  const project = getProjectById(projectId)
+export const updateProjectProgress = (
+  projectId: string,
+  progress: number,
+  status?: Project["status"]
+) => {
+  const project = getProjectById(projectId);
   if (project) {
-    project.progress = progress
+    project.progress = progress;
     if (status) {
-      project.status = status
+      project.status = status;
     }
   }
-}
+};
 
 export const enrollInCourse = (courseId: string) => {
-  const course = getCourseById(courseId)
+  const course = getCourseById(courseId);
   if (course) {
-    course.enrolled = true
+    course.enrolled = true;
   }
-}
+};
 
 export const enrollInBootcamp = (bootcampId: string) => {
-  const bootcamp = getBootcampById(bootcampId)
+  const bootcamp = getBootcampById(bootcampId);
   if (bootcamp) {
-    bootcamp.enrolled = true
-    bootcamp.spotsLeft -= 1
+    bootcamp.enrolled = true;
+    bootcamp.spotsLeft -= 1;
   }
-}
+};
 
 export const enrollInLearningPath = (pathId: string) => {
-  const path = getLearningPathById(pathId)
+  const path = getLearningPathById(pathId);
   if (path) {
-    path.enrolled = true
+    path.enrolled = true;
   }
-}
+};
 
 export const enrollInRoadmap = (roadmapId: string) => {
-  const roadmap = getRoadmapById(roadmapId)
+  const roadmap = getRoadmapById(roadmapId);
   if (roadmap) {
-    roadmap.enrolled = true
-    roadmap.started = true
+    roadmap.enrolled = true;
+    roadmap.started = true;
   }
-}
+};
 
-export const updateRoadmapProgress = (roadmapId: string, progress: number, currentMilestone?: number) => {
-  const roadmap = getRoadmapById(roadmapId)
+export const updateRoadmapProgress = (
+  roadmapId: string,
+  progress: number,
+  currentMilestone?: number
+) => {
+  const roadmap = getRoadmapById(roadmapId);
   if (roadmap) {
-    roadmap.progress = progress
+    roadmap.progress = progress;
     if (currentMilestone !== undefined) {
-      roadmap.currentMilestone = currentMilestone
+      roadmap.currentMilestone = currentMilestone;
     }
   }
-}
+};
 
 export const completeMilestone = (roadmapId: string, milestoneId: string) => {
-  const roadmap = getRoadmapById(roadmapId)
+  const roadmap = getRoadmapById(roadmapId);
   if (roadmap) {
-    const milestone = roadmap.milestones.find((m) => m.id === milestoneId)
+    const milestone = roadmap.milestones.find((m) => m.id === milestoneId);
     if (milestone) {
-      milestone.completed = true
-      milestone.progress = 100
-      roadmap.completedMilestones += 1
+      milestone.completed = true;
+      milestone.progress = 100;
+      roadmap.completedMilestones += 1;
     }
   }
-}
+};
 
 export const updateUser = (updates: Partial<User>) => {
-  Object.assign(dataStore.user, updates)
-}
+  Object.assign(dataStore.user, updates);
+};
 
 export const updateCourse = (id: string, updates: Partial<Course>) => {
-  const course = dataStore.courses.find((c) => c.id === id)
+  const course = dataStore.courses.find((c) => c.id === id);
   if (course) {
-    Object.assign(course, updates)
+    Object.assign(course, updates);
   }
-}
+};
 
 export const updateProject = (id: string, updates: Partial<Project>) => {
-  const project = dataStore.projects.find((p) => p.id === id)
+  const project = dataStore.projects.find((p) => p.id === id);
   if (project) {
-    Object.assign(project, updates)
+    Object.assign(project, updates);
   }
-}
+};
 
 export const updateChallenge = (id: string, updates: Partial<Challenge>) => {
-  const challenge = dataStore.challenges.find((c) => c.id === id)
+  const challenge = dataStore.challenges.find((c) => c.id === id);
   if (challenge) {
-    Object.assign(challenge, updates)
+    Object.assign(challenge, updates);
   }
-}
+};
 
 // Mock data for compatibility with existing components
-export const mockInterviews = dataStore.interviews
-export const mockBootcamps = dataStore.bootcamps
-export const mockPaths = dataStore.learningPaths
-export const mockCourses = dataStore.courses
-export const mockProjects = dataStore.projects
-export const mockRoadmaps = dataStore.roadmaps
+export const mockInterviews = dataStore.interviews;
+export const mockBootcamps = dataStore.bootcamps;
+export const mockPaths = dataStore.learningPaths;
+export const mockCourses = dataStore.courses;
+export const mockProjects = dataStore.projects;
+export const mockRoadmaps = dataStore.roadmaps;
 
 // Named exports for direct access to data arrays
-export const courses = dataStore.courses
-export const projects = dataStore.projects
-export const challenges = dataStore.challenges
-export const interviews = dataStore.interviews
-export const bootcamps = dataStore.bootcamps
-export const learningPaths = dataStore.learningPaths
-export const roadmaps = dataStore.roadmaps
-export const user = dataStore.user
+export const courses = dataStore.courses;
+export const projects = dataStore.projects;
+export const challenges = dataStore.challenges;
+export const interviews = dataStore.interviews;
+export const bootcamps = dataStore.bootcamps;
+export const learningPaths = dataStore.learningPaths;
+export const roadmaps = dataStore.roadmaps;
+export const user = dataStore.user;

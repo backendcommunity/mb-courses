@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Play,
@@ -24,27 +24,32 @@ import {
   Clock,
   Target,
   Trophy,
-} from "lucide-react"
-import { useAppStore } from "@/lib/store"
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface RoadmapVideoWatchPageProps {
-  roadmapId: string
-  videoId: string
-  onNavigate?: (route: string) => void
+  roadmapId: string;
+  videoId: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: RoadmapVideoWatchPageProps) {
-  const store = useAppStore()
-  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration] = useState(2400) // 40 minutes in seconds
+export function RoadmapVideoWatchPage({
+  roadmapId,
+  videoId,
+  onNavigate,
+}: RoadmapVideoWatchPageProps) {
+  const store = useAppStore();
+  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration] = useState(2400); // 40 minutes in seconds
 
   // Mock video data based on roadmap
   const video = {
     id: videoId,
     title: "System Design Fundamentals",
-    description: "Learn the core principles of designing scalable distributed systems",
+    description:
+      "Learn the core principles of designing scalable distributed systems",
     duration: "40 min",
     milestone: "System Design Mastery",
     milestoneProgress: 65,
@@ -55,33 +60,39 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
       "Caching Strategies",
       "Microservices Architecture",
     ],
-  }
+  };
 
   if (!roadmap) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Roadmap not found</h1>
-          <Button onClick={() => onNavigate?.("/dashboard/roadmaps")} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.("/dashboard/roadmaps")}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Roadmaps
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(`/dashboard/roadmaps/${roadmapId}/watch`)}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(`/dashboard/roadmaps/${roadmapId}/watch`)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
@@ -107,7 +118,9 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                 <div className="text-center text-white">
                   <Target className="h-16 w-16 mx-auto mb-4" />
                   <h3 className="text-xl font-bold">{video.title}</h3>
-                  <p className="text-blue-200">Roadmap milestone video content</p>
+                  <p className="text-blue-200">
+                    Roadmap milestone video content
+                  </p>
                 </div>
               </div>
 
@@ -118,7 +131,10 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                   <div className="flex items-center gap-2 text-white text-sm">
                     <span>{formatTime(currentTime)}</span>
                     <div className="flex-1">
-                      <Progress value={(currentTime / duration) * 100} className="h-1" />
+                      <Progress
+                        value={(currentTime / duration) * 100}
+                        className="h-1"
+                      />
                     </div>
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -132,23 +148,47 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                         className="text-white hover:bg-white/20"
                         onClick={() => setIsPlaying(!isPlaying)}
                       >
-                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        {isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <SkipBack className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <SkipForward className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Volume2 className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Settings className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Maximize className="h-4 w-4" />
                       </Button>
                     </div>
@@ -217,7 +257,10 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                           <span>{video.milestone}</span>
                           <span>{video.milestoneProgress}%</span>
                         </div>
-                        <Progress value={video.milestoneProgress} className="h-2" />
+                        <Progress
+                          value={video.milestoneProgress}
+                          className="h-2"
+                        />
                       </div>
                     </div>
                   </div>
@@ -233,16 +276,31 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                 <CardContent>
                   <div className="space-y-3 text-sm">
                     <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">00:00</span>
-                      <p>Welcome to this comprehensive guide on system design fundamentals...</p>
+                      <span className="text-muted-foreground min-w-[60px]">
+                        00:00
+                      </span>
+                      <p>
+                        Welcome to this comprehensive guide on system design
+                        fundamentals...
+                      </p>
                     </div>
                     <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">00:30</span>
-                      <p>Today we'll cover the core principles that every backend engineer needs to know...</p>
+                      <span className="text-muted-foreground min-w-[60px]">
+                        00:30
+                      </span>
+                      <p>
+                        Today we'll cover the core principles that every backend
+                        engineer needs to know...
+                      </p>
                     </div>
                     <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">01:15</span>
-                      <p>Let's start with scalability. When we talk about scalable systems...</p>
+                      <span className="text-muted-foreground min-w-[60px]">
+                        01:15
+                      </span>
+                      <p>
+                        Let's start with scalability. When we talk about
+                        scalable systems...
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -257,17 +315,38 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                 <CardContent>
                   <div className="space-y-3">
                     {[
-                      { title: "System Design Interview Guide", type: "PDF", url: "#" },
-                      { title: "Scalability Patterns", type: "Article", url: "#" },
-                      { title: "Load Balancer Configuration", type: "Code", url: "#" },
-                      { title: "Database Sharding Examples", type: "Tutorial", url: "#" },
+                      {
+                        title: "System Design Interview Guide",
+                        type: "PDF",
+                        url: "#",
+                      },
+                      {
+                        title: "Scalability Patterns",
+                        type: "Article",
+                        url: "#",
+                      },
+                      {
+                        title: "Load Balancer Configuration",
+                        type: "Code",
+                        url: "#",
+                      },
+                      {
+                        title: "Database Sharding Examples",
+                        type: "Tutorial",
+                        url: "#",
+                      },
                     ].map((resource, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
                           <BookOpen className="h-4 w-4 text-blue-600" />
                           <div>
                             <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">{resource.type}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {resource.type}
+                            </p>
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -302,7 +381,8 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                         {
                           author: "Sarah Johnson",
                           time: "3 hours ago",
-                          comment: "Can you explain more about consistent hashing in the context of database sharding?",
+                          comment:
+                            "Can you explain more about consistent hashing in the context of database sharding?",
                         },
                       ].map((comment, index) => (
                         <div key={index} className="border rounded-lg p-3">
@@ -313,8 +393,12 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                                 .map((n) => n[0])
                                 .join("")}
                             </div>
-                            <span className="font-medium text-sm">{comment.author}</span>
-                            <span className="text-xs text-muted-foreground">{comment.time}</span>
+                            <span className="font-medium text-sm">
+                              {comment.author}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {comment.time}
+                            </span>
                           </div>
                           <p className="text-sm">{comment.comment}</p>
                         </div>
@@ -345,7 +429,9 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
                 </div>
                 <Progress value={video.milestoneProgress} className="h-2" />
               </div>
-              <div className="text-sm text-muted-foreground">3 of 5 videos watched in this milestone</div>
+              <div className="text-sm text-muted-foreground">
+                3 of 5 videos watched in this milestone
+              </div>
             </CardContent>
           </Card>
 
@@ -356,21 +442,59 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { id: "1", title: "System Design Fundamentals", duration: "40 min", completed: false, current: true },
-                { id: "2", title: "Database Design Patterns", duration: "35 min", completed: true, current: false },
-                { id: "3", title: "Caching Strategies", duration: "30 min", completed: true, current: false },
-                { id: "4", title: "Microservices Architecture", duration: "45 min", completed: false, current: false },
-                { id: "5", title: "System Design Interview", duration: "50 min", completed: false, current: false },
+                {
+                  id: "1",
+                  title: "System Design Fundamentals",
+                  duration: "40 min",
+                  completed: false,
+                  current: true,
+                },
+                {
+                  id: "2",
+                  title: "Database Design Patterns",
+                  duration: "35 min",
+                  completed: true,
+                  current: false,
+                },
+                {
+                  id: "3",
+                  title: "Caching Strategies",
+                  duration: "30 min",
+                  completed: true,
+                  current: false,
+                },
+                {
+                  id: "4",
+                  title: "Microservices Architecture",
+                  duration: "45 min",
+                  completed: false,
+                  current: false,
+                },
+                {
+                  id: "5",
+                  title: "System Design Interview",
+                  duration: "50 min",
+                  completed: false,
+                  current: false,
+                },
               ].map((vid) => (
                 <div
                   key={vid.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
                     vid.current ? "bg-blue-50 border border-blue-200" : ""
                   }`}
-                  onClick={() => onNavigate?.(`/dashboard/roadmaps/${roadmapId}/video/${vid.id}`)}
+                  onClick={() =>
+                    onNavigate?.(
+                      `/dashboard/roadmaps/${roadmapId}/video/${vid.id}`
+                    )
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {vid.completed ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <Play className="h-3 w-3" />}
+                    {vid.completed ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Play className="h-3 w-3" />
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{vid.title}</p>
@@ -392,7 +516,9 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
             <CardContent className="space-y-3">
               <div className="p-3 bg-green-50 rounded-lg">
                 <h4 className="font-medium text-sm">Complete Milestone</h4>
-                <p className="text-xs text-muted-foreground">Watch 2 more videos to complete this milestone</p>
+                <p className="text-xs text-muted-foreground">
+                  Watch 2 more videos to complete this milestone
+                </p>
               </div>
               <Button className="w-full" size="sm">
                 <Trophy className="mr-2 h-4 w-4" />
@@ -403,5 +529,5 @@ export function RoadmapVideoWatchPage({ roadmapId, videoId, onNavigate }: Roadma
         </div>
       </div>
     </div>
-  )
+  );
 }

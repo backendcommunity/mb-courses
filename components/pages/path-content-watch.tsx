@@ -1,23 +1,36 @@
-"use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, CheckCircle2, BookOpen, Code2, Target, Clock, SkipForward, SkipBack } from "lucide-react"
-import { useAppStore } from "@/lib/store"
-import { routes } from "@/lib/routes"
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  BookOpen,
+  Code2,
+  Target,
+  Clock,
+  SkipForward,
+  SkipBack,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 interface PathContentWatchPageProps {
-  pathId: string
-  stepId: string
-  onNavigate?: (route: string) => void
+  pathId: string;
+  stepId: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContentWatchPageProps) {
-  const store = useAppStore()
-  const path = store.getLearningPaths().find((p) => p.id === pathId)
+export function PathContentWatchPage({
+  pathId,
+  stepId,
+  onNavigate,
+}: PathContentWatchPageProps) {
+  const store = useAppStore();
+  const path = store.getLearningPaths().find((p) => p.id === pathId);
 
   // Mock step data
   const steps = [
@@ -50,36 +63,44 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
       duration: "25 min",
       completed: false,
     },
-  ]
+  ];
 
-  const currentStep = steps.find((s) => s.id === stepId) || steps[0]
-  const currentIndex = steps.findIndex((s) => s.id === stepId)
-  const nextStep = steps[currentIndex + 1]
-  const prevStep = steps[currentIndex - 1]
+  const currentStep = steps.find((s) => s.id === stepId) || steps[0];
+  const currentIndex = steps.findIndex((s) => s.id === stepId);
+  const nextStep = steps[currentIndex + 1];
+  const prevStep = steps[currentIndex - 1];
 
   if (!path) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Learning path not found</h1>
-          <Button onClick={() => onNavigate?.(routes.learningPaths)} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.(routes.learningPaths)}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Learning Paths
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(routes.learningPathContinue(pathId))}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(routes.learningPathContinue(pathId))}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{currentStep.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {currentStep.title}
+          </h1>
           <p className="text-muted-foreground">{path.title}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -95,9 +116,15 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
           <Card className="overflow-hidden">
             <div className="aspect-video bg-gradient-to-br from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
               <div className="text-center text-white">
-                {currentStep.type === "lesson" && <BookOpen className="h-16 w-16 mx-auto mb-4" />}
-                {currentStep.type === "hands-on" && <Code2 className="h-16 w-16 mx-auto mb-4" />}
-                {currentStep.type === "project" && <Target className="h-16 w-16 mx-auto mb-4" />}
+                {currentStep.type === "lesson" && (
+                  <BookOpen className="h-16 w-16 mx-auto mb-4" />
+                )}
+                {currentStep.type === "hands-on" && (
+                  <Code2 className="h-16 w-16 mx-auto mb-4" />
+                )}
+                {currentStep.type === "project" && (
+                  <Target className="h-16 w-16 mx-auto mb-4" />
+                )}
                 <h3 className="text-xl font-bold">{currentStep.title}</h3>
                 <p className="text-blue-200">Learning path step content</p>
               </div>
@@ -107,7 +134,10 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
           {/* Step Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-blue-600 border-blue-600">
+              <Badge
+                variant="outline"
+                className="text-blue-600 border-blue-600"
+              >
                 Step {currentIndex + 1} of {steps.length}
               </Badge>
             </div>
@@ -117,7 +147,11 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 Mark Complete
               </Button>
               {nextStep && (
-                <Button onClick={() => onNavigate?.(routes.pathContentWatch(pathId, nextStep.id))}>
+                <Button
+                  onClick={() =>
+                    onNavigate?.(routes.pathContentWatch(pathId, nextStep.id))
+                  }
+                >
                   Next Step
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -142,8 +176,9 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 <CardContent>
                   <div className="space-y-4">
                     <p className="text-muted-foreground">
-                      In this step, you'll learn how to build your first API using Node.js and Express. We'll cover
-                      routing, middleware, and basic CRUD operations.
+                      In this step, you'll learn how to build your first API
+                      using Node.js and Express. We'll cover routing,
+                      middleware, and basic CRUD operations.
                     </p>
                     <div className="space-y-3">
                       <h4 className="font-medium">What You'll Learn:</h4>
@@ -167,9 +202,12 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 <CardContent>
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-medium mb-2">Task: Build a Simple API</h4>
+                      <h4 className="font-medium mb-2">
+                        Task: Build a Simple API
+                      </h4>
                       <p className="text-sm text-muted-foreground">
-                        Create a basic Express server with the following endpoints:
+                        Create a basic Express server with the following
+                        endpoints:
                       </p>
                       <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                         <li>• GET /api/users - Return list of users</li>
@@ -178,8 +216,13 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                       </ul>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Submit your solution:</label>
-                      <Textarea placeholder="Paste your code here..." className="min-h-[200px]" />
+                      <label className="text-sm font-medium">
+                        Submit your solution:
+                      </label>
+                      <Textarea
+                        placeholder="Paste your code here..."
+                        className="min-h-[200px]"
+                      />
                       <Button>Submit Solution</Button>
                     </div>
                   </div>
@@ -193,7 +236,10 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                   <CardTitle>Your Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Textarea placeholder="Take notes for this step..." className="min-h-[200px]" />
+                  <Textarea
+                    placeholder="Take notes for this step..."
+                    className="min-h-[200px]"
+                  />
                   <Button className="mt-2">Save Notes</Button>
                 </CardContent>
               </Card>
@@ -207,16 +253,33 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 <CardContent>
                   <div className="space-y-3">
                     {[
-                      { title: "Express.js Documentation", type: "Documentation", url: "#" },
-                      { title: "REST API Best Practices", type: "Article", url: "#" },
-                      { title: "Node.js HTTP Module", type: "Tutorial", url: "#" },
+                      {
+                        title: "Express.js Documentation",
+                        type: "Documentation",
+                        url: "#",
+                      },
+                      {
+                        title: "REST API Best Practices",
+                        type: "Article",
+                        url: "#",
+                      },
+                      {
+                        title: "Node.js HTTP Module",
+                        type: "Tutorial",
+                        url: "#",
+                      },
                     ].map((resource, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
                           <BookOpen className="h-4 w-4 text-blue-600" />
                           <div>
                             <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">{resource.type}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {resource.type}
+                            </p>
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -247,7 +310,8 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 <Progress value={path.progress} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {steps.filter((s) => s.completed).length} of {steps.length} steps completed
+                {steps.filter((s) => s.completed).length} of {steps.length}{" "}
+                steps completed
               </div>
             </CardContent>
           </Card>
@@ -262,12 +326,20 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
                 <div
                   key={step.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    step.id === stepId ? "bg-blue-50 border border-blue-200" : ""
+                    step.id === stepId
+                      ? "bg-blue-50 border border-blue-200"
+                      : ""
                   }`}
-                  onClick={() => onNavigate?.(routes.pathContentWatch(pathId, step.id))}
+                  onClick={() =>
+                    onNavigate?.(routes.pathContentWatch(pathId, step.id))
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {step.completed ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <span>{index + 1}</span>}
+                    {step.completed ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{step.title}</p>
@@ -290,7 +362,9 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.pathContentWatch(pathId, prevStep.id))}
+                onClick={() =>
+                  onNavigate?.(routes.pathContentWatch(pathId, prevStep.id))
+                }
               >
                 <SkipBack className="mr-2 h-4 w-4" />
                 Previous: {prevStep.title}
@@ -299,7 +373,9 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
             {nextStep && (
               <Button
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.pathContentWatch(pathId, nextStep.id))}
+                onClick={() =>
+                  onNavigate?.(routes.pathContentWatch(pathId, nextStep.id))
+                }
               >
                 Next: {nextStep.title}
                 <SkipForward className="ml-2 h-4 w-4" />
@@ -309,5 +385,5 @@ export function PathContentWatchPage({ pathId, stepId, onNavigate }: PathContent
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,25 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Play, RotateCcw, CheckCircle, XCircle, Lightbulb, Eye } from "lucide-react"
-import { routes } from "@/lib/routes"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ArrowLeft,
+  Play,
+  RotateCcw,
+  CheckCircle,
+  XCircle,
+  Lightbulb,
+  Eye,
+} from "lucide-react";
+import { routes } from "@/lib/routes";
 
 interface CourseExercisePageProps {
-  courseId: string
-  exerciseId: string
-  onNavigate: (path: string) => void
+  courseId: string;
+  exerciseId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function CourseExercisePage({ courseId, exerciseId, onNavigate }: CourseExercisePageProps) {
-  const [code, setCode] = useState("")
-  const [testResults, setTestResults] = useState<any[]>([])
-  const [showHint, setShowHint] = useState(false)
-  const [showSolution, setShowSolution] = useState(false)
-  const [isRunning, setIsRunning] = useState(false)
+export function CourseExercisePage({
+  courseId,
+  exerciseId,
+  onNavigate,
+}: CourseExercisePageProps) {
+  const [code, setCode] = useState("");
+  const [testResults, setTestResults] = useState<any[]>([]);
+  const [showHint, setShowHint] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
   // Mock exercise data
   const exercise = {
@@ -67,35 +79,37 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
         description: "Exactly 18 years old",
       },
     ],
-  }
+  };
 
   // Initialize with starter code if empty
   if (!code) {
-    setCode(exercise.starterCode)
+    setCode(exercise.starterCode);
   }
 
   const runTests = async () => {
-    setIsRunning(true)
+    setIsRunning(true);
 
     // Simulate test execution
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
       // In a real implementation, this would execute the code safely
       const results = exercise.testCases.map((testCase, index) => {
         // Mock test execution - in reality, you'd run the actual code
-        const mockResult = Math.random() > 0.3 // 70% pass rate for demo
+        const mockResult = Math.random() > 0.3; // 70% pass rate for demo
         return {
           id: index,
           description: testCase.description,
           input: testCase.input,
           expected: testCase.expected,
-          actual: mockResult ? testCase.expected : { error: "Function not implemented correctly" },
+          actual: mockResult
+            ? testCase.expected
+            : { error: "Function not implemented correctly" },
           passed: mockResult,
-        }
-      })
+        };
+      });
 
-      setTestResults(results)
+      setTestResults(results);
     } catch (error) {
       setTestResults([
         {
@@ -104,38 +118,38 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
           error: "Syntax error in your code",
           passed: false,
         },
-      ])
+      ]);
     }
 
-    setIsRunning(false)
-  }
+    setIsRunning(false);
+  };
 
   const resetCode = () => {
-    setCode(exercise.starterCode)
-    setTestResults([])
-    setShowHint(false)
-    setShowSolution(false)
-  }
+    setCode(exercise.starterCode);
+    setTestResults([]);
+    setShowHint(false);
+    setShowSolution(false);
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Medium":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "Hard":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
-  const passedTests = testResults.filter((t) => t.passed).length
-  const totalTests = testResults.length
-  const allTestsPassed = totalTests > 0 && passedTests === totalTests
+  const passedTests = testResults.filter((t) => t.passed).length;
+  const totalTests = testResults.length;
+  const allTestsPassed = totalTests > 0 && passedTests === totalTests;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -154,7 +168,9 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={getDifficultyColor(exercise.difficulty)}>{exercise.difficulty}</Badge>
+          <Badge className={getDifficultyColor(exercise.difficulty)}>
+            {exercise.difficulty}
+          </Badge>
           <Badge variant="outline">{exercise.points} pts</Badge>
         </div>
       </div>
@@ -177,7 +193,9 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                   <CardTitle>Exercise Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="whitespace-pre-wrap text-sm">{exercise.instructions}</pre>
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {exercise.instructions}
+                  </pre>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -189,7 +207,9 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                 </CardHeader>
                 <CardContent>
                   {testResults.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Run your code to see test results</p>
+                    <p className="text-gray-500 text-center py-4">
+                      Run your code to see test results
+                    </p>
                   ) : (
                     <div className="space-y-3">
                       {testResults.map((result) => (
@@ -200,16 +220,24 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                             ) : (
                               <XCircle className="h-4 w-4 text-red-600" />
                             )}
-                            <span className="font-medium">{result.description}</span>
+                            <span className="font-medium">
+                              {result.description}
+                            </span>
                           </div>
                           {result.input && (
                             <div className="text-sm text-gray-600">
                               <p>Input: {JSON.stringify(result.input)}</p>
                               <p>Expected: {JSON.stringify(result.expected)}</p>
-                              {result.actual && <p>Actual: {JSON.stringify(result.actual)}</p>}
+                              {result.actual && (
+                                <p>Actual: {JSON.stringify(result.actual)}</p>
+                              )}
                             </div>
                           )}
-                          {result.error && <p className="text-sm text-red-600">{result.error}</p>}
+                          {result.error && (
+                            <p className="text-sm text-red-600">
+                              {result.error}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -231,7 +259,11 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                     {showHint ? (
                       <p className="text-sm">{exercise.hint}</p>
                     ) : (
-                      <Button variant="outline" onClick={() => setShowHint(true)} className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowHint(true)}
+                        className="flex items-center gap-2"
+                      >
                         <Lightbulb className="h-4 w-4" />
                         Show Hint
                       </Button>
@@ -275,11 +307,20 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
               <div className="flex items-center justify-between">
                 <CardTitle>Code Editor</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={resetCode} className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetCode}
+                    className="flex items-center gap-2"
+                  >
                     <RotateCcw className="h-4 w-4" />
                     Reset
                   </Button>
-                  <Button onClick={runTests} disabled={isRunning} className="flex items-center gap-2">
+                  <Button
+                    onClick={runTests}
+                    disabled={isRunning}
+                    className="flex items-center gap-2"
+                  >
                     <Play className="h-4 w-4" />
                     {isRunning ? "Running..." : "Run Tests"}
                   </Button>
@@ -308,10 +349,16 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                       <XCircle className="h-5 w-5 text-red-600" />
                     )}
                     <span className="font-medium">
-                      {allTestsPassed ? "All tests passed!" : `${passedTests}/${totalTests} tests passed`}
+                      {allTestsPassed
+                        ? "All tests passed!"
+                        : `${passedTests}/${totalTests} tests passed`}
                     </span>
                   </div>
-                  {allTestsPassed && <Badge className="bg-green-100 text-green-800">+{exercise.points} pts</Badge>}
+                  {allTestsPassed && (
+                    <Badge className="bg-green-100 text-green-800">
+                      +{exercise.points} pts
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -319,5 +366,5 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
         </div>
       </div>
     </div>
-  )
+  );
 }

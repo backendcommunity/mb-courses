@@ -137,7 +137,7 @@ export function CourseDetailPage({
   const canEarnCertificate = course.enrolled && isCompleted;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Course Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" onClick={handleBackToCourses}>

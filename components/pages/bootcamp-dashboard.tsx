@@ -1,44 +1,63 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Play, CheckCircle2, Users, Target, Trophy, Calendar } from "lucide-react"
-import { useAppStore } from "@/lib/store"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  Play,
+  CheckCircle2,
+  Users,
+  Target,
+  Trophy,
+  Calendar,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface BootcampDashboardPageProps {
-  bootcampId: string
-  onNavigate?: (route: string) => void
+  bootcampId: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashboardPageProps) {
-  const store = useAppStore()
-  const bootcamp = store.getBootcamps().find((b) => b.id === bootcampId)
+export function BootcampDashboardPage({
+  bootcampId,
+  onNavigate,
+}: BootcampDashboardPageProps) {
+  const store = useAppStore();
+  const bootcamp = store.getBootcamps().find((b) => b.id === bootcampId);
 
   if (!bootcamp) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Bootcamp not found</h1>
-          <Button onClick={() => onNavigate?.("/dashboard/bootcamps")} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.("/dashboard/bootcamps")}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Bootcamps
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(`/dashboard/bootcamps/${bootcampId}`)}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(`/dashboard/bootcamps/${bootcampId}`)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{bootcamp.title} Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {bootcamp.title} Dashboard
+          </h1>
           <p className="text-muted-foreground">Week 4 of 12 • 33% Complete</p>
         </div>
       </div>
@@ -92,8 +111,17 @@ export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashbo
               <div className="space-y-3">
                 {[
                   { title: "Express.js Setup", completed: true, type: "video" },
-                  { title: "Routing & Middleware", completed: true, type: "video" },
-                  { title: "Building REST APIs", completed: false, type: "video", current: true },
+                  {
+                    title: "Routing & Middleware",
+                    completed: true,
+                    type: "video",
+                  },
+                  {
+                    title: "Building REST APIs",
+                    completed: false,
+                    type: "video",
+                    current: true,
+                  },
                   { title: "API Project", completed: false, type: "project" },
                 ].map((lesson, index) => (
                   <div
@@ -145,12 +173,17 @@ export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashbo
                   type: "Workshop",
                 },
               ].map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-blue-600" />
                     <div>
                       <h4 className="font-medium">{event.title}</h4>
-                      <p className="text-sm text-muted-foreground">{event.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.date}
+                      </p>
                     </div>
                   </div>
                   <Badge variant="outline">{event.type}</Badge>
@@ -200,11 +233,15 @@ export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashbo
             <CardContent className="space-y-3">
               <div className="text-center p-4 border rounded-lg">
                 <div className="text-2xl font-bold">25</div>
-                <div className="text-sm text-muted-foreground">Total Students</div>
+                <div className="text-sm text-muted-foreground">
+                  Total Students
+                </div>
               </div>
               <div className="text-center p-4 border rounded-lg">
                 <div className="text-2xl font-bold">23</div>
-                <div className="text-sm text-muted-foreground">Still Active</div>
+                <div className="text-sm text-muted-foreground">
+                  Still Active
+                </div>
               </div>
               <Button variant="outline" className="w-full">
                 <Users className="mr-2 h-4 w-4" />
@@ -227,9 +264,14 @@ export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashbo
                 { title: "Perfect Attendance", icon: "📅" },
                 { title: "Top Performer", icon: "⭐" },
               ].map((achievement, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg"
+                >
                   <span className="text-lg">{achievement.icon}</span>
-                  <span className="text-sm font-medium">{achievement.title}</span>
+                  <span className="text-sm font-medium">
+                    {achievement.title}
+                  </span>
                 </div>
               ))}
             </CardContent>
@@ -237,5 +279,5 @@ export function BootcampDashboardPage({ bootcampId, onNavigate }: BootcampDashbo
         </div>
       </div>
     </div>
-  )
+  );
 }

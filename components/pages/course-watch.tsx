@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Play,
@@ -25,118 +25,143 @@ import {
   Brain,
   Code,
   Gamepad2,
-} from "lucide-react"
-import { useAppStore } from "@/lib/store"
-import { routes } from "@/lib/routes"
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 interface CourseWatchPageProps {
-  courseId: string
-  chapterId: string
-  videoId?: string
-  onNavigate?: (route: string) => void
+  courseId: string;
+  chapterId: string;
+  videoId?: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: CourseWatchPageProps) {
-  const store = useAppStore()
-  const course = store.getCourses().find((c) => c.id === courseId)
-  const chapter = course?.chapters.find((ch) => ch.id === chapterId)
-  const currentVideo = videoId ? chapter?.videos.find((v) => v.id === videoId) : chapter?.videos[0]
+export function CourseWatchPage({
+  courseId,
+  chapterId,
+  videoId,
+  onNavigate,
+}: CourseWatchPageProps) {
+  const store = useAppStore();
+  const course = store.getCourses().find((c) => c.id === courseId);
+  const chapter = course?.chapters.find((ch) => ch.id === chapterId);
+  const currentVideo = videoId
+    ? chapter?.videos.find((v) => v.id === videoId)
+    : chapter?.videos[0];
 
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration] = useState(1800) // 30 minutes in seconds
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration] = useState(1800); // 30 minutes in seconds
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   if (!course || !chapter) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Chapter not found</h1>
-          <Button onClick={() => onNavigate?.(routes.courseDetail(courseId))} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.(routes.courseDetail(courseId))}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Course
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleMarkComplete = () => {
     if (currentVideo) {
       // Mark current video as complete
       const updatedChapters = course.chapters.map((ch) => {
         if (ch.id === chapterId) {
-          const updatedVideos = ch.videos.map((v) => (v.id === currentVideo.id ? { ...v, completed: true } : v))
-          const allVideosComplete = updatedVideos.every((v) => v.completed)
-          const hasOtherContent = ch.quiz || ch.exercise || ch.playground
-          const chapterComplete = allVideosComplete && !hasOtherContent
+          const updatedVideos = ch.videos.map((v) =>
+            v.id === currentVideo.id ? { ...v, completed: true } : v
+          );
+          const allVideosComplete = updatedVideos.every((v) => v.completed);
+          const hasOtherContent = ch.quiz || ch.exercise || ch.playground;
+          const chapterComplete = allVideosComplete && !hasOtherContent;
 
-          return { ...ch, videos: updatedVideos, completed: chapterComplete }
+          return { ...ch, videos: updatedVideos, completed: chapterComplete };
         }
-        return ch
-      })
+        return ch;
+      });
 
-      store.updateCourse(courseId, { chapters: updatedChapters })
+      store.updateCourse(courseId, { chapters: updatedChapters });
     }
-  }
+  };
 
   const nextVideo = chapter.videos.find((v, index) => {
-    const currentIndex = chapter.videos.findIndex((video) => video.id === currentVideo?.id)
-    return index === currentIndex + 1
-  })
+    const currentIndex = chapter.videos.findIndex(
+      (video) => video.id === currentVideo?.id
+    );
+    return index === currentIndex + 1;
+  });
 
   const prevVideo = chapter.videos.find((v, index) => {
-    const currentIndex = chapter.videos.findIndex((video) => video.id === currentVideo?.id)
-    return index === currentIndex - 1
-  })
+    const currentIndex = chapter.videos.findIndex(
+      (video) => video.id === currentVideo?.id
+    );
+    return index === currentIndex - 1;
+  });
 
-  const nextChapter = course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) + 1]
-  const prevChapter = course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) - 1]
+  const nextChapter =
+    course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) + 1];
+  const prevChapter =
+    course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) - 1];
 
   const handleVideoClick = (video: any) => {
     if (onNavigate) {
-      onNavigate(routes.courseWatch(courseId, chapterId))
+      onNavigate(routes.courseWatch(courseId, chapterId));
     }
-  }
+  };
 
   const handleChapterFeatureClick = (type: string, id: string) => {
-    if (!onNavigate) return
+    if (!onNavigate) return;
 
     switch (type) {
       case "quiz":
-        onNavigate(routes.courseQuiz(courseId, id))
-        break
+        onNavigate(routes.courseQuiz(courseId, id));
+        break;
       case "exercise":
-        onNavigate(routes.courseExercise(courseId, id))
-        break
+        onNavigate(routes.courseExercise(courseId, id));
+        break;
       case "playground":
-        onNavigate(routes.coursePlayground(courseId, id))
-        break
+        onNavigate(routes.coursePlayground(courseId, id));
+        break;
     }
-  }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(routes.courseDetail(courseId))}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(routes.courseDetail(courseId))}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{currentVideo ? currentVideo.title : chapter.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {currentVideo ? currentVideo.title : chapter.title}
+          </h1>
           <p className="text-muted-foreground">
             {course.title} • {chapter.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{chapter.type}</Badge>
-          <Badge variant="outline">{currentVideo?.duration || chapter.duration}</Badge>
+          <Badge variant="outline">
+            {currentVideo?.duration || chapter.duration}
+          </Badge>
         </div>
       </div>
 
@@ -150,8 +175,12 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-700">
                 <div className="text-center text-white">
                   <Play className="h-16 w-16 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold">{currentVideo?.title || chapter.title}</h3>
-                  <p className="text-gray-300">{currentVideo?.description || chapter.description}</p>
+                  <h3 className="text-xl font-bold">
+                    {currentVideo?.title || chapter.title}
+                  </h3>
+                  <p className="text-gray-300">
+                    {currentVideo?.description || chapter.description}
+                  </p>
                 </div>
               </div>
 
@@ -162,7 +191,10 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                   <div className="flex items-center gap-2 text-white text-sm">
                     <span>{formatTime(currentTime)}</span>
                     <div className="flex-1">
-                      <Progress value={(currentTime / duration) * 100} className="h-1" />
+                      <Progress
+                        value={(currentTime / duration) * 100}
+                        className="h-1"
+                      />
                     </div>
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -176,7 +208,11 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                         className="text-white hover:bg-white/20"
                         onClick={() => setIsPlaying(!isPlaying)}
                       >
-                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        {isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"
@@ -196,12 +232,18 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                       >
                         <SkipForward className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Volume2 className="h-4 w-4" />
                       </Button>
                       <select
                         value={playbackSpeed}
-                        onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+                        onChange={(e) =>
+                          setPlaybackSpeed(Number(e.target.value))
+                        }
                         className="bg-transparent text-white text-sm border border-white/20 rounded px-2 py-1"
                       >
                         <option value={0.5}>0.5x</option>
@@ -213,10 +255,18 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Settings className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Maximize className="h-4 w-4" />
                       </Button>
                     </div>
@@ -256,7 +306,11 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 </Button>
               )}
               {!nextVideo && nextChapter && (
-                <Button onClick={() => onNavigate?.(routes.courseWatch(courseId, nextChapter.id))}>
+                <Button
+                  onClick={() =>
+                    onNavigate?.(routes.courseWatch(courseId, nextChapter.id))
+                  }
+                >
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -276,7 +330,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                     <Button
                       variant="outline"
                       className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("quiz", chapter.quiz!.id)}
+                      onClick={() =>
+                        handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                      }
                     >
                       <Brain className="h-6 w-6" />
                       <span className="text-sm">{chapter.quiz.title}</span>
@@ -286,7 +342,12 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                     <Button
                       variant="outline"
                       className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("exercise", chapter.exercise!.id)}
+                      onClick={() =>
+                        handleChapterFeatureClick(
+                          "exercise",
+                          chapter.exercise!.id
+                        )
+                      }
                     >
                       <Code className="h-6 w-6" />
                       <span className="text-sm">{chapter.exercise.title}</span>
@@ -296,10 +357,17 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                     <Button
                       variant="outline"
                       className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("playground", chapter.playground!.id)}
+                      onClick={() =>
+                        handleChapterFeatureClick(
+                          "playground",
+                          chapter.playground!.id
+                        )
+                      }
                     >
                       <Gamepad2 className="h-6 w-6" />
-                      <span className="text-sm">{chapter.playground.title}</span>
+                      <span className="text-sm">
+                        {chapter.playground.title}
+                      </span>
                     </Button>
                   )}
                 </div>
@@ -320,11 +388,15 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
             <TabsContent value="overview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>{currentVideo ? "Video" : "Chapter"} Overview</CardTitle>
+                  <CardTitle>
+                    {currentVideo ? "Video" : "Chapter"} Overview
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">{currentVideo?.description || chapter.description}</p>
+                    <p className="text-muted-foreground">
+                      {currentVideo?.description || chapter.description}
+                    </p>
                     {chapter.videos.length > 1 && (
                       <div>
                         <h4 className="font-medium mb-2">Chapter Videos</h4>
@@ -348,7 +420,10 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                   <CardTitle>Your Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Textarea placeholder="Take notes while watching the video..." className="min-h-[200px]" />
+                  <Textarea
+                    placeholder="Take notes while watching the video..."
+                    className="min-h-[200px]"
+                  />
                   <Button className="mt-2">Save Notes</Button>
                 </CardContent>
               </Card>
@@ -362,16 +437,33 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 <CardContent>
                   <div className="space-y-3">
                     {[
-                      { title: "Design Patterns in JavaScript", type: "Article", url: "#" },
-                      { title: "Node.js Best Practices", type: "Documentation", url: "#" },
-                      { title: "Observer Pattern Examples", type: "Code", url: "#" },
+                      {
+                        title: "Design Patterns in JavaScript",
+                        type: "Article",
+                        url: "#",
+                      },
+                      {
+                        title: "Node.js Best Practices",
+                        type: "Documentation",
+                        url: "#",
+                      },
+                      {
+                        title: "Observer Pattern Examples",
+                        type: "Code",
+                        url: "#",
+                      },
                     ].map((resource, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
                           <BookOpen className="h-4 w-4 text-blue-600" />
                           <div>
                             <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">{resource.type}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {resource.type}
+                            </p>
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -400,12 +492,14 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                         {
                           author: "Sarah Chen",
                           time: "2 hours ago",
-                          comment: "Great explanation! The examples really helped me understand the concept.",
+                          comment:
+                            "Great explanation! The examples really helped me understand the concept.",
                         },
                         {
                           author: "Mike Rodriguez",
                           time: "5 hours ago",
-                          comment: "Can someone explain the difference between this and the previous pattern?",
+                          comment:
+                            "Can someone explain the difference between this and the previous pattern?",
                         },
                       ].map((comment, index) => (
                         <div key={index} className="border rounded-lg p-3">
@@ -416,8 +510,12 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                                 .map((n) => n[0])
                                 .join("")}
                             </div>
-                            <span className="font-medium text-sm">{comment.author}</span>
-                            <span className="text-xs text-muted-foreground">{comment.time}</span>
+                            <span className="font-medium text-sm">
+                              {comment.author}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {comment.time}
+                            </span>
                           </div>
                           <p className="text-sm">{comment.comment}</p>
                         </div>
@@ -432,12 +530,19 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <Card>
                 <CardHeader>
                   <CardTitle>Video Transcript</CardTitle>
-                  <p className="text-sm text-muted-foreground">Auto-generated transcript with timestamps</p>
+                  <p className="text-sm text-muted-foreground">
+                    Auto-generated transcript with timestamps
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {[
-                      { time: "00:00", text: `Welcome to ${currentVideo?.title || chapter.title}.` },
+                      {
+                        time: "00:00",
+                        text: `Welcome to ${
+                          currentVideo?.title || chapter.title
+                        }.`,
+                      },
                       {
                         time: "00:15",
                         text: "In this section, we'll explore the key concepts and practical applications.",
@@ -456,11 +561,14 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                         className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
                         onClick={() =>
                           setCurrentTime(
-                            Number.parseInt(item.time.split(":")[0]) * 60 + Number.parseInt(item.time.split(":")[1]),
+                            Number.parseInt(item.time.split(":")[0]) * 60 +
+                              Number.parseInt(item.time.split(":")[1])
                           )
                         }
                       >
-                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">{item.time}</span>
+                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">
+                          {item.time}
+                        </span>
                         <span className="text-sm">{item.text}</span>
                       </div>
                     ))}
@@ -487,7 +595,8 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 <Progress value={course.progress} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {course.chapters.filter((ch) => ch.completed).length} of {course.chapters.length} chapters completed
+                {course.chapters.filter((ch) => ch.completed).length} of{" "}
+                {course.chapters.length} chapters completed
               </div>
             </CardContent>
           </Card>
@@ -503,7 +612,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 <div
                   key={video.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    video.id === currentVideo?.id ? "bg-blue-50 border border-blue-200" : ""
+                    video.id === currentVideo?.id
+                      ? "border border-blue-200"
+                      : ""
                   }`}
                   onClick={() => handleVideoClick(video)}
                 >
@@ -531,7 +642,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.quiz && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("quiz", chapter.quiz!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Brain className="h-4 w-4" />
@@ -552,13 +665,17 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.exercise && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("exercise", chapter.exercise!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick("exercise", chapter.exercise!.id)
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Code className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.exercise.title}</p>
+                    <p className="text-sm font-medium">
+                      {chapter.exercise.title}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
                         {chapter.exercise.difficulty}
@@ -574,13 +691,20 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.playground && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("playground", chapter.playground!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick(
+                      "playground",
+                      chapter.playground!.id
+                    )
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Gamepad2 className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.playground.title}</p>
+                    <p className="text-sm font-medium">
+                      {chapter.playground.title}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
                         {chapter.playground.language.toUpperCase()}
@@ -605,12 +729,18 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 <div
                   key={ch.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.id === chapterId ? "bg-blue-50 border border-blue-200" : ""
+                    ch.id === chapterId ? "border border-blue-200" : ""
                   }`}
-                  onClick={() => onNavigate?.(routes.courseWatch(courseId, ch.id))}
+                  onClick={() =>
+                    onNavigate?.(routes.courseWatch(courseId, ch.id))
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {ch.completed ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <span>{index + 1}</span>}
+                    {ch.completed ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{ch.title}</p>
@@ -633,7 +763,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.courseWatch(courseId, prevChapter.id))}
+                onClick={() =>
+                  onNavigate?.(routes.courseWatch(courseId, prevChapter.id))
+                }
               >
                 <SkipBack className="mr-2 h-4 w-4" />
                 Previous: {prevChapter.title}
@@ -642,7 +774,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
             {nextChapter && (
               <Button
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.courseWatch(courseId, nextChapter.id))}
+                onClick={() =>
+                  onNavigate?.(routes.courseWatch(courseId, nextChapter.id))
+                }
               >
                 Next: {nextChapter.title}
                 <SkipForward className="ml-2 h-4 w-4" />
@@ -652,5 +786,5 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,20 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface InterviewAlgorithmEditorProps {
-  project: any
-  onNavigate: (route: string) => void
+  project: any;
+  onNavigate: (route: string) => void;
 }
 
-export function InterviewAlgorithmEditor({ project, onNavigate }: InterviewAlgorithmEditorProps) {
-  const [language, setLanguage] = useState("javascript")
-  const [isRunning, setIsRunning] = useState(false)
+export function InterviewAlgorithmEditor({
+  project,
+  onNavigate,
+}: InterviewAlgorithmEditorProps) {
+  const [language, setLanguage] = useState("javascript");
+  const [isRunning, setIsRunning] = useState(false);
 
   const codeTemplates = {
     javascript: `function solution(nums, target) {
@@ -33,12 +42,12 @@ export function InterviewAlgorithmEditor({ project, onNavigate }: InterviewAlgor
         return new int[0];
     }
 }`,
-  }
+  };
 
   const handleRunCode = () => {
-    setIsRunning(true)
-    setTimeout(() => setIsRunning(false), 2000)
-  }
+    setIsRunning(true);
+    setTimeout(() => setIsRunning(false), 2000);
+  };
 
   return (
     <div className="flex-1 grid grid-cols-[450px_1fr] overflow-hidden">
@@ -59,11 +68,15 @@ export function InterviewAlgorithmEditor({ project, onNavigate }: InterviewAlgor
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Input: </span>
-                      <code className="bg-background px-2 py-1 rounded text-sm">{example.input}</code>
+                      <code className="bg-background px-2 py-1 rounded text-sm">
+                        {example.input}
+                      </code>
                     </div>
                     <div>
                       <span className="font-medium">Output: </span>
-                      <code className="bg-background px-2 py-1 rounded text-sm">{example.output}</code>
+                      <code className="bg-background px-2 py-1 rounded text-sm">
+                        {example.output}
+                      </code>
                     </div>
                     {example.explanation && (
                       <div>
@@ -133,7 +146,9 @@ export function InterviewAlgorithmEditor({ project, onNavigate }: InterviewAlgor
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <span className="font-medium">Test Case 1</span>
               </div>
-              <div className="pl-6 mt-1 text-xs text-muted-foreground">Input: [2,7,11,15], 9 → Output: [0,1] ✓</div>
+              <div className="pl-6 mt-1 text-xs text-muted-foreground">
+                Input: [2,7,11,15], 9 → Output: [0,1] ✓
+              </div>
             </div>
             <div className="p-3 mb-2 bg-red-50 border border-red-200 rounded-md text-sm">
               <div className="flex items-center gap-2">
@@ -148,5 +163,5 @@ export function InterviewAlgorithmEditor({ project, onNavigate }: InterviewAlgor
         </div>
       </div>
     </div>
-  )
+  );
 }

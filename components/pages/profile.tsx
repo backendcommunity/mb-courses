@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
   User,
   Mail,
@@ -25,17 +25,17 @@ import {
   Trophy,
   Calendar,
   Award,
-} from "lucide-react"
-import { useAppStore } from "@/lib/store"
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface ProfilePageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const store = useAppStore()
-  const user = store.getUser()
+  const [isEditing, setIsEditing] = useState(false);
+  const store = useAppStore();
+  const user = store.getUser();
 
   const [formData, setFormData] = useState({
     name: user.name,
@@ -46,15 +46,15 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     website: "https://johndoe.dev",
     github: "https://github.com/johndoe",
     linkedin: "https://linkedin.com/in/johndoe",
-  })
+  });
 
   const handleSave = () => {
     // In a real app, this would save to the backend
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
   const handleCancel = () => {
-    setIsEditing(false)
+    setIsEditing(false);
     // Reset form data
     setFormData({
       name: user.name,
@@ -65,24 +65,60 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       website: "https://johndoe.dev",
       github: "https://github.com/johndoe",
       linkedin: "https://linkedin.com/in/johndoe",
-    })
-  }
+    });
+  };
 
   const achievements = [
-    { id: 1, name: "First Course Completed", description: "Complete your first course", earned: true, icon: "🎓" },
-    { id: 2, name: "Speed Learner", description: "Complete 3 courses in a week", earned: true, icon: "⚡" },
-    { id: 3, name: "Project Master", description: "Complete 10 projects", earned: true, icon: "🏗️" },
-    { id: 4, name: "Community Helper", description: "Help 50 community members", earned: false, icon: "🤝" },
-    { id: 5, name: "Streak Master", description: "Maintain a 30-day learning streak", earned: false, icon: "🔥" },
-    { id: 6, name: "Interview Ace", description: "Pass 5 mock interviews", earned: false, icon: "💼" },
-  ]
+    {
+      id: 1,
+      name: "First Course Completed",
+      description: "Complete your first course",
+      earned: true,
+      icon: "🎓",
+    },
+    {
+      id: 2,
+      name: "Speed Learner",
+      description: "Complete 3 courses in a week",
+      earned: true,
+      icon: "⚡",
+    },
+    {
+      id: 3,
+      name: "Project Master",
+      description: "Complete 10 projects",
+      earned: true,
+      icon: "🏗️",
+    },
+    {
+      id: 4,
+      name: "Community Helper",
+      description: "Help 50 community members",
+      earned: false,
+      icon: "🤝",
+    },
+    {
+      id: 5,
+      name: "Streak Master",
+      description: "Maintain a 30-day learning streak",
+      earned: false,
+      icon: "🔥",
+    },
+    {
+      id: 6,
+      name: "Interview Ace",
+      description: "Pass 5 mock interviews",
+      earned: false,
+      icon: "💼",
+    },
+  ];
 
   const stats = [
     { label: "Courses Completed", value: "12", icon: Trophy },
     { label: "Projects Built", value: "8", icon: Award },
     { label: "Total XP", value: user.xp.toLocaleString(), icon: Star },
     { label: "Learning Streak", value: "15 days", icon: Calendar },
-  ]
+  ];
 
   return (
     <div className="px-4 py-6 md:py-8 lg:py-10 max-w-5xl mx-auto space-y-6">
@@ -90,7 +126,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Profile</h1>
-          <p className="text-muted-foreground">Manage your account information and preferences</p>
+          <p className="text-muted-foreground">
+            Manage your account information and preferences
+          </p>
         </div>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)} className="gap-2">
@@ -123,13 +161,19 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-2 border-border">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={formData.name} />
+                    <AvatarImage
+                      src={user.avatar || "/placeholder.svg"}
+                      alt={formData.name}
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-lg">
                       {formData.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button size="sm" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0">
+                    <Button
+                      size="sm"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                    >
                       <Edit3 className="h-3 w-3" />
                     </Button>
                   )}
@@ -142,7 +186,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         <Input
                           id="name"
                           value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
@@ -158,7 +204,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
@@ -175,7 +223,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         <Input
                           id="phone"
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, phone: e.target.value })
+                          }
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
@@ -190,7 +240,12 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         <Input
                           id="location"
                           value={formData.location}
-                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              location: e.target.value,
+                            })
+                          }
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
@@ -212,11 +267,15 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                   <Textarea
                     id="bio"
                     value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bio: e.target.value })
+                    }
                     rows={3}
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground">{formData.bio}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formData.bio}
+                  </p>
                 )}
               </div>
 
@@ -234,7 +293,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       <Input
                         id="website"
                         value={formData.website}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, website: e.target.value })
+                        }
                       />
                     ) : (
                       <div className="flex items-center gap-2 text-sm">
@@ -258,7 +319,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       <Input
                         id="github"
                         value={formData.github}
-                        onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, github: e.target.value })
+                        }
                       />
                     ) : (
                       <div className="flex items-center gap-2 text-sm">
@@ -282,7 +345,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       <Input
                         id="linkedin"
                         value={formData.linkedin}
-                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, linkedin: e.target.value })
+                        }
                       />
                     ) : (
                       <div className="flex items-center gap-2 text-sm">
@@ -317,13 +382,19 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
             <CardContent className="space-y-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">Level {user.level}</div>
-                <div className="text-sm text-muted-foreground">Senior Engineer</div>
+                <div className="text-sm text-muted-foreground">
+                  Senior Engineer
+                </div>
               </div>
-              <Progress value={(user.xp / user.xpToNextLevel) * 100} className="h-3" />
+              <Progress
+                value={(user.xp / user.xpToNextLevel) * 100}
+                className="h-3"
+              />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{user.xp.toLocaleString()} XP</span>
                 <span>
-                  {user.xpToNextLevel.toLocaleString()} XP to Level {user.level + 1}
+                  {user.xpToNextLevel.toLocaleString()} XP to Level{" "}
+                  {user.level + 1}
                 </span>
               </div>
             </CardContent>
@@ -351,7 +422,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-sm text-muted-foreground">Member since</div>
+                <div className="text-sm text-muted-foreground">
+                  Member since
+                </div>
                 <div className="font-semibold">January 2024</div>
               </div>
             </CardContent>
@@ -370,7 +443,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               <div
                 key={achievement.id}
                 className={`p-4 rounded-lg border transition-colors ${
-                  achievement.earned ? "bg-primary/5 border-primary/20" : "bg-muted/50 border-border opacity-60"
+                  achievement.earned
+                    ? "bg-primary/5 border-primary/20"
+                    : "bg-muted/50 border-border opacity-60"
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -379,12 +454,17 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{achievement.name}</h4>
                       {achievement.earned && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        <Badge
+                          variant="secondary"
+                          className="bg-primary/10 text-primary"
+                        >
                           Earned
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{achievement.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {achievement.description}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -393,7 +473,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default ProfilePage
+export default ProfilePage;

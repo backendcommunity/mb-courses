@@ -1,44 +1,73 @@
-"use client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Clock, BookOpen, Code2, Target, CheckCircle2, Play, Lock, Trophy } from "lucide-react"
-import { useAppStore } from "@/lib/store"
+"use client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  Clock,
+  BookOpen,
+  Code2,
+  Target,
+  CheckCircle2,
+  Play,
+  Lock,
+  Trophy,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface LearningPathContinuePageProps {
-  pathId: string
-  onNavigate?: (route: string) => void
+  pathId: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathContinuePageProps) {
-  const store = useAppStore()
-  const path = store.getLearningPaths().find((p) => p.id === pathId)
+export function LearningPathContinuePage({
+  pathId,
+  onNavigate,
+}: LearningPathContinuePageProps) {
+  const store = useAppStore();
+  const path = store.getLearningPaths().find((p) => p.id === pathId);
 
   if (!path) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Learning Path not found</h1>
-          <Button onClick={() => onNavigate?.("learning-paths")} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.("learning-paths")}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Learning Paths
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(`learning-path-detail/${path.id}`)}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(`learning-path-detail/${path.id}`)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Continue: {path.title}</h1>
-          <p className="text-muted-foreground">Step 3 of 12 • {path.progress}% Complete</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Continue: {path.title}
+          </h1>
+          <p className="text-muted-foreground">
+            Step 3 of 12 • {path.progress}% Complete
+          </p>
         </div>
       </div>
 
@@ -91,8 +120,12 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
                   3
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Current: Advanced Node.js Concepts</CardTitle>
-                  <CardDescription>Learn about streams, clusters, and performance optimization</CardDescription>
+                  <CardTitle className="text-lg">
+                    Current: Advanced Node.js Concepts
+                  </CardTitle>
+                  <CardDescription>
+                    Learn about streams, clusters, and performance optimization
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -122,30 +155,62 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
           <Card>
             <CardHeader>
               <CardTitle>Learning Timeline</CardTitle>
-              <CardDescription>Your progress through the learning path</CardDescription>
+              <CardDescription>
+                Your progress through the learning path
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Completed Steps */}
               <div className="space-y-3">
                 <h4 className="font-medium text-green-600">✓ Completed</h4>
                 {[
-                  { type: "course", title: "JavaScript Fundamentals", duration: "4 hours" },
-                  { type: "course", title: "Node.js Basics", duration: "6 hours" },
-                  { type: "project", title: "REST API Project", duration: "8 hours" },
-                  { type: "assessment", title: "Backend Fundamentals Quiz", duration: "30 min" },
+                  {
+                    type: "course",
+                    title: "JavaScript Fundamentals",
+                    duration: "4 hours",
+                  },
+                  {
+                    type: "course",
+                    title: "Node.js Basics",
+                    duration: "6 hours",
+                  },
+                  {
+                    type: "project",
+                    title: "REST API Project",
+                    duration: "8 hours",
+                  },
+                  {
+                    type: "assessment",
+                    title: "Backend Fundamentals Quiz",
+                    duration: "30 min",
+                  },
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-green-50 rounded-lg"
+                  >
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        {item.type === "course" && <BookOpen className="h-4 w-4 text-blue-600" />}
-                        {item.type === "project" && <Code2 className="h-4 w-4 text-green-600" />}
-                        {item.type === "assessment" && <Target className="h-4 w-4 text-purple-600" />}
+                        {item.type === "course" && (
+                          <BookOpen className="h-4 w-4 text-blue-600" />
+                        )}
+                        {item.type === "project" && (
+                          <Code2 className="h-4 w-4 text-green-600" />
+                        )}
+                        {item.type === "assessment" && (
+                          <Target className="h-4 w-4 text-purple-600" />
+                        )}
                         <span className="font-medium">{item.title}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{item.duration}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {item.duration}
+                      </span>
                     </div>
-                    <Badge variant="outline" className="text-green-600 border-green-200">
+                    <Badge
+                      variant="outline"
+                      className="text-green-600 border-green-200"
+                    >
                       Completed
                     </Badge>
                   </div>
@@ -160,9 +225,13 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 text-blue-600" />
-                      <span className="font-medium">Advanced Node.js Concepts</span>
+                      <span className="font-medium">
+                        Advanced Node.js Concepts
+                      </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">8 hours • 3 of 8 lessons</span>
+                    <span className="text-sm text-muted-foreground">
+                      8 hours • 3 of 8 lessons
+                    </span>
                     <Progress value={37.5} className="h-1 mt-2" />
                   </div>
                   <Badge className="bg-blue-600">In Progress</Badge>
@@ -171,23 +240,54 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
 
               {/* Upcoming Steps */}
               <div className="space-y-3">
-                <h4 className="font-medium text-muted-foreground">⏳ Upcoming</h4>
+                <h4 className="font-medium text-muted-foreground">
+                  ⏳ Upcoming
+                </h4>
                 {[
-                  { type: "course", title: "Database Design & Optimization", duration: "10 hours" },
-                  { type: "project", title: "E-commerce Backend", duration: "12 hours" },
-                  { type: "course", title: "Microservices Architecture", duration: "8 hours" },
-                  { type: "assessment", title: "Advanced Backend Assessment", duration: "45 min" },
+                  {
+                    type: "course",
+                    title: "Database Design & Optimization",
+                    duration: "10 hours",
+                  },
+                  {
+                    type: "project",
+                    title: "E-commerce Backend",
+                    duration: "12 hours",
+                  },
+                  {
+                    type: "course",
+                    title: "Microservices Architecture",
+                    duration: "8 hours",
+                  },
+                  {
+                    type: "assessment",
+                    title: "Advanced Backend Assessment",
+                    duration: "45 min",
+                  },
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
                     <Lock className="h-5 w-5 text-gray-400" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        {item.type === "course" && <BookOpen className="h-4 w-4 text-gray-400" />}
-                        {item.type === "project" && <Code2 className="h-4 w-4 text-gray-400" />}
-                        {item.type === "assessment" && <Target className="h-4 w-4 text-gray-400" />}
-                        <span className="font-medium text-gray-600">{item.title}</span>
+                        {item.type === "course" && (
+                          <BookOpen className="h-4 w-4 text-gray-400" />
+                        )}
+                        {item.type === "project" && (
+                          <Code2 className="h-4 w-4 text-gray-400" />
+                        )}
+                        {item.type === "assessment" && (
+                          <Target className="h-4 w-4 text-gray-400" />
+                        )}
+                        <span className="font-medium text-gray-600">
+                          {item.title}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{item.duration}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {item.duration}
+                      </span>
                     </div>
                     <Badge variant="outline" className="text-gray-500">
                       Locked
@@ -235,8 +335,12 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="p-3 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-sm">Advanced Node.js - Lesson 4</h4>
-                <p className="text-xs text-muted-foreground">Event Loop & Performance</p>
+                <h4 className="font-medium text-sm">
+                  Advanced Node.js - Lesson 4
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Event Loop & Performance
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Clock className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs">45 minutes</span>
@@ -262,14 +366,18 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
                 <div className="text-center p-4 border rounded-lg">
                   <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
                   <h3 className="font-medium">Certificate</h3>
-                  <p className="text-sm text-muted-foreground">Industry-recognized completion certificate</p>
+                  <p className="text-sm text-muted-foreground">
+                    Industry-recognized completion certificate
+                  </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="h-8 w-8 mx-auto mb-2 rounded-full bg-[#13AECE] text-white flex items-center justify-center text-sm font-bold">
                     XP
                   </div>
                   <h3 className="font-medium">500 XP</h3>
-                  <p className="text-sm text-muted-foreground">Experience points for completion</p>
+                  <p className="text-sm text-muted-foreground">
+                    Experience points for completion
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -277,5 +385,5 @@ export function LearningPathContinuePage({ pathId, onNavigate }: LearningPathCon
         </div>
       </div>
     </div>
-  )
+  );
 }

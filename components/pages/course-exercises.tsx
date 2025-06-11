@@ -1,27 +1,42 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Code, Clock, CheckCircle, XCircle, Trophy, Filter, Star } from "lucide-react"
-import { routes } from "@/lib/routes"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Code,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Trophy,
+  Filter,
+  Star,
+} from "lucide-react";
+import { routes } from "@/lib/routes";
 
 interface CourseExercisesPageProps {
-  courseId: string
-  onNavigate: (path: string) => void
+  courseId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPageProps) {
-  const [filter, setFilter] = useState<"all" | "completed" | "pending">("all")
-  const [difficultyFilter, setDifficultyFilter] = useState<"all" | "Easy" | "Medium" | "Hard">("all")
+export function CourseExercisesPage({
+  courseId,
+  onNavigate,
+}: CourseExercisesPageProps) {
+  const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<
+    "all" | "Easy" | "Medium" | "Hard"
+  >("all");
 
   // Mock exercises data
   const exercises = [
     {
       id: "exercise-1",
       title: "Variable Declaration Practice",
-      description: "Practice declaring and initializing variables in JavaScript",
+      description:
+        "Practice declaring and initializing variables in JavaScript",
       difficulty: "Easy",
       estimatedTime: 15,
       points: 50,
@@ -70,45 +85,48 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
       bestScore: null,
       tags: ["async", "promises"],
     },
-  ]
+  ];
 
   const filteredExercises = exercises.filter((exercise) => {
     const statusMatch =
       filter === "all" ||
       (filter === "completed" && exercise.completed) ||
-      (filter === "pending" && !exercise.completed)
+      (filter === "pending" && !exercise.completed);
 
-    const difficultyMatch = difficultyFilter === "all" || exercise.difficulty === difficultyFilter
+    const difficultyMatch =
+      difficultyFilter === "all" || exercise.difficulty === difficultyFilter;
 
-    return statusMatch && difficultyMatch
-  })
+    return statusMatch && difficultyMatch;
+  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Medium":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "Hard":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getScoreColor = (score: number | null) => {
-    if (!score) return "text-gray-500"
-    if (score >= 80) return "text-green-600"
-    if (score >= 60) return "text-yellow-600"
-    return "text-red-600"
-  }
+    if (!score) return "text-gray-500";
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
 
-  const totalPoints = exercises.filter((e) => e.passed).reduce((acc, e) => acc + e.points, 0)
-  const completedCount = exercises.filter((e) => e.completed).length
-  const passedCount = exercises.filter((e) => e.passed).length
+  const totalPoints = exercises
+    .filter((e) => e.passed)
+    .reduce((acc, e) => acc + e.points, 0);
+  const completedCount = exercises.filter((e) => e.completed).length;
+  const passedCount = exercises.filter((e) => e.passed).length;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -126,7 +144,9 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
               <Code className="h-6 w-6 text-blue-600" />
               Coding Exercises
             </h1>
-            <p className="text-gray-600">Practice your coding skills with hands-on exercises</p>
+            <p className="text-gray-600">
+              Practice your coding skills with hands-on exercises
+            </p>
           </div>
         </div>
       </div>
@@ -185,7 +205,11 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-600" />
             <span className="text-sm font-medium">Status:</span>
-            <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("all")}
+            >
               All
             </Button>
             <Button
@@ -246,9 +270,13 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg">{exercise.title}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">{exercise.description}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {exercise.description}
+                  </p>
                 </div>
-                <Badge className={getDifficultyColor(exercise.difficulty)}>{exercise.difficulty}</Badge>
+                <Badge className={getDifficultyColor(exercise.difficulty)}>
+                  {exercise.difficulty}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -277,7 +305,13 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Best Score</span>
-                    <span className={`font-semibold ${getScoreColor(exercise.bestScore)}`}>{exercise.bestScore}%</span>
+                    <span
+                      className={`font-semibold ${getScoreColor(
+                        exercise.bestScore
+                      )}`}
+                    >
+                      {exercise.bestScore}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {exercise.passed ? (
@@ -286,7 +320,8 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
                       <XCircle className="h-4 w-4 text-red-600" />
                     )}
                     <span className="text-sm text-gray-600">
-                      {exercise.attempts} attempt{exercise.attempts !== 1 ? "s" : ""}
+                      {exercise.attempts} attempt
+                      {exercise.attempts !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -299,10 +334,18 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
               {/* Action Button */}
               <Button
                 className="w-full"
-                onClick={() => onNavigate(routes.courseExercise(courseId, exercise.id))}
-                variant={exercise.completed && !exercise.passed ? "outline" : "default"}
+                onClick={() =>
+                  onNavigate(routes.courseExercise(courseId, exercise.id))
+                }
+                variant={
+                  exercise.completed && !exercise.passed ? "outline" : "default"
+                }
               >
-                {exercise.completed ? (exercise.passed ? "Review Solution" : "Try Again") : "Start Exercise"}
+                {exercise.completed
+                  ? exercise.passed
+                    ? "Review Solution"
+                    : "Try Again"
+                  : "Start Exercise"}
               </Button>
             </CardContent>
           </Card>
@@ -313,11 +356,15 @@ export function CourseExercisesPage({ courseId, onNavigate }: CourseExercisesPag
         <Card>
           <CardContent className="text-center py-8">
             <Code className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">No exercises found</h3>
-            <p className="text-gray-500">No exercises match your current filters.</p>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              No exercises found
+            </h3>
+            <p className="text-gray-500">
+              No exercises match your current filters.
+            </p>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

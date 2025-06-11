@@ -1,322 +1,437 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { MessageSquare, Users, Trophy, TrendingUp, Heart, Share2, BookOpen, Code, Zap } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Users,
+  MessageSquare,
+  Heart,
+  Share,
+  Plus,
+  Search,
+  TrendingUp,
+  Award,
+  Calendar,
+  ExternalLink,
+} from "lucide-react";
 
-interface CommunityPageProps {
-  onNavigate: (path: string) => void
-}
-
-export function CommunityPage({ onNavigate }: CommunityPageProps) {
-  const [activeTab, setActiveTab] = useState("discussions")
-
-  const discussions = [
+export function CommunityPage() {
+  const posts = [
     {
       id: 1,
-      title: "Best practices for Node.js authentication",
       author: "Sarah Chen",
-      avatar: "/placeholder-user.jpg",
-      replies: 23,
-      likes: 45,
-      category: "Backend",
-      timeAgo: "2 hours ago",
-      isHot: true,
+      avatar: "/placeholder.svg?height=40&width=40",
+      title: "Just completed my first microservices project!",
+      content:
+        "After 3 weeks of hard work, I finally deployed my e-commerce microservices architecture. The journey was challenging but incredibly rewarding. Thanks to everyone who helped me debug the Docker issues! 🚀",
+      timestamp: "2 hours ago",
+      likes: 24,
+      comments: 8,
+      tags: ["microservices", "docker", "achievement"],
     },
     {
       id: 2,
-      title: "How to optimize React performance?",
-      author: "Mike Johnson",
-      avatar: "/placeholder-user.jpg",
-      replies: 18,
-      likes: 32,
-      category: "Frontend",
-      timeAgo: "4 hours ago",
-      isHot: false,
+      author: "Mike Rodriguez",
+      avatar: "/placeholder.svg?height=40&width=40",
+      title: "Database optimization tips that saved me 70% query time",
+      content:
+        "Here are 5 database optimization techniques I learned this week:\n\n1. Proper indexing strategy\n2. Query plan analysis\n3. Connection pooling\n4. Caching layer implementation\n5. Database partitioning\n\nWould love to hear your experiences!",
+      timestamp: "5 hours ago",
+      likes: 45,
+      comments: 12,
+      tags: ["database", "optimization", "tips"],
     },
     {
       id: 3,
-      title: "Database design patterns for scalable apps",
-      author: "Alex Rodriguez",
-      avatar: "/placeholder-user.jpg",
-      replies: 31,
-      likes: 67,
-      category: "Database",
-      timeAgo: "6 hours ago",
-      isHot: true,
+      author: "Emily Johnson",
+      avatar: "/placeholder.svg?height=40&width=40",
+      title: "Looking for study buddy for System Design interviews",
+      content:
+        "Hey everyone! I'm preparing for system design interviews and would love to find a study partner. We could practice mock interviews together and share resources. DM me if interested!",
+      timestamp: "1 day ago",
+      likes: 18,
+      comments: 15,
+      tags: ["study-group", "interviews", "system-design"],
     },
-  ]
-
-  const leaderboard = [
-    { rank: 1, name: "Emma Wilson", points: 2450, avatar: "/placeholder-user.jpg", badge: "Expert" },
-    { rank: 2, name: "David Kim", points: 2180, avatar: "/placeholder-user.jpg", badge: "Pro" },
-    { rank: 3, name: "Lisa Zhang", points: 1920, avatar: "/placeholder-user.jpg", badge: "Advanced" },
-    { rank: 4, name: "John Doe", points: 1750, avatar: "/placeholder-user.jpg", badge: "Intermediate" },
-    { rank: 5, name: "Maria Garcia", points: 1680, avatar: "/placeholder-user.jpg", badge: "Intermediate" },
-  ]
+  ];
 
   const events = [
     {
       id: 1,
-      title: "Weekly Code Review Session",
+      title: "Backend Architecture Workshop",
       date: "Dec 15, 2024",
       time: "2:00 PM EST",
-      participants: 45,
-      type: "Live Session",
-    },
-    {
-      id: 2,
-      title: "Backend Architecture Workshop",
-      date: "Dec 18, 2024",
-      time: "6:00 PM EST",
-      participants: 32,
+      attendees: 45,
       type: "Workshop",
     },
     {
-      id: 3,
-      title: "Monthly Coding Challenge",
-      date: "Dec 20, 2024",
-      time: "All Day",
-      participants: 128,
-      type: "Challenge",
+      id: 2,
+      title: "Mock Interview Session",
+      date: "Dec 18, 2024",
+      time: "6:00 PM EST",
+      attendees: 12,
+      type: "Practice",
     },
-  ]
+    {
+      id: 3,
+      title: "Node.js Best Practices Webinar",
+      date: "Dec 20, 2024",
+      time: "1:00 PM EST",
+      attendees: 78,
+      type: "Webinar",
+    },
+  ];
+
+  const leaderboard = [
+    { rank: 1, name: "Alex Chen", points: 2450, badge: "🏆" },
+    { rank: 2, name: "Sarah Johnson", points: 2380, badge: "🥈" },
+    { rank: 3, name: "Mike Rodriguez", points: 2250, badge: "🥉" },
+    { rank: 4, name: "Emily Davis", points: 2100, badge: "" },
+    { rank: 5, name: "John Smith", points: 1950, badge: "" },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex- space-y-6 w-full">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Community</h1>
-          <p className="text-muted-foreground">Connect, learn, and grow with fellow developers</p>
+          <h1 className="text-3xl font-bold tracking-tight">Community</h1>
+          <p className="text-muted-foreground">
+            Connect with fellow backend engineers, share knowledge, and grow
+            together
+          </p>
         </div>
-        <Button onClick={() => onNavigate("/dashboard/community/new-post")}>
-          <MessageSquare className="mr-2 h-4 w-4" />
-          New Post
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            24 Online
+          </Badge>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Post
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">12.5K</p>
-                <p className="text-sm text-muted-foreground">Active Members</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2,847</div>
+            <p className="text-xs text-muted-foreground">+127 this month</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">3.2K</p>
-                <p className="text-sm text-muted-foreground">Discussions</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Discussions
+            </CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">156</div>
+            <p className="text-xs text-muted-foreground">+23 today</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Trophy className="h-8 w-8 text-yellow-600" />
-              <div>
-                <p className="text-2xl font-bold">856</p>
-                <p className="text-sm text-muted-foreground">Solutions</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Knowledge Shared
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,234</div>
+            <p className="text-xs text-muted-foreground">Posts & answers</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-8 w-8 text-purple-600" />
-              <div>
-                <p className="text-2xl font-bold">94%</p>
-                <p className="text-sm text-muted-foreground">Help Rate</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Success Stories
+            </CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">89</div>
+            <p className="text-xs text-muted-foreground">Job placements</p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="discussions">Discussions</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-        </TabsList>
+      {/* Main Content */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Feed */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs defaultValue="feed" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="feed">Latest</TabsTrigger>
+              <TabsTrigger value="trending">Trending</TabsTrigger>
+              <TabsTrigger value="questions">Questions</TabsTrigger>
+              <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="discussions" className="space-y-4">
-          <div className="flex space-x-4">
-            <Input placeholder="Search discussions..." className="flex-1" />
-            <Button variant="outline">Filter</Button>
-          </div>
-
-          <div className="space-y-4">
-            {discussions.map((discussion) => (
-              <Card key={discussion.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        {discussion.isHot && (
-                          <Badge variant="destructive" className="text-xs">
-                            <Zap className="mr-1 h-3 w-3" />
-                            Hot
+            <TabsContent value="feed" className="space-y-4">
+              {/* Create Post */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex gap-3">
+                    <Avatar>
+                      <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-3">
+                      <Textarea placeholder="Share your backend engineering journey, ask questions, or help others..." />
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-2">
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
+                            #question
                           </Badge>
-                        )}
-                        <Badge variant="secondary">{discussion.category}</Badge>
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">{discussion.title}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={discussion.avatar || "/placeholder.svg"} />
-                            <AvatarFallback>{discussion.author[0]}</AvatarFallback>
-                          </Avatar>
-                          <span>{discussion.author}</span>
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
+                            #achievement
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
+                            #help
+                          </Badge>
                         </div>
-                        <span>{discussion.timeAgo}</span>
+                        <Button>Post</Button>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{discussion.replies}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Heart className="h-4 w-4" />
-                        <span>{discussion.likes}</span>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </TabsContent>
 
-        <TabsContent value="leaderboard" className="space-y-4">
+              {/* Posts */}
+              {posts.map((post) => (
+                <Card key={post.id}>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar>
+                          <AvatarImage
+                            src={post.avatar || "/placeholder.svg"}
+                          />
+                          <AvatarFallback>
+                            {post.author
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{post.author}</h3>
+                            <span className="text-sm text-muted-foreground">
+                              {post.timestamp}
+                            </span>
+                          </div>
+                          <h4 className="font-medium mt-1">{post.title}</h4>
+                        </div>
+                      </div>
+
+                      <div className="pl-12">
+                        <p className="text-sm whitespace-pre-line">
+                          {post.content}
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {post.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+                          <Button variant="ghost" size="sm">
+                            <Heart className="mr-2 h-4 w-4" />
+                            {post.likes}
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            {post.comments}
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Share className="mr-2 h-4 w-4" />
+                            Share
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="trending">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">
+                    Trending posts will appear here
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="questions">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">
+                    Community questions will appear here
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="achievements">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">
+                    Member achievements will appear here
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Search */}
           <Card>
-            <CardHeader>
-              <CardTitle>Top Contributors This Month</CardTitle>
-              <CardDescription>Community members making the biggest impact</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {leaderboard.map((member) => (
-                  <div key={member.rank} className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
-                        {member.rank}
-                      </div>
-                      <Avatar>
-                        <AvatarImage src={member.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">{member.name}</p>
-                        <Badge variant="outline">{member.badge}</Badge>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{member.points.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">points</p>
-                    </div>
-                  </div>
-                ))}
+            <CardContent className="pt-6">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search community..." className="pl-8" />
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="events" className="space-y-4">
-          <div className="grid gap-4">
-            {events.map((event) => (
-              <Card key={event.id}>
-                <CardContent className="p-6">
+          {/* Upcoming Events */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Upcoming Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {events.map((event) => (
+                <div key={event.id} className="space-y-2 p-3 border rounded-lg">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{event.title}</h3>
-                      <p className="text-muted-foreground">
-                        {event.date} at {event.time}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Badge>{event.type}</Badge>
-                        <span className="text-sm text-muted-foreground">{event.participants} participants</span>
-                      </div>
-                    </div>
-                    <Button>Join Event</Button>
+                    <Badge variant="outline">{event.type}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {event.attendees} attending
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="resources" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5" />
-                  <span>Study Guides</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button variant="ghost" className="w-full justify-start">
-                    JavaScript Interview Prep
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    System Design Basics
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    Database Optimization
+                  <h4 className="font-medium text-sm">{event.title}</h4>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {event.date} at {event.time}
+                  </div>
+                  <Button size="sm" className="w-full">
+                    Join Event
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Code className="h-5 w-5" />
-                  <span>Code Templates</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button variant="ghost" className="w-full justify-start">
-                    React Component Boilerplate
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    Node.js API Starter
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    Database Schema Templates
-                  </Button>
+          {/* Community Leaderboard */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Top Contributors
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {leaderboard.map((member) => (
+                <div
+                  key={member.rank}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium w-6">
+                      {member.badge || `#${member.rank}`}
+                    </span>
+                    <span className="text-sm">{member.name}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {member.points} pts
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Quick Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Links</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Community Guidelines
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Discord Server
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                GitHub Repository
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Resource Library
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
