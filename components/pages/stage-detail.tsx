@@ -42,6 +42,8 @@ export function StageDetailPage({
   const land = getLandById(landId);
   const stage = getStageById(landId, stageId);
 
+  console.log(land, stage, stageId);
+
   if (!land || !stage) {
     return (
       <div className="flex-1 p-6 flex flex-col items-center justify-center">

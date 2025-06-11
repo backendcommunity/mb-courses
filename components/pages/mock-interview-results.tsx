@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Trophy,
   TrendingUp,
@@ -16,16 +22,21 @@ import {
   Target,
   CheckCircle,
   AlertCircle,
-} from "lucide-react"
-import { getMockInterviewById } from "@/lib/mock-interview-data"
+} from "lucide-react";
+import { getMockInterviewById } from "@/lib/mock-interview-data";
 
 interface MockInterviewResultsProps {
-  interviewId: string
-  onNavigate: (path: string) => void
+  interviewId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterviewResultsProps) {
-  const interview = getMockInterviewById(interviewId)
+export function MockInterviewResultsPage({
+  interviewId,
+  onNavigate,
+}: MockInterviewResultsProps) {
+  const interview = getMockInterviewById(interviewId);
+
+  console.log(interview, interviewId);
 
   if (!interview || !interview.feedback) {
     return (
@@ -36,26 +47,26 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const { feedback } = interview
+  const { feedback } = interview;
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
       case "A+":
       case "A":
-        return "text-green-600"
+        return "text-green-600";
       case "B+":
       case "B":
-        return "text-blue-600"
+        return "text-blue-600";
       case "C+":
       case "C":
-        return "text-yellow-600"
+        return "text-yellow-600";
       default:
-        return "text-red-600"
+        return "text-red-600";
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -64,7 +75,8 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
         <div>
           <h1 className="text-3xl font-bold">Interview Results</h1>
           <p className="text-muted-foreground">
-            {interview.type.title} • {new Date(interview.scheduledDate).toLocaleDateString()}
+            {interview.type.title} •{" "}
+            {new Date(interview.scheduledDate).toLocaleDateString()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -76,7 +88,9 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button onClick={() => onNavigate("/dashboard/mock-interviews")}>Back to Interviews</Button>
+          <Button onClick={() => onNavigate("/dashboard/mock-interviews")}>
+            Back to Interviews
+          </Button>
         </div>
       </div>
 
@@ -85,17 +99,26 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="text-center">
-              <div className={`text-6xl font-bold ${getGradeColor(feedback.grade)}`}>{feedback.grade}</div>
+              <div
+                className={`text-6xl font-bold ${getGradeColor(
+                  feedback.grade
+                )}`}
+              >
+                {feedback.grade}
+              </div>
               <p className="text-sm text-muted-foreground">Overall Grade</p>
             </div>
             <div className="text-center">
-              <div className="text-6xl font-bold text-primary">{feedback.overallScore}</div>
+              <div className="text-6xl font-bold text-primary">
+                {feedback.overallScore}
+              </div>
               <p className="text-sm text-muted-foreground">Score</p>
             </div>
           </div>
           <CardTitle className="text-2xl">Excellent Performance!</CardTitle>
           <CardDescription>
-            You demonstrated strong technical skills and clear communication throughout the interview.
+            You demonstrated strong technical skills and clear communication
+            throughout the interview.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -104,7 +127,9 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Technical Skills</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Technical Skills
+            </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -118,17 +143,23 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{feedback.communicationScore}%</div>
+            <div className="text-2xl font-bold">
+              {feedback.communicationScore}%
+            </div>
             <Progress value={feedback.communicationScore} className="mt-2" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Problem Solving</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Problem Solving
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{feedback.problemSolvingScore}%</div>
+            <div className="text-2xl font-bold">
+              {feedback.problemSolvingScore}%
+            </div>
             <Progress value={feedback.problemSolvingScore} className="mt-2" />
           </CardContent>
         </Card>
@@ -148,10 +179,18 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
               <Card key={analysis.questionId}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Question {index + 1}</CardTitle>
+                    <CardTitle className="text-lg">
+                      Question {index + 1}
+                    </CardTitle>
                     <div className="flex items-center gap-2">
                       <Badge
-                        variant={analysis.score >= 80 ? "default" : analysis.score >= 60 ? "secondary" : "destructive"}
+                        variant={
+                          analysis.score >= 80
+                            ? "default"
+                            : analysis.score >= 60
+                            ? "secondary"
+                            : "destructive"
+                        }
                       >
                         {analysis.score}%
                       </Badge>
@@ -167,7 +206,9 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
                 <CardContent className="space-y-3">
                   <div>
                     <h4 className="font-medium mb-2">Your Answer:</h4>
-                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded">{analysis.userAnswer}</p>
+                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                      {analysis.userAnswer}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-medium mb-2">Feedback:</h4>
@@ -228,14 +269,22 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
                 <MessageSquare className="h-5 w-5" />
                 Interview Transcript
               </CardTitle>
-              <CardDescription>Complete conversation log from your interview session</CardDescription>
+              <CardDescription>
+                Complete conversation log from your interview session
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {feedback.transcript.map((entry, index) => (
                   <div key={index} className="flex gap-3">
                     <div className="flex-shrink-0">
-                      <Badge variant={entry.speaker === "interviewer" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          entry.speaker === "interviewer"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
                         {entry.speaker === "interviewer" ? "AI" : "You"}
                       </Badge>
                     </div>
@@ -261,18 +310,25 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
                     <BookOpen className="h-5 w-5" />
                     {recommendation.title}
                   </CardTitle>
-                  <CardDescription>{recommendation.description}</CardDescription>
+                  <CardDescription>
+                    {recommendation.description}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <h4 className="font-medium">Recommended Resources:</h4>
                     <ul className="space-y-1">
-                      {recommendation.resources.map((resource, resourceIndex) => (
-                        <li key={resourceIndex} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                          <span className="text-sm">{resource}</span>
-                        </li>
-                      ))}
+                      {recommendation.resources.map(
+                        (resource, resourceIndex) => (
+                          <li
+                            key={resourceIndex}
+                            className="flex items-center gap-2"
+                          >
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            <span className="text-sm">{resource}</span>
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 </CardContent>
@@ -289,14 +345,17 @@ export function MockInterviewResultsPage({ interviewId, onNavigate }: MockInterv
             <Trophy className="h-4 w-4 mr-2" />
             Book Another Interview
           </Button>
-          <Button variant="outline" onClick={() => onNavigate("/dashboard/courses")}>
+          <Button
+            variant="outline"
+            onClick={() => onNavigate("/dashboard/courses")}
+          >
             <BookOpen className="h-4 w-4 mr-2" />
             Explore Courses
           </Button>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default MockInterviewResultsPage
+export default MockInterviewResultsPage;

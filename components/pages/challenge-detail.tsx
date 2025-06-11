@@ -58,7 +58,7 @@ export function ChallengeDetailPage({
 
   const land = getLandById(landId);
   const stage = getStageById(landId, stageId);
-  const challenge = getChallengeById(landId, stageId, challengeId);
+  const challenge: any = getChallengeById(landId, stageId, challengeId);
 
   const handleUseHintEffect = useCallback(() => {
     if (usedHintId) {
@@ -149,7 +149,7 @@ export function ChallengeDetailPage({
                 "Handle edge cases appropriately",
                 "Ensure all test cases pass",
               ],
-              testCases: challenge.testCases || [
+              testCases: challenge?.testCases || [
                 {
                   input: "5",
                   expectedOutput: "25",
@@ -157,7 +157,7 @@ export function ChallengeDetailPage({
                 },
               ],
               starterCode:
-                challenge.starterCode ||
+                challenge?.starterCode ||
                 `function solution(input) {
   // Your code here
   return input;
@@ -293,7 +293,7 @@ export function ChallengeDetailPage({
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {/* Hints */}
-            {challenge.hints.map((hint, index) => (
+            {challenge.hints.map((hint: any, index: any) => (
               <Button
                 key={hint.id}
                 variant="outline"
@@ -377,13 +377,13 @@ export function ChallengeDetailPage({
           </div>
 
           {/* Show used hints */}
-          {challenge.hints.some((hint) => hint.used) && (
+          {challenge.hints.some((hint: any) => hint.used) && (
             <div className="mt-4 space-y-2">
               <Separator />
               <h4 className="font-medium text-sm">Used Hints:</h4>
               {challenge.hints
-                .filter((hint) => hint.used)
-                .map((hint, index) => (
+                .filter((hint: any) => hint.used)
+                .map((hint: any, index: any) => (
                   <div key={hint.id} className="p-2 bg-muted rounded text-sm">
                     <strong>Hint {index + 1}:</strong> {hint.content}
                   </div>
