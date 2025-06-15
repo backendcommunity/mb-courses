@@ -125,7 +125,7 @@ export function StageDetailPage({
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">Total XP</span>
+              <span className="text-sm font-medium">Total MB</span>
             </div>
             <p className="text-2xl font-bold mt-1">
               {stage.totalXP.toLocaleString()}
@@ -183,9 +183,9 @@ export function StageDetailPage({
             </div>
             <Progress value={stage.progress} className="h-3" />
             <div className="flex justify-between text-sm text-blue-100">
-              <span>{stage.completedXP.toLocaleString()} XP earned</span>
+              <span>{stage.completedXP.toLocaleString()} MB earned</span>
               <span>
-                {(stage.totalXP - stage.completedXP).toLocaleString()} XP
+                {(stage.totalXP - stage.completedXP).toLocaleString()} MB
                 remaining
               </span>
             </div>
@@ -225,7 +225,7 @@ export function StageDetailPage({
                 <div className="flex items-center gap-1">
                   <Zap className="h-4 w-4 text-[#F2C94C]" />
                   <span className="text-sm font-medium">
-                    {challenge.xpReward.toLocaleString()} XP
+                    {challenge.xpReward.toLocaleString()} MB
                   </span>
                 </div>
               </div>
@@ -295,7 +295,7 @@ export function StageDetailPage({
           <CardContent>
             <p className="text-green-600 mb-4">
               Congratulations! You've completed all challenges in this stage and
-              earned {stage.totalXP.toLocaleString()} XP.
+              earned {stage.totalXP.toLocaleString()} MB.
             </p>
             <div className="flex gap-2">
               <Button onClick={() => onNavigate(routes.landDetail(landId))}>

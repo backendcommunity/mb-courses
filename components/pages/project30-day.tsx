@@ -247,7 +247,7 @@ server.listen(PORT, () => {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">XP Reward</span>
+              <span className="text-sm font-medium">MB Reward</span>
             </div>
             <p className="text-2xl font-bold mt-1">{projectData.xpReward}</p>
           </CardContent>
@@ -583,7 +583,7 @@ server.listen(PORT, () => {
                     Submit Your Project
                   </CardTitle>
                   <CardDescription>
-                    Share your completed project to earn XP and maintain your
+                    Share your completed project to earn MB and maintain your
                     streak
                   </CardDescription>
                 </CardHeader>

@@ -136,14 +136,14 @@ export const routes = {
   checkout: (type: string, planId: string) =>
     `/dashboard/checkout?type=${type}&plan=${planId}`,
 
-  // XP Store & Redemption
+  // MB Store & Redemption
   xpStore: "/dashboard/xp-store",
   xpRedeem: (category: string, itemId: string) =>
     `/dashboard/xp-store/redeem?category=${category}&item=${itemId}`,
   xpHistory: "/dashboard/xp-store/history",
 
   // Auth
-  logout: "/logout",
+  logout: "/auth/login",
 };
 
 // Helper function to check if a path matches a route pattern

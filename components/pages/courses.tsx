@@ -109,7 +109,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   };
 
   const getXPCost = (price: number) => {
-    return Math.round(price * 50); // 1 dollar = 50 XP
+    return Math.round(price * 50); // 1 dollar = 50 MB
   };
 
   return (
@@ -427,19 +427,19 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                                 <Gift className="h-6 w-6 md:h-8 md:w-8 text-[#EB5757] flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <h3 className="font-semibold text-sm md:text-base">
-                                    Redeem with XP
+                                    Redeem with MB
                                   </h3>
                                   <p className="text-xs md:text-sm text-muted-foreground">
-                                    Use your earned XP points
+                                    Use your earned MB points
                                   </p>
                                 </div>
                                 <div className="text-right">
                                   <div className="font-bold text-sm md:text-base">
-                                    {xpCost.toLocaleString()} XP
+                                    {xpCost.toLocaleString()} MB
                                   </div>
                                   <div className="text-xs text-muted-foreground">
                                     Balance:{" "}
-                                    {subscription.xpBalance.toLocaleString()} XP
+                                    {subscription.xpBalance.toLocaleString()} MB
                                   </div>
                                 </div>
                               </div>

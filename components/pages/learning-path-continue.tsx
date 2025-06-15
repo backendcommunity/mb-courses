@@ -372,9 +372,9 @@ export function LearningPathContinuePage({
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="h-8 w-8 mx-auto mb-2 rounded-full bg-[#13AECE] text-white flex items-center justify-center text-sm font-bold">
-                    XP
+                    MB
                   </div>
-                  <h3 className="font-medium">500 XP</h3>
+                  <h3 className="font-medium">500 MB</h3>
                   <p className="text-sm text-muted-foreground">
                     Experience points for completion
                   </p>

@@ -64,7 +64,7 @@ export function ChallengeDetailPage({
     if (usedHintId) {
       const cost = useHint(landId, stageId, challengeId, usedHintId);
       setXpCost(cost);
-      console.log(`Used hint, lost ${cost} XP`);
+      console.log(`Used hint, lost ${cost} MB`);
       setUsedHintId(null);
     }
   }, [usedHintId, landId, stageId, challengeId]);
@@ -94,8 +94,8 @@ export function ChallengeDetailPage({
 
   const handleCompleteChallenge = () => {
     const xpEarned = completeChallenge(landId, stageId, challengeId);
-    // In a real app, you'd update the user's XP here
-    console.log(`Challenge completed! Earned ${xpEarned} XP`);
+    // In a real app, you'd update the user's MB here
+    console.log(`Challenge completed! Earned ${xpEarned} MB`);
   };
 
   const handleAskKap = async () => {
@@ -105,11 +105,11 @@ export function ChallengeDetailPage({
     // Simulate AI response
     setTimeout(() => {
       setKapResponse(
-        `Here's a hint for your question: "${kapQuestion}"\n\nBased on the challenge context, I suggest breaking down the problem into smaller steps. Remember to consider edge cases and test your solution thoroughly. This hint cost you 100 XP, but it should help you move forward!`
+        `Here's a hint for your question: "${kapQuestion}"\n\nBased on the challenge context, I suggest breaking down the problem into smaller steps. Remember to consider edge cases and test your solution thoroughly. This hint cost you 100 MB, but it should help you move forward!`
       );
       setIsLoadingKap(false);
-      // Deduct XP for using Kap
-      console.log("Used Kap AI assistant, lost 100 XP");
+      // Deduct MB for using Kap
+      console.log("Used Kap AI assistant, lost 100 MB");
     }, 2000);
   };
 
@@ -231,7 +231,7 @@ export function ChallengeDetailPage({
           <div className="flex items-center gap-1">
             <Zap className="h-4 w-4 text-[#F2C94C]" />
             <span className="text-sm font-medium">
-              {challenge.xpReward.toLocaleString()} XP
+              {challenge.xpReward.toLocaleString()} MB
             </span>
           </div>
           {challenge.completed && (
@@ -246,7 +246,7 @@ export function ChallengeDetailPage({
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">XP Reward</span>
+              <span className="text-sm font-medium">MB Reward</span>
             </div>
             <p className="text-2xl font-bold mt-1">
               {challenge.xpReward.toLocaleString()}
@@ -305,7 +305,7 @@ export function ChallengeDetailPage({
                 <Lightbulb className="h-3 w-3" />
                 {hint.used
                   ? `Hint ${index + 1} (Used)`
-                  : `Hint ${index + 1} (-${hint.xpCost} XP)`}
+                  : `Hint ${index + 1} (-${hint.xpCost} MB)`}
               </Button>
             ))}
 
@@ -318,7 +318,7 @@ export function ChallengeDetailPage({
                   className="flex items-center gap-1"
                 >
                   <Star className="h-3 w-3" />
-                  Ask Kap (-100 XP)
+                  Ask Kap (-100 MB)
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
@@ -329,7 +329,7 @@ export function ChallengeDetailPage({
                   </DialogTitle>
                   <DialogDescription>
                     Get personalized help from our AI assistant. This will cost
-                    you 100 XP.
+                    you 100 MB.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">

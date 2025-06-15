@@ -1,15 +1,21 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Medal, Trophy, Award, ArrowLeft } from "lucide-react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Medal, Trophy, Award, ArrowLeft } from "lucide-react";
 
 interface Project30LeaderboardPageProps {
-  courseId?: string
-  onNavigate: (path: string) => void
+  courseId?: string;
+  onNavigate: (path: string) => void;
 }
 
 export function Project30LeaderboardPage({
@@ -18,8 +24,22 @@ export function Project30LeaderboardPage({
 }: Project30LeaderboardPageProps) {
   // Mock leaderboard data
   const topUsers = [
-    { id: 1, name: "Sarah Johnson", avatar: "/placeholder.svg?height=40&width=40", projects: 30, streak: 30, xp: 9500 },
-    { id: 2, name: "Michael Chen", avatar: "/placeholder.svg?height=40&width=40", projects: 30, streak: 28, xp: 9200 },
+    {
+      id: 1,
+      name: "Sarah Johnson",
+      avatar: "/placeholder.svg?height=40&width=40",
+      projects: 30,
+      streak: 30,
+      xp: 9500,
+    },
+    {
+      id: 2,
+      name: "Michael Chen",
+      avatar: "/placeholder.svg?height=40&width=40",
+      projects: 30,
+      streak: 28,
+      xp: 9200,
+    },
     {
       id: 3,
       name: "Jessica Williams",
@@ -28,7 +48,7 @@ export function Project30LeaderboardPage({
       streak: 29,
       xp: 8900,
     },
-  ]
+  ];
 
   const leaderboardUsers = [
     {
@@ -94,7 +114,7 @@ export function Project30LeaderboardPage({
       xp: 7600,
       rank: 10,
     },
-  ]
+  ];
 
   const currentUser = {
     id: 42,
@@ -104,22 +124,40 @@ export function Project30LeaderboardPage({
     streak: 15,
     xp: 7500,
     rank: 42,
-  }
+  };
 
   const achievements = [
-    { name: "30-Day Champion", description: "Complete all 30 projects", count: 24 },
-    { name: "Perfect Streak", description: "Maintain a 30-day streak", count: 18 },
-    { name: "Code Master", description: "Earn 10,000+ XP", count: 12 },
-    { name: "Community Helper", description: "Help 50+ community members", count: 35 },
-    { name: "Speed Coder", description: "Complete 5 projects in under 2 hours each", count: 42 },
-  ]
+    {
+      name: "30-Day Champion",
+      description: "Complete all 30 projects",
+      count: 24,
+    },
+    {
+      name: "Perfect Streak",
+      description: "Maintain a 30-day streak",
+      count: 18,
+    },
+    { name: "Code Master", description: "Earn 10,000+ MB", count: 12 },
+    {
+      name: "Community Helper",
+      description: "Help 50+ community members",
+      count: 35,
+    },
+    {
+      name: "Speed Coder",
+      description: "Complete 5 projects in under 2 hours each",
+      count: 42,
+    },
+  ];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Project30 Leaderboard</h1>
-          <p className="text-muted-foreground">See how you rank against other participants</p>
+          <p className="text-muted-foreground">
+            See how you rank against other participants
+          </p>
         </div>
         <Button
           variant="outline"
@@ -146,14 +184,19 @@ export function Project30LeaderboardPage({
               </CardHeader>
               <CardContent className="text-center pt-0">
                 <Avatar className="h-16 w-16 mx-auto mb-2">
-                  <AvatarImage src={topUsers[1].avatar || "/placeholder.svg"} alt={topUsers[1].name} />
-                  <AvatarFallback>{topUsers[1].name.substring(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={topUsers[1].avatar || "/placeholder.svg"}
+                    alt={topUsers[1].name}
+                  />
+                  <AvatarFallback>
+                    {topUsers[1].name.substring(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
                 <h3 className="font-medium">{topUsers[1].name}</h3>
                 <div className="mt-2 text-sm text-muted-foreground">
                   <div>Projects: {topUsers[1].projects}</div>
                   <div>Streak: {topUsers[1].streak} days</div>
-                  <div>XP: {topUsers[1].xp}</div>
+                  <div>MB: {topUsers[1].xp}</div>
                 </div>
               </CardContent>
             </Card>
@@ -168,16 +211,23 @@ export function Project30LeaderboardPage({
               </CardHeader>
               <CardContent className="text-center pt-0">
                 <Avatar className="h-20 w-20 mx-auto mb-2">
-                  <AvatarImage src={topUsers[0].avatar || "/placeholder.svg"} alt={topUsers[0].name} />
-                  <AvatarFallback>{topUsers[0].name.substring(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={topUsers[0].avatar || "/placeholder.svg"}
+                    alt={topUsers[0].name}
+                  />
+                  <AvatarFallback>
+                    {topUsers[0].name.substring(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
                 <h3 className="font-medium text-lg">{topUsers[0].name}</h3>
                 <div className="mt-2 text-sm text-muted-foreground">
                   <div>Projects: {topUsers[0].projects}</div>
                   <div>Streak: {topUsers[0].streak} days</div>
-                  <div>XP: {topUsers[0].xp}</div>
+                  <div>MB: {topUsers[0].xp}</div>
                 </div>
-                <Badge className="mt-2 bg-amber-400 text-amber-950">Champion</Badge>
+                <Badge className="mt-2 bg-amber-400 text-amber-950">
+                  Champion
+                </Badge>
               </CardContent>
             </Card>
 
@@ -191,14 +241,19 @@ export function Project30LeaderboardPage({
               </CardHeader>
               <CardContent className="text-center pt-0">
                 <Avatar className="h-16 w-16 mx-auto mb-2">
-                  <AvatarImage src={topUsers[2].avatar || "/placeholder.svg"} alt={topUsers[2].name} />
-                  <AvatarFallback>{topUsers[2].name.substring(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={topUsers[2].avatar || "/placeholder.svg"}
+                    alt={topUsers[2].name}
+                  />
+                  <AvatarFallback>
+                    {topUsers[2].name.substring(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
                 <h3 className="font-medium">{topUsers[2].name}</h3>
                 <div className="mt-2 text-sm text-muted-foreground">
                   <div>Projects: {topUsers[2].projects}</div>
                   <div>Streak: {topUsers[2].streak} days</div>
-                  <div>XP: {topUsers[2].xp}</div>
+                  <div>MB: {topUsers[2].xp}</div>
                 </div>
               </CardContent>
             </Card>
@@ -217,7 +272,9 @@ export function Project30LeaderboardPage({
           <Card>
             <CardHeader>
               <CardTitle>Leaderboard Rankings</CardTitle>
-              <CardDescription>Based on projects completed, streaks, and XP earned</CardDescription>
+              <CardDescription>
+                Based on projects completed, streaks, and MB earned
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -228,22 +285,34 @@ export function Project30LeaderboardPage({
                     <div className="col-span-5">User</div>
                     <div className="col-span-2 text-center">Projects</div>
                     <div className="col-span-2 text-center">Streak</div>
-                    <div className="col-span-2 text-center">XP</div>
+                    <div className="col-span-2 text-center">MB</div>
                   </div>
 
                   {/* Leaderboard Entries */}
                   {leaderboardUsers.map((user) => (
-                    <div key={user.id} className="grid grid-cols-12 gap-2 p-4 border-b">
+                    <div
+                      key={user.id}
+                      className="grid grid-cols-12 gap-2 p-4 border-b"
+                    >
                       <div className="col-span-1 font-medium">#{user.rank}</div>
                       <div className="col-span-5 flex items-center gap-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                          <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                          <AvatarImage
+                            src={user.avatar || "/placeholder.svg"}
+                            alt={user.name}
+                          />
+                          <AvatarFallback>
+                            {user.name.substring(0, 2)}
+                          </AvatarFallback>
                         </Avatar>
                         <span>{user.name}</span>
                       </div>
-                      <div className="col-span-2 text-center">{user.projects}</div>
-                      <div className="col-span-2 text-center">{user.streak} days</div>
+                      <div className="col-span-2 text-center">
+                        {user.projects}
+                      </div>
+                      <div className="col-span-2 text-center">
+                        {user.streak} days
+                      </div>
                       <div className="col-span-2 text-center">{user.xp}</div>
                     </div>
                   ))}
@@ -255,17 +324,30 @@ export function Project30LeaderboardPage({
 
                   {/* Current User */}
                   <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50">
-                    <div className="col-span-1 font-medium">#{currentUser.rank}</div>
+                    <div className="col-span-1 font-medium">
+                      #{currentUser.rank}
+                    </div>
                     <div className="col-span-5 flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={currentUser.avatar || "/placeholder.svg"} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.substring(0, 2)}</AvatarFallback>
+                        <AvatarImage
+                          src={currentUser.avatar || "/placeholder.svg"}
+                          alt={currentUser.name}
+                        />
+                        <AvatarFallback>
+                          {currentUser.name.substring(0, 2)}
+                        </AvatarFallback>
                       </Avatar>
                       <span className="font-medium">{currentUser.name}</span>
                     </div>
-                    <div className="col-span-2 text-center">{currentUser.projects}</div>
-                    <div className="col-span-2 text-center">{currentUser.streak} days</div>
-                    <div className="col-span-2 text-center">{currentUser.xp}</div>
+                    <div className="col-span-2 text-center">
+                      {currentUser.projects}
+                    </div>
+                    <div className="col-span-2 text-center">
+                      {currentUser.streak} days
+                    </div>
+                    <div className="col-span-2 text-center">
+                      {currentUser.xp}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -281,7 +363,9 @@ export function Project30LeaderboardPage({
             </CardHeader>
             <CardContent>
               <div className="text-center p-8">
-                <p className="text-muted-foreground">Weekly leaderboard resets every Sunday at midnight</p>
+                <p className="text-muted-foreground">
+                  Weekly leaderboard resets every Sunday at midnight
+                </p>
                 <p className="mt-2">Check back for this week's rankings!</p>
               </div>
             </CardContent>
@@ -292,17 +376,24 @@ export function Project30LeaderboardPage({
           <Card>
             <CardHeader>
               <CardTitle>Achievement Leaderboard</CardTitle>
-              <CardDescription>Most prestigious achievements in the community</CardDescription>
+              <CardDescription>
+                Most prestigious achievements in the community
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {achievements.map((achievement) => (
-                  <div key={achievement.name} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={achievement.name}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <Trophy className="h-8 w-8 text-amber-400" />
                       <div>
                         <h4 className="font-medium">{achievement.name}</h4>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {achievement.description}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -317,5 +408,5 @@ export function Project30LeaderboardPage({
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

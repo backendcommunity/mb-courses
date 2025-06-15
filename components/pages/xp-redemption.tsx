@@ -1,20 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Gift, Star, Trophy, Zap, ShoppingCart, Clock, CheckCircle } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Gift,
+  Star,
+  Trophy,
+  Zap,
+  ShoppingCart,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 
 interface XpRedemptionPageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
 export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
-  const [activeTab, setActiveTab] = useState("rewards")
-  const [userXP] = useState(2450)
+  const [activeTab, setActiveTab] = useState("rewards");
+  const [userXP] = useState(2450);
 
   const rewards = [
     {
@@ -67,7 +81,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
       available: false,
       popular: false,
     },
-  ]
+  ];
 
   const recentRedemptions = [
     {
@@ -91,7 +105,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
       date: "2024-12-05",
       status: "Completed",
     },
-  ]
+  ];
 
   const achievements = [
     {
@@ -121,32 +135,40 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
       xpReward: 250,
       unlocked: false,
     },
-  ]
+  ];
 
   const handleRedeem = (rewardId: number, xpCost: number) => {
     if (userXP >= xpCost) {
       // Handle redemption logic
-      console.log(`Redeeming reward ${rewardId} for ${xpCost} XP`)
+      console.log(`Redeeming reward ${rewardId} for ${xpCost} MB`);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">XP Store</h1>
-          <p className="text-muted-foreground">Redeem your XP for amazing rewards</p>
+          <h1 className="text-3xl font-bold">MB Store</h1>
+          <p className="text-muted-foreground">
+            Redeem your MB for amazing rewards
+          </p>
         </div>
         <Card className="p-4">
           <div className="flex items-center space-x-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            <span className="text-2xl font-bold">{userXP.toLocaleString()}</span>
-            <span className="text-muted-foreground">XP</span>
+            <span className="text-2xl font-bold">
+              {userXP.toLocaleString()}
+            </span>
+            <span className="text-muted-foreground">MB</span>
           </div>
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
@@ -156,7 +178,10 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
         <TabsContent value="rewards" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rewards.map((reward) => (
-              <Card key={reward.id} className={`relative ${!reward.available ? "opacity-50" : ""}`}>
+              <Card
+                key={reward.id}
+                className={`relative ${!reward.available ? "opacity-50" : ""}`}
+              >
                 {reward.popular && (
                   <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500">
                     Popular
@@ -189,7 +214,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                           Coming Soon
                         </>
                       ) : userXP < reward.xpCost ? (
-                        `Need ${reward.xpCost - userXP} more XP`
+                        `Need ${reward.xpCost - userXP} more MB`
                       ) : (
                         <>
                           <ShoppingCart className="mr-2 h-4 w-4" />
@@ -212,10 +237,16 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-semibold">{achievement.title}</h3>
-                        {achievement.unlocked && <CheckCircle className="h-5 w-5 text-green-500" />}
+                        <h3 className="text-lg font-semibold">
+                          {achievement.title}
+                        </h3>
+                        {achievement.unlocked && (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        )}
                       </div>
-                      <p className="text-muted-foreground mb-3">{achievement.description}</p>
+                      <p className="text-muted-foreground mb-3">
+                        {achievement.description}
+                      </p>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span>Progress</span>
@@ -223,13 +254,20 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                             {achievement.progress}/{achievement.total}
                           </span>
                         </div>
-                        <Progress value={(achievement.progress / achievement.total) * 100} className="h-2" />
+                        <Progress
+                          value={
+                            (achievement.progress / achievement.total) * 100
+                          }
+                          className="h-2"
+                        />
                       </div>
                     </div>
                     <div className="text-right ml-4">
                       <div className="flex items-center space-x-1 mb-2">
                         <Zap className="h-4 w-4 text-yellow-500" />
-                        <span className="font-bold">{achievement.xpReward}</span>
+                        <span className="font-bold">
+                          {achievement.xpReward}
+                        </span>
                       </div>
                       {achievement.unlocked ? (
                         <Badge variant="default">Completed</Badge>
@@ -248,16 +286,22 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Redemption History</CardTitle>
-              <CardDescription>Your recent XP redemptions and their status</CardDescription>
+              <CardDescription>
+                Your recent MB redemptions and their status
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentRedemptions.map((redemption) => (
-                  <div key={redemption.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={redemption.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div>
                       <h4 className="font-semibold">{redemption.reward}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Redeemed on {new Date(redemption.date).toLocaleDateString()}
+                        Redeemed on{" "}
+                        {new Date(redemption.date).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="text-right">
@@ -270,8 +314,8 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                           redemption.status === "Active"
                             ? "default"
                             : redemption.status === "Completed"
-                              ? "secondary"
-                              : "outline"
+                            ? "secondary"
+                            : "outline"
                         }
                       >
                         {redemption.status}
@@ -285,5 +329,5 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

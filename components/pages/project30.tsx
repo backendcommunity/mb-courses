@@ -725,19 +725,19 @@ export function Project30Page({
                         <Gift className="h-6 w-6 md:h-8 md:w-8 text-[#EB5757] flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm md:text-base">
-                            Redeem with XP
+                            Redeem with MB
                           </h3>
                           <p className="text-xs md:text-sm text-muted-foreground">
-                            Use your earned XP points
+                            Use your earned MB points
                           </p>
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-sm md:text-base">
-                            {getXPCost(project30Data.price).toLocaleString()} XP
+                            {getXPCost(project30Data.price).toLocaleString()} MB
                           </div>
                           <div className="text-xs text-muted-foreground">
                             Balance: {subscription.xpBalance.toLocaleString()}{" "}
-                            XP
+                            MB
                           </div>
                         </div>
                       </div>
@@ -918,7 +918,7 @@ export function Project30Page({
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 md:h-4 md:w-4" />
-                          {dailyLessons[0].xpReward} XP
+                          {dailyLessons[0].xpReward} MB
                         </div>
                       </div>
 
@@ -989,7 +989,7 @@ export function Project30Page({
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 md:h-4 md:w-4" />
-                          {dailyLessons[0].xpReward} XP
+                          {dailyLessons[0].xpReward} MB
                         </div>
                       </div>
 
@@ -1180,7 +1180,7 @@ export function Project30Page({
                   <>
                     <div className="flex items-center justify-between">
                       <span className="text-xs md:text-sm text-muted-foreground">
-                        Total XP Earned
+                        Total MB Earned
                       </span>
                       <span className="font-semibold text-sm md:text-base">
                         {project30Data.totalXP.toLocaleString()}
@@ -1188,7 +1188,7 @@ export function Project30Page({
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs md:text-sm text-muted-foreground">
-                        Average XP/Day
+                        Average MB/Day
                       </span>
                       <span className="font-semibold text-sm md:text-base">
                         {Math.round(
@@ -1225,18 +1225,18 @@ export function Project30Page({
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs md:text-sm text-muted-foreground">
-                        XP Cost
+                        MB Cost
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {getXPCost(project30Data.price).toLocaleString()} XP
+                        {getXPCost(project30Data.price).toLocaleString()} MB
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs md:text-sm text-muted-foreground">
-                        Your XP Balance
+                        Your MB Balance
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {subscription.xpBalance.toLocaleString()} XP
+                        {subscription.xpBalance.toLocaleString()} MB
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1288,7 +1288,7 @@ export function Project30Page({
                               (total, day) => total + day.xpReward,
                               0
                             )}{" "}
-                            XP
+                            MB
                           </Badge>
                         </div>
                       </div>
@@ -1333,7 +1333,7 @@ export function Project30Page({
                                   {day.difficulty}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
-                                  {day.xpReward} XP
+                                  {day.xpReward} MB
                                 </Badge>
                               </div>
                               <h4 className="font-medium text-sm md:text-base">
@@ -1550,7 +1550,7 @@ export function Project30Page({
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-sm md:text-base">
-                            {entry.xp} XP
+                            {entry.xp} MB
                           </p>
                         </div>
                       </div>

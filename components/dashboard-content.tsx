@@ -1,22 +1,40 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { BookOpen, Code2, Trophy, Users, Star, Clock, Award, ArrowRight, Play, CheckCircle, Flame } from "lucide-react"
-import { useAppStore } from "@/lib/store"
-import { routes } from "@/lib/routes"
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  BookOpen,
+  Code2,
+  Trophy,
+  Users,
+  Star,
+  Clock,
+  Award,
+  ArrowRight,
+  Play,
+  CheckCircle,
+  Flame,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 export function DashboardContent() {
-  const router = useRouter()
-  const store = useAppStore()
-  const user = store.getUser()
+  const router = useRouter();
+  const store = useAppStore();
+  const user = store.getUser();
 
   const handleNavigate = (path: string) => {
-    router.push(path)
-  }
+    router.push(path);
+  };
 
   // Mock data for dashboard
   const stats = {
@@ -26,7 +44,7 @@ export function DashboardContent() {
     xpEarned: user.xp,
     currentStreak: 7,
     certificatesEarned: 3,
-  }
+  };
 
   const recentActivity = [
     {
@@ -56,7 +74,7 @@ export function DashboardContent() {
       xp: 100,
       icon: Trophy,
     },
-  ]
+  ];
 
   const quickActions = [
     {
@@ -87,7 +105,7 @@ export function DashboardContent() {
       action: () => handleNavigate(routes.community),
       color: "bg-orange-500",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -95,10 +113,15 @@ export function DashboardContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
-          <p className="text-muted-foreground">Ready to continue your backend engineering journey?</p>
+          <p className="text-muted-foreground">
+            Ready to continue your backend engineering journey?
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10">
+          <Badge
+            variant="outline"
+            className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10"
+          >
             <Flame className="h-3 w-3 mr-1 text-orange-500" />
             {stats.currentStreak} day streak
           </Badge>
@@ -109,20 +132,27 @@ export function DashboardContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Courses Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Courses Progress
+            </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats.coursesCompleted}/{stats.totalCourses}
             </div>
-            <Progress value={(stats.coursesCompleted / stats.totalCourses) * 100} className="mt-2" />
+            <Progress
+              value={(stats.coursesCompleted / stats.totalCourses) * 100}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projects Built</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Projects Built
+            </CardTitle>
             <Code2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -133,12 +163,16 @@ export function DashboardContent() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">XP Earned</CardTitle>
+            <CardTitle className="text-sm font-medium">MB Earned</CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.xpEarned.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Level {user.level} Engineer</p>
+            <div className="text-2xl font-bold">
+              {stats.xpEarned.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Level {user.level} Engineer
+            </p>
           </CardContent>
         </Card>
 
@@ -174,7 +208,9 @@ export function DashboardContent() {
                 </div>
                 <div className="text-center">
                   <div className="font-medium">{action.title}</div>
-                  <div className="text-xs text-muted-foreground">{action.description}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {action.description}
+                  </div>
                 </div>
               </Button>
             ))}
@@ -187,23 +223,32 @@ export function DashboardContent() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest achievements and progress</CardDescription>
+            <CardDescription>
+              Your latest achievements and progress
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg border">
+              <div
+                key={activity.id}
+                className="flex items-center gap-4 p-3 rounded-lg border"
+              >
                 <div className="p-2 rounded-lg bg-primary/10">
                   <activity.icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium">{activity.title}</h4>
-                  <p className="text-sm text-muted-foreground">{activity.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {activity.description}
+                  </p>
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {activity.time}
+                    </span>
                   </div>
                 </div>
-                <Badge variant="secondary">+{activity.xp} XP</Badge>
+                <Badge variant="secondary">+{activity.xp} MB</Badge>
               </div>
             ))}
           </CardContent>
@@ -239,11 +284,16 @@ export function DashboardContent() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-4 w-4 rounded-full border-2 border-muted" />
-                <span className="text-sm text-muted-foreground">Microservices</span>
+                <span className="text-sm text-muted-foreground">
+                  Microservices
+                </span>
               </div>
             </div>
 
-            <Button className="w-full" onClick={() => handleNavigate(routes.paths)}>
+            <Button
+              className="w-full"
+              onClick={() => handleNavigate(routes.paths)}
+            >
               Continue Learning Path
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -251,5 +301,5 @@ export function DashboardContent() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

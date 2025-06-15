@@ -164,14 +164,14 @@ export function DashboardSidebar({
             className="h-2 mb-1"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{user.xp.toLocaleString()} XP</span>
+            <span>{user.xp.toLocaleString()} MB</span>
             <span>
-              {user.xpToNextLevel.toLocaleString()} XP to Level {user.level + 1}
+              {user.xpToNextLevel.toLocaleString()} MB to Level {user.level + 1}
             </span>
           </div>
         </div>
 
-        {/* XP Balance */}
+        {/* MB Balance */}
         <div className="mt-3">
           <Button
             variant="outline"
@@ -181,7 +181,7 @@ export function DashboardSidebar({
             <div className="flex items-center gap-2">
               <Gift className="h-4 w-4 text-primary" />
               <span className="text-primary">
-                {subscription.xpBalance.toLocaleString()} XP
+                {subscription.xpBalance.toLocaleString()} MB
               </span>
             </div>
             <span className="text-xs text-primary">Redeem</span>

@@ -94,7 +94,7 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">Total XP</span>
+              <span className="text-sm font-medium">Total MB</span>
             </div>
             <p className="text-2xl font-bold mt-1">
               {land.totalXP.toLocaleString()}
@@ -173,9 +173,9 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
             </div>
             <Progress value={land.progress} className="h-3" />
             <div className="flex justify-between text-sm text-blue-100">
-              <span>{land.completedXP.toLocaleString()} XP earned</span>
+              <span>{land.completedXP.toLocaleString()} MB earned</span>
               <span>
-                {(land.totalXP - land.completedXP).toLocaleString()} XP
+                {(land.totalXP - land.completedXP).toLocaleString()} MB
                 remaining
               </span>
             </div>
@@ -207,7 +207,7 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                     <div className="flex items-center gap-1">
                       <Zap className="h-4 w-4 text-[#F2C94C]" />
                       <span className="text-sm font-medium">
-                        {stage.totalXP.toLocaleString()} XP
+                        {stage.totalXP.toLocaleString()} MB
                       </span>
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                       <div>
                         <p className="font-medium">{player.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {player.xp.toLocaleString()} XP
+                          {player.xp.toLocaleString()} MB
                         </p>
                       </div>
                     </div>

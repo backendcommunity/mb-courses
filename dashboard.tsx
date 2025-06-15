@@ -86,7 +86,7 @@ export default function Dashboard() {
       return <SettingsPage onNavigate={handleNavigate} />;
     }
 
-    // XP Store
+    // MB Store
     if (pathname === "/dashboard/xp-store") {
       return <XpRedemptionPage onNavigate={handleNavigate} />;
     }
@@ -258,7 +258,6 @@ export default function Dashboard() {
 
     // Roadmaps
     if (pathname === routes.roadmaps) {
-      console.log("asa");
       return <RoadmapsPage onNavigate={handleNavigate} />;
     }
 

@@ -89,7 +89,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">MB Lands</h1>
           <p className="text-muted-foreground">
-            Master programming concepts through gamified challenges and earn XP,
+            Master programming concepts through gamified challenges and earn MB,
             badges, and glory!
           </p>
         </div>
@@ -120,7 +120,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-[#13AECE]" />
-              <span className="text-sm font-medium">Total XP Earned</span>
+              <span className="text-sm font-medium">Total MB Earned</span>
             </div>
             <p className="text-2xl font-bold mt-1">4,000</p>
             <p className="text-xs text-muted-foreground">From challenges</p>
@@ -246,7 +246,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
                   <div className="flex items-center gap-1">
                     <Zap className="h-4 w-4 text-[#F2C94C]" />
                     <span className="text-sm font-medium">
-                      {land.totalXP.toLocaleString()} XP
+                      {land.totalXP.toLocaleString()} MB
                     </span>
                   </div>
                 </div>
@@ -365,7 +365,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
                   <div>
                     <p className="font-medium">{player.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {player.xp.toLocaleString()} XP
+                      {player.xp.toLocaleString()} MB
                     </p>
                   </div>
                 </div>

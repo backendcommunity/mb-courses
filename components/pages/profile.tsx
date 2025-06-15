@@ -116,7 +116,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const stats = [
     { label: "Courses Completed", value: "12", icon: Trophy },
     { label: "Projects Built", value: "8", icon: Award },
-    { label: "Total XP", value: user.xp.toLocaleString(), icon: Star },
+    { label: "Total MB", value: user.xp.toLocaleString(), icon: Star },
     { label: "Learning Streak", value: "15 days", icon: Calendar },
   ];
 
@@ -391,9 +391,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 className="h-3"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{user.xp.toLocaleString()} XP</span>
+                <span>{user.xp.toLocaleString()} MB</span>
                 <span>
-                  {user.xpToNextLevel.toLocaleString()} XP to Level{" "}
+                  {user.xpToNextLevel.toLocaleString()} MB to Level{" "}
                   {user.level + 1}
                 </span>
               </div>

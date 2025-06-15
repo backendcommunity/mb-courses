@@ -12,6 +12,16 @@ export interface User {
   badges: Badge[];
 }
 
+export interface NewUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  subscribe: boolean;
+  signedUpThrough: "MASTERINGBACKEND" | "GOOGLE" | "GITHUB";
+  source?: string;
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -2289,7 +2299,7 @@ export const completeMilestone = (roadmapId: string, milestoneId: string) => {
   }
 };
 
-export const updateUser = (updates: Partial<User>) => {
+export const updateUser = (updates: Partial<User | null>) => {
   Object.assign(dataStore.user, updates);
 };
 
