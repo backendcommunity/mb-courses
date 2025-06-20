@@ -25,6 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { useUser } from "@/hooks/use-user";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -101,8 +102,8 @@ export function DashboardSidebar({
   onNavigate,
   isMobile,
 }: DashboardSidebarProps) {
-  const [mounted, setMounted] = useState(false);
-  const store = useAppStore();
+  const [mounted, setMounted] = useState(true);
+  const user = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -111,8 +112,6 @@ export function DashboardSidebar({
   if (!mounted) {
     return null;
   }
-
-  const user = store.getUser();
 
   // Mock subscription data
   const subscription = {
@@ -147,7 +146,7 @@ export function DashboardSidebar({
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 text-yellow-500" />
             <span className="text-sm font-medium">
-              Level {user.level} Engineer
+              Level {user?.level} Engineer
             </span>
             {subscription.plan !== "Free" && (
               <Badge
@@ -160,13 +159,14 @@ export function DashboardSidebar({
             )}
           </div>
           <Progress
-            value={(user.xp / user.xpToNextLevel) * 100}
+            value={(user?.points / user?.xpToNextLevel) * 100}
             className="h-2 mb-1"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{user.xp.toLocaleString()} MB</span>
+            <span>{user?.points?.toLocaleString()} MB</span>
             <span>
-              {user.xpToNextLevel.toLocaleString()} MB to Level {user.level + 1}
+              {user?.xpToNextLevel?.toLocaleString()} MB to Level{" "}
+              {user?.level + 1}
             </span>
           </div>
         </div>
@@ -273,17 +273,17 @@ export function DashboardSidebar({
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8 border border-border">
               <AvatarImage
-                src={user.avatar || "/placeholder.svg"}
-                alt={user.name}
+                src={user?.avatar || "/placeholder.svg"}
+                alt={user?.name}
               />
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                {user.name.charAt(0)}
+                {user?.name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
+              <span className="truncate font-medium">{user?.name}</span>
               <span className="truncate text-xs text-muted-foreground">
-                {user.email}
+                {user?.email}
               </span>
             </div>
           </div>

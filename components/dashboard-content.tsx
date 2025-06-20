@@ -24,13 +24,12 @@ import {
   CheckCircle,
   Flame,
 } from "lucide-react";
-import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { useUser } from "@/hooks/use-user";
 
 export function DashboardContent() {
   const router = useRouter();
-  const store = useAppStore();
-  const user = store.getUser();
+  const user = useUser();
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -38,12 +37,7 @@ export function DashboardContent() {
 
   // Mock data for dashboard
   const stats = {
-    coursesCompleted: 12,
-    totalCourses: 45,
-    projectsBuilt: 8,
-    xpEarned: user.xp,
     currentStreak: 7,
-    certificatesEarned: 3,
   };
 
   const recentActivity = [
@@ -112,7 +106,7 @@ export function DashboardContent() {
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
+          <h1 className="text-3xl font-bold">Welcome back, {user?.name}!</h1>
           <p className="text-muted-foreground">
             Ready to continue your backend engineering journey?
           </p>
@@ -139,10 +133,14 @@ export function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.coursesCompleted}/{stats.totalCourses}
+              {user?.numberOfCoursesCompleted}/{user?.numberOfCoursesInProgress}
             </div>
             <Progress
-              value={(stats.coursesCompleted / stats.totalCourses) * 100}
+              value={
+                (user?.numberOfCoursesCompleted /
+                  user?.numberOfCoursesInProgress) *
+                100
+              }
               className="mt-2"
             />
           </CardContent>
@@ -156,8 +154,12 @@ export function DashboardContent() {
             <Code2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.projectsBuilt}</div>
-            <p className="text-xs text-muted-foreground">+2 this month</p>
+            <div className="text-2xl font-bold">
+              {user?.numberOfProjectsBuilt}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              +{user?.numberOfProjectsBuiltThisMonth} this month
+            </p>
           </CardContent>
         </Card>
 
@@ -168,10 +170,10 @@ export function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.xpEarned.toLocaleString()}
+              {user?.points?.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Level {user.level} Engineer
+              Level {user?.level} Engineer
             </p>
           </CardContent>
         </Card>
@@ -182,7 +184,9 @@ export function DashboardContent() {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.certificatesEarned}</div>
+            <div className="text-2xl font-bold">
+              {user?.numberOfCertificateEarned}
+            </div>
             <p className="text-xs text-muted-foreground">Industry recognized</p>
           </CardContent>
         </Card>

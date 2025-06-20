@@ -1,30 +1,28 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { RoadmapDetailPage } from "@/components/pages/roadmap-detail";
+import { CourseDetailPage } from "@/components/pages/course-detail";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-interface RoadmapDetailPageRouteProps {
+interface CourseDetailPageRouteProps {
   params: {
-    roadmapId: string;
+    slug: string;
   };
 }
 
-export default function RoadmapDetailPageRoute({
+export default function CourseDetailPageRoute({
   params,
-}: RoadmapDetailPageRouteProps) {
+}: CourseDetailPageRouteProps) {
   const router = useRouter();
-
+  const { slug } = React.use(params);
   const handleNavigate = (path: string) => {
     router.push(path);
   };
 
-  const { roadmapId } = React.use(params);
-
   return (
     <DashboardLayout>
-      <RoadmapDetailPage roadmapId={roadmapId} onNavigate={handleNavigate} />
+      <CourseDetailPage slug={slug} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }

@@ -5,35 +5,51 @@ import { ArrowLeft } from "lucide-react";
 import { Certificate } from "@/components/certificate";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { useCourse } from "@/hooks/use-course";
+import { useEffect, useState } from "react";
+import { Course } from "@/lib/data";
+import { useUser } from "@/hooks/use-user";
 
 interface CourseCertificatePageProps {
-  courseId: string;
+  slug: string;
   onNavigate: (path: string) => void;
 }
 
 export function CourseCertificatePage({
-  courseId,
+  slug,
   onNavigate,
 }: CourseCertificatePageProps) {
   const store = useAppStore();
-  const courses = store.getCourses();
-  const user = store.getUser();
-  const course = courses.find((c) => c.id === courseId) || courses[0];
+  const [course, setCourse] = useState<Course>();
+  const [loading, setLoading] = useState(false);
+  const user = useUser();
+
+  useEffect(() => {
+    setLoading(true);
+    async function findCourse(slug: string) {
+      const course = await store.getCourse(slug);
+      setCourse(course);
+      setLoading(false);
+    }
+    findCourse(slug);
+  }, [slug]);
+
+  if (loading || !course) return <div>loading...</div>;
 
   const handleBackToCourse = () => {
-    const coursePath = routes.courseDetail(courseId);
+    const coursePath = routes.courseDetail(slug);
     console.log("Back to Course - Navigating to:", coursePath);
     onNavigate(coursePath);
   };
 
   const handleDownload = () => {
-    console.log("Downloading certificate for course:", courseId);
+    console.log("Downloading certificate for course:", slug);
     // In a real app, this would generate and download a PDF
     alert("Certificate download started!");
   };
 
   const handleShare = () => {
-    console.log("Sharing certificate for course:", courseId);
+    console.log("Sharing certificate for course:", slug);
     // In a real app, this would open sharing options
     if (navigator.share) {
       navigator.share({
@@ -49,7 +65,7 @@ export function CourseCertificatePage({
   };
 
   // Only show certificate if course is completed
-  if (course.progress !== 100) {
+  if (course?.progress !== 100) {
     return (
       <div className="flex-1 space-y-6">
         <div className="flex items-center gap-4 mb-6">
@@ -83,9 +99,9 @@ export function CourseCertificatePage({
       <Certificate
         courseName={course.title}
         studentName={user.name}
-        instructorName={course.instructor}
-        completionDate="December 8, 2024"
-        courseId={courseId}
+        instructorName={course?.instructor ?? "Solomon Eseme"}
+        completionDate={"December 8, 2024"}
+        course={course}
         onDownload={handleDownload}
         onShare={handleShare}
       />

@@ -7,10 +7,14 @@ export const routes = {
 
   // Courses
   courses: "/dashboard/courses",
-  courseDetail: (courseId: string) => `/dashboard/courses/${courseId}`,
+  courseDetail: (slug: string) => `/dashboard/courses/${slug}`,
   coursePreview: (courseId: string) => `/dashboard/courses/${courseId}/preview`,
-  courseWatch: (courseId: string, chapterId: string) =>
-    `/dashboard/courses/${courseId}/watch/${chapterId}`,
+  courseWatch: (courseId: string, chapterId: string, videoId?: string) => {
+    if (videoId)
+      return `/dashboard/courses/${courseId}/watch/${chapterId}/${videoId}`;
+
+    return `/dashboard/courses/${courseId}/watch/${chapterId}`;
+  },
   courseQuizzes: (courseId: string) => `/dashboard/courses/${courseId}/quizzes`,
   courseQuiz: (courseId: string, quizId: string) =>
     `/dashboard/courses/${courseId}/quizzes/${quizId}`,

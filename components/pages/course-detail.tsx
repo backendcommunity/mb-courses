@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -32,39 +32,86 @@ import {
   ChevronUp,
   BadgeIcon as Certificate,
   Trophy,
+  Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import DisqusCommentBlock from "../ui/comment";
+import { PaymentDialog } from "../payment-dialog";
+import { Course, UserChapter, Video } from "@/lib/data";
+import { toast } from "sonner";
+import ConfettiCelebration from "@/components/confetti-celebration";
 
 interface CourseDetailPageProps {
-  courseId: string;
+  slug: string;
   onNavigate: (path: string) => void;
 }
 
-export function CourseDetailPage({
-  courseId,
-  onNavigate,
-}: CourseDetailPageProps) {
+export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   const store = useAppStore();
-  const courses = store.getCourses();
+  const [course, setCourse] = useState<Course>();
   const { updateCourse } = store;
-  const course = courses.find((c) => c.id === courseId) || courses[0];
-  const [currentChapter, setCurrentChapter] = useState(course.chapters[0]);
+  const [currentChapter] = useState(course?.chapters[0]);
+  const [loading, setLoading] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [celebration, setCelebration] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    async function findCourse(slug: string) {
+      const course = await store.getCourse(slug);
+      setCourse(course);
+      setLoading(false);
+    }
+    findCourse(slug);
+  }, [slug]);
+
+  const isChapterCompleted = (chapterId: string) => {
+    return course?.userCourse?.userChapters?.find(
+      (ch: any) => ch.chapterId === chapterId
+    )?.isCompleted;
+  };
 
   const handleChapterComplete = (chapterId: string) => {
-    const updatedChapters = course.chapters.map((chapter) =>
+    const updatedChapters = course?.chapters.map((chapter) =>
       chapter.id === chapterId ? { ...chapter, completed: true } : chapter
     );
-    const completedCount = updatedChapters.filter((c) => c.completed).length;
+    const completedCount = updatedChapters?.filter((c) => c.isCompleted).length;
     const newProgress = Math.round(
-      (completedCount / updatedChapters.length) * 100
+      (completedCount! / updatedChapters?.length!) * 100
     );
 
-    updateCourse(courseId, {
+    updateCourse(slug, {
       chapters: updatedChapters,
       progress: newProgress,
     });
+  };
+
+  const handlePurchase = (
+    courseId: string,
+    method: "subscription" | "individual" | "xp"
+  ) => {
+    if (!course) return;
+
+    switch (method) {
+      case "subscription":
+        onNavigate(routes.subscriptionPlans);
+        break;
+      case "individual":
+        onNavigate(routes.checkout("course", courseId));
+        break;
+      case "xp":
+        onNavigate(routes.xpRedeem("course", courseId));
+        break;
+    }
+  };
+
+  // Mock subscription data
+  const subscription = {
+    plan: "Pro", // Free, Pro, Enterprise
+    status: "active",
+    xpBalance: 2450,
   };
 
   const handleBackToCourses = () => {
@@ -72,44 +119,67 @@ export function CourseDetailPage({
     onNavigate(routes.courses);
   };
 
-  const handleEnrollNow = () => {
-    console.log("Enrolling in course:", courseId);
-    updateCourse(courseId, { enrolled: true });
+  const handleEnrollNow = async () => {
+    if (subscription.plan !== "Pro") {
+      setShowPaymentDialog(!showPaymentDialog);
+      return;
+    }
+
+    const userCourse = await handleEnrollment(course?.id!);
+    if (!userCourse) {
+      toast.error("An error occurred. Please try again");
+      return;
+    }
+    updateCourse(course?.id!, { enrolled: true });
+    Object.assign(course!, { enrolled: true });
+
+    // Trigger celebration for first-time enrollment
+    setCelebration(true);
+    toast.success("You have successfully enrolled");
+  };
+
+  const handleEnrollment = async (courseId: string) => {
+    return await store.handleCourseEnrollment(courseId);
   };
 
   const handlePreviewCourse = () => {
-    const previewPath = routes.coursePreview(courseId);
-    console.log("Preview Course - Navigating to:", previewPath);
+    const previewPath = routes.coursePreview(slug);
     onNavigate(previewPath);
   };
 
   const handleContinueLearning = () => {
     // Navigate to first incomplete chapter or continue from current
     const nextChapter =
-      course.chapters.find((c) => !c.completed) || course.chapters[0];
-    const watchPath = routes.courseWatch(courseId, nextChapter.id);
+      course?.chapters.find((c) => !c.isCompleted) || course?.chapters[0];
+
+    const nextVideo =
+      nextChapter?.videos?.find((v: Video) => !v.isCompleted) ||
+      nextChapter?.videos[0];
+
+    const watchPath = routes.courseWatch(
+      slug,
+      nextChapter?.slug!,
+      nextVideo?.slug
+    );
     console.log("Continue Learning - Navigating to:", watchPath);
     onNavigate(watchPath);
   };
 
   const handleChapterClick = (chapter: any, index: number) => {
     const isPreview = index < 3; // First 3 chapters are preview
-    if (course.enrolled || isPreview) {
+    if (course?.enrolled || isPreview) {
       // Check if chapter has specific features to navigate to
       if (chapter.quiz && chapter.type === "quiz") {
-        const quizPath = routes.courseQuiz(courseId, chapter.quiz.id);
+        const quizPath = routes.courseQuiz(slug, chapter.quiz.id);
         console.log("Chapter Quiz Click - Navigating to:", quizPath);
         onNavigate(quizPath);
       } else if (chapter.exercise && chapter.type === "exercise") {
-        const exercisePath = routes.courseExercise(
-          courseId,
-          chapter.exercise.id
-        );
+        const exercisePath = routes.courseExercise(slug, chapter.exercise.id);
         console.log("Chapter Exercise Click - Navigating to:", exercisePath);
         onNavigate(exercisePath);
       } else if (chapter.playground && chapter.type === "playground") {
         const playgroundPath = routes.coursePlayground(
-          courseId,
+          slug,
           chapter.playground.id
         );
         console.log(
@@ -119,12 +189,15 @@ export function CourseDetailPage({
         onNavigate(playgroundPath);
       } else {
         // Default to video watch
-        const watchPath = routes.courseWatch(courseId, chapter.id);
-        console.log("Chapter Click - Navigating to:", watchPath);
+        const watchPath = routes.courseWatch(
+          slug,
+          chapter.slug,
+          chapter?.videos[0]?.slug
+        );
         onNavigate(watchPath);
       }
     } else {
-      const previewPath = routes.coursePreview(courseId);
+      const previewPath = routes.coursePreview(slug);
       console.log(
         "Chapter Click (locked) - Navigating to preview:",
         previewPath
@@ -133,17 +206,26 @@ export function CourseDetailPage({
     }
   };
 
-  const isCompleted = course.progress === 100;
-  const canEarnCertificate = course.enrolled && isCompleted;
+  const isCompleted = course?.progress! >= 100;
+  const canEarnCertificate = course?.enrolled && isCompleted;
+
+  if (loading) return <div>loading...</div>;
 
   return (
     <div className="flex-1 space-y-6">
       {/* Course Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex justify-between items-center gap-4 mb-6">
         <Button variant="outline" onClick={handleBackToCourses}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Courses
         </Button>
+
+        <div className="flex items-center gap-2">
+          {course?.category && (
+            <Badge variant="outline">{course?.category?.name}</Badge>
+          )}
+          <Badge variant="outline">{course?.totalDuration ?? 0} hours</Badge>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -151,37 +233,37 @@ export function CourseDetailPage({
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                course.level === "Advanced"
+                course?.level === "Advanced"
                   ? "destructive"
-                  : course.level === "Intermediate"
+                  : course?.level === "Intermediate"
                   ? "default"
                   : "secondary"
               }
             >
-              {course.level}
+              {course?.level}
             </Badge>
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm">{course.rating}</span>
+              <span className="text-sm">{course?.rating ?? 4.5}</span>
               <span className="text-sm text-muted-foreground">
-                ({course.students.toLocaleString()} students)
+                ({course?.students?.toLocaleString()} students)
               </span>
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{course?.title}</h1>
 
           {/* Short Description */}
-          <p className="text-lg text-muted-foreground">{course.description}</p>
+          <p className="text-lg text-muted-foreground">{course?.summary}</p>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
-              {course.duration}
+              {course?.totalDuration} hours
             </div>
             <div className="flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
-              {course.chapters.length} chapters
+              {course?.chapters.length} chapters
             </div>
             <div className="flex items-center gap-1">
               <Award className="h-4 w-4" />
@@ -190,7 +272,7 @@ export function CourseDetailPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {course.tags.map((tag) => (
+            {course?.tags.map((tag) => (
               <Badge key={tag} variant="outline">
                 {tag}
               </Badge>
@@ -223,15 +305,16 @@ export function CourseDetailPage({
                   isDescriptionExpanded ? "" : "line-clamp-3"
                 }`}
               >
-                {course.longDescription
+                {course?.description
                   ?.split("\n\n")
-                  .map((paragraph, index) => (
-                    <p
+                  .map((paragraph: string, index: number) => (
+                    <article
+                      dangerouslySetInnerHTML={{ __html: paragraph }}
                       key={index}
-                      className="text-muted-foreground leading-relaxed"
+                      className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
                     >
-                      {paragraph}
-                    </p>
+                      {/* {paragraph} */}
+                    </article>
                   ))}
               </div>
               {!isDescriptionExpanded && (
@@ -247,54 +330,60 @@ export function CourseDetailPage({
           </Card>
 
           {/* Course Features Section */}
-          {course.enrolled && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Course Features</CardTitle>
-                <CardDescription>
-                  Interactive learning tools and resources
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* {course?.enrolled && ( */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Features</CardTitle>
+              <CardDescription>
+                Interactive learning tools and resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {course?.hasQuizzes && (
                   <Button
                     variant="outline"
                     className="h-20 flex-col gap-2"
-                    onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+                    onClick={() => onNavigate(routes.courseQuizzes(slug))}
                   >
                     <Brain className="h-6 w-6" />
                     <span className="text-sm">Quizzes</span>
                   </Button>
+                )}
+                {course?.hasExercises && (
                   <Button
                     variant="outline"
                     className="h-20 flex-col gap-2"
-                    onClick={() => onNavigate(routes.courseExercises(courseId))}
+                    onClick={() => onNavigate(routes.courseExercises(slug))}
                   >
                     <Code className="h-6 w-6" />
                     <span className="text-sm">Exercises</span>
                   </Button>
+                )}
+                {course?.hasPlaygrounds && (
                   <Button
                     variant="outline"
                     className="h-20 flex-col gap-2"
-                    onClick={() =>
-                      onNavigate(routes.coursePlaygrounds(courseId))
-                    }
+                    onClick={() => onNavigate(routes.coursePlaygrounds(slug))}
                   >
                     <Gamepad2 className="h-6 w-6" />
                     <span className="text-sm">Playgrounds</span>
                   </Button>
+                )}
+                {course?.hasProjects && (
                   <Button
                     variant="outline"
                     className="h-20 flex-col gap-2"
-                    onClick={() => onNavigate(routes.courseProjects(courseId))}
+                    onClick={() => onNavigate(routes.courseProjects(slug))}
                   >
                     <FolderOpen className="h-6 w-6" />
                     <span className="text-sm">Projects</span>
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          {/* )} */}
         </div>
 
         <div className="space-y-6">
@@ -303,32 +392,30 @@ export function CourseDetailPage({
             <CardHeader>
               <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                 <img
-                  src={course.thumbnail || "/placeholder.svg"}
-                  alt={course.title}
+                  src={course?.banner ?? "/placeholder.svg"}
+                  alt={course?.title}
                   className="h-full w-full object-cover"
                 />
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {course.enrolled ? (
+              {course?.enrolled ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span>Your Progress</span>
-                    <span>{course.progress}%</span>
+                    <span>{course?.progress ?? 0}%</span>
                   </div>
-                  <Progress value={course.progress} className="h-2" />
+                  <Progress value={course?.progress ?? 0} className="h-2" />
                   <Button className="w-full" onClick={handleContinueLearning}>
                     <Play className="mr-2 h-4 w-4" />
                     Continue Learning
                   </Button>
                 </div>
-              ) : (
+              ) : subscription.plan !== "Free" ? (
                 <div className="space-y-3">
-                  <div className="text-center">
-                    <span className="text-3xl font-bold">${course.price}</span>
-                  </div>
                   <Button className="w-full" onClick={handleEnrollNow}>
-                    Enroll Now
+                    <Play className="mr-2 h-4 w-4" />
+                    Start Learning
                   </Button>
                   <Button
                     variant="outline"
@@ -339,6 +426,37 @@ export function CourseDetailPage({
                     Preview Course
                   </Button>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-100 text-green-800 border-green-200 text-xs"
+                  >
+                    <Crown className="mr-1 h-3 w-3" />
+                    Included in {subscription.plan}
+                  </Badge>
+                  <Button className="w-full" onClick={handleEnrollNow}>
+                    Start Learning
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handlePreviewCourse}
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Preview Course
+                  </Button>
+                </div>
+              )}
+
+              {showPaymentDialog && (
+                <PaymentDialog
+                  onClose={() => setShowPaymentDialog(false)}
+                  open={showPaymentDialog}
+                  data={course}
+                  onHandlePreview={() => {}}
+                  onHandlePurchase={() => {}}
+                />
               )}
 
               <Separator />
@@ -395,13 +513,13 @@ export function CourseDetailPage({
                     : "Complete all chapters and pass the final assessment to earn your verified certificate."}
                 </p>
 
-                {course.enrolled && (
+                {course?.enrolled && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Progress to Certificate</span>
-                      <span>{course.progress}%</span>
+                      <span>{course?.progress}%</span>
                     </div>
-                    <Progress value={course.progress} className="h-2" />
+                    <Progress value={course?.progress} className="h-2" />
                   </div>
                 )}
               </div>
@@ -424,12 +542,12 @@ export function CourseDetailPage({
               {canEarnCertificate ? (
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700"
-                  onClick={() => onNavigate(routes.courseCertificate(courseId))}
+                  onClick={() => onNavigate(routes.courseCertificate(slug))}
                 >
                   <Certificate className="mr-2 h-4 w-4" />
                   View Certificate
                 </Button>
-              ) : course.enrolled ? (
+              ) : course?.enrolled ? (
                 <Button variant="outline" className="w-full" disabled>
                   <Certificate className="mr-2 h-4 w-4" />
                   Complete Course to Earn
@@ -462,13 +580,13 @@ export function CourseDetailPage({
             <CardHeader>
               <CardTitle>Course Curriculum</CardTitle>
               <CardDescription>
-                {course.chapters.length} chapters • {course.duration} total
-                length
+                {course?.chapters.length} chapters •{" "}
+                {course?.totalDuration ?? 0} total hours
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {course.chapters.map((chapter, index) => {
+                {course?.chapters.map((chapter, index) => {
                   const isPreview = index < 3; // First 3 chapters are preview
                   return (
                     <div
@@ -480,9 +598,9 @@ export function CourseDetailPage({
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                          {chapter.completed ? (
+                          {isChapterCompleted(chapter.id) ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : course.enrolled || isPreview ? (
+                          ) : course?.enrolled || isPreview ? (
                             <span className="text-sm font-medium">
                               {index + 1}
                             </span>
@@ -498,20 +616,20 @@ export function CourseDetailPage({
                               className={`text-xs ${
                                 isPreview
                                   ? "border-green-600 text-green-600"
-                                  : course.enrolled
+                                  : course?.enrolled
                                   ? "border-blue-600 text-blue-600"
                                   : "border-orange-600 text-orange-600"
                               }`}
                             >
                               {isPreview
                                 ? "FREE"
-                                : course.enrolled
+                                : course?.enrolled
                                 ? "ENROLLED"
                                 : "PREMIUM"}
                             </Badge>
                             <span>{chapter.duration}</span>
                             <Badge variant="secondary" className="text-xs">
-                              {chapter.type.toUpperCase()}
+                              {chapter?.type?.toUpperCase()}
                             </Badge>
                             {/* Feature indicators */}
                             {chapter.quiz && (
@@ -546,14 +664,17 @@ export function CourseDetailPage({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (course.enrolled && !chapter.completed) {
+                          if (
+                            course?.enrolled &&
+                            isChapterCompleted(chapter.id)
+                          ) {
                             handleChapterComplete(chapter.id);
                           }
                         }}
                       >
-                        {chapter.completed ? (
+                        {isChapterCompleted(chapter.id) ? (
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : course.enrolled || isPreview ? (
+                        ) : course?.enrolled || isPreview ? (
                           <Play className="h-4 w-4" />
                         ) : (
                           <Lock className="h-4 w-4 text-muted-foreground" />
@@ -574,9 +695,16 @@ export function CourseDetailPage({
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-4">
-                <div className="h-16 w-16 rounded-full bg-muted"></div>
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                  {course?.instructor
+                    ?.split(" ")
+                    .map((n: string) => n.charAt(0))
+                    .join("") ?? "MB"}
+                </div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">{course.instructor}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {course?.instructor ?? "Mastering Backend"}
+                  </h3>
                   <p className="text-muted-foreground">
                     Senior Backend Engineer with 8+ years of experience building
                     scalable systems. Previously worked at Google and Netflix.
@@ -599,7 +727,8 @@ export function CourseDetailPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[1, 2, 3].map((review) => (
+                {
+                  /* {[1, 2, 3].map((review) => (
                   <div
                     key={review}
                     className="space-y-2 border-b pb-4 last:border-b-0"
@@ -624,12 +753,29 @@ export function CourseDetailPage({
                       me understand the material.
                     </p>
                   </div>
-                ))}
+                ))} */
+                  // DisqusComments({course, 'dashboard/courses/sas'})
+                }
+                <DisqusCommentBlock
+                  config={{
+                    url: "/courses/" + slug,
+                    identifier: slug,
+                    title: course?.title,
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={course?.title!}
+      />
     </div>
   );
 }

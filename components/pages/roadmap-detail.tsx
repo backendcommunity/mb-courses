@@ -67,13 +67,13 @@ export function RoadmapDetailPage({
   };
 
   const handleContinue = () => {
-    if (roadmap.currentMilestone < milestones.length) {
+    if (roadmap.currentMilestone < milestones?.length) {
       const currentMilestone = milestones[roadmap.currentMilestone];
-      if (currentMilestone.courses.length > 0) {
+      if (currentMilestone.courses?.length > 0) {
         onNavigate?.(
           routes.roadmapVideoWatch(roadmap.id, currentMilestone.courses[0]?.id)
         );
-      } else if (currentMilestone.projects.length > 0) {
+      } else if (currentMilestone.projects?.length > 0) {
         onNavigate?.(routes.projectDetail(currentMilestone.projects[0]));
       } else {
         onNavigate?.(routes.roadmapWatch(roadmapId));
@@ -120,7 +120,7 @@ export function RoadmapDetailPage({
                   Current Milestone
                 </div>
                 <div className="font-medium">
-                  {roadmap.currentMilestone < milestones.length
+                  {roadmap.currentMilestone < milestones?.length
                     ? milestones[roadmap.currentMilestone].title
                     : "Completed"}
                 </div>
@@ -136,7 +136,7 @@ export function RoadmapDetailPage({
                   Milestones Completed
                 </div>
                 <div className="font-medium">
-                  {roadmap.completedMilestones} of {milestones.length}
+                  {roadmap.completedMilestones} of {milestones?.length}
                 </div>
               </div>
             </div>
@@ -410,7 +410,7 @@ export function RoadmapDetailPage({
                             </div>
                           )
                         )}
-                        {getRoadmapCoursesByMilestone(milestone.id).length ===
+                        {getRoadmapCoursesByMilestone(milestone.id)?.length ===
                           0 && (
                           <div className="text-sm text-muted-foreground">
                             No courses in this milestone
@@ -469,7 +469,7 @@ export function RoadmapDetailPage({
                           )
                         )}
                         {getRoadmapAssessmentsByMilestone(milestone.id)
-                          .length === 0 && (
+                          ?.length === 0 && (
                           <div className="text-sm text-muted-foreground">
                             No assessments in this milestone
                           </div>
@@ -491,13 +491,13 @@ export function RoadmapDetailPage({
                           const courses = getRoadmapCoursesByMilestone(
                             milestone.id
                           );
-                          if (courses.length > 0) {
+                          if (courses?.length > 0) {
                             onNavigate?.(routes.courseDetail(courses[0].id));
                           } else {
                             const projects = getRoadmapProjectsByMilestone(
                               milestone.id
                             );
-                            if (projects.length > 0) {
+                            if (projects?.length > 0) {
                               onNavigate?.(
                                 routes.projectDetail(projects[0].id)
                               );
@@ -541,7 +541,7 @@ export function RoadmapDetailPage({
 
                   <div className="space-y-4 pl-8">
                     {/* Courses */}
-                    {getRoadmapCoursesByMilestone(milestone.id).length > 0 && (
+                    {getRoadmapCoursesByMilestone(milestone.id)?.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-blue-600" />
@@ -584,7 +584,7 @@ export function RoadmapDetailPage({
                                       <div className="flex items-center gap-2">
                                         <PlayCircle className="h-4 w-4 text-blue-600" />
                                         <span className="text-sm">
-                                          {course.chapters.length} chapters
+                                          {course.chapters?.length} chapters
                                         </span>
                                       </div>
                                       <Button
@@ -609,7 +609,8 @@ export function RoadmapDetailPage({
                     )}
 
                     {/* Projects */}
-                    {getRoadmapProjectsByMilestone(milestone.id).length > 0 && (
+                    {getRoadmapProjectsByMilestone(milestone.id)?.length >
+                      0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <Code className="h-4 w-4 text-green-600" />
@@ -660,9 +661,9 @@ export function RoadmapDetailPage({
                                               {tech}
                                             </Badge>
                                           ))}
-                                        {project.technologies.length > 3 && (
+                                        {project.technologies?.length > 3 && (
                                           <Badge variant="secondary">
-                                            +{project.technologies.length - 3}{" "}
+                                            +{project.technologies?.length - 3}{" "}
                                             more
                                           </Badge>
                                         )}
@@ -689,7 +690,7 @@ export function RoadmapDetailPage({
                     )}
 
                     {/* Assessments */}
-                    {getRoadmapAssessmentsByMilestone(milestone.id).length >
+                    {getRoadmapAssessmentsByMilestone(milestone.id)?.length >
                       0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">

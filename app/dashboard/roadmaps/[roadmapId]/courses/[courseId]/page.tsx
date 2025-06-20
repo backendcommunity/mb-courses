@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { RoadmapCoursePreviewPage } from "@/components/pages/roadmap-course-preview";
 import { getRoadmapById } from "@/lib/data";
 import { useRouter } from "next/navigation";
+import React from "react";
 
 interface RoadmapDetailPageRouteProps {
   params: {
@@ -22,12 +23,14 @@ export default function RoadmapDetailPageRoute({
     router.push(path);
   };
 
+  const { roadmapId, courseId } = React.use(params);
+
   return (
     <DashboardLayout>
       <RoadmapCoursePreviewPage
-        roadmapId={params.roadmapId}
+        roadmapId={roadmapId}
         milestoneId={`${"m1"}`}
-        courseId={params.courseId}
+        courseId={courseId}
         onBack={() => router.back()}
         onEnroll={() => {}}
         onStartWatching={() => {}}

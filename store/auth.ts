@@ -10,16 +10,17 @@ import {
   verifyEmail,
   fetchUser,
 } from "@/lib/auth";
-import { NewUser, updateUser } from "@/lib/data";
+import { NewUser, updateUser, User } from "@/lib/data";
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-}
+// interface User {
+//   id: string;
+//   email: string;
+//   name?: string;
+// }
 
 interface AuthState {
   user: User | null;
+  loading: boolean;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (user: NewUser) => Promise<boolean>;
@@ -33,19 +34,25 @@ interface AuthState {
     password: string
   ) => Promise<boolean>;
   verifyCode: (email: string, code: string) => Promise<boolean>;
+  currentUser: () => Promise<User>;
 }
 
 export const useAuth = create<AuthState>((set) => ({
   user: null,
   token: null,
+  loading: false,
 
   currentUser: async () => {
     try {
+      set({ loading: true });
       const { data } = await fetchUser();
       set({ user: data });
+      updateUser(data);
+      set({ loading: false });
       return data;
     } catch (e) {
       set({ user: null });
+      set({ loading: false });
       throw e;
     }
   },

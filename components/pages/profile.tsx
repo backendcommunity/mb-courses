@@ -26,7 +26,8 @@ import {
   Calendar,
   Award,
 } from "lucide-react";
-import { useAppStore } from "@/lib/store";
+
+import { useUser } from "@/hooks/use-user";
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
@@ -34,18 +35,17 @@ interface ProfilePageProps {
 
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const store = useAppStore();
-  const user = store.getUser();
+  const user = useUser();
 
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    bio: "Passionate backend developer with 5+ years of experience building scalable systems.",
-    website: "https://johndoe.dev",
-    github: "https://github.com/johndoe",
-    linkedin: "https://linkedin.com/in/johndoe",
+    phone: user?.phone,
+    location: user?.address,
+    bio: user?.bio,
+    website: user?.website,
+    github: user?.github,
+    linkedin: user?.linkedin,
   });
 
   const handleSave = () => {
@@ -59,12 +59,12 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     setFormData({
       name: user.name,
       email: user.email,
-      phone: "+1 (555) 123-4567",
-      location: "San Francisco, CA",
-      bio: "Passionate backend developer with 5+ years of experience building scalable systems.",
-      website: "https://johndoe.dev",
-      github: "https://github.com/johndoe",
-      linkedin: "https://linkedin.com/in/johndoe",
+      phone: user?.phone,
+      location: user?.address,
+      bio: user?.bio,
+      website: user?.website,
+      github: user?.github,
+      linkedin: user?.linkedin,
     });
   };
 
@@ -114,10 +114,14 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   ];
 
   const stats = [
-    { label: "Courses Completed", value: "12", icon: Trophy },
-    { label: "Projects Built", value: "8", icon: Award },
-    { label: "Total MB", value: user.xp.toLocaleString(), icon: Star },
-    { label: "Learning Streak", value: "15 days", icon: Calendar },
+    {
+      label: "Courses Completed",
+      value: user.numberOfCoursesCompleted,
+      icon: Trophy,
+    },
+    { label: "Projects Built", value: user.numberOfProjectsBuilt, icon: Award },
+    { label: "Total MB", value: user?.points?.toLocaleString(), icon: Star },
+    { label: "Learning Streak", value: user.streak + " days", icon: Calendar },
   ];
 
   return (
@@ -166,7 +170,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       alt={formData.name}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-lg">
-                      {formData.name.charAt(0)}
+                      {formData?.name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -381,20 +385,20 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">Level {user.level}</div>
+                <div className="text-2xl font-bold">Level {user?.level}</div>
                 <div className="text-sm text-muted-foreground">
                   Senior Engineer
                 </div>
               </div>
               <Progress
-                value={(user.xp / user.xpToNextLevel) * 100}
+                value={(user?.points / user?.xpToNextLevel) * 100}
                 className="h-3"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{user.xp.toLocaleString()} MB</span>
+                <span>{user?.points?.toLocaleString()} MB</span>
                 <span>
-                  {user.xpToNextLevel.toLocaleString()} MB to Level{" "}
-                  {user.level + 1}
+                  {user?.xpToNextLevel?.toLocaleString()} MB to Level{" "}
+                  {user?.level + 1}
                 </span>
               </div>
             </CardContent>
@@ -425,7 +429,12 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="text-sm text-muted-foreground">
                   Member since
                 </div>
-                <div className="font-semibold">January 2024</div>
+                <div className="font-semibold">
+                  {new Intl.DateTimeFormat("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  }).format(new Date(user?.createdAt))}
+                </div>
               </div>
             </CardContent>
           </Card>

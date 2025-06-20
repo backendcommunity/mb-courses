@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { useMobile } from "@/hooks/use-mobile";
+import { useAppStore } from "@/lib/store";
+import { User } from "@/lib/data";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,9 +16,11 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const store = useAppStore();
   const router = useRouter();
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const [user, setUser] = useState<User | null>(null);
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -33,6 +37,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+
+  useEffect(() => {
+    async function loadUser() {
+      const user = await store.getUser();
+      setUser(user);
+    }
+    loadUser();
+  }, []);
+
+  if (!user) return <p>Loading user...</p>;
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

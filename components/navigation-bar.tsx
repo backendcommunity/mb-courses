@@ -38,9 +38,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getUser } from "@/lib/data";
 import { routes } from "@/lib/routes";
 import { useAuth } from "@/store/auth";
+import { useUser } from "@/hooks/use-user";
 
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
@@ -58,8 +58,7 @@ export function NavigationBar({
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-
-  const user = getUser();
+  const user = useUser();
 
   // Mock subscription data
   const subscription = {
@@ -443,7 +442,7 @@ export function NavigationBar({
               >
                 <Gift className="h-4 w-4 mr-1" />
                 <span className={isMobile ? "sr-only" : ""}>
-                  {subscription.xpBalance.toLocaleString()} MB
+                  {user?.points?.toLocaleString()} MB
                 </span>
               </Button>
             )}
@@ -529,11 +528,11 @@ export function NavigationBar({
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={user.avatar || "/placeholder.svg"}
-                      alt={user.name}
+                      src={user?.avatar || "/placeholder.svg"}
+                      alt={user?.name}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                      {user.name.charAt(0)}
+                      {user?.name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -542,10 +541,10 @@ export function NavigationBar({
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {user.name}
+                      {user?.name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {user?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>

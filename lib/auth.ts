@@ -47,7 +47,7 @@ export const resetPassword = async (
   return res.data;
 };
 
-export const fetchUser = async () => {
+export const fetchUser = async (): Promise<any> => {
   const { data } = await api.get("/auth/me");
   return data;
 };

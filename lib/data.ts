@@ -1,3 +1,4 @@
+import { fetchUser } from "./auth";
 export interface User {
   id: string;
   name: string;
@@ -7,9 +8,52 @@ export interface User {
   xp: number;
   xpToNextLevel: number;
   streak: number;
-  joinDate: string;
   title: string;
   badges: Badge[];
+  points?: number;
+  numberOfCoursesCompleted?: number;
+  numberOfCoursesInProgress?: number;
+  numberOfProjectsBuilt?: number;
+  numberOfProjectsBuiltThisMonth?: number;
+  numberOfCertificateEarned?: number;
+  bio?: string;
+  linkedin?: string;
+  github?: string;
+  website?: string;
+  address?: string;
+  phone?: string;
+  createdAt?: Date;
+}
+
+export interface Note {
+  id: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  video?: Video;
+}
+export interface CoursesQuery {
+  page?: string;
+  size?: string;
+  filters?: CourseFilterOptions;
+}
+
+export interface CourseFilterOptions {
+  desc?: boolean;
+  duration?: number;
+  free?: boolean;
+  fromAmount?: number;
+  fromDate?: string;
+  paid?: boolean;
+  sortBy?: string;
+  terms?: string;
+  toAmount?: number;
+  toDate?: string;
+  topicIds?: string;
+  topics?: Array<string>;
+  category?: string;
+  level?: string;
+  tab?: string;
 }
 
 export interface NewUser {
@@ -28,7 +72,7 @@ export interface Course {
   description: string;
   instructor: string;
   duration: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
+  level: string; //"Beginner" | "Intermediate" | "Advanced";
   progress: number;
   thumbnail: string;
   chapters: Chapter[];
@@ -38,14 +82,103 @@ export interface Course {
   price: number;
   tags: string[];
   longDescription?: string;
+  summary: string;
+  category: Category;
+  slug: string;
+  type: string;
+  topics?: Topic[];
+  amount: number;
+  isPremium: boolean;
+  banner: string;
+  preview: string;
+  totalDuration: number;
+  isWaiting: boolean;
+  waitingLink: string;
+  hasQuizzes: boolean;
+  hasPlaygrounds: boolean;
+  hasProjects: boolean;
+  hasExercises: boolean;
+  paddlePlanCode: number;
+  totalContent: number;
+  isEnrolled: boolean;
+  userCourse?: UserCourse;
+  totalStudents: number;
+  totalProjects: number;
+  totalQuizzes: number;
+  totalPlaygrounds: number;
+  totalTasks: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserCourse {
+  id: string;
+  course?: Course;
+  currentChapter?: Chapter;
+  currentVideo?: Video;
+  // currentArticle: Article
+  isCompleted: boolean;
+  progress?: number;
+  user?: User;
+  isPreview?: boolean;
+  userVideos?: UserVideo[];
+  // userArticles: UserArticle[]
+  userChapters?: UserChapter[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserVideo {
+  id?: string;
+  userId?: string;
+  chapterId?: string;
+  videoId?: string;
+  isCompleted: Boolean;
+  chapter?: Chapter;
+  currentDuration?: number;
+  video?: Video;
+}
+
+export interface UserCoursesResponse {
+  userCourses: UserCourse[];
+  meta: Meta;
+}
+export interface CoursesResponse {
+  courses: Course[];
+  meta: Meta;
+}
+
+export interface PopularCoursesResponse {
+  courses: Course[];
+  meta: Meta;
+}
+
+export interface Meta {
+  total: number;
+  netTotal: number;
+}
+interface Topic {
+  id: string;
+  title: string;
+  summary?: string;
 }
 
 export interface Chapter {
   id: string;
   title: string;
   description: string;
+  summary: string;
   duration: string;
-  completed: boolean;
+  isCompleted?: boolean;
+  slug: string;
   videos: Video[];
   quiz?: Quiz;
   exercise?: Exercise;
@@ -54,13 +187,23 @@ export interface Chapter {
   order: number;
 }
 
+export interface UserChapter {
+  id?: string;
+  isCompleted: boolean;
+  user?: User;
+  chapter?: Chapter;
+  chapterId: string;
+}
+
 export interface Video {
   id: string;
   title: string;
   duration: string;
-  completed: boolean;
+  isCompleted?: boolean;
+  slug: string;
   videoUrl?: string;
   description: string;
+  summary: string;
   order: number;
 }
 
@@ -286,9 +429,21 @@ export const dataStore = {
     avatar: "/placeholder.svg?height=40&width=40",
     level: 8,
     xp: 2450,
+    points: 2450,
+    bio: "",
+    numberOfCoursesCompleted: 90,
+    numberOfCoursesInProgress: 100,
+    numberOfProjectsBuiltThisMonth: 0,
+    numberOfProjectsBuilt: 0,
+    numberOfCertificateEarned: 0,
     xpToNextLevel: 3200,
     streak: 7,
-    joinDate: "2024-01-15",
+    linkedin: "",
+    github: "",
+    website: "",
+    address: "",
+    phone: "",
+    createdAt: "2024-01-15",
     title: "Backend Engineer",
     badges: [
       {
@@ -318,884 +473,22 @@ export const dataStore = {
     ],
   },
 
-  courses: [
-    {
-      id: "1",
-      title: "Advanced Node.js Patterns",
-      description:
-        "Master advanced Node.js concepts including design patterns, performance optimization, and scalability.",
-      instructor: "Sarah Johnson",
-      duration: "8 hours",
-      level: "Advanced" as const,
-      progress: 100,
-      thumbnail: "/placeholder.svg?height=200&width=300",
-      enrolled: true,
-      rating: 4.8,
-      students: 1250,
-      price: 99,
-      tags: ["Node.js", "JavaScript", "Backend", "Patterns"],
-      longDescription: `This comprehensive course takes you deep into the world of advanced Node.js development patterns and practices. You'll master essential design patterns including Singleton, Factory, Observer, and Strategy patterns, learning how to implement them effectively in Node.js applications.
+  notes: [],
+  userCourse: {},
+  coursesResponse: {
+    courses: [] as Course[],
+    meta: { total: 0, netTotal: 0 } as Meta,
+  },
 
-Throughout this course, you'll explore performance optimization techniques, memory management strategies, and scalable architecture patterns. We'll cover advanced topics like event-driven programming, stream processing, and microservices communication patterns.
+  userCoursesResponse: {
+    userCourses: [] as UserCourse[],
+    meta: { total: 0, netTotal: 0 } as Meta,
+  },
 
-By the end of this course, you'll have the skills to build robust, maintainable, and scalable Node.js applications using industry-proven patterns and best practices. You'll understand when and how to apply different patterns, and you'll be able to architect complex backend systems with confidence.
-
-The course includes hands-on projects, real-world examples, and practical exercises that reinforce your learning. You'll work with modern tools and frameworks, and learn debugging and testing strategies for pattern-based code.`,
-      chapters: [
-        {
-          id: "1",
-          title: "Introduction to Advanced Patterns",
-          description: "Learn the fundamentals of design patterns in Node.js",
-          duration: "45 min",
-          completed: true,
-          type: "mixed" as const,
-          order: 1,
-          videos: [
-            {
-              id: "1-1",
-              title: "Welcome to Advanced Patterns",
-              duration: "5 min",
-              completed: true,
-              description: "Course overview and what you'll learn",
-              order: 1,
-            },
-            {
-              id: "1-2",
-              title: "Design Pattern Fundamentals",
-              duration: "15 min",
-              completed: true,
-              description: "Understanding design patterns and their importance",
-              order: 2,
-            },
-            {
-              id: "1-3",
-              title: "Node.js Architecture Overview",
-              duration: "20 min",
-              completed: true,
-              description: "How Node.js architecture influences pattern choice",
-              order: 3,
-            },
-          ],
-          quiz: {
-            id: "quiz-1",
-            title: "Pattern Fundamentals Quiz",
-            description: "Test your understanding of design pattern basics",
-            timeLimit: 10,
-            passingScore: 80,
-            attempts: 1,
-            maxAttempts: 3,
-            completed: true,
-            questions: [
-              {
-                id: "q1",
-                question: "What is the main purpose of design patterns?",
-                type: "multiple-choice" as const,
-                options: [
-                  "To make code more complex",
-                  "To provide reusable solutions to common problems",
-                  "To slow down development",
-                  "To increase memory usage",
-                ],
-                correctAnswer:
-                  "To provide reusable solutions to common problems",
-                explanation:
-                  "Design patterns provide proven solutions to recurring design problems.",
-                points: 25,
-              },
-              {
-                id: "q2",
-                question: "Node.js is single-threaded.",
-                type: "true-false" as const,
-                options: ["True", "False"],
-                correctAnswer: "True",
-                explanation:
-                  "Node.js runs on a single main thread but uses thread pools for I/O operations.",
-                points: 25,
-              },
-            ],
-          },
-        },
-        {
-          id: "2",
-          title: "Singleton and Factory Patterns",
-          description:
-            "Deep dive into Singleton and Factory patterns with practical examples",
-          duration: "60 min",
-          completed: true,
-          type: "mixed" as const,
-          order: 2,
-          videos: [
-            {
-              id: "2-1",
-              title: "Singleton Pattern Explained",
-              duration: "20 min",
-              completed: true,
-              description:
-                "Understanding the Singleton pattern and when to use it",
-              order: 1,
-            },
-            {
-              id: "2-2",
-              title: "Implementing Singleton in Node.js",
-              duration: "15 min",
-              completed: true,
-              description: "Practical implementation with code examples",
-              order: 2,
-            },
-            {
-              id: "2-3",
-              title: "Factory Pattern Deep Dive",
-              duration: "20 min",
-              completed: true,
-              description: "Factory pattern implementation and use cases",
-              order: 3,
-            },
-          ],
-          exercise: {
-            id: "exercise-1",
-            title: "Implement a Database Connection Singleton",
-            description:
-              "Create a singleton class for managing database connections",
-            difficulty: "Medium" as const,
-            language: "javascript",
-            starterCode: `class DatabaseConnection {
-  constructor() {
-    // Your implementation here
-  }
-  
-  static getInstance() {
-    // Implement singleton pattern
-  }
-  
-  connect() {
-    // Implement connection logic
-  }
-}
-
-module.exports = DatabaseConnection;`,
-            solution: `class DatabaseConnection {
-  constructor() {
-    if (DatabaseConnection.instance) {
-      return DatabaseConnection.instance;
-    }
-    this.isConnected = false;
-    DatabaseConnection.instance = this;
-  }
-  
-  static getInstance() {
-    if (!DatabaseConnection.instance) {
-      DatabaseConnection.instance = new DatabaseConnection();
-    }
-    return DatabaseConnection.instance;
-  }
-  
-  connect() {
-    if (!this.isConnected) {
-      console.log('Connecting to database...');
-      this.isConnected = true;
-    }
-    return this;
-  }
-}
-
-module.exports = DatabaseConnection;`,
-            testCases: [
-              {
-                id: "test1",
-                input:
-                  "const db1 = DatabaseConnection.getInstance(); const db2 = DatabaseConnection.getInstance();",
-                expectedOutput: "db1 === db2 should be true",
-                description: "Two instances should be the same object",
-              },
-            ],
-            hints: [
-              "Use a static property to store the instance",
-              "Check if instance exists before creating new one",
-              "Return the existing instance if it already exists",
-            ],
-            completed: true,
-            attempts: 0,
-          },
-        },
-        {
-          id: "3",
-          title: "Observer Pattern Implementation",
-          description:
-            "Learn to implement the Observer pattern for event-driven architecture",
-          duration: "50 min",
-          completed: true,
-          type: "mixed" as const,
-          order: 3,
-          videos: [
-            {
-              id: "3-1",
-              title: "Observer Pattern Concepts",
-              duration: "18 min",
-              completed: true,
-              description:
-                "Understanding the Observer pattern and its benefits",
-              order: 1,
-            },
-            {
-              id: "3-2",
-              title: "Event Emitters in Node.js",
-              duration: "22 min",
-              completed: true,
-              description: "Using Node.js EventEmitter for Observer pattern",
-              order: 2,
-            },
-          ],
-          playground: {
-            id: "playground-1",
-            title: "Observer Pattern Playground",
-            description: "Experiment with Observer pattern implementations",
-            language: "javascript",
-            files: [
-              {
-                id: "file1",
-                name: "observer.js",
-                content: `// Observer Pattern Implementation
-class Subject {
-  constructor() {
-    this.observers = [];
-  }
-  
-  subscribe(observer) {
-    this.observers.push(observer);
-  }
-  
-  unsubscribe(observer) {
-    this.observers = this.observers.filter(obs => obs !== observer);
-  }
-  
-  notify(data) {
-    this.observers.forEach(observer => observer.update(data));
-  }
-}
-
-class Observer {
-  constructor(name) {
-    this.name = name;
-  }
-  
-  update(data) {
-    console.log(\`\${this.name} received: \${data}\`);
-  }
-}
-
-// Try it out
-const subject = new Subject();
-const observer1 = new Observer('Observer 1');
-const observer2 = new Observer('Observer 2');
-
-subject.subscribe(observer1);
-subject.subscribe(observer2);
-
-subject.notify('Hello World!');`,
-                language: "javascript",
-              },
-              {
-                id: "file2",
-                name: "eventEmitter.js",
-                content: `// Using Node.js EventEmitter
-const EventEmitter = require('events');
-
-class NewsAgency extends EventEmitter {
-  constructor() {
-    super();
-    this.news = '';
-  }
-  
-  setNews(news) {
-    this.news = news;
-    this.emit('news', news);
-  }
-}
-
-class NewsChannel {
-  constructor(name) {
-    this.name = name;
-  }
-  
-  update(news) {
-    console.log(\`\${this.name} broadcasting: \${news}\`);
-  }
-}
-
-// Example usage
-const agency = new NewsAgency();
-const channel1 = new NewsChannel('CNN');
-const channel2 = new NewsChannel('BBC');
-
-agency.on('news', (news) => channel1.update(news));
-agency.on('news', (news) => channel2.update(news));
-
-agency.setNews('Breaking: New JavaScript framework released!');`,
-                language: "javascript",
-              },
-            ],
-            dependencies: ["events"],
-            completed: true,
-          },
-        },
-        {
-          id: "4",
-          title: "Advanced Patterns Assessment",
-          description: "Comprehensive quiz covering all patterns learned",
-          duration: "20 min",
-          completed: true,
-          type: "quiz" as const,
-          order: 4,
-          videos: [],
-          quiz: {
-            id: "quiz-2",
-            title: "Advanced Patterns Final Quiz",
-            description:
-              "Test your mastery of Singleton, Factory, and Observer patterns",
-            timeLimit: 20,
-            passingScore: 85,
-            attempts: 0,
-            maxAttempts: 2,
-            completed: true,
-            questions: [
-              {
-                id: "q3",
-                question:
-                  "Which pattern ensures only one instance of a class exists?",
-                type: "multiple-choice" as const,
-                options: ["Factory", "Observer", "Singleton", "Strategy"],
-                correctAnswer: "Singleton",
-                explanation:
-                  "The Singleton pattern restricts instantiation to a single instance.",
-                points: 20,
-              },
-              {
-                id: "q4",
-                question:
-                  "The Observer pattern is useful for implementing _____ systems.",
-                type: "fill-blank" as const,
-                correctAnswer: "event-driven",
-                explanation:
-                  "Observer pattern is perfect for event-driven architectures.",
-                points: 20,
-              },
-            ],
-          },
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Microservices Architecture",
-      description:
-        "Learn to design and implement scalable microservices using modern tools and practices.",
-      instructor: "Michael Chen",
-      duration: "12 hours",
-      level: "Intermediate" as const,
-      progress: 30,
-      thumbnail: "/placeholder.svg?height=200&width=300",
-      enrolled: true,
-      rating: 4.9,
-      students: 890,
-      price: 129,
-      tags: ["Microservices", "Docker", "Kubernetes", "Architecture"],
-      longDescription: `Dive deep into the world of microservices architecture with this comprehensive course designed for intermediate to advanced developers. Learn how to break down monolithic applications into scalable, maintainable microservices that can be developed, deployed, and scaled independently.
-
-This course covers essential microservices concepts including service decomposition strategies, inter-service communication patterns, data management in distributed systems, and deployment orchestration. You'll master tools like Docker, Kubernetes, API gateways, and service meshes.
-
-We'll explore real-world challenges such as distributed transactions, eventual consistency, circuit breakers, and monitoring distributed systems. You'll learn how to implement robust error handling, implement distributed tracing, and ensure system resilience.
-
-The course includes practical projects where you'll build a complete microservices-based e-commerce platform, implement service discovery, configure load balancing, and set up comprehensive monitoring and logging solutions.
-
-By completion, you'll be equipped to design, implement, and maintain production-ready microservices architectures that can scale to handle millions of users while maintaining high availability and performance.`,
-      chapters: [
-        {
-          id: "1",
-          title: "Microservices Fundamentals",
-          description:
-            "Introduction to microservices architecture and principles",
-          duration: "40 min",
-          completed: true,
-          type: "video" as const,
-          order: 1,
-          videos: [
-            {
-              id: "1-1",
-              title: "What are Microservices?",
-              duration: "20 min",
-              completed: true,
-              description:
-                "Understanding microservices vs monolithic architecture",
-              order: 1,
-            },
-            {
-              id: "1-2",
-              title: "Benefits and Challenges",
-              duration: "20 min",
-              completed: true,
-              description: "Pros and cons of microservices architecture",
-              order: 2,
-            },
-          ],
-        },
-        {
-          id: "2",
-          title: "Service Communication",
-          description:
-            "Learn different ways services communicate in microservices architecture",
-          duration: "55 min",
-          completed: false,
-          type: "mixed" as const,
-          order: 2,
-          videos: [
-            {
-              id: "2-1",
-              title: "Synchronous Communication",
-              duration: "25 min",
-              completed: false,
-              description: "REST APIs and gRPC for service communication",
-              order: 1,
-            },
-            {
-              id: "2-2",
-              title: "Asynchronous Communication",
-              duration: "30 min",
-              completed: false,
-              description: "Message queues and event-driven communication",
-              order: 2,
-            },
-          ],
-          exercise: {
-            id: "exercise-2",
-            title: "Build a Simple API Gateway",
-            description:
-              "Create an API gateway to route requests to different services",
-            difficulty: "Medium" as const,
-            language: "javascript",
-            starterCode: `const express = require('express');
-const httpProxy = require('http-proxy-middleware');
-
-const app = express();
-
-// Configure routes to different services
-// Your implementation here
-
-app.listen(3000, () => {
-  console.log('API Gateway running on port 3000');
-});`,
-            solution: `const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-
-const app = express();
-
-// User service proxy
-app.use('/api/users', createProxyMiddleware({
-  target: 'http://localhost:3001',
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/users': '/users'
-  }
-}));
-
-// Product service proxy
-app.use('/api/products', createProxyMiddleware({
-  target: 'http://localhost:3002',
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/products': '/products'
-  }
-}));
-
-app.listen(3000, () => {
-  console.log('API Gateway running on port 3000');
-});`,
-            testCases: [
-              {
-                id: "test1",
-                input: "GET /api/users",
-                expectedOutput: "Should proxy to user service on port 3001",
-                description: "User service routing test",
-              },
-            ],
-            hints: [
-              "Use http-proxy-middleware for routing",
-              "Configure different target ports for each service",
-              "Use pathRewrite to modify the request path",
-            ],
-            completed: false,
-            attempts: 0,
-          },
-        },
-      ],
-    },
-    {
-      id: "3",
-      title: "Database Design Mastery",
-      description:
-        "Complete guide to database design, optimization, and scaling strategies.",
-      instructor: "Emily Rodriguez",
-      duration: "10 hours",
-      level: "Intermediate" as const,
-      progress: 0,
-      thumbnail: "/placeholder.svg?height=200&width=300",
-      enrolled: false,
-      rating: 4.7,
-      students: 2100,
-      price: 89,
-      tags: ["Database", "SQL", "NoSQL", "Design"],
-      longDescription: `Master the art and science of database design with this comprehensive course covering both SQL and NoSQL database systems. Learn how to design efficient, scalable, and maintainable database schemas that can handle complex business requirements and high-traffic applications.
-
-This course covers fundamental database design principles including normalization, denormalization, indexing strategies, and query optimization. You'll explore advanced topics like database sharding, replication, backup strategies, and disaster recovery planning.
-
-We'll dive deep into both relational databases (PostgreSQL, MySQL) and NoSQL solutions (MongoDB, Redis, Cassandra), learning when to use each type and how to design optimal data models for different use cases. You'll master advanced SQL techniques, stored procedures, triggers, and database security best practices.
-
-The course includes hands-on projects where you'll design databases for real-world scenarios including e-commerce platforms, social media applications, and analytics systems. You'll learn performance tuning, monitoring, and troubleshooting techniques.
-
-By the end of this course, you'll be able to architect database solutions that can scale from startup to enterprise level, ensuring data integrity, optimal performance, and robust security throughout the application lifecycle.`,
-      chapters: [],
-    },
-    {
-      id: "4",
-      title: "System Design Fundamentals",
-      description:
-        "Learn how to design scalable, reliable, and maintainable systems.",
-      instructor: "Alex Wong",
-      duration: "15 hours",
-      level: "Advanced" as const,
-      progress: 0,
-      thumbnail: "/placeholder.svg?height=200&width=300",
-      enrolled: false,
-      rating: 4.9,
-      students: 1800,
-      price: 149,
-      tags: ["System Design", "Architecture", "Scalability", "Performance"],
-      longDescription: `This comprehensive course teaches you how to design large-scale distributed systems that are scalable, reliable, and maintainable. You'll learn the fundamental principles and patterns used by top tech companies to build systems that can handle millions of users.
-
-The course covers key topics including load balancing, caching strategies, database sharding, consistent hashing, CAP theorem, microservices architecture, and API design. You'll learn how to make critical design decisions and trade-offs based on system requirements and constraints.
-
-Through real-world case studies and hands-on design exercises, you'll analyze and design systems similar to those used by companies like Google, Amazon, and Netflix. You'll learn how to approach system design interviews and communicate your design decisions effectively.
-
-By the end of this course, you'll have the skills to design robust distributed systems and confidently tackle system design interviews at top tech companies.`,
-      chapters: [
-        {
-          id: "1",
-          title: "Introduction to System Design",
-          description:
-            "Learn the fundamentals of system design and why it matters",
-          duration: "60 min",
-          completed: false,
-          type: "video" as const,
-          order: 1,
-          videos: [
-            {
-              id: "1-1",
-              title: "What is System Design?",
-              duration: "15 min",
-              completed: false,
-              description: "Understanding the importance of system design",
-              order: 1,
-            },
-            {
-              id: "1-2",
-              title: "System Design Process",
-              duration: "20 min",
-              completed: false,
-              description: "Step-by-step approach to designing systems",
-              order: 2,
-            },
-            {
-              id: "1-3",
-              title: "Key Components of Distributed Systems",
-              duration: "25 min",
-              completed: false,
-              description:
-                "Overview of components in modern distributed systems",
-              order: 3,
-            },
-          ],
-        },
-        {
-          id: "2",
-          title: "Scalability Concepts",
-          description:
-            "Learn how to design systems that can scale to millions of users",
-          duration: "90 min",
-          completed: false,
-          type: "mixed" as const,
-          order: 2,
-          videos: [
-            {
-              id: "2-1",
-              title: "Vertical vs Horizontal Scaling",
-              duration: "20 min",
-              completed: false,
-              description: "Understanding different scaling approaches",
-              order: 1,
-            },
-            {
-              id: "2-2",
-              title: "Load Balancing Strategies",
-              duration: "25 min",
-              completed: false,
-              description: "Techniques for distributing traffic across servers",
-              order: 2,
-            },
-            {
-              id: "2-3",
-              title: "Database Scaling",
-              duration: "30 min",
-              completed: false,
-              description: "Strategies for scaling databases",
-              order: 3,
-            },
-          ],
-          quiz: {
-            id: "quiz-sd1",
-            title: "Scalability Concepts Quiz",
-            description: "Test your understanding of system scalability",
-            timeLimit: 15,
-            passingScore: 80,
-            attempts: 0,
-            maxAttempts: 3,
-            completed: false,
-            questions: [
-              {
-                id: "q1",
-                question:
-                  "Which scaling approach involves adding more machines to your pool of resources?",
-                type: "multiple-choice" as const,
-                options: [
-                  "Vertical Scaling",
-                  "Horizontal Scaling",
-                  "Diagonal Scaling",
-                  "Perpendicular Scaling",
-                ],
-                correctAnswer: "Horizontal Scaling",
-                explanation:
-                  "Horizontal scaling (scaling out) involves adding more machines to your resource pool.",
-                points: 25,
-              },
-              {
-                id: "q2",
-                question:
-                  "Which load balancing algorithm distributes requests based on the current server load?",
-                type: "multiple-choice" as const,
-                options: [
-                  "Round Robin",
-                  "Least Connections",
-                  "IP Hash",
-                  "Random",
-                ],
-                correctAnswer: "Least Connections",
-                explanation:
-                  "Least Connections routes traffic to the server with the fewest active connections.",
-                points: 25,
-              },
-            ],
-          },
-        },
-      ],
-    },
-    {
-      id: "5",
-      title: "API Design and Development",
-      description:
-        "Master the art of designing and building robust, scalable APIs.",
-      instructor: "Maria Garcia",
-      duration: "10 hours",
-      level: "Intermediate" as const,
-      progress: 0,
-      thumbnail: "/placeholder.svg?height=200&width=300",
-      enrolled: false,
-      rating: 4.8,
-      students: 1500,
-      price: 99,
-      tags: ["API", "REST", "GraphQL", "Backend"],
-      longDescription: `This comprehensive course teaches you how to design, build, and maintain high-quality APIs that developers love to use. You'll learn best practices for creating intuitive, consistent, and well-documented APIs that power modern applications.
-
-The course covers both REST and GraphQL API design patterns, authentication strategies, versioning approaches, and error handling. You'll learn how to design APIs that are secure, performant, and easy to evolve over time.
-
-Through hands-on projects, you'll build real-world APIs using Node.js, Express, and popular API frameworks. You'll implement authentication, rate limiting, caching, and comprehensive documentation using tools like Swagger/OpenAPI.
-
-By the end of this course, you'll have the skills to design and implement professional-grade APIs that meet the needs of your users and stand the test of time.`,
-      chapters: [
-        {
-          id: "1",
-          title: "API Design Fundamentals",
-          description: "Learn the core principles of good API design",
-          duration: "60 min",
-          completed: false,
-          type: "video" as const,
-          order: 1,
-          videos: [
-            {
-              id: "1-1",
-              title: "What Makes a Good API?",
-              duration: "15 min",
-              completed: false,
-              description: "Understanding the qualities of well-designed APIs",
-              order: 1,
-            },
-            {
-              id: "1-2",
-              title: "API Design Patterns",
-              duration: "25 min",
-              completed: false,
-              description: "Common patterns and best practices in API design",
-              order: 2,
-            },
-            {
-              id: "1-3",
-              title: "REST vs GraphQL",
-              duration: "20 min",
-              completed: false,
-              description: "Comparing different API architectural styles",
-              order: 3,
-            },
-          ],
-        },
-        {
-          id: "2",
-          title: "Building RESTful APIs",
-          description:
-            "Learn how to implement RESTful APIs with best practices",
-          duration: "90 min",
-          completed: false,
-          type: "mixed" as const,
-          order: 2,
-          videos: [
-            {
-              id: "2-1",
-              title: "RESTful Resource Design",
-              duration: "25 min",
-              completed: false,
-              description: "How to design resources and endpoints",
-              order: 1,
-            },
-            {
-              id: "2-2",
-              title: "HTTP Methods and Status Codes",
-              duration: "20 min",
-              completed: false,
-              description: "Using HTTP methods and status codes correctly",
-              order: 2,
-            },
-            {
-              id: "2-3",
-              title: "Implementing CRUD Operations",
-              duration: "30 min",
-              completed: false,
-              description:
-                "Building Create, Read, Update, Delete functionality",
-              order: 3,
-            },
-          ],
-          exercise: {
-            id: "exercise-api1",
-            title: "Build a RESTful API",
-            description: "Create a simple RESTful API for a blog platform",
-            difficulty: "Medium" as const,
-            language: "javascript",
-            starterCode: `const express = require('express');
-const app = express();
-app.use(express.json());
-
-// Define your blog post routes here
-// GET /posts - List all posts
-// GET /posts/:id - Get a specific post
-// POST /posts - Create a new post
-// PUT /posts/:id - Update a post
-// DELETE /posts/:id - Delete a post
-
-app.listen(3000, () => {
-  console.log('API server running on port 3000');
-});`,
-            solution: `const express = require('express');
-const app = express();
-app.use(express.json());
-
-// In-memory database
-let posts = [
-  { id: 1, title: 'First Post', content: 'Hello world!', author: 'John' }
-];
-let nextId = 2;
-
-// GET /posts - List all posts
-app.get('/posts', (req, res) => {
-  res.json(posts);
-});
-
-// GET /posts/:id - Get a specific post
-app.get('/posts/:id', (req, res) => {
-  const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (!post) return res.status(404).json({ error: 'Post not found' });
-  res.json(post);
-});
-
-// POST /posts - Create a new post
-app.post('/posts', (req, res) => {
-  const { title, content, author } = req.body;
-  if (!title || !content || !author) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  
-  const post = { id: nextId++, title, content, author };
-  posts.push(post);
-  res.status(201).json(post);
-});
-
-// PUT /posts/:id - Update a post
-app.put('/posts/:id', (req, res) => {
-  const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (!post) return res.status(404).json({ error: 'Post not found' });
-  
-  const { title, content, author } = req.body;
-  if (title) post.title = title;
-  if (content) post.content = content;
-  if (author) post.author = author;
-  
-  res.json(post);
-});
-
-// DELETE /posts/:id - Delete a post
-app.delete('/posts/:id', (req, res) => {
-  const index = posts.findIndex(p => p.id === parseInt(req.params.id));
-  if (index === -1) return res.status(404).json({ error: 'Post not found' });
-  
-  posts.splice(index, 1);
-  res.status(204).end();
-});
-
-app.listen(3000, () => {
-  console.log('API server running on port 3000');
-});`,
-            testCases: [
-              {
-                id: "test1",
-                input: "GET /posts",
-                expectedOutput: "Array of posts",
-                description: "Should return all posts",
-              },
-              {
-                id: "test2",
-                input:
-                  "POST /posts with { title: 'Test', content: 'Content', author: 'User' }",
-                expectedOutput: "New post object with ID",
-                description: "Should create a new post",
-              },
-            ],
-            hints: [
-              "Use Express route parameters to get the post ID",
-              "Remember to validate incoming data",
-              "Use appropriate HTTP status codes for responses",
-            ],
-            completed: false,
-            attempts: 0,
-          },
-        },
-      ],
-    },
-  ],
+  popularCoursesResponse: {
+    courses: [] as Course[],
+    meta: { total: 0, netTotal: 0 } as Meta,
+  },
 
   projects: [
     {
@@ -2029,8 +1322,10 @@ By following this roadmap, you'll develop the skills and confidence needed to ex
 };
 
 // Helper functions to work with the JSON data store
-export const getUser = () => dataStore.user;
-export const getCourses = () => dataStore.courses;
+export const getUser = async () => await fetchUser();
+export const getCourses = () => dataStore.coursesResponse.courses;
+export const getNotes = () => dataStore.notes;
+export const getUserCourses = () => dataStore.userCoursesResponse.userCourses;
 export const getProjects = () => dataStore.projects;
 export const getChallenges = () => dataStore.challenges;
 export const getInterviews = () => dataStore.interviews;
@@ -2062,7 +1357,9 @@ export const getRoadmapCoursesByMilestone = (milestoneId: string) => {
   );
   return roadmapCourses
     .map((rc) => {
-      const course = dataStore.courses.find((c) => c.id === rc.courseId);
+      const course = dataStore.coursesResponse.courses.find(
+        (c) => c.id === rc.courseId
+      );
       return {
         ...course,
         milestoneId,
@@ -2097,7 +1394,7 @@ export const getRoadmapAssessmentsByMilestone = (milestoneId: string) => {
 };
 
 export const getCourseById = (id: string) =>
-  dataStore.courses.find((c) => c.id === id);
+  dataStore.coursesResponse.courses.find((c) => c.id === id);
 export const getProjectById = (id: string) =>
   dataStore.projects.find((p) => p.id === id);
 export const getChallengeById = (id: string) =>
@@ -2111,7 +1408,7 @@ export const getLearningPathById = (id: string) =>
 
 export const getCourseChapters = (courseId: string) => {
   const course = getCourseById(courseId);
-  return course ? course.chapters : [];
+  return course ? course?.chapters! : [];
 };
 
 export const getCourseChapterById = (courseId: string, chapterId: string) => {
@@ -2171,12 +1468,12 @@ export const updateCourseProgress = (courseId: string, progress: number) => {
   }
 };
 
-export const markChapterComplete = (courseId: string, chapterId: string) => {
-  const chapter = getCourseChapterById(courseId, chapterId);
-  if (chapter) {
-    chapter.completed = true;
-  }
-};
+// export const markChapterComplete = (courseId: string, chapterId: string) => {
+//   const chapter = getCourseChapterById(courseId, chapterId);
+//   if (chapter) {
+//     chapter.isCompleted = true;
+//   }
+// };
 
 export const markVideoComplete = (
   courseId: string,
@@ -2304,10 +1601,406 @@ export const updateUser = (updates: Partial<User | null>) => {
 };
 
 export const updateCourse = (id: string, updates: Partial<Course>) => {
-  const course = dataStore.courses.find((c) => c.id === id);
+  const course = dataStore.coursesResponse.courses.find((c) => c.id === id);
   if (course) {
     Object.assign(course, updates);
   }
+};
+
+export const updatePopularCourses = (
+  updates: Partial<PopularCoursesResponse>
+) => {
+  const courses = [...(updates?.courses ?? [])];
+  dataStore.popularCoursesResponse.courses = [...courses];
+  dataStore.popularCoursesResponse.meta = updates?.meta!;
+};
+
+export const updateCourses = (updates: Partial<CoursesResponse>) => {
+  const courses = [...(updates?.courses ?? [])];
+  dataStore.coursesResponse.courses = [
+    ...courses,
+    // {
+    //   id: "1",
+    //   title: "Advanced Node.js Patterns",
+    //   summary:
+    //     "Master advanced Node.js concepts including design patterns, performance optimization, and scalability.",
+    //   instructor: "Sarah Johnson",
+    //   totalDuration: 8,
+    //   duration: "8",
+    //   slug: "advanced-nodejs-patterns",
+    //   level: "Advanced",
+    //   progress: 100,
+    //   amount: 20,
+    //   thumbnail: "/placeholder.svg?height=200&width=300",
+    //   enrolled: true,
+    //   rating: 4.8,
+    //   students: 1250,
+    //   price: 99,
+    //   tags: ["Node.js", "JavaScript", "Backend", "Patterns"],
+    //   description: `This comprehensive course takes you deep into the world of advanced Node.js development patterns and practices. You'll master essential design patterns including Singleton, Factory, Observer, and Strategy patterns, learning how to implement them effectively in Node.js applications.
+
+    // Throughout this course, you'll explore performance optimization techniques, memory management strategies, and scalable architecture patterns. We'll cover advanced topics like event-driven programming, stream processing, and microservices communication patterns.
+
+    // By the end of this course, you'll have the skills to build robust, maintainable, and scalable Node.js applications using industry-proven patterns and best practices. You'll understand when and how to apply different patterns, and you'll be able to architect complex backend systems with confidence.
+
+    // The course includes hands-on projects, real-world examples, and practical exercises that reinforce your learning. You'll work with modern tools and frameworks, and learn debugging and testing strategies for pattern-based code.`,
+    //   chapters: [
+    //     {
+    //       id: "1",
+    //       title: "Introduction to Advanced Patterns",
+    //       description: "Learn the fundamentals of design patterns in Node.js",
+    //       duration: "45 min",
+    //       completed: true,
+    //       type: "mixed" as const,
+    //       order: 1,
+    //       videos: [
+    //         {
+    //           id: "1-1",
+    //           title: "Welcome to Advanced Patterns",
+    //           duration: "5 min",
+    //           completed: true,
+    //           description: "Course overview and what you'll learn",
+    //           order: 1,
+    //         },
+    //         {
+    //           id: "1-2",
+    //           title: "Design Pattern Fundamentals",
+    //           duration: "15 min",
+    //           completed: true,
+    //           description: "Understanding design patterns and their importance",
+    //           order: 2,
+    //         },
+    //         {
+    //           id: "1-3",
+    //           title: "Node.js Architecture Overview",
+    //           duration: "20 min",
+    //           completed: true,
+    //           description: "How Node.js architecture influences pattern choice",
+    //           order: 3,
+    //         },
+    //       ],
+    //       quiz: {
+    //         id: "quiz-1",
+    //         title: "Pattern Fundamentals Quiz",
+    //         description: "Test your understanding of design pattern basics",
+    //         timeLimit: 10,
+    //         passingScore: 80,
+    //         attempts: 1,
+    //         maxAttempts: 3,
+    //         completed: true,
+    //         questions: [
+    //           {
+    //             id: "q1",
+    //             question: "What is the main purpose of design patterns?",
+    //             type: "multiple-choice" as const,
+    //             options: [
+    //               "To make code more complex",
+    //               "To provide reusable solutions to common problems",
+    //               "To slow down development",
+    //               "To increase memory usage",
+    //             ],
+    //             correctAnswer:
+    //               "To provide reusable solutions to common problems",
+    //             explanation:
+    //               "Design patterns provide proven solutions to recurring design problems.",
+    //             points: 25,
+    //           },
+    //           {
+    //             id: "q2",
+    //             question: "Node.js is single-threaded.",
+    //             type: "true-false" as const,
+    //             options: ["True", "False"],
+    //             correctAnswer: "True",
+    //             explanation:
+    //               "Node.js runs on a single main thread but uses thread pools for I/O operations.",
+    //             points: 25,
+    //           },
+    //         ],
+    //       },
+    //     },
+    //     {
+    //       id: "2",
+    //       title: "Singleton and Factory Patterns",
+    //       description:
+    //         "Deep dive into Singleton and Factory patterns with practical examples",
+    //       duration: "60 min",
+    //       completed: true,
+    //       type: "mixed" as const,
+    //       order: 2,
+    //       videos: [
+    //         {
+    //           id: "2-1",
+    //           title: "Singleton Pattern Explained",
+    //           duration: "20 min",
+    //           completed: true,
+    //           description:
+    //             "Understanding the Singleton pattern and when to use it",
+    //           order: 1,
+    //         },
+    //         {
+    //           id: "2-2",
+    //           title: "Implementing Singleton in Node.js",
+    //           duration: "15 min",
+    //           completed: true,
+    //           description: "Practical implementation with code examples",
+    //           order: 2,
+    //         },
+    //         {
+    //           id: "2-3",
+    //           title: "Factory Pattern Deep Dive",
+    //           duration: "20 min",
+    //           completed: true,
+    //           description: "Factory pattern implementation and use cases",
+    //           order: 3,
+    //         },
+    //       ],
+    //       exercise: {
+    //         id: "exercise-1",
+    //         title: "Implement a Database Connection Singleton",
+    //         description:
+    //           "Create a singleton class for managing database connections",
+    //         difficulty: "Medium" as const,
+    //         language: "javascript",
+    //         starterCode: `class DatabaseConnection {
+    //   constructor() {
+    //     // Your implementation here
+    //   }
+
+    //   static getInstance() {
+    //     // Implement singleton pattern
+    //   }
+
+    //   connect() {
+    //     // Implement connection logic
+    //   }
+    // }
+
+    // module.exports = DatabaseConnection;`,
+    //         solution: `class DatabaseConnection {
+    //   constructor() {
+    //     if (DatabaseConnection.instance) {
+    //       return DatabaseConnection.instance;
+    //     }
+    //     this.isConnected = false;
+    //     DatabaseConnection.instance = this;
+    //   }
+
+    //   static getInstance() {
+    //     if (!DatabaseConnection.instance) {
+    //       DatabaseConnection.instance = new DatabaseConnection();
+    //     }
+    //     return DatabaseConnection.instance;
+    //   }
+
+    //   connect() {
+    //     if (!this.isConnected) {
+    //       console.log('Connecting to database...');
+    //       this.isConnected = true;
+    //     }
+    //     return this;
+    //   }
+    // }
+
+    // module.exports = DatabaseConnection;`,
+    //         testCases: [
+    //           {
+    //             id: "test1",
+    //             input:
+    //               "const db1 = DatabaseConnection.getInstance(); const db2 = DatabaseConnection.getInstance();",
+    //             expectedOutput: "db1 === db2 should be true",
+    //             description: "Two instances should be the same object",
+    //           },
+    //         ],
+    //         hints: [
+    //           "Use a static property to store the instance",
+    //           "Check if instance exists before creating new one",
+    //           "Return the existing instance if it already exists",
+    //         ],
+    //         completed: true,
+    //         attempts: 0,
+    //       },
+    //     },
+    //     {
+    //       id: "3",
+    //       title: "Observer Pattern Implementation",
+    //       description:
+    //         "Learn to implement the Observer pattern for event-driven architecture",
+    //       duration: "50 min",
+    //       completed: true,
+    //       type: "mixed" as const,
+    //       order: 3,
+    //       videos: [
+    //         {
+    //           id: "3-1",
+    //           title: "Observer Pattern Concepts",
+    //           duration: "18 min",
+    //           completed: true,
+    //           description:
+    //             "Understanding the Observer pattern and its benefits",
+    //           order: 1,
+    //         },
+    //         {
+    //           id: "3-2",
+    //           title: "Event Emitters in Node.js",
+    //           duration: "22 min",
+    //           completed: true,
+    //           description: "Using Node.js EventEmitter for Observer pattern",
+    //           order: 2,
+    //         },
+    //       ],
+    //       playground: {
+    //         id: "playground-1",
+    //         title: "Observer Pattern Playground",
+    //         description: "Experiment with Observer pattern implementations",
+    //         language: "javascript",
+    //         files: [
+    //           {
+    //             id: "file1",
+    //             name: "observer.js",
+    //             content: `// Observer Pattern Implementation
+    // class Subject {
+    //   constructor() {
+    //     this.observers = [];
+    //   }
+
+    //   subscribe(observer) {
+    //     this.observers.push(observer);
+    //   }
+
+    //   unsubscribe(observer) {
+    //     this.observers = this.observers.filter(obs => obs !== observer);
+    //   }
+
+    //   notify(data) {
+    //     this.observers.forEach(observer => observer.update(data));
+    //   }
+    // }
+
+    // class Observer {
+    //   constructor(name) {
+    //     this.name = name;
+    //   }
+
+    //   update(data) {
+    //     console.log(\`\${this.name} received: \${data}\`);
+    //   }
+    // }
+
+    // // Try it out
+    // const subject = new Subject();
+    // const observer1 = new Observer('Observer 1');
+    // const observer2 = new Observer('Observer 2');
+
+    // subject.subscribe(observer1);
+    // subject.subscribe(observer2);
+
+    // subject.notify('Hello World!');`,
+    //             language: "javascript",
+    //           },
+    //           {
+    //             id: "file2",
+    //             name: "eventEmitter.js",
+    //             content: `// Using Node.js EventEmitter
+    // const EventEmitter = require('events');
+
+    // class NewsAgency extends EventEmitter {
+    //   constructor() {
+    //     super();
+    //     this.news = '';
+    //   }
+
+    //   setNews(news) {
+    //     this.news = news;
+    //     this.emit('news', news);
+    //   }
+    // }
+
+    // class NewsChannel {
+    //   constructor(name) {
+    //     this.name = name;
+    //   }
+
+    //   update(news) {
+    //     console.log(\`\${this.name} broadcasting: \${news}\`);
+    //   }
+    // }
+
+    // // Example usage
+    // const agency = new NewsAgency();
+    // const channel1 = new NewsChannel('CNN');
+    // const channel2 = new NewsChannel('BBC');
+
+    // agency.on('news', (news) => channel1.update(news));
+    // agency.on('news', (news) => channel2.update(news));
+
+    // agency.setNews('Breaking: New JavaScript framework released!');`,
+    //             language: "javascript",
+    //           },
+    //         ],
+    //         dependencies: ["events"],
+    //         completed: true,
+    //       },
+    //     },
+    //     {
+    //       id: "4",
+    //       title: "Advanced Patterns Assessment",
+    //       description: "Comprehensive quiz covering all patterns learned",
+    //       duration: "20 min",
+    //       completed: true,
+    //       type: "quiz" as const,
+    //       order: 4,
+    //       videos: [],
+    //       quiz: {
+    //         id: "quiz-2",
+    //         title: "Advanced Patterns Final Quiz",
+    //         description:
+    //           "Test your mastery of Singleton, Factory, and Observer patterns",
+    //         timeLimit: 20,
+    //         passingScore: 85,
+    //         attempts: 0,
+    //         maxAttempts: 2,
+    //         completed: true,
+    //         questions: [
+    //           {
+    //             id: "q3",
+    //             question:
+    //               "Which pattern ensures only one instance of a class exists?",
+    //             type: "multiple-choice" as const,
+    //             options: ["Factory", "Observer", "Singleton", "Strategy"],
+    //             correctAnswer: "Singleton",
+    //             explanation:
+    //               "The Singleton pattern restricts instantiation to a single instance.",
+    //             points: 20,
+    //           },
+    //           {
+    //             id: "q4",
+    //             question:
+    //               "The Observer pattern is useful for implementing _____ systems.",
+    //             type: "fill-blank" as const,
+    //             correctAnswer: "event-driven",
+    //             explanation:
+    //               "Observer pattern is perfect for event-driven architectures.",
+    //             points: 20,
+    //           },
+    //         ],
+    //       },
+    //     },
+    //   ],
+    // } as Course,
+  ];
+
+  dataStore.coursesResponse.meta = updates?.meta!;
+};
+
+export const updateUserCourses = (updates: Partial<UserCoursesResponse>) => {
+  const courses = [...(updates?.userCourses ?? [])];
+  dataStore.userCoursesResponse.userCourses = [...courses];
+
+  dataStore.userCoursesResponse.meta = updates?.meta!;
+};
+
+export const updateUserCourse = (update: Partial<UserCourse>) => {
+  dataStore.userCourse = update;
 };
 
 export const updateProject = (id: string, updates: Partial<Project>) => {
@@ -2328,12 +2021,12 @@ export const updateChallenge = (id: string, updates: Partial<Challenge>) => {
 export const mockInterviews = dataStore.interviews;
 export const mockBootcamps = dataStore.bootcamps;
 export const mockPaths = dataStore.learningPaths;
-export const mockCourses = dataStore.courses;
+export const mockCourses = dataStore.coursesResponse.courses;
 export const mockProjects = dataStore.projects;
 export const mockRoadmaps = dataStore.roadmaps;
 
 // Named exports for direct access to data arrays
-export const courses = dataStore.courses;
+export const courses = dataStore.coursesResponse.courses;
 export const projects = dataStore.projects;
 export const challenges = dataStore.challenges;
 export const interviews = dataStore.interviews;

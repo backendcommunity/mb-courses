@@ -15,12 +15,32 @@ import {
   updateCourse as updateCourseInStore,
   updateProject as updateProjectInStore,
   updateChallenge as updateChallengeInStore,
+  updateCourses,
+  CoursesQuery,
+  updateUserCourses,
+  UserCourse,
+  updatePopularCourses,
+  Note,
+  updateUserCourse,
 } from "./data";
+import { fetchUser } from "./auth";
+import {
+  fetchCourse,
+  fetchCourses,
+  fetchUserCourse,
+  fetchUserCourses,
+  handleCourseEnrollment,
+  loadVideoNotes,
+} from "./courses";
 
 interface AppState {
   // Data getters
-  getUser: () => User;
-  getCourses: () => Course[];
+  getUser: () => User | any;
+  getCourses: (queries?: CoursesQuery) => Course[] | any;
+  getCourse: (slug: string) => Course | any;
+  getUserCourse: (slug: string) => UserCourse | any;
+  getUserCourses: (queries?: CoursesQuery) => UserCourse[] | any;
+  getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
   getProjects: () => Project[];
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
@@ -39,6 +59,7 @@ interface AppState {
   enrollInPath: (pathId: string) => void;
   completeChallenge: (challengeId: string) => void;
   addXP: (amount: number) => void;
+  handleCourseEnrollment: (courseId: string) => UserCourse | any;
 
   // Force re-render trigger
   version: number;
@@ -47,8 +68,63 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Data getters - always return current data from JSON store
-  getUser: () => dataStore.user,
-  getCourses: () => dataStore.courses,
+  getUser: async () => {
+    try {
+      const res = await fetchUser();
+      updateUserInStore(res.data);
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getCourses: async (queries?: CoursesQuery) => {
+    try {
+      const res = await fetchCourses(queries!);
+
+      if (queries?.filters!["tab"]?.includes("popular")) {
+        updatePopularCourses(res.data);
+        return res.data?.courses;
+      }
+
+      updateCourses(res.data);
+      return res.data?.courses;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getUserCourses: async (queries?: CoursesQuery) => {
+    try {
+      const res = await fetchUserCourses(queries!);
+      updateUserCourses(res.data);
+      return res.data?.userCourses;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getUserCourse: async (courseId: string) => {
+    try {
+      const res = await fetchUserCourse(courseId);
+      updateUserCourse(res.data);
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCourse: async (slug: string) => {
+    try {
+      const res = await fetchCourse(slug);
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getVideoNotes: async (courseId: string, videoId: string) => {
+    const res = await loadVideoNotes(courseId, videoId);
+    return res.data;
+  },
   getProjects: () => dataStore.projects,
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
@@ -71,6 +147,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().forceUpdate();
   },
 
+  handleCourseEnrollment: async (
+    courseId: string
+  ): Promise<UserCourse | any> => {
+    const res = await handleCourseEnrollment(courseId);
+    return res.data;
+  },
+
   updateProject: (id, updates) => {
     updateProjectInStore(id, updates);
     get().forceUpdate();
@@ -90,7 +173,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   enrollInCourse: (courseId) => {
-    const course = dataStore.courses.find((c) => c.id === courseId);
+    const course = dataStore.coursesResponse.courses.find(
+      (c) => c.id === courseId
+    );
     if (course) {
       course.enrolled = true;
       get().forceUpdate();
