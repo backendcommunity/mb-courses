@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,24 +23,44 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-
+import { Chapter, Course, Topic, updateCourse } from "@/lib/data";
+import DisqusCommentBlock from "../ui/comment";
+import { PaymentDialog } from "../payment-dialog";
+import ConfettiCelebration from "@/components/confetti-celebration";
+import { toast } from "sonner";
+import { useUser } from "@/hooks/use-user";
 interface CoursePreviewPageProps {
-  courseId: string;
+  slug: string;
   onNavigate?: (route: string) => void;
 }
 
 export function CoursePreviewPage({
-  courseId,
+  slug,
   onNavigate,
 }: CoursePreviewPageProps) {
   const store = useAppStore();
-  const course = store.getCourses().find((c) => c.id === courseId);
+  const user = useUser();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [celebration, setCelebration] = useState(false);
+  const [course, setCourse] = useState<Course>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration] = useState(300); // 5 minutes preview
   const [selectedPreview, setSelectedPreview] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  if (!course) {
+  useEffect(() => {
+    setLoading(true);
+    async function findCourse(slug: string) {
+      const course = await store.getCourse(slug);
+      setCourse(course);
+      setLoading(false);
+    }
+
+    findCourse(slug);
+  }, [slug]);
+
+  if (!course || loading) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -63,8 +83,81 @@ export function CoursePreviewPage({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const previewChapters = course.chapters.slice(0, 3); // First 3 chapters as preview
+  const calculateHours = (chapter: Chapter) => {
+    let totalSeconds = 0;
+
+    for (const video of chapter?.videos) {
+      if (typeof video.duration === "number") {
+        // Assume number = minutes
+        totalSeconds += video.duration * 60;
+      } else if (typeof video.duration === "string") {
+        const parts = video.duration.split(":").map(Number);
+
+        if (parts.length === 1) {
+          // e.g. "5" => 5 minutes
+          totalSeconds += parts[0] * 60;
+        } else if (parts.length === 2) {
+          // mm:ss
+          const [m, s] = parts;
+          totalSeconds += m * 60 + s;
+        } else if (parts.length === 3) {
+          // hh:mm:ss
+          const [h, m, s] = parts;
+          totalSeconds += h * 3600 + m * 60 + s;
+        }
+      }
+    }
+
+    return +(totalSeconds / 3600).toFixed(2);
+  };
+
+  const handleEnrollNow = async () => {
+    if (!user.isPremium) {
+      setShowPaymentDialog(!showPaymentDialog);
+      return;
+    }
+
+    if (course.isEnrolled) {
+      onNavigate?.(
+        routes.courseWatch(
+          slug,
+          course?.chapters[0]?.slug,
+          course?.chapters[0]?.videos[0]?.slug
+        )
+      );
+      return;
+    }
+
+    const userCourse = await handleEnrollment(course?.id!);
+    if (!userCourse) {
+      toast.error("An error occurred. Please try again");
+      return;
+    }
+    updateCourse(course?.id!, { enrolled: true });
+    Object.assign(course!, { enrolled: true });
+
+    // Trigger celebration for first-time enrollment
+    setCelebration(true);
+    toast.success("You have successfully enrolled");
+
+    onNavigate?.(routes.courseDetail(slug));
+  };
+
+  const handleEnrollment = async (courseId: string) => {
+    return await store.handleCourseEnrollment(courseId);
+  };
+
+  const previewChapters = course?.chapters?.filter((ch) => !ch.isPremium); // First 3 chapters as preview
   const currentPreview = previewChapters[selectedPreview];
+
+  const topics = [
+    ...[...(course?.topics ?? [])],
+    "Advanced Node.js design patterns",
+    "Performance optimization techniques",
+    "Scalable architecture principles",
+    "Real-world project implementation",
+    "Best practices and common pitfalls",
+  ] as Array<Topic | string>;
 
   return (
     <div className="flex-1 space-y-6">
@@ -72,7 +165,7 @@ export function CoursePreviewPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(routes.courseDetail(courseId))}
+          onClick={() => onNavigate?.(routes.courseDetail(slug))}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -90,7 +183,7 @@ export function CoursePreviewPage({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold">${course.price}</div>
+          <div className="text-2xl font-bold">${course.amount}</div>
           <div className="text-sm text-muted-foreground">Full course</div>
         </div>
       </div>
@@ -116,7 +209,7 @@ export function CoursePreviewPage({
                       {currentPreview?.title}
                     </h3>
                     <p className="text-blue-200">
-                      Preview: {currentPreview?.duration}
+                      Preview: {calculateHours(currentPreview)}
                     </p>
                   </div>
 
@@ -207,11 +300,14 @@ export function CoursePreviewPage({
             </div>
             <Button
               onClick={() => {
-                store.updateCourse(courseId, { enrolled: true });
-                onNavigate?.(routes.courseDetail(courseId));
+                handleEnrollNow();
               }}
             >
-              Enroll Now - ${course.price}
+              {user.isPremium
+                ? "Start Learning Now"
+                : course.isEnrolled
+                ? "Continue Learning"
+                : "Enroll Now"}
             </Button>
           </div>
 
@@ -238,9 +334,7 @@ export function CoursePreviewPage({
                       <div
                         key={chapter.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
-                          selectedPreview === index
-                            ? "bg-blue-50 border-blue-200"
-                            : ""
+                          selectedPreview === index ? "" : ""
                         }`}
                         onClick={() => setSelectedPreview(index)}
                       >
@@ -257,7 +351,10 @@ export function CoursePreviewPage({
                               FREE
                             </Badge>
                             <Clock className="h-3 w-3" />
-                            <span>{chapter.duration}</span>
+                            <span>
+                              {calculateHours(chapter)} hour
+                              {calculateHours(chapter) > 1 ? "s" : ""}
+                            </span>
                             <Badge variant="outline" className="text-xs">
                               {chapter.type}
                             </Badge>
@@ -275,32 +372,33 @@ export function CoursePreviewPage({
                 <CardHeader>
                   <CardTitle>Complete Course Curriculum</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {course.chapters.length} chapters • {course.duration} total
-                    length
+                    {course.chapters.length} chapters • {course.totalDuration}{" "}
+                    total length
                   </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {course.chapters.map((chapter, index) => {
-                      const isPreview = index < 3;
                       return (
                         <div
                           key={chapter.id}
                           className={`flex items-center gap-3 p-3 rounded-lg border ${
-                            isPreview
+                            !chapter.isPremium
                               ? "cursor-pointer hover:bg-muted/50"
                               : "opacity-60"
                           }`}
-                          onClick={() => isPreview && setSelectedPreview(index)}
+                          onClick={() =>
+                            !chapter.isPremium && setSelectedPreview(index)
+                          }
                         >
                           <div
                             className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                              isPreview
+                              !chapter.isPremium
                                 ? "bg-green-100 text-green-600"
                                 : "bg-muted text-muted-foreground"
                             }`}
                           >
-                            {isPreview ? (
+                            {!chapter.isPremium ? (
                               <Play className="h-4 w-4" />
                             ) : (
                               <Lock className="h-4 w-4" />
@@ -312,15 +410,18 @@ export function CoursePreviewPage({
                               <Badge
                                 variant="outline"
                                 className={`text-xs ${
-                                  isPreview
+                                  !chapter.isPremium
                                     ? "border-green-600 text-green-600"
                                     : "border-orange-600 text-orange-600"
                                 }`}
                               >
-                                {isPreview ? "FREE" : "PREMIUM"}
+                                {!chapter.isPremium ? "FREE" : "PREMIUM"}
                               </Badge>
                               <Clock className="h-3 w-3" />
-                              <span>{chapter.duration}</span>
+                              <span>
+                                {calculateHours(chapter)} hour
+                                {calculateHours(chapter) > 1 ? "s" : ""}
+                              </span>
                               <Badge variant="outline" className="text-xs">
                                 {chapter.type}
                               </Badge>
@@ -343,15 +444,15 @@ export function CoursePreviewPage({
                   <div className="flex items-start gap-4">
                     <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
                       <span className="text-lg font-bold">
-                        {course.instructor
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {course?.instructor
+                          ?.split(" ")
+                          .map((n: string) => n.charAt(0))
+                          .join("") ?? "MB"}
                       </span>
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold">
-                        {course.instructor}
+                        {course?.instructor ?? "Mastering Backend"}
                       </h3>
                       <p className="text-muted-foreground">
                         Senior Backend Engineer with 8+ years of experience
@@ -383,77 +484,18 @@ export function CoursePreviewPage({
                 <CardHeader>
                   <CardTitle>Student Reviews</CardTitle>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-bold">{course.rating}</span>
-                    </div>
-                    <span className="text-muted-foreground">
-                      ({course.students.toLocaleString()} students)
-                    </span>
+                    <div className="flex items-center gap-1"></div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
-                      {
-                        name: "Sarah Chen",
-                        rating: 5,
-                        time: "2 weeks ago",
-                        comment:
-                          "Excellent course! The preview chapters gave me confidence to enroll. The instructor explains complex concepts clearly.",
-                      },
-                      {
-                        name: "Mike Rodriguez",
-                        rating: 5,
-                        time: "1 month ago",
-                        comment:
-                          "The free preview was very helpful in understanding the teaching style. Definitely worth the investment!",
-                      },
-                      {
-                        name: "Emily Johnson",
-                        rating: 4,
-                        time: "2 months ago",
-                        comment:
-                          "Great content and structure. The preview feature is a nice touch that helped me decide.",
-                      },
-                    ].map((review, index) => (
-                      <div
-                        key={index}
-                        className="space-y-2 border-b pb-4 last:border-b-0"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                            {review.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </div>
-                          <div>
-                            <p className="font-medium">{review.name}</p>
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-3 w-3 ${
-                                      star <= review.rating
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {review.time}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {review.comment}
-                        </p>
-                      </div>
-                    ))}
+                    <DisqusCommentBlock
+                      config={{
+                        url: "/courses/" + slug,
+                        identifier: slug,
+                        title: course?.title,
+                      }}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -472,13 +514,16 @@ export function CoursePreviewPage({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Price</span>
-                  <span className="font-bold text-lg">${course.price}</span>
+                  <span className="font-bold text-lg">${course.amount}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
                     Duration
                   </span>
-                  <span className="font-medium">{course.duration}</span>
+                  <span className="font-medium">
+                    {course.totalDuration} hour
+                    {course.totalDuration > 1 ? "s" : ""}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Level</span>
@@ -521,11 +566,14 @@ export function CoursePreviewPage({
                 className="w-full"
                 size="lg"
                 onClick={() => {
-                  store.updateCourse(courseId, { enrolled: true });
-                  onNavigate?.(routes.courseDetail(courseId));
+                  handleEnrollNow();
                 }}
               >
-                Enroll Now - ${course.price}
+                {user.isPremium
+                  ? "Start Learning Now"
+                  : course.isEnrolled
+                  ? "Continue Learning"
+                  : "Enroll Now"}
               </Button>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">
@@ -536,28 +584,25 @@ export function CoursePreviewPage({
           </Card>
 
           {/* What You'll Learn */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">What You'll Learn</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {[
-                  "Advanced Node.js design patterns",
-                  "Performance optimization techniques",
-                  "Scalable architecture principles",
-                  "Real-world project implementation",
-                  "Best practices and common pitfalls",
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-2 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
+          {course?.topics?.length ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">What You'll Learn</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  {course?.topics?.map((item: Topic, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-2 flex-shrink-0" />
+                      <span>{item?.title ?? item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : (
+            ""
+          )}
           {/* Course Tags */}
           <Card>
             <CardHeader>
@@ -575,6 +620,23 @@ export function CoursePreviewPage({
           </Card>
         </div>
       </div>
+
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={course?.title!}
+      />
+
+      {showPaymentDialog && (
+        <PaymentDialog
+          onClose={() => setShowPaymentDialog(false)}
+          open={showPaymentDialog}
+          data={course}
+          onHandlePreview={() => {}}
+          onHandlePurchase={() => {}}
+        />
+      )}
     </div>
   );
 }

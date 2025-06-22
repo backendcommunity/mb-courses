@@ -10,7 +10,9 @@ export interface User {
   streak: number;
   title: string;
   badges: Badge[];
-  points?: number;
+  isPremium: boolean;
+  subscription?: Subscription;
+  points: number;
   numberOfCoursesCompleted?: number;
   numberOfCoursesInProgress?: number;
   numberOfProjectsBuilt?: number;
@@ -22,14 +24,77 @@ export interface User {
   website?: string;
   address?: string;
   phone?: string;
-  createdAt?: Date;
+  createdAt?: Date | string;
+}
+
+export interface Subscription {
+  id: string;
+  name: string;
+  planId?: string;
+  userId?: string;
+  subscriptionPlanId?: string;
+  teamId?: string;
+  user?: User;
+  paymentChannelId?: string;
+  subscriptionId?: string;
+  expiry?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  switchToBasicDate?: Date | string;
+  paymentChannel?: PaymentChannel;
+  plan?: Plan;
+}
+
+export interface Level {
+  id: number;
+  name: string;
+  point: number;
+  icon?: string;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  paymentChannels?: PaymentChannel[];
+  monthlyPrice?: number;
+  annualPrice?: number;
+  features?: Array<any>;
+  popular?: boolean;
+  cta?: string;
+  disabled?: boolean;
+}
+
+export interface PaymentChannel {
+  id: String;
+  channel: PaymentChannelType;
+  planId: String;
+  originalMonthlyPrice: number;
+  discountedMonthlyPrice: number;
+  discountMonthlyDate?: Date | string;
+  originalYearlyPrice: number;
+  discountedYearlyPrice: number;
+  discountYearlyDate?: Date | string;
+  monthlyPlanId?: String;
+  yearlyPlanId?: String;
+  plan: Plan;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export enum PaymentChannelType {
+  PAYSTACK,
+  STRIPE,
+  PADDLE,
 }
 
 export interface Note {
   id: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   video?: Video;
 }
 export interface CoursesQuery {
@@ -107,16 +172,16 @@ export interface Course {
   totalQuizzes: number;
   totalPlaygrounds: number;
   totalTasks: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface Category {
   id: string;
   name: string;
   color: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface UserCourse {
@@ -132,8 +197,8 @@ export interface UserCourse {
   userVideos?: UserVideo[];
   // userArticles: UserArticle[]
   userChapters?: UserChapter[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface UserVideo {
@@ -165,7 +230,7 @@ export interface Meta {
   total: number;
   netTotal: number;
 }
-interface Topic {
+export interface Topic {
   id: string;
   title: string;
   summary?: string;
@@ -178,6 +243,7 @@ export interface Chapter {
   summary: string;
   duration: string;
   isCompleted?: boolean;
+  isPremium: boolean;
   slug: string;
   videos: Video[];
   quiz?: Quiz;
@@ -218,6 +284,8 @@ export interface Quiz {
   maxAttempts: number;
   completed: boolean;
   score?: number;
+  enrolled?: boolean;
+  userQuiz?: any;
 }
 
 export interface QuizQuestion {
@@ -422,12 +490,24 @@ export interface RoadmapAssessment {
 
 // JSON Data Store - All data stored as simple JavaScript objects
 export const dataStore = {
+  levels: [
+    { id: 1, name: "Code Squire", point: 1000 },
+    { id: 2, name: "API Tinkerer", point: 2500 },
+    { id: 3, name: "Logic Blacksmith", point: 5000 },
+    { id: 4, name: "Auth Alchemist", point: 8000 },
+    { id: 5, name: "Database Cartographer", point: 12000 },
+    { id: 6, name: "Service Sorcerer", point: 17000 },
+    { id: 7, name: "Architect", point: 23000 },
+    { id: 8, name: "Performance Paladin", point: 30000 },
+    { id: 9, name: "DevOps Enchanter", point: 38000 },
+    { id: 10, name: "Backend Overlord", point: 47000 },
+  ] as Level[],
+
   user: {
     id: "1",
     name: "John Doe",
     email: "john@example.com",
     avatar: "/placeholder.svg?height=40&width=40",
-    level: 8,
     xp: 2450,
     points: 2450,
     bio: "",
@@ -623,6 +703,75 @@ export const dataStore = {
       ],
     },
   ],
+
+  plans: [
+    {
+      id: "free",
+      name: "Free",
+      description: "Basic access to get started",
+      monthlyPrice: 0,
+      annualPrice: 0,
+      features: [
+        { name: "Access to free courses", included: true },
+        { name: "Limited project access", included: true },
+        { name: "Community forum access", included: true },
+        { name: "Basic learning paths", included: true },
+        { name: "Premium courses", included: false },
+        { name: "Bootcamps", included: false },
+        { name: "Interview preparation", included: false },
+        { name: "Certification exams", included: false },
+        { name: "1-on-1 mentorship", included: false },
+        { name: "Career services", included: false },
+      ],
+      popular: false,
+      cta: "Current Plan",
+      disabled: true,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      description: "Everything you need to accelerate your career",
+      monthlyPrice: 39.99,
+      annualPrice: 399.99, // ~2 months free
+      features: [
+        { name: "Access to free courses", included: true },
+        { name: "Unlimited project access", included: true },
+        { name: "Community forum access", included: true },
+        { name: "All learning paths", included: true },
+        { name: "Premium courses", included: true },
+        { name: "Interview preparation", included: true },
+        { name: "Bootcamps", included: false },
+        { name: "Certification exams", included: false },
+        { name: "1-on-1 mentorship", included: false },
+        { name: "Career services", included: false },
+      ],
+      popular: true,
+      cta: "Choose Pro",
+      disabled: false,
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      description: "Advanced features for teams and businesses",
+      monthlyPrice: 99.99,
+      annualPrice: 999.99, // ~2 months free
+      features: [
+        { name: "Access to free courses", included: true },
+        { name: "Unlimited project access", included: true },
+        { name: "Community forum access", included: true },
+        { name: "All learning paths", included: true },
+        { name: "Premium courses", included: true },
+        { name: "Bootcamps", included: true },
+        { name: "Interview preparation", included: true },
+        { name: "Certification exams", included: true },
+        { name: "1-on-1 mentorship", included: true },
+        { name: "Career services", included: true },
+      ],
+      popular: false,
+      cta: "Choose Enterprise",
+      disabled: false,
+    },
+  ] as Plan[],
 
   challenges: [
     {

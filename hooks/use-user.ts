@@ -1,6 +1,6 @@
-import { dataStore } from "@/lib/data";
+import { dataStore, User } from "@/lib/data";
 
 export function useUser() {
-  const user = dataStore.user;
+  const user: User | any = dataStore.user;
   return user;
 }

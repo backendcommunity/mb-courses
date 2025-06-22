@@ -38,6 +38,11 @@ export const loadVideoNotes = async (courseId: string, videoId: string) => {
   return data;
 };
 
+export const fetchCourseQuizzes = async (courseId: string) => {
+  const { data } = await api.get(`/courses/${courseId}/quizzes`);
+  return data;
+};
+
 export const fetchUserCourse = async (courseId: string) => {
   const { data } = await api.get("/users/courses/" + courseId);
 

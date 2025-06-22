@@ -1,5 +1,4 @@
 import { CreditCard, Crown, Gift } from "lucide-react";
-import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import {
   Dialog,
@@ -7,9 +6,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { useState } from "react";
+import { useUser } from "@/hooks/use-user";
 
 interface PaymentDialogProps {
   data: any;
@@ -26,21 +25,16 @@ export function PaymentDialog({
   onHandlePurchase,
   onClose,
 }: PaymentDialogProps) {
-  const [showPaymentDialog, setShowPaymentDialog] = useState(open);
+  const user = useUser();
 
   const canAccessCourse = (data: any) => {
-    return subscription.plan !== "Free" || data?.enrolled || data?.isFree;
+    return (
+      (user.isPremium && user?.subscription) || data?.enrolled || data?.isFree
+    );
   };
 
   const getXPCost = (amount: number) => {
     return Math.round(amount * 50); // 1 dollar = 50 MB
-  };
-
-  // Mock subscription data
-  const subscription = {
-    plan: "Pro", // Free, Pro, Enterprise
-    status: "active",
-    xpBalance: 2450,
   };
 
   const hasAccess = canAccessCourse(data);
@@ -115,7 +109,7 @@ export function PaymentDialog({
 
             <Card
               className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onHandlePurchase(data.id, "xp")}
+              onClick={() => onHandlePurchase(data.id, "mb")}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">
@@ -133,7 +127,7 @@ export function PaymentDialog({
                       {xpCost?.toLocaleString()} MB
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Balance: {subscription?.xpBalance?.toLocaleString()} MB
+                      Balance: {user?.points?.toLocaleString()} MB
                     </div>
                   </div>
                 </div>

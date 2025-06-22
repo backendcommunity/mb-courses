@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
+import { useLevel } from "@/hooks/use-level";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -104,6 +105,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const [mounted, setMounted] = useState(true);
   const user = useUser();
+  const level = useLevel();
 
   useEffect(() => {
     setMounted(true);
@@ -112,13 +114,6 @@ export function DashboardSidebar({
   if (!mounted) {
     return null;
   }
-
-  // Mock subscription data
-  const subscription = {
-    plan: "Pro",
-    status: "active",
-    xpBalance: 2450,
-  };
 
   return (
     <div className="flex fixed w-72 flex-col h-full bg-sidebar border-r border-border overflow-hidden">
@@ -148,24 +143,31 @@ export function DashboardSidebar({
             <span className="text-sm font-medium">
               Level {user?.level} Engineer
             </span>
-            {subscription.plan !== "Free" && (
+            {user.isPremium && user?.subscription ? (
               <Badge
                 variant="outline"
                 className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
               >
                 <Crown className="h-3 w-3 mr-1" />
-                {subscription.plan}
+                {user.subscription?.plan?.name}
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
+              >
+                Free
               </Badge>
             )}
           </div>
           <Progress
-            value={(user?.points / user?.xpToNextLevel) * 100}
+            value={(user.points / user?.xpToNextLevel) * 100}
             className="h-2 mb-1"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{user?.points?.toLocaleString()} MB</span>
             <span>
-              {user?.xpToNextLevel?.toLocaleString()} MB to Level{" "}
+              {level?.mbToNextLevel?.toLocaleString()} MB to Level{" "}
               {user?.level + 1}
             </span>
           </div>
@@ -181,7 +183,7 @@ export function DashboardSidebar({
             <div className="flex items-center gap-2">
               <Gift className="h-4 w-4 text-primary" />
               <span className="text-primary">
-                {subscription.xpBalance.toLocaleString()} MB
+                {user.points.toLocaleString()} MB
               </span>
             </div>
             <span className="text-xs text-primary">Redeem</span>

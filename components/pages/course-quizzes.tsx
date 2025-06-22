@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,62 +14,36 @@ import {
   Filter,
 } from "lucide-react";
 import { routes } from "@/lib/routes";
+import { useAppStore } from "@/lib/store";
+import { Quiz } from "@/lib/data";
 
 interface CourseQuizzesPageProps {
-  courseId: string;
+  slug: string;
   onNavigate: (path: string) => void;
 }
 
 export function CourseQuizzesPage({
-  courseId,
+  slug,
   onNavigate,
 }: CourseQuizzesPageProps) {
+  const store = useAppStore();
   const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
+  const [quizzes, setQuizzes] = useState<Quiz[] | any>();
 
-  // Mock quiz data
-  const quizzes = [
-    {
-      id: "quiz-1",
-      title: "JavaScript Fundamentals Quiz",
-      description:
-        "Test your knowledge of JavaScript basics, variables, and functions",
-      questions: 15,
-      timeLimit: 20,
-      difficulty: "Easy",
-      attempts: 2,
-      bestScore: 85,
-      passed: true,
-      completed: true,
-    },
-    {
-      id: "quiz-2",
-      title: "Async Programming Quiz",
-      description: "Promises, async/await, and callback patterns",
-      questions: 12,
-      timeLimit: 15,
-      difficulty: "Medium",
-      attempts: 1,
-      bestScore: 70,
-      passed: false,
-      completed: true,
-    },
-    {
-      id: "quiz-3",
-      title: "Advanced JavaScript Quiz",
-      description: "Closures, prototypes, and advanced concepts",
-      questions: 20,
-      timeLimit: 30,
-      difficulty: "Hard",
-      attempts: 0,
-      bestScore: null,
-      passed: false,
-      completed: false,
-    },
-  ];
+  async function loadQuizzes() {
+    const quizzes = await store.getCourseQuizzes(slug);
+    setQuizzes(quizzes);
+  }
 
-  const filteredQuizzes = quizzes.filter((quiz) => {
-    if (filter === "completed") return quiz.completed;
-    if (filter === "pending") return !quiz.completed;
+  useEffect(() => {
+    loadQuizzes();
+  }, []);
+
+  if (!quizzes) return <div>loading...</div>;
+
+  const filteredQuizzes = quizzes.filter(({ userQuiz, enrolled }: any) => {
+    if (filter === "completed") return enrolled && userQuiz?.completed;
+    if (filter === "pending") return !enrolled || !userQuiz?.completed;
     return true;
   });
 
@@ -93,6 +67,9 @@ export function CourseQuizzesPage({
     return "text-red-600";
   };
 
+  // const averageScore =
+  // quizScores.reduce((total, score) => total + score, 0) / quizScores.length;
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -101,7 +78,7 @@ export function CourseQuizzesPage({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate(routes.courseDetail(courseId))}
+            onClick={() => onNavigate(routes.courseDetail(slug))}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -112,7 +89,7 @@ export function CourseQuizzesPage({
               <Brain className="h-6 w-6 text-blue-600" />
               Course Quizzes
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               Test your knowledge and track your progress
             </p>
           </div>
@@ -126,7 +103,7 @@ export function CourseQuizzesPage({
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-600">Total Quizzes</p>
+                <p className="text-sm text-gray-400">Total Quizzes</p>
                 <p className="text-2xl font-bold">{quizzes.length}</p>
               </div>
             </div>
@@ -137,9 +114,12 @@ export function CourseQuizzesPage({
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-gray-400">Completed</p>
                 <p className="text-2xl font-bold">
-                  {quizzes.filter((q) => q.completed).length}
+                  {
+                    quizzes.filter(({ userQuiz }: any) => userQuiz?.completed)
+                      ?.length
+                  }
                 </p>
               </div>
             </div>
@@ -150,9 +130,12 @@ export function CourseQuizzesPage({
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-600">Passed</p>
+                <p className="text-sm text-gray-400">Passed</p>
                 <p className="text-2xl font-bold">
-                  {quizzes.filter((q) => q.passed).length}
+                  {
+                    quizzes.filter(({ userQuiz }: any) => userQuiz?.passed)
+                      .length
+                  }
                 </p>
               </div>
             </div>
@@ -163,13 +146,20 @@ export function CourseQuizzesPage({
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-600">Avg Score</p>
+                <p className="text-sm text-gray-400">Avg Score</p>
                 <p className="text-2xl font-bold">
                   {Math.round(
                     quizzes
-                      .filter((q) => q.bestScore)
-                      .reduce((acc, q) => acc + (q.bestScore || 0), 0) /
-                      quizzes.filter((q) => q.bestScore).length
+                      .filter(({ userQuiz }: any) => {
+                        return userQuiz.bestScore;
+                      })
+                      .reduce(
+                        (acc: any, { userQuiz }: any) =>
+                          acc + (userQuiz?.bestScore || 0),
+                        0
+                      ) /
+                      quizzes.filter(({ userQuiz }: any) => userQuiz?.bestScore)
+                        .length
                   ) || 0}
                   %
                 </p>
@@ -181,7 +171,7 @@ export function CourseQuizzesPage({
 
       {/* Filter Buttons */}
       <div className="flex items-center gap-2 mb-6">
-        <Filter className="h-4 w-4 text-gray-600" />
+        <Filter className="h-4 w-4 text-gray-400" />
         <Button
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
@@ -207,13 +197,13 @@ export function CourseQuizzesPage({
 
       {/* Quizzes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {filteredQuizzes.map((quiz) => (
+        {filteredQuizzes.map(({ quiz, userQuiz, enrolled }: any) => (
           <Card key={quiz.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg">{quiz.title}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-400 mt-1">
                     {quiz.description}
                   </p>
                 </div>
@@ -224,10 +214,10 @@ export function CourseQuizzesPage({
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Quiz Info */}
-              <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center justify-between text-sm text-gray-400">
                 <div className="flex items-center gap-1">
                   <Brain className="h-4 w-4" />
-                  {quiz.questions} questions
+                  {quiz?.questions?.length} questions
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -236,26 +226,28 @@ export function CourseQuizzesPage({
               </div>
 
               {/* Progress/Score */}
-              {quiz.completed ? (
+
+              {enrolled && userQuiz?.completed ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Best Score</span>
+                    <span className="text-sm text-gray-400">Best Score</span>
                     <span
                       className={`font-semibold ${getScoreColor(
-                        quiz.bestScore
+                        userQuiz?.bestScore
                       )}`}
                     >
-                      {quiz.bestScore}%
+                      {userQuiz?.bestScore}%
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {quiz.passed ? (
+                    {userQuiz?.passed ? (
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     ) : (
                       <XCircle className="h-4 w-4 text-red-600" />
                     )}
-                    <span className="text-sm text-gray-600">
-                      {quiz.attempts} attempt{quiz.attempts !== 1 ? "s" : ""}
+                    <span className="text-sm text-gray-400">
+                      {userQuiz?.attempts} attempt
+                      {userQuiz?.attempts !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -268,11 +260,15 @@ export function CourseQuizzesPage({
               {/* Action Button */}
               <Button
                 className="w-full"
-                onClick={() => onNavigate(routes.courseQuiz(courseId, quiz.id))}
-                variant={quiz.completed && !quiz.passed ? "outline" : "default"}
+                onClick={() => onNavigate(routes.courseQuiz(slug, quiz.id))}
+                variant={
+                  userQuiz?.completed && !userQuiz?.passed
+                    ? "outline"
+                    : "default"
+                }
               >
-                {quiz.completed
-                  ? quiz.passed
+                {userQuiz?.completed
+                  ? userQuiz?.passed
                     ? "Review Quiz"
                     : "Retake Quiz"
                   : "Start Quiz"}
@@ -286,7 +282,7 @@ export function CourseQuizzesPage({
         <Card>
           <CardContent className="text-center py-8">
             <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+            <h3 className="text-lg font-semibold text-gray-400 mb-2">
               No quizzes found
             </h3>
             <p className="text-gray-500">

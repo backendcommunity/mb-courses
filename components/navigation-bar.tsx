@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Sparkles,
   Menu,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -420,7 +421,7 @@ export function NavigationBar({
             <ThemeToggle />
 
             {/* Subscription Status */}
-            {subscription.plan !== "Free" && !isMobile && (
+            {user?.isPremium && user?.subscription && !isMobile ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -428,7 +429,17 @@ export function NavigationBar({
                 onClick={() => onNavigate(routes.subscriptionManagement)}
               >
                 <Crown className="h-4 w-4 mr-1" />
-                {subscription.plan}
+                {user?.subscription?.plan?.name}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to- hover:from-yellow-400/20 hover:to-yellow-400/20 dark:text-yellow-400"
+                onClick={() => onNavigate(routes.subscriptionManagement)}
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Free
               </Button>
             )}
 

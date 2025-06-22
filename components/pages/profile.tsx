@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import { useUser } from "@/hooks/use-user";
+import { useLevel } from "@/hooks/use-level";
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
@@ -36,6 +37,7 @@ interface ProfilePageProps {
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const user = useUser();
+  const { level, mbToNextLevel } = useLevel();
 
   const [formData, setFormData] = useState({
     name: user.name,
@@ -384,20 +386,29 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">Level {user?.level}</div>
-                <div className="text-sm text-muted-foreground">
-                  Senior Engineer
+              <div className="flex justify-center items-center gap-2">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={level?.icon} alt={user?.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                    {level?.name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1">
+                  <div className="text-2xl font-bold">Level {user?.level}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {level.name}
+                  </div>
                 </div>
               </div>
               <Progress
-                value={(user?.points / user?.xpToNextLevel) * 100}
+                value={(user?.points / mbToNextLevel) * 100}
                 className="h-3"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{user?.points?.toLocaleString()} MB</span>
                 <span>
-                  {user?.xpToNextLevel?.toLocaleString()} MB to Level{" "}
+                  {mbToNextLevel?.toLocaleString()} MB to Level{" "}
                   {user?.level + 1}
                 </span>
               </div>
@@ -433,7 +444,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                   {new Intl.DateTimeFormat("en-US", {
                     month: "long",
                     year: "numeric",
-                  }).format(new Date(user?.createdAt))}
+                  }).format(new Date(user?.createdAt!))}
                 </div>
               </div>
             </CardContent>

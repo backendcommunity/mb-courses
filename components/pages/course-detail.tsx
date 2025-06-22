@@ -38,9 +38,10 @@ import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import DisqusCommentBlock from "../ui/comment";
 import { PaymentDialog } from "../payment-dialog";
-import { Course, UserChapter, Video } from "@/lib/data";
+import { Chapter, Course, UserChapter, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
+import { useUser } from "@/hooks/use-user";
 
 interface CourseDetailPageProps {
   slug: string;
@@ -49,6 +50,7 @@ interface CourseDetailPageProps {
 
 export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   const store = useAppStore();
+  const user = useUser();
   const [course, setCourse] = useState<Course>();
   const { updateCourse } = store;
   const [currentChapter] = useState(course?.chapters[0]);
@@ -90,7 +92,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handlePurchase = (
     courseId: string,
-    method: "subscription" | "individual" | "xp"
+    method: "subscription" | "individual" | "mb"
   ) => {
     if (!course) return;
 
@@ -101,17 +103,10 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       case "individual":
         onNavigate(routes.checkout("course", courseId));
         break;
-      case "xp":
+      case "mb":
         onNavigate(routes.xpRedeem("course", courseId));
         break;
     }
-  };
-
-  // Mock subscription data
-  const subscription = {
-    plan: "Pro", // Free, Pro, Enterprise
-    status: "active",
-    xpBalance: 2450,
   };
 
   const handleBackToCourses = () => {
@@ -120,7 +115,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   };
 
   const handleEnrollNow = async () => {
-    if (subscription.plan !== "Pro") {
+    if (!user.isPremium && !user?.subscription) {
       setShowPaymentDialog(!showPaymentDialog);
       return;
     }
@@ -165,9 +160,8 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
     onNavigate(watchPath);
   };
 
-  const handleChapterClick = (chapter: any, index: number) => {
-    const isPreview = index < 3; // First 3 chapters are preview
-    if (course?.enrolled || isPreview) {
+  const handleChapterClick = (chapter: Chapter, index: number) => {
+    if (course?.enrolled) {
       // Check if chapter has specific features to navigate to
       if (chapter.quiz && chapter.type === "quiz") {
         const quizPath = routes.courseQuiz(slug, chapter.quiz.id);
@@ -198,10 +192,6 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       }
     } else {
       const previewPath = routes.coursePreview(slug);
-      console.log(
-        "Chapter Click (locked) - Navigating to preview:",
-        previewPath
-      );
       onNavigate(previewPath);
     }
   };
@@ -411,7 +401,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                     Continue Learning
                   </Button>
                 </div>
-              ) : subscription.plan !== "Free" ? (
+              ) : user.isPremium && user?.subscription ? (
                 <div className="space-y-3">
                   <Button className="w-full" onClick={handleEnrollNow}>
                     <Play className="mr-2 h-4 w-4" />
@@ -428,13 +418,15 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Badge
-                    variant="outline"
-                    className="bg-green-100 text-green-800 border-green-200 text-xs"
-                  >
-                    <Crown className="mr-1 h-3 w-3" />
-                    Included in {subscription.plan}
-                  </Badge>
+                  {course?.isPremium && (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-100 text-green-800 border-green-200 text-xs"
+                    >
+                      <Crown className="mr-1 h-3 w-3" />
+                      Included in Pro
+                    </Badge>
+                  )}
                   <Button className="w-full" onClick={handleEnrollNow}>
                     Start Learning
                   </Button>
@@ -586,8 +578,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {course?.chapters.map((chapter, index) => {
-                  const isPreview = index < 3; // First 3 chapters are preview
+                {course?.chapters.map((chapter: Chapter, index) => {
                   return (
                     <div
                       key={chapter.id}
@@ -600,7 +591,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                           {isChapterCompleted(chapter.id) ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : course?.enrolled || isPreview ? (
+                          ) : course?.enrolled || !chapter.isPremium ? (
                             <span className="text-sm font-medium">
                               {index + 1}
                             </span>
@@ -614,14 +605,14 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                             <Badge
                               variant="outline"
                               className={`text-xs ${
-                                isPreview
+                                !chapter.isPremium
                                   ? "border-green-600 text-green-600"
                                   : course?.enrolled
                                   ? "border-blue-600 text-blue-600"
                                   : "border-orange-600 text-orange-600"
                               }`}
                             >
-                              {isPreview
+                              {!chapter.isPremium
                                 ? "FREE"
                                 : course?.enrolled
                                 ? "ENROLLED"
@@ -674,7 +665,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                       >
                         {isChapterCompleted(chapter.id) ? (
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : course?.enrolled || isPreview ? (
+                        ) : course?.enrolled || !chapter.isPremium ? (
                           <Play className="h-4 w-4" />
                         ) : (
                           <Lock className="h-4 w-4 text-muted-foreground" />
@@ -727,35 +718,6 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {
-                  /* {[1, 2, 3].map((review) => (
-                  <div
-                    key={review}
-                    className="space-y-2 border-b pb-4 last:border-b-0"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-muted"></div>
-                      <div>
-                        <p className="font-medium">Student {review}</p>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Excellent course! The instructor explains complex concepts
-                      in a very clear way. The hands-on projects really helped
-                      me understand the material.
-                    </p>
-                  </div>
-                ))} */
-                  // DisqusComments({course, 'dashboard/courses/sas'})
-                }
                 <DisqusCommentBlock
                   config={{
                     url: "/courses/" + slug,

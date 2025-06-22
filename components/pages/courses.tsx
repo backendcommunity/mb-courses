@@ -29,7 +29,6 @@ import {
   Code2,
   CheckCircle2,
 } from "lucide-react";
-import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import { useCourse } from "@/hooks/use-course";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,7 +41,6 @@ interface CoursesPageProps {
 }
 
 export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
-  const store = useAppStore();
   const { courses, meta, userCourses, userCourseMeta, popularCourses } =
     useCourse();
   const user = useUser();
@@ -50,13 +48,6 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   const [level, setLevel] = useState("");
   const [category, setCategory] = useState("");
   const [tab, setTab] = useState("all-courses");
-
-  // Mock subscription data
-  const subscription = {
-    plan: "Pro", // Free, Pro, Enterprise
-    status: "active",
-    xpBalance: 2450,
-  };
 
   useEffect(() => {
     const debounce = setTimeout(() => {
@@ -68,13 +59,11 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
   const handleViewDetails = (slug: string) => {
     const detailPath = routes.courseDetail(slug);
-    console.log("View Details - Navigating to:", detailPath);
     onNavigate(detailPath);
   };
 
   const handlePreview = (courseId: string) => {
     const previewPath = routes.coursePreview(courseId);
-    console.log("Preview - Navigating to:", previewPath);
     onNavigate(previewPath);
   };
 
@@ -164,32 +153,32 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
         </div>
 
         {/* Subscription Status Banner */}
-        {/* {subscription.plan !== "Free" && ( */}
-        <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Crown className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-sm md:text-base">
-                    Unlock All Courses with Pro
-                  </h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Get unlimited access to all courses, bootcamps, and learning
-                    paths
-                  </p>
+        {!user.isPremium && (
+          <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Crown className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-sm md:text-base">
+                      Unlock All Courses with Pro
+                    </h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Get unlimited access to all courses, bootcamps, and
+                      learning paths
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  onClick={() => onNavigate("/dashboard/subscription-plans")}
+                  className="w-full md:w-auto"
+                >
+                  Upgrade Now
+                </Button>
               </div>
-              <Button
-                onClick={() => onNavigate("/dashboard/subscription-plans")}
-                className="w-full md:w-auto"
-              >
-                Upgrade Now
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        {/* )} */}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -301,7 +290,8 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                        {course?.totalDuration}
+                        {course?.totalDuration} hour
+                        {course?.totalDuration > 1 ? "s" : ""}
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 md:h-4 md:w-4" />
@@ -330,17 +320,19 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     ) : (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100 text-green-800 border-green-200 text-xs"
-                          >
-                            <Crown className="mr-1 h-3 w-3" />
-                            Included in {subscription.plan}
-                          </Badge>
+                          {course.isPremium && (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-100 text-green-800 border-green-200 text-xs"
+                            >
+                              <Crown className="mr-1 h-3 w-3" />
+                              Included in Pro
+                            </Badge>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePreview(course.id)}
+                            onClick={() => handlePreview(course.slug)}
                             className="text-xs"
                           >
                             Preview
@@ -550,17 +542,19 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     ) : (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100 text-green-800 border-green-200 text-xs"
-                          >
-                            <Crown className="mr-1 h-3 w-3" />
-                            Included in {subscription.plan}
-                          </Badge>
+                          {course.isPremium && (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-100 text-green-800 border-green-200 text-xs"
+                            >
+                              <Crown className="mr-1 h-3 w-3" />
+                              Included in Pro
+                            </Badge>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePreview(course.id)}
+                            onClick={() => handlePreview(course.slug)}
                             className="text-xs"
                           >
                             Preview
@@ -669,17 +663,19 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     ) : (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100 text-green-800 border-green-200 text-xs"
-                          >
-                            <Crown className="mr-1 h-3 w-3" />
-                            Included in {subscription.plan}
-                          </Badge>
+                          {course.isPremium && (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-100 text-green-800 border-green-200 text-xs"
+                            >
+                              <Crown className="mr-1 h-3 w-3" />
+                              Included in Pro
+                            </Badge>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePreview(course.id)}
+                            onClick={() => handlePreview(course.slug)}
                             className="text-xs"
                           >
                             Preview

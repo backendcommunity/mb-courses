@@ -22,16 +22,19 @@ import {
   updatePopularCourses,
   Note,
   updateUserCourse,
+  Quiz,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
   fetchCourse,
+  fetchCourseQuizzes,
   fetchCourses,
   fetchUserCourse,
   fetchUserCourses,
   handleCourseEnrollment,
   loadVideoNotes,
 } from "./courses";
+import api from "./api";
 
 interface AppState {
   // Data getters
@@ -41,12 +44,14 @@ interface AppState {
   getUserCourse: (slug: string) => UserCourse | any;
   getUserCourses: (queries?: CoursesQuery) => UserCourse[] | any;
   getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
+  getCourseQuizzes: (courseId: string) => Quiz[] | any;
   getProjects: () => Project[];
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
   getBootcamps: () => Bootcamp[];
   getLearningPaths: () => LearningPath[];
   getRoadmaps: () => Roadmap[];
+  getQuiz: (id: string) => Quiz | any;
 
   // Actions
   updateUser: (updates: Partial<User>) => void;
@@ -60,6 +65,8 @@ interface AppState {
   completeChallenge: (challengeId: string) => void;
   addXP: (amount: number) => void;
   handleCourseEnrollment: (courseId: string) => UserCourse | any;
+  startQuiz: (id: string, data: { userQuizId: string }) => any;
+  submitQuiz: (id: string, questions: any) => any;
 
   // Force re-render trigger
   version: number;
@@ -125,6 +132,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     const res = await loadVideoNotes(courseId, videoId);
     return res.data;
   },
+  getCourseQuizzes: async (courseId: string): Promise<Quiz[] | any> => {
+    const res = await fetchCourseQuizzes(courseId);
+    return res.data;
+  },
+  getQuiz: async (id: string): Promise<Quiz | any> => {
+    const { data } = await api.get("/quizzes/" + id);
+    return data?.data;
+  },
   getProjects: () => dataStore.projects,
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
@@ -137,6 +152,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   forceUpdate: () => set((state) => ({ version: state.version + 1 })),
 
   // Actions
+  startQuiz: async (id: string, { userQuizId }: { userQuizId: string }) => {
+    const { data } = await api.post("/quizzes/" + id + "/start", {
+      userQuizId,
+    });
+    return data?.data;
+  },
+  submitQuiz: async (id: string, questions: any) => {
+    const { data } = await api.post("/quizzes/" + id + "/submit", questions);
+    return data?.data;
+  },
   updateUser: (updates) => {
     updateUserInStore(updates);
     get().forceUpdate();
