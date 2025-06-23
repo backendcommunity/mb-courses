@@ -5,7 +5,7 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({
-  size = "md",
+  size = "lg",
   showText = true,
   variant = "default",
 }: BrandLogoProps) {
@@ -43,26 +43,16 @@ export function BrandLogo({
   return (
     <div className="flex items-center space-x-2">
       <div
-        className={`${sizeClasses[size]} ${logoColors[variant]} rounded-lg flex items-center justify-center relative`}
+        className={`${sizeClasses[size]}  rounded-lg flex items-center justify-center relative`}
       >
         <span
           className={`${
             variant === "white" ? "text-[#0E1F33]" : "text-white"
           } font-bold ${size === "sm" ? "text-xs" : "text-sm"}`}
         >
-          m
+          <img src="/logo.png" alt="logo" />
         </span>
-        <div
-          className={`absolute -top-0.5 -right-0.5 ${starSizeClasses[size]} bg-[#97C3CC] dark:bg-[#F4E04D] transform rotate-45 star-pulse`}
-        ></div>
       </div>
-      {showText && (
-        <span
-          className={`${textSizeClasses[size]} font-bold ${textColors[variant]}`}
-        >
-          Masteringbackend
-        </span>
-      )}
     </div>
   );
 }

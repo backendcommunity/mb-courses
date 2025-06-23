@@ -13,10 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/store/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
@@ -138,6 +138,16 @@ export default function RegisterPage() {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-[#13AECE]/10 dark:bg-[#0EA5E9]/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[10%] right-[5%] w-80 h-80 bg-[#97C3CC]/10 dark:bg-[#475569]/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="absolute top-6 left-6 z-10">
+        <Link
+          href="https://v3.masteringbackend.com"
+          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back to Home</span>
+        </Link>
       </div>
 
       <div className="relative w-full max-w-md">
@@ -520,22 +530,6 @@ export default function RegisterPage() {
               </a>
             </p>
           </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <a
-            href="/"
-            className="inline-flex items-center space-x-2 text-[#0E1F33]/70 dark:text-[#94A3B8] hover:text-[#0E1F33] dark:hover:text-[#F1F5F9] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
-          </a>
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
         </div>
       </div>
     </div>
