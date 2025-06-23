@@ -51,11 +51,11 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   };
 
   const handleStartInterview = (interviewId: string) => {
-    onNavigate(`/dashboard/mock-interviews/${interviewId}`);
+    onNavigate(`/mock-interviews/${interviewId}`);
   };
 
   const handleViewResults = (interviewId: string) => {
-    onNavigate(`/dashboard/mock-interviews/${interviewId}/results`);
+    onNavigate(`/mock-interviews/${interviewId}/results`);
   };
 
   return (

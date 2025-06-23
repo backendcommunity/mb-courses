@@ -15,6 +15,11 @@ export default function CoursesPageRoute() {
     router.push(path);
   };
 
+  useEffect(() => {
+    store.getCourses();
+    store.getUserCourses();
+  }, []);
+
   const handleFilter = async (filters: CourseFilterOptions) => {
     if (filters.tab?.includes("my-courses")) {
       await store.getUserCourses({ filters });

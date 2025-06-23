@@ -42,10 +42,7 @@ export function BootcampDetailPage({
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Bootcamp not found</h1>
-          <Button
-            onClick={() => onNavigate?.("/dashboard/bootcamps")}
-            className="mt-4"
-          >
+          <Button onClick={() => onNavigate?.("/bootcamps")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Bootcamps
           </Button>
@@ -58,10 +55,7 @@ export function BootcampDetailPage({
     <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => onNavigate?.("/dashboard/bootcamps")}
-        >
+        <Button variant="ghost" onClick={() => onNavigate?.("/bootcamps")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -279,9 +273,7 @@ export function BootcampDetailPage({
                               variant="ghost"
                               onClick={() =>
                                 onNavigate?.(
-                                  `/dashboard/bootcamps/${bootcampId}/week/${
-                                    index + 1
-                                  }`
+                                  `/bootcamps/${bootcampId}/week/${index + 1}`
                                 )
                               }
                             >
@@ -477,9 +469,7 @@ export function BootcampDetailPage({
                   <Button
                     className="w-full"
                     onClick={() =>
-                      onNavigate?.(
-                        `/dashboard/bootcamps/${bootcampId}/dashboard`
-                      )
+                      onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
                     }
                   >
                     Access Bootcamp

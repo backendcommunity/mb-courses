@@ -451,9 +451,7 @@ export function Project30ListingPage({
                         </div>
                         <Button
                           className="w-full"
-                          onClick={() =>
-                            onNavigate(`/dashboard/project30/${course.id}`)
-                          }
+                          onClick={() => onNavigate(`/project30/${course.id}`)}
                         >
                           Continue Learning
                           <ChevronRight className="ml-2 h-4 w-4" />
@@ -462,9 +460,7 @@ export function Project30ListingPage({
                     ) : (
                       <Button
                         className="w-full"
-                        onClick={() =>
-                          onNavigate(`/dashboard/project30/${course.id}`)
-                        }
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -532,9 +528,7 @@ export function Project30ListingPage({
 
                       <Button
                         className="w-full"
-                        onClick={() =>
-                          onNavigate(`/dashboard/project30/${course.id}`)
-                        }
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
                       >
                         Continue Learning
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -626,9 +620,7 @@ export function Project30ListingPage({
 
                       <Button
                         className="w-full"
-                        onClick={() =>
-                          onNavigate(`/dashboard/project30/${course.id}`)
-                        }
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -703,9 +695,7 @@ export function Project30ListingPage({
 
                       <Button
                         className="w-full"
-                        onClick={() =>
-                          onNavigate(`/dashboard/project30/${course.id}`)
-                        }
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />

@@ -181,7 +181,7 @@ server.listen(PORT, () => {
   const submitProject = () => {
     // Handle project submission
     console.log("Submitting project:", { projectUrl, submissionNotes });
-    onNavigate("/dashboard/project30");
+    onNavigate("/project30");
   };
 
   return (
@@ -192,7 +192,7 @@ server.listen(PORT, () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("/dashboard/project30")}
+            onClick={() => onNavigate("/project30")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

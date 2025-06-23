@@ -88,7 +88,7 @@ export function MockInterviewResultsPage({
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button onClick={() => onNavigate("/dashboard/mock-interviews")}>
+          <Button onClick={() => onNavigate("/mock-interviews")}>
             Back to Interviews
           </Button>
         </div>
@@ -341,14 +341,11 @@ export function MockInterviewResultsPage({
       {/* Action Buttons */}
       <Card>
         <CardContent className="flex items-center justify-center gap-4 py-6">
-          <Button onClick={() => onNavigate("/dashboard/mock-interviews")}>
+          <Button onClick={() => onNavigate("/mock-interviews")}>
             <Trophy className="h-4 w-4 mr-2" />
             Book Another Interview
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => onNavigate("/dashboard/courses")}
-          >
+          <Button variant="outline" onClick={() => onNavigate("/courses")}>
             <BookOpen className="h-4 w-4 mr-2" />
             Explore Courses
           </Button>

@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { VimeoPlayer } from "@/components/ui/vimeo-player";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "timeago.js";
@@ -51,7 +52,10 @@ import DisqusCommentBlock from "../ui/comment";
 import { markVideoComlete } from "@/lib/courses";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
-import { codeSample } from "@/lib/utils";
+import { codeSample, handleShare } from "@/lib/utils";
+import { CourseQuizPage } from "./course-quiz";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -69,7 +73,9 @@ export function CourseWatchPage({
   const store = useAppStore();
   const [course, setCourse] = useState<Course>();
   const [userCourse, setUserCourse] = useState<UserCourse>();
-  const chapter = course?.chapters.find((ch: Chapter) => ch.slug === chapterId);
+  const chapter: Chapter | any = course?.chapters.find(
+    (ch: Chapter) => ch.slug === chapterId
+  );
   const user = useUser();
   const currentVideo = videoId
     ? chapter?.videos.find((v: Video) => v.slug === videoId)
@@ -82,6 +88,9 @@ export function CourseWatchPage({
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
   const [code, setCode] = useState(codeSample);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const [note, setNote] = useState("");
+  const path = usePathname();
 
   useEffect(() => {
     setLoading(true);
@@ -132,6 +141,13 @@ export function CourseWatchPage({
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
 
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
     try {
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
@@ -142,7 +158,7 @@ export function CourseWatchPage({
       completedVideoIds.add(currentVideo.id); // include this one just marked
 
       // Check if all chapter videos are now complete
-      const allVideosComplete = chapter.videos.every((v) =>
+      const allVideosComplete = chapter.videos.every((v: Video) =>
         completedVideoIds.has(v.id)
       );
 
@@ -184,12 +200,12 @@ export function CourseWatchPage({
           : userCourse.userChapters,
       });
 
-      // ✅ Backend update with proper `isChapterCompleted`
+      // Backend update with proper `isChapterCompleted`
       await markVideoComlete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
       });
 
-      toast.success("You just earned +50 points!");
+      toast.success("You just earned some points!");
       setCelebration(true);
     } catch (error) {
       toast.error("An error occurred. Please try again");
@@ -211,19 +227,26 @@ export function CourseWatchPage({
     return (userCourse?.userVideos?.length! / course?.totalContent || 0) * 100;
   };
 
-  const nextVideo = chapter.videos.find((v: Video, index: number) => {
-    const currentIndex = chapter.videos.findIndex(
-      (video: Video) => video.id === currentVideo?.id
-    );
-    return index === currentIndex + 1;
-  });
+  const next = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (video: Video) => video.id === currentVideo?.id
+      );
+      return index === currentIndex + 1;
+    });
+  };
 
-  const prevVideo = chapter.videos.find((v: Video, index: number) => {
-    const currentIndex = chapter.videos.findIndex(
-      (video: Video) => video.id === currentVideo?.id
-    );
-    return index === currentIndex - 1;
-  });
+  const prev = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (video: Video) => video.id === currentVideo?.id
+      );
+      return index === currentIndex - 1;
+    });
+  };
+
+  const nextVideo = next();
+  const prevVideo = prev();
 
   const nextChapter =
     course.chapters[
@@ -234,25 +257,69 @@ export function CourseWatchPage({
       course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
     ];
 
-  const handleVideoClick = (video: any) => {
+  const handleVideoClick = (video: Video) => {
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
     if (onNavigate) {
       onNavigate(routes.courseWatch(slug, chapterId, video.slug));
     }
   };
 
-  const handleChapterFeatureClick = (type: string, id: string) => {
+  const handleChapterFeatureClick = (type: string, id?: string) => {
     if (!onNavigate) return;
-
-    switch (type) {
+    let url = "";
+    switch (type?.toLowerCase()) {
       case "quiz":
-        onNavigate(routes.courseQuiz(slug, id));
+        url = routes.courseQuizzes(slug);
         break;
       case "exercise":
-        onNavigate(routes.courseExercise(slug, id));
+        url = routes.courseExercises(slug);
         break;
       case "playground":
-        onNavigate(routes.coursePlayground(slug, id));
+        url = routes.coursePlaygrounds(slug);
         break;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleChapterClick = (next: boolean) => {
+    if (!onNavigate) return;
+
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
+    if (next) {
+      onNavigate(
+        routes.courseWatch(slug, nextChapter.slug, nextChapter?.videos[0]?.slug)
+      );
+      return;
+    }
+
+    onNavigate(
+      routes.courseWatch(
+        slug,
+        prevChapter.slug,
+        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
+      )
+    );
+  };
+
+  const handleSaveNotes = async () => {
+    if (!note) return;
+    try {
+      const saveNote = await store.saveNote(note, course.id, currentVideo.id);
+      setNotes([...notes, saveNote]);
+    } catch (error) {
+      toast.error("Error occurred adding note");
     }
   };
 
@@ -284,156 +351,81 @@ export function CourseWatchPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Video Player */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 flex flex-col">
           {/* Video Player */}
-          <Card className="overflow-hidden">
-            <div className="aspect-video bg-black relative">
-              {/* Video placeholder */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-700">
-                <div className="text-center text-white">
-                  <Play className="h-16 w-16 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold">
-                    {currentVideo?.title ?? chapter?.title}
-                  </h3>
-                  <p className="text-gray-300">
-                    {currentVideo?.description ?? chapter?.description}
-                  </p>
-                </div>
+          {currentVideo?.type === "VIDEO" && (
+            <Card className="overflow-hidden">
+              <div className="aspect-video bg-black relative">
+                <VimeoPlayer video={currentVideo} />
               </div>
+            </Card>
+          )}
+          {currentVideo?.type === "QUIZ" && (
+            <Card className="overflow-hidden">
+              <CourseQuizPage
+                courseId={slug}
+                onNavigate={() => {}}
+                quiz={currentVideo?.quiz!}
+                showNav={false}
+                handleQuizSubmit={(passed) => {
+                  setQuizPassed(passed);
+                  if (!passed) {
+                  }
 
-              {/* Video Controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="space-y-2">
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2 text-white text-sm">
-                    <span>{formatTime(currentTime)}</span>
-                    <div className="flex-1">
-                      <Progress
-                        value={(currentTime / duration) * 100}
-                        className="h-1"
-                      />
-                    </div>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        disabled={!prevVideo}
-                        onClick={() => prevVideo && handleVideoClick(prevVideo)}
-                      >
-                        <SkipBack className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        disabled={!nextVideo}
-                        onClick={() => nextVideo && handleVideoClick(nextVideo)}
-                      >
-                        <SkipForward className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                      <select
-                        value={playbackSpeed}
-                        onChange={(e) =>
-                          setPlaybackSpeed(Number(e.target.value))
-                        }
-                        className="bg-transparent text-white text-sm border border-white/20 rounded px-2 py-1"
-                      >
-                        <option value={0.5}>0.5x</option>
-                        <option value={0.75}>0.75x</option>
-                        <option value={1}>1x</option>
-                        <option value={1.25}>1.25x</option>
-                        <option value={1.5}>1.5x</option>
-                        <option value={2}>2x</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Maximize className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
+                  handleMarkComplete();
+                }}
+              />
+            </Card>
+          )}
           {/* Video Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                Like
-              </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                onClick={() => handleShare(currentVideo.title, path)}
+                variant="outline"
+                size="sm"
+              >
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={userCourse?.enrollmentType?.includes("SUBSCRIPTION")}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              {currentVideo && !isVideoCompleted(currentVideo.id) && (
-                <Button onClick={handleMarkComplete}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Mark Complete
-                </Button>
-              )}
+              {currentVideo &&
+                currentVideo.type === "VIDEO" &&
+                !isVideoCompleted(currentVideo.id) && (
+                  <Button onClick={handleMarkComplete}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </Button>
+                )}
+
+              {(currentVideo && currentVideo.type === "QUIZ" && quizPassed) ||
+                (!currentVideo?.quiz?.required && (
+                  <Button onClick={handleMarkComplete}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </Button>
+                ))}
+
               {nextVideo && (
-                <Button onClick={() => handleVideoClick(nextVideo)}>
-                  Next Video
+                <Button
+                  onClick={() => handleVideoClick(nextVideo)}
+                  className="capitalize"
+                >
+                  Next {nextVideo?.type?.toLowerCase()}
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {!nextVideo && nextChapter && (
-                <Button
-                  onClick={() =>
-                    onNavigate?.(
-                      routes.courseWatch(
-                        slug,
-                        nextChapter?.slug,
-                        nextChapter?.videos[0]?.slug
-                      )
-                    )
-                  }
-                >
+                <Button onClick={() => handleChapterClick(true)}>
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -441,76 +433,17 @@ export function CourseWatchPage({
             </div>
           </div>
 
-          {/* Chapter Features */}
-          {/* {(chapter.quiz || chapter.exercise || chapter.playground) && ( */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Chapter Activities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {!chapter?.quiz && (
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col gap-2"
-                    onClick={() =>
-                      handleChapterFeatureClick("quiz", chapter.quiz!.id)
-                    }
-                  >
-                    <Brain className="h-6 w-6" />
-                    <span className="text-sm">
-                      {chapter?.quiz?.title ?? "Quiz"}
-                    </span>
-                  </Button>
-                )}
-                {!chapter?.exercise && (
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col gap-2"
-                    onClick={() =>
-                      handleChapterFeatureClick(
-                        "exercise",
-                        chapter.exercise!.id
-                      )
-                    }
-                  >
-                    <Code className="h-6 w-6" />
-                    <span className="text-sm">
-                      {chapter?.exercise?.title ?? "Exercise"}
-                    </span>
-                  </Button>
-                )}
-                {!chapter?.playground && (
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col gap-2"
-                    onClick={() =>
-                      handleChapterFeatureClick(
-                        "playground",
-                        chapter.playground!.id
-                      )
-                    }
-                  >
-                    <Gamepad2 className="h-6 w-6" />
-                    <span className="text-sm">
-                      {chapter?.playground?.title ?? "Playground"}
-                    </span>
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          {/* )} */}
+          <Card></Card>
 
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="transcript">Transcript</TabsTrigger>
               <TabsTrigger value="code">Code Editor</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="resources">Resources</TabsTrigger>
               <TabsTrigger value="discussion">Discussion</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -594,11 +527,19 @@ export function CourseWatchPage({
                 </CardHeader>
                 <CardContent>
                   <Textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
                     placeholder="Take notes while watching the video..."
                     className="min-h-[200px]"
                   />
                   <div className="space-y-2">
-                    <Button className="mt-2">Save Notes</Button>
+                    <Button
+                      onClick={() => handleSaveNotes()}
+                      className="mt-2"
+                      disabled={!note}
+                    >
+                      Save Notes
+                    </Button>
                   </div>
                   <div className="border-t mt-5">
                     <div className="space-y-3  pt-5">
@@ -608,7 +549,7 @@ export function CourseWatchPage({
                             <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
                               {user.name
                                 .split(" ")
-                                .map((n) => n[0])
+                                .map((n: any) => n[0])
                                 .join("")}
                             </div>
                             <span className="font-medium text-sm">
@@ -635,41 +576,29 @@ export function CourseWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      {
-                        title: "Design Patterns in JavaScript",
-                        type: "Article",
-                        url: "#",
-                      },
-                      {
-                        title: "Node.js Best Practices",
-                        type: "Documentation",
-                        url: "#",
-                      },
-                      {
-                        title: "Observer Pattern Examples",
-                        type: "Code",
-                        url: "#",
-                      },
-                    ].map((resource, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <BookOpen className="h-4 w-4 text-blue-600" />
-                          <div>
-                            <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {resource.type}
-                            </p>
+                    {currentVideo?.resources?.map(
+                      (resource: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <h4 className="font-medium">{resource.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {resource.type}
+                              </p>
+                            </div>
                           </div>
+                          <Button asChild={true} variant="link">
+                            <a target="_blank" href={resource?.link}>
+                              View
+                            </a>
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -799,9 +728,11 @@ export function CourseWatchPage({
                     <p className="text-sm font-medium">{video.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{video.duration}</span>
+                      <span>
+                        {video?.duration ?? video.quiz?.timeLimit} mins
+                      </span>
                       <Badge variant="outline" className="text-xs">
-                        VIDEO
+                        {video?.type}
                       </Badge>
                     </div>
                   </div>
@@ -903,7 +834,6 @@ export function CourseWatchPage({
                   }`}
                   onClick={() =>
                     onNavigate?.(
-                      // Check for completed videos
                       routes.courseWatch(slug, ch.slug, ch?.videos[0]?.slug)
                     )
                   }
@@ -919,10 +849,45 @@ export function CourseWatchPage({
                     <p className="text-sm font-medium">{ch.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{ch.duration}</span>
+                      <span>
+                        {ch.videos.reduce((a: number, c: any) => {
+                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
+                        }, 0)}{" "}
+                        mins
+                      </span>
                       <Badge variant="outline" className="text-xs">
-                        {ch.videos.length} videos
+                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                        videos
                       </Badge>
+
+                      {ch.videos.filter((v) => v.type === "QUIZ").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
+                          quizzes
+                        </Badge>
+                      )}
+                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "EXERCISE")
+                              .length
+                          }{" "}
+                          exercises
+                        </Badge>
+                      )}
+
+                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "PLAYGROUND")
+                              .length
+                          }{" "}
+                          playgrounds
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -936,15 +901,7 @@ export function CourseWatchPage({
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() =>
-                  onNavigate?.(
-                    routes.courseWatch(
-                      slug,
-                      prevChapter.slug,
-                      prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
-                    )
-                  )
-                }
+                onClick={() => handleChapterClick(false)}
               >
                 <SkipBack className="mr-2 h-4 w-4" />
                 Previous: {prevChapter.title}
@@ -953,15 +910,7 @@ export function CourseWatchPage({
             {nextChapter && (
               <Button
                 className="w-full justify-start"
-                onClick={() =>
-                  onNavigate?.(
-                    routes.courseWatch(
-                      slug,
-                      nextChapter.slug,
-                      nextChapter?.videos[0]?.slug
-                    )
-                  )
-                }
+                onClick={() => handleChapterClick(true)}
               >
                 Next: {nextChapter.title}
                 <SkipForward className="ml-2 h-4 w-4" />

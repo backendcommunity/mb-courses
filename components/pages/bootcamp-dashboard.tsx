@@ -32,10 +32,7 @@ export function BootcampDashboardPage({
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Bootcamp not found</h1>
-          <Button
-            onClick={() => onNavigate?.("/dashboard/bootcamps")}
-            className="mt-4"
-          >
+          <Button onClick={() => onNavigate?.("/bootcamps")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Bootcamps
           </Button>
@@ -50,7 +47,7 @@ export function BootcampDashboardPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/dashboard/bootcamps/${bootcampId}`)}
+          onClick={() => onNavigate?.(`/bootcamps/${bootcampId}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

@@ -67,6 +67,7 @@ interface AppState {
   handleCourseEnrollment: (courseId: string) => UserCourse | any;
   startQuiz: (id: string, data: { userQuizId: string }) => any;
   submitQuiz: (id: string, questions: any) => any;
+  saveNote: (note: string, courseId: string, videoId: string) => any;
 
   // Force re-render trigger
   version: number;
@@ -158,6 +159,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     return data?.data;
   },
+
+  saveNote: async (note: string, courseId: string, videoId: string) => {
+    const { data } = await api.post(
+      `/courses/${courseId}/videos/${videoId}/notes`,
+      { note: note }
+    );
+    return data?.data;
+  },
+
   submitQuiz: async (id: string, questions: any) => {
     const { data } = await api.post("/quizzes/" + id + "/submit", questions);
     return data?.data;

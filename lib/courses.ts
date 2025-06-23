@@ -1,25 +1,19 @@
 import api from "./api";
 import { CoursesQuery } from "./data";
 
-export const fetchCourses = async ({
-  page,
-  size,
-  filters,
-}: CoursesQuery): Promise<any> => {
+export const fetchCourses = async (queries?: CoursesQuery): Promise<any> => {
   const { data } = await api.get("/courses", {
-    params: { page, size, filters },
+    params: queries,
   });
 
   return data;
 };
 
-export const fetchUserCourses = async ({
-  page,
-  size,
-  filters,
-}: CoursesQuery): Promise<any> => {
+export const fetchUserCourses = async (
+  queries?: CoursesQuery
+): Promise<any> => {
   const { data } = await api.get("/users/courses", {
-    params: { page, size, filters },
+    params: queries,
   });
 
   return data;

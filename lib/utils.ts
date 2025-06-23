@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -59,3 +60,23 @@ server.listen(PORT, () => {
   console.log(\`Server running on port \${PORT}\`);
 });`;
 }
+
+export const handleShare = (title: string, url: string) => {
+  if (navigator.share) {
+    navigator
+      .share({
+        title: `Watch "${title}" on MasteringBackend`,
+        text: `I'm learning from this great video: "${title}" on MasteringBackend.\nJoin me to become a great backend engineer!`,
+        url: url,
+      })
+      .then(() => toast.success("Thanks for sharing!"))
+      .catch((error) => toast.error("Error sharing", error));
+  } else {
+    // Fallback for browsers that don’t support navigator.share
+    const shareText = `I'm watching "${title}" on MasteringBackend. Check it out: ${url}`;
+    navigator.clipboard.writeText(shareText);
+    toast.success(
+      "Link copied to clipboard! You can now share it with your friends."
+    );
+  }
+};

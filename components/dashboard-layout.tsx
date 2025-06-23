@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
@@ -46,7 +46,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     loadUser();
   }, []);
 
-  if (!user) return <p>Loading user...</p>;
+  if (!user) return <div>loading... user</div>;
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

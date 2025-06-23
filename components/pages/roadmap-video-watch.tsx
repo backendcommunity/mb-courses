@@ -67,10 +67,7 @@ export function RoadmapVideoWatchPage({
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Roadmap not found</h1>
-          <Button
-            onClick={() => onNavigate?.("/dashboard/roadmaps")}
-            className="mt-4"
-          >
+          <Button onClick={() => onNavigate?.("/roadmaps")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Roadmaps
           </Button>
@@ -91,7 +88,7 @@ export function RoadmapVideoWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/dashboard/roadmaps/${roadmapId}/watch`)}
+          onClick={() => onNavigate?.(`/roadmaps/${roadmapId}/watch`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -484,9 +481,7 @@ export function RoadmapVideoWatchPage({
                     vid.current ? "bg-blue-50 border border-blue-200" : ""
                   }`}
                   onClick={() =>
-                    onNavigate?.(
-                      `/dashboard/roadmaps/${roadmapId}/video/${vid.id}`
-                    )
+                    onNavigate?.(`/roadmaps/${roadmapId}/video/${vid.id}`)
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">

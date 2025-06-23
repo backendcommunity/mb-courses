@@ -22,6 +22,7 @@ import {
   Play,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { Course } from "@/lib/data";
 
 interface LearningPathDetailPageProps {
   pathId: string;
@@ -42,10 +43,7 @@ export function LearningPathDetailPage({
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Learning Path not found</h1>
-          <Button
-            onClick={() => onNavigate?.("/dashboard/paths")}
-            className="mt-4"
-          >
+          <Button onClick={() => onNavigate?.("/paths")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Learning Paths
           </Button>
@@ -58,10 +56,7 @@ export function LearningPathDetailPage({
     <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => onNavigate?.("/dashboard/paths")}
-        >
+        <Button variant="ghost" onClick={() => onNavigate?.("/paths")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -204,7 +199,9 @@ export function LearningPathDetailPage({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {path.courses.map((courseId, index) => {
-                    const course = courses.find((c) => c.id === courseId);
+                    const course = courses.find(
+                      (c: Course) => c.id === courseId
+                    );
                     if (!course) return null;
 
                     return (
@@ -227,7 +224,7 @@ export function LearningPathDetailPage({
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                onNavigate?.(`/dashboard/courses/${course.id}`)
+                                onNavigate?.(`/courses/${course.id}`)
                               }
                             >
                               <Play className="h-4 w-4" />
@@ -365,9 +362,7 @@ export function LearningPathDetailPage({
                   </Badge>
                   <Button
                     className="w-full"
-                    onClick={() =>
-                      onNavigate?.(`/dashboard/paths/${path.id}/continue`)
-                    }
+                    onClick={() => onNavigate?.(`/paths/${path.id}/continue`)}
                   >
                     Continue Learning
                   </Button>

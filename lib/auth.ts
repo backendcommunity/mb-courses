@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import api from "./api";
 import { NewUser } from "./data";
 
@@ -25,8 +26,13 @@ export const verifyEmail = async (data: { code: string; email: string }) => {
 };
 
 export const resendEmail = async (email: string) => {
-  const res = await api.post("/auth/email", { email });
-  return res.data;
+  try {
+    const res = await api.post("/auth/email", { email });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    redirect("/auth/login");
+  }
 };
 
 export const sendForgotPasswordEmail = async (email: string) => {

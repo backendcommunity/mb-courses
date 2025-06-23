@@ -170,7 +170,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                   </div>
                 </div>
                 <Button
-                  onClick={() => onNavigate("/dashboard/subscription-plans")}
+                  onClick={() => onNavigate("/subscription-plans")}
                   className="w-full md:w-auto"
                 >
                   Upgrade Now
@@ -585,7 +585,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
         <TabsContent value="new" className="space-y-4">
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => {
+            {courses?.sort()?.map((course) => {
               return (
                 <Card key={course.id} className="overflow-hidden relative">
                   <div

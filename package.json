@@ -39,6 +39,8 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "latest",
     "@types/canvas-confetti": "^1.9.0",
+    "@types/vimeo__player": "^2.18.3",
+    "@vimeo/player": "^2.29.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.9.0",
     "canvas-confetti": "^1.9.3",

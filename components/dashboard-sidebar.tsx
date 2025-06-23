@@ -87,7 +87,7 @@ const navigationData = {
     },
     {
       title: "Certifications",
-      url: "/dashboard/certifications",
+      url: "/certifications",
       icon: Award,
     },
     {

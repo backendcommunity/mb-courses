@@ -161,7 +161,7 @@ export function Project30LeaderboardPage({
         </div>
         <Button
           variant="outline"
-          onClick={() => onNavigate(`/dashboard/project30/${courseId}`)}
+          onClick={() => onNavigate(`/project30/${courseId}`)}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />

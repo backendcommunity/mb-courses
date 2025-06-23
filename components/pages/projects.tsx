@@ -229,7 +229,7 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
               <Button
                 className="w-full text-xs md:text-sm"
-                onClick={() => onNavigate(`/dashboard/projects/${project.id}`)}
+                onClick={() => onNavigate(`/projects/${project.id}`)}
               >
                 {project.status === "Not Started"
                   ? "Start Project"

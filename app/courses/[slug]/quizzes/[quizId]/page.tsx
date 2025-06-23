@@ -44,7 +44,12 @@ export default function CourseQuizPageRoute() {
 
   return (
     <DashboardLayout>
-      <CourseQuizPage courseId={slug} onNavigate={handleNavigate} quiz={quiz} />
+      <CourseQuizPage
+        courseId={slug}
+        onNavigate={handleNavigate}
+        quiz={quiz}
+        handleQuizSubmit={() => {}}
+      />
     </DashboardLayout>
   );
 }

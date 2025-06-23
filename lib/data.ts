@@ -199,6 +199,7 @@ export interface UserCourse {
   userChapters?: UserChapter[];
   createdAt: Date | string;
   updatedAt: Date | string;
+  enrollmentType?: "SUBSCRIPTION" | "ONETIME" | "COINS";
 }
 
 export interface UserVideo {
@@ -246,7 +247,7 @@ export interface Chapter {
   isPremium: boolean;
   slug: string;
   videos: Video[];
-  quiz?: Quiz;
+  quizzes?: Quiz[];
   exercise?: Exercise;
   playground?: Playground;
   type: "video" | "quiz" | "exercise" | "playground" | "mixed";
@@ -271,6 +272,11 @@ export interface Video {
   description: string;
   summary: string;
   order: number;
+  type?: string;
+  quizId?: string;
+  quiz?: Quiz;
+  resources?: any;
+  video: Number
 }
 
 export interface Quiz {
@@ -286,6 +292,7 @@ export interface Quiz {
   score?: number;
   enrolled?: boolean;
   userQuiz?: any;
+  required?: boolean;
 }
 
 export interface QuizQuestion {

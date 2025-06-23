@@ -1,27 +1,44 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Video, VideoOff, Mic, MicOff, MessageSquare, Clock, Send, Phone, Settings, User } from "lucide-react"
-import { getMockInterviewById, getInterviewQuestions } from "@/lib/mock-interview-data"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  MessageSquare,
+  Clock,
+  Send,
+  Phone,
+  Settings,
+  User,
+} from "lucide-react";
+import {
+  getMockInterviewById,
+  getInterviewQuestions,
+} from "@/lib/mock-interview-data";
 
 interface MockInterviewSessionProps {
-  interviewId: string
-  onNavigate: (path: string) => void
+  interviewId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterviewSessionProps) {
-  const [interview] = useState(() => getMockInterviewById(interviewId))
-  const [questions] = useState(() => getInterviewQuestions())
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [timeRemaining, setTimeRemaining] = useState(300) // 5 minutes for demo
-  const [isVideoOn, setIsVideoOn] = useState(true)
-  const [isAudioOn, setIsAudioOn] = useState(true)
-  const [chatMessage, setChatMessage] = useState("")
+export function MockInterviewSessionPage({
+  interviewId,
+  onNavigate,
+}: MockInterviewSessionProps) {
+  const [interview] = useState(() => getMockInterviewById(interviewId));
+  const [questions] = useState(() => getInterviewQuestions());
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes for demo
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
       sender: "interviewer",
@@ -29,48 +46,50 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
         "Hello! Welcome to your mock interview. I'm Kap AI, and I'll be conducting your interview today. Are you ready to begin?",
       timestamp: new Date().toISOString(),
     },
-  ])
-  const [userAnswer, setUserAnswer] = useState("")
-  const [isRecording, setIsRecording] = useState(false)
+  ]);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
-  const currentQuestion = questions[currentQuestionIndex]
+  const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
     if (!interview) {
-      onNavigate("/dashboard/mock-interviews")
-      return
+      onNavigate("/mock-interviews");
+      return;
     }
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          handleEndInterview()
-          return 0
+          handleEndInterview();
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [interview, onNavigate])
+    return () => clearInterval(timer);
+  }, [interview, onNavigate]);
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   const handleSendMessage = () => {
-    if (!chatMessage.trim()) return
+    if (!chatMessage.trim()) return;
 
     const newMessage = {
       sender: "candidate" as const,
       message: chatMessage,
       timestamp: new Date().toISOString(),
-    }
+    };
 
-    setChatHistory((prev) => [...prev, newMessage])
-    setChatMessage("")
+    setChatHistory((prev) => [...prev, newMessage]);
+    setChatMessage("");
 
     // Simulate AI response
     setTimeout(() => {
@@ -78,33 +97,33 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
         sender: "interviewer" as const,
         message: "Thank you for your question. Let me help you with that...",
         timestamp: new Date().toISOString(),
-      }
-      setChatHistory((prev) => [...prev, aiResponse])
-    }, 1000)
-  }
+      };
+      setChatHistory((prev) => [...prev, aiResponse]);
+    }, 1000);
+  };
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1)
-      setUserAnswer("")
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setUserAnswer("");
     } else {
-      handleEndInterview()
+      handleEndInterview();
     }
-  }
+  };
 
   const handleEndInterview = () => {
-    onNavigate(`/dashboard/mock-interviews/${interviewId}/results`)
-  }
+    onNavigate(`/mock-interviews/${interviewId}/results`);
+  };
 
   const handleStartRecording = () => {
-    setIsRecording(true)
+    setIsRecording(true);
     // In a real app, this would start actual recording
-  }
+  };
 
   const handleStopRecording = () => {
-    setIsRecording(false)
+    setIsRecording(false);
     // In a real app, this would stop recording and process the answer
-  }
+  };
 
   if (!interview) {
     return (
@@ -115,7 +134,7 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -127,8 +146,12 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
             <div className="flex items-center gap-2">
               <span className="text-2xl">{interview.type.icon}</span>
               <div>
-                <h1 className="text-lg font-semibold">{interview.type.title}</h1>
-                <p className="text-sm text-muted-foreground">Mock Interview Session</p>
+                <h1 className="text-lg font-semibold">
+                  {interview.type.title}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Mock Interview Session
+                </p>
               </div>
             </div>
             <Badge variant="outline">
@@ -178,14 +201,22 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
                 variant={isVideoOn ? "default" : "destructive"}
                 onClick={() => setIsVideoOn(!isVideoOn)}
               >
-                {isVideoOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                {isVideoOn ? (
+                  <Video className="h-4 w-4" />
+                ) : (
+                  <VideoOff className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 size="sm"
                 variant={isAudioOn ? "default" : "destructive"}
                 onClick={() => setIsAudioOn(!isAudioOn)}
               >
-                {isAudioOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                {isAudioOn ? (
+                  <Mic className="h-4 w-4" />
+                ) : (
+                  <MicOff className="h-4 w-4" />
+                )}
               </Button>
               <Button size="sm" variant="outline">
                 <Settings className="h-4 w-4" />
@@ -205,7 +236,9 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
               <CardContent className="space-y-4">
                 <p className="text-lg">{currentQuestion?.question}</p>
                 <div className="flex items-center gap-4">
-                  <Badge variant="secondary">{currentQuestion?.difficulty}</Badge>
+                  <Badge variant="secondary">
+                    {currentQuestion?.difficulty}
+                  </Badge>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     {currentQuestion?.timeLimit} min suggested
@@ -224,13 +257,17 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
                     <Button
                       variant={isRecording ? "destructive" : "outline"}
                       size="sm"
-                      onClick={isRecording ? handleStopRecording : handleStartRecording}
+                      onClick={
+                        isRecording ? handleStopRecording : handleStartRecording
+                      }
                     >
                       <Mic className="h-4 w-4 mr-2" />
                       {isRecording ? "Stop Recording" : "Start Recording"}
                     </Button>
                     <Button onClick={handleNextQuestion}>
-                      {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Interview"}
+                      {currentQuestionIndex < questions.length - 1
+                        ? "Next Question"
+                        : "Finish Interview"}
                     </Button>
                   </div>
                 </div>
@@ -246,19 +283,32 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
               <MessageSquare className="h-4 w-4" />
               Chat with Kap AI
             </h3>
-            <p className="text-xs text-muted-foreground">Ask questions anytime during the interview</p>
+            <p className="text-xs text-muted-foreground">
+              Ask questions anytime during the interview
+            </p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {chatHistory.map((message, index) => (
-              <div key={index} className={`flex ${message.sender === "candidate" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={index}
+                className={`flex ${
+                  message.sender === "candidate"
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
                 <div
                   className={`max-w-[80%] rounded-lg p-3 text-sm ${
-                    message.sender === "candidate" ? "bg-primary text-primary-foreground" : "bg-muted"
+                    message.sender === "candidate"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   }`}
                 >
                   <p>{message.message}</p>
-                  <p className="text-xs opacity-70 mt-1">{new Date(message.timestamp).toLocaleTimeString()}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))}
@@ -280,7 +330,7 @@ export function MockInterviewSessionPage({ interviewId, onNavigate }: MockInterv
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default MockInterviewSessionPage
+export default MockInterviewSessionPage;

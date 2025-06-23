@@ -138,6 +138,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   };
 
   const handlePreviewCourse = () => {
+    //TODO: Add user to course and set preview true
     const previewPath = routes.coursePreview(slug);
     onNavigate(previewPath);
   };
@@ -162,37 +163,15 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handleChapterClick = (chapter: Chapter, index: number) => {
     if (course?.enrolled) {
-      // Check if chapter has specific features to navigate to
-      if (chapter.quiz && chapter.type === "quiz") {
-        const quizPath = routes.courseQuiz(slug, chapter.quiz.id);
-        console.log("Chapter Quiz Click - Navigating to:", quizPath);
-        onNavigate(quizPath);
-      } else if (chapter.exercise && chapter.type === "exercise") {
-        const exercisePath = routes.courseExercise(slug, chapter.exercise.id);
-        console.log("Chapter Exercise Click - Navigating to:", exercisePath);
-        onNavigate(exercisePath);
-      } else if (chapter.playground && chapter.type === "playground") {
-        const playgroundPath = routes.coursePlayground(
-          slug,
-          chapter.playground.id
-        );
-        console.log(
-          "Chapter Playground Click - Navigating to:",
-          playgroundPath
-        );
-        onNavigate(playgroundPath);
-      } else {
-        // Default to video watch
-        const watchPath = routes.courseWatch(
-          slug,
-          chapter.slug,
-          chapter?.videos[0]?.slug
-        );
-        onNavigate(watchPath);
-      }
+      // Default to video watch
+      const watchPath = routes.courseWatch(
+        slug,
+        chapter.slug,
+        chapter?.videos[0]?.slug
+      );
+      onNavigate(watchPath);
     } else {
-      const previewPath = routes.coursePreview(slug);
-      onNavigate(previewPath);
+      handlePreviewCourse();
     }
   };
 
@@ -623,7 +602,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                               {chapter?.type?.toUpperCase()}
                             </Badge>
                             {/* Feature indicators */}
-                            {chapter.quiz && (
+                            {chapter?.quizzes?.length! > 0 && (
                               <Badge
                                 variant="outline"
                                 className="text-xs border-purple-600 text-purple-600"

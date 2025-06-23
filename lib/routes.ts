@@ -2,149 +2,137 @@ export const routes = {
   // Main dashboard
   dashboard: "/dashboard",
   home: "/dashboard",
-  profile: "/dashboard/profile",
-  settings: "/dashboard/settings",
+  profile: "/profile",
+  settings: "/settings",
 
   // Courses
-  courses: "/dashboard/courses",
-  courseDetail: (slug: string) => `/dashboard/courses/${slug}`,
-  coursePreview: (courseId: string) => `/dashboard/courses/${courseId}/preview`,
+  courses: "/courses",
+  courseDetail: (slug: string) => `/courses/${slug}`,
+  coursePreview: (courseId: string) => `/courses/${courseId}/preview`,
   courseWatch: (courseId: string, chapterId: string, videoId?: string) => {
-    if (videoId)
-      return `/dashboard/courses/${courseId}/watch/${chapterId}/${videoId}`;
+    if (videoId) return `/courses/${courseId}/watch/${chapterId}/${videoId}`;
 
-    return `/dashboard/courses/${courseId}/watch/${chapterId}`;
+    return `/courses/${courseId}/watch/${chapterId}`;
   },
-  courseQuizzes: (courseId: string) => `/dashboard/courses/${courseId}/quizzes`,
+  courseQuizzes: (courseId: string) => `/courses/${courseId}/quizzes`,
   courseQuiz: (courseId: string, quizId: string) =>
-    `/dashboard/courses/${courseId}/quizzes/${quizId}`,
-  courseExercises: (courseId: string) =>
-    `/dashboard/courses/${courseId}/exercises`,
+    `/courses/${courseId}/quizzes/${quizId}`,
+  courseExercises: (courseId: string) => `/courses/${courseId}/exercises`,
   courseExercise: (courseId: string, exerciseId: string) =>
-    `/dashboard/courses/${courseId}/exercises/${exerciseId}`,
-  coursePlaygrounds: (courseId: string) =>
-    `/dashboard/courses/${courseId}/playgrounds`,
+    `/courses/${courseId}/exercises/${exerciseId}`,
+  coursePlaygrounds: (courseId: string) => `/courses/${courseId}/playgrounds`,
   coursePlayground: (courseId: string, playgroundId: string) =>
-    `/dashboard/courses/${courseId}/playgrounds/${playgroundId}`,
-  courseProjects: (courseId: string) =>
-    `/dashboard/courses/${courseId}/projects`,
+    `/courses/${courseId}/playgrounds/${playgroundId}`,
+  courseProjects: (courseId: string) => `/courses/${courseId}/projects`,
   courseProject: (courseId: string, projectId: string) =>
-    `/dashboard/courses/${courseId}/projects/${projectId}`,
-  courseCertificate: (courseId: string) =>
-    `/dashboard/courses/${courseId}/certificate`,
+    `/courses/${courseId}/projects/${projectId}`,
+  courseCertificate: (courseId: string) => `/courses/${courseId}/certificate`,
 
   // Roadmaps
-  roadmaps: "/dashboard/roadmaps",
-  roadmapDetail: (roadmapId: string) => `/dashboard/roadmaps/${roadmapId}`,
-  roadmapWatch: (roadmapId: string) => `/dashboard/roadmaps/${roadmapId}/watch`,
+  roadmaps: "/roadmaps",
+  roadmapDetail: (roadmapId: string) => `/roadmaps/${roadmapId}`,
+  roadmapWatch: (roadmapId: string) => `/roadmaps/${roadmapId}/watch`,
   roadmapVideoWatch: (roadmapId: string, videoId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/video/${videoId}`,
+    `/roadmaps/${roadmapId}/video/${videoId}`,
   roadmapCoursePreview: (roadmapId: string, courseId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}`,
+    `/roadmaps/${roadmapId}/courses/${courseId}`,
   roadmapCourseWatch: (
     roadmapId: string,
     courseId: string,
     chapterId: string
-  ) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/watch/${chapterId}`,
+  ) => `/roadmaps/${roadmapId}/courses/${courseId}/watch/${chapterId}`,
   roadmapCourseQuizzes: (roadmapId: string, courseId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/quizzes`,
+    `/roadmaps/${roadmapId}/courses/${courseId}/quizzes`,
   roadmapCourseQuiz: (roadmapId: string, courseId: string, quizId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/quizzes/${quizId}`,
+    `/roadmaps/${roadmapId}/courses/${courseId}/quizzes/${quizId}`,
   roadmapCourseExercises: (roadmapId: string, courseId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/exercises`,
+    `/roadmaps/${roadmapId}/courses/${courseId}/exercises`,
   roadmapCourseExercise: (
     roadmapId: string,
     courseId: string,
     exerciseId: string
-  ) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/exercises/${exerciseId}`,
+  ) => `/roadmaps/${roadmapId}/courses/${courseId}/exercises/${exerciseId}`,
   roadmapCoursePlaygrounds: (roadmapId: string, courseId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/playgrounds`,
+    `/roadmaps/${roadmapId}/courses/${courseId}/playgrounds`,
   roadmapCoursePlayground: (
     roadmapId: string,
     courseId: string,
     playgroundId: string
-  ) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/playgrounds/${playgroundId}`,
+  ) => `/roadmaps/${roadmapId}/courses/${courseId}/playgrounds/${playgroundId}`,
   roadmapCourseProjects: (roadmapId: string, courseId: string) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/projects`,
+    `/roadmaps/${roadmapId}/courses/${courseId}/projects`,
   roadmapCourseProject: (
     roadmapId: string,
     courseId: string,
     projectId: string
-  ) =>
-    `/dashboard/roadmaps/${roadmapId}/courses/${courseId}/projects/${projectId}`,
+  ) => `/roadmaps/${roadmapId}/courses/${courseId}/projects/${projectId}`,
 
   // Learning Paths
-  paths: "/dashboard/paths",
-  pathDetail: (pathId: string) => `/dashboard/paths/${pathId}`,
-  pathContinue: (pathId: string) => `/dashboard/paths/${pathId}/continue`,
+  paths: "/paths",
+  pathDetail: (pathId: string) => `/paths/${pathId}`,
+  pathContinue: (pathId: string) => `/paths/${pathId}/continue`,
   pathContentWatch: (pathId: string, stepId: string) =>
-    `/dashboard/paths/${pathId}/watch/${stepId}`,
+    `/paths/${pathId}/watch/${stepId}`,
 
   // Bootcamps
-  bootcamps: "/dashboard/bootcamps",
-  bootcampDetail: (bootcampId: string) => `/dashboard/bootcamps/${bootcampId}`,
+  bootcamps: "/bootcamps",
+  bootcampDetail: (bootcampId: string) => `/bootcamps/${bootcampId}`,
   bootcampDashboard: (bootcampId: string) =>
-    `/dashboard/bootcamps/${bootcampId}/dashboard`,
+    `/bootcamps/${bootcampId}/dashboard`,
   bootcampWeek: (bootcampId: string, weekId: string) =>
-    `/dashboard/bootcamps/${bootcampId}/week/${weekId}`,
+    `/bootcamps/${bootcampId}/week/${weekId}`,
 
   // Project30
-  project30: "/dashboard/project30",
-  project30Detail: (courseId: string) => `/dashboard/project30/${courseId}`,
+  project30: "/project30",
+  project30Detail: (courseId: string) => `/project30/${courseId}`,
   project30Day: (courseId: string, dayNumber: string) =>
-    `/dashboard/project30/${courseId}/day/${dayNumber}`,
-  project30Community: (courseId: string) =>
-    `/dashboard/project30/${courseId}/community`,
+    `/project30/${courseId}/day/${dayNumber}`,
+  project30Community: (courseId: string) => `/project30/${courseId}/community`,
   project30Leaderboard: (courseId: string) =>
-    `/dashboard/project30/${courseId}/leaderboard`,
+    `/project30/${courseId}/leaderboard`,
 
   // Projects
-  projects: "/dashboard/projects",
-  projectDetail: (projectId: string) => `/dashboard/projects/${projectId}`,
+  projects: "/projects",
+  projectDetail: (projectId: string) => `/projects/${projectId}`,
 
   // MB Lands
-  lands: "/dashboard/lands",
-  landDetail: (landId: string) => `/dashboard/lands/${landId}`,
+  lands: "/lands",
+  landDetail: (landId: string) => `/lands/${landId}`,
   stageDetail: (landId: string, stageId: string) =>
-    `/dashboard/lands/${landId}/stages/${stageId}`,
+    `/lands/${landId}/stages/${stageId}`,
   challengeDetail: (landId: string, stageId: string, challengeId: string) =>
-    `/dashboard/lands/${landId}/stages/${stageId}/challenges/${challengeId}`,
+    `/lands/${landId}/stages/${stageId}/challenges/${challengeId}`,
 
   // Interviews
-  interviews: "/dashboard/interviews",
-  interviewDetail: (interviewId: string) =>
-    `/dashboard/interviews/${interviewId}`,
+  interviews: "/interviews",
+  interviewDetail: (interviewId: string) => `/interviews/${interviewId}`,
   interviewProject: (interviewId: string) =>
-    `/dashboard/interviews/${interviewId}/project`,
+    `/interviews/${interviewId}/project`,
   interviewAlgorithm: (interviewId: string) =>
-    `/dashboard/interviews/${interviewId}/algorithm`,
+    `/interviews/${interviewId}/algorithm`,
   interviewResults: (interviewId: string) =>
-    `/dashboard/interviews/${interviewId}/results`,
+    `/interviews/${interviewId}/results`,
 
   // Mock Interviews
-  mockInterviews: "/dashboard/mock-interviews",
-  mockInterviewDetail: (id: string) => `/dashboard/mock-interviews/${id}`,
-  mockInterviewResults: (id: string) =>
-    `/dashboard/mock-interviews/${id}/results`,
+  mockInterviews: "/mock-interviews",
+  mockInterviewDetail: (id: string) => `/mock-interviews/${id}`,
+  mockInterviewResults: (id: string) => `/mock-interviews/${id}/results`,
 
   // Community
-  community: "/dashboard/community",
+  community: "/community",
 
   // Subscription & Billing
-  subscriptionPlans: "/dashboard/subscription/plans",
-  subscriptionManagement: "/dashboard/subscription/management",
-  billing: "/dashboard/billing",
+  subscriptionPlans: "/subscription/plans",
+  subscriptionManagement: "/subscription/management",
+  billing: "/billing",
   checkout: (type: string, planId: string) =>
-    `/dashboard/checkout?type=${type}&plan=${planId}`,
+    `/checkout?type=${type}&plan=${planId}`,
 
   // MB Store & Redemption
-  xpStore: "/dashboard/xp-store",
+  xpStore: "/xp-store",
   xpRedeem: (category: string, itemId: string) =>
-    `/dashboard/xp-store/redeem?category=${category}&item=${itemId}`,
-  xpHistory: "/dashboard/xp-store/history",
+    `/xp-store/redeem?category=${category}&item=${itemId}`,
+  xpHistory: "/xp-store/history",
 
   // Auth
   logout: "/auth/login",

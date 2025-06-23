@@ -108,7 +108,7 @@ export function BootcampWeekPage({
         <div className="text-center">
           <h1 className="text-2xl font-bold">Week not found</h1>
           <Button
-            onClick={() => onNavigate?.(`/dashboard/bootcamps/${bootcampId}`)}
+            onClick={() => onNavigate?.(`/bootcamps/${bootcampId}`)}
             className="mt-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -125,7 +125,7 @@ export function BootcampWeekPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/dashboard/bootcamps/${bootcampId}`)}
+          onClick={() => onNavigate?.(`/bootcamps/${bootcampId}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -288,9 +288,7 @@ export function BootcampWeekPage({
                       : ""
                   }`}
                   onClick={() =>
-                    onNavigate?.(
-                      `/dashboard/bootcamps/${bootcampId}/week/${week}`
-                    )
+                    onNavigate?.(`/bootcamps/${bootcampId}/week/${week}`)
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">

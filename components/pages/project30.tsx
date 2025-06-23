@@ -545,13 +545,13 @@ export function Project30Page({
   const handlePurchase = (method: "subscription" | "individual" | "xp") => {
     switch (method) {
       case "subscription":
-        onNavigate("/dashboard/subscription-plans");
+        onNavigate("/subscription-plans");
         break;
       case "individual":
-        onNavigate(`/dashboard/checkout?type=project30&id=${courseId}`);
+        onNavigate(`/checkout?type=project30&id=${courseId}`);
         break;
       case "xp":
-        onNavigate(`/dashboard/xp-store?redeem=project30&id=${courseId}`);
+        onNavigate(`/xp-store?redeem=project30&id=${courseId}`);
         break;
     }
     setShowPaymentDialog(false);
@@ -621,9 +621,7 @@ export function Project30Page({
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
-            onClick={() =>
-              onNavigate(`/dashboard/project30/${courseId}/leaderboard`)
-            }
+            onClick={() => onNavigate(`/project30/${courseId}/leaderboard`)}
             className="w-full sm:w-auto"
           >
             <Trophy className="mr-2 h-4 w-4" />
@@ -633,7 +631,7 @@ export function Project30Page({
             <Button
               onClick={() =>
                 onNavigate(
-                  `/dashboard/project30/${courseId}/day/${project30Data.currentDay}`
+                  `/project30/${courseId}/day/${project30Data.currentDay}`
                 )
               }
               className="w-full sm:w-auto"
@@ -940,7 +938,7 @@ export function Project30Page({
                     className="w-full"
                     onClick={() =>
                       onNavigate(
-                        `/dashboard/project30/${courseId}/day/${project30Data.currentDay}`
+                        `/project30/${courseId}/day/${project30Data.currentDay}`
                       )
                     }
                   >
@@ -1080,7 +1078,7 @@ export function Project30Page({
                       onClick={() =>
                         project30Data.enrolled
                           ? onNavigate(
-                              `/dashboard/project30/${courseId}/day/${project30Data.currentDay}`
+                              `/project30/${courseId}/day/${project30Data.currentDay}`
                             )
                           : setShowPaymentDialog(true)
                       }
@@ -1309,7 +1307,7 @@ export function Project30Page({
                                 day.status !== "locked"
                               ) {
                                 onNavigate(
-                                  `/dashboard/project30/${courseId}/day/${project30Data.currentDay}`
+                                  `/project30/${courseId}/day/${project30Data.currentDay}`
                                 );
                               } else if (!project30Data.enrolled) {
                                 setShowPaymentDialog(true);
@@ -1559,9 +1557,7 @@ export function Project30Page({
                       variant="outline"
                       className="w-full mt-4"
                       onClick={() =>
-                        onNavigate(
-                          `/dashboard/project30/${courseId}/leaderboard`
-                        )
+                        onNavigate(`/project30/${courseId}/leaderboard`)
                       }
                     >
                       View Full Leaderboard
@@ -1635,7 +1631,7 @@ export function Project30Page({
                     variant="outline"
                     className="w-full"
                     onClick={() =>
-                      onNavigate(`/dashboard/project30/${courseId}/community`)
+                      onNavigate(`/project30/${courseId}/community`)
                     }
                   >
                     Join Community Discussion

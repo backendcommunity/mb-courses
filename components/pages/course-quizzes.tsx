@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
-import { Quiz } from "@/lib/data";
+import { Course, Quiz } from "@/lib/data";
+import { PaymentDialog } from "../payment-dialog";
 
 interface CourseQuizzesPageProps {
   slug: string;
@@ -29,14 +30,22 @@ export function CourseQuizzesPage({
   const store = useAppStore();
   const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
   const [quizzes, setQuizzes] = useState<Quiz[] | any>();
+  const [course, setCourse] = useState<Course | any>();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   async function loadQuizzes() {
     const quizzes = await store.getCourseQuizzes(slug);
     setQuizzes(quizzes);
   }
 
+  async function loadUserCourse() {
+    const userCourse = await store.getCourse(slug);
+    setCourse(userCourse);
+  }
+
   useEffect(() => {
     loadQuizzes();
+    loadUserCourse();
   }, []);
 
   if (!quizzes) return <div>loading...</div>;
@@ -258,21 +267,32 @@ export function CourseQuizzesPage({
               )}
 
               {/* Action Button */}
-              <Button
-                className="w-full"
-                onClick={() => onNavigate(routes.courseQuiz(slug, quiz.id))}
-                variant={
-                  userQuiz?.completed && !userQuiz?.passed
-                    ? "outline"
-                    : "default"
-                }
-              >
-                {userQuiz?.completed
-                  ? userQuiz?.passed
-                    ? "Review Quiz"
-                    : "Retake Quiz"
-                  : "Start Quiz"}
-              </Button>
+
+              {!course?.enrolled ? (
+                <Button
+                  className="w-full"
+                  onClick={() => setShowPaymentDialog(true)}
+                  variant={"default"}
+                >
+                  Start Quiz
+                </Button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={() => onNavigate(routes.courseQuiz(slug, quiz.id))}
+                  variant={
+                    userQuiz?.completed && !userQuiz?.passed
+                      ? "outline"
+                      : "default"
+                  }
+                >
+                  {userQuiz?.completed
+                    ? userQuiz?.passed
+                      ? "Review Quiz"
+                      : "Retake Quiz"
+                    : "Start Quiz"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -292,6 +312,16 @@ export function CourseQuizzesPage({
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {showPaymentDialog && (
+        <PaymentDialog
+          onClose={() => setShowPaymentDialog(false)}
+          open={showPaymentDialog}
+          data={course}
+          onHandlePreview={() => {}}
+          onHandlePurchase={() => {}}
+        />
       )}
     </div>
   );

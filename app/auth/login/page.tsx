@@ -32,7 +32,7 @@ export default function LoginPage() {
 
       setIsLoading(false);
       // Handle login logic here
-      return router.push("/dashboard");
+      return router.push("/");
     } catch (error: any) {
       const message = error?.response?.data?.message ?? error?.message;
       if (message.includes("Confirm your email"))

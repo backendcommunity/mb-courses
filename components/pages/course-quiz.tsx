@@ -22,12 +22,16 @@ interface CourseQuizPageProps {
   courseId: string;
   quiz: Quiz;
   onNavigate: (path: string) => void;
+  showNav?: boolean;
+  handleQuizSubmit: (passed: boolean) => void;
 }
 
 export function CourseQuizPage({
   courseId,
   quiz,
   onNavigate,
+  showNav = true,
+  handleQuizSubmit,
 }: CourseQuizPageProps) {
   const store = useAppStore();
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -71,7 +75,7 @@ export function CourseQuizPage({
     let earnedPoints = 0;
     let result: any = [];
 
-    quiz.questions.forEach((question, index) => {
+    quiz?.questions.forEach((question, index) => {
       const userAnswerIndex = parseInt(answers[index]);
 
       // If user didn't answer, skip
@@ -98,19 +102,20 @@ export function CourseQuizPage({
 
     setScore(finalScore);
 
-    await store.submitQuiz(quiz.id, {
+    await store.submitQuiz(quiz?.id, {
       items: result,
       userQuizId: quiz?.userQuiz?.id ?? newUserQuiz?.id,
       score: finalScore,
     });
 
     setQuizCompleted(true);
-    setCelebration(finalScore >= quiz.passingScore);
+    setCelebration(finalScore >= quiz?.passingScore);
+    handleQuizSubmit(finalScore >= quiz?.passingScore);
   };
 
   const startQuiz = async () => {
     try {
-      const new_quiz = await store.startQuiz(quiz.id, {
+      const new_quiz = await store.startQuiz(quiz?.id, {
         userQuizId: quiz?.userQuiz?.id,
       });
 
@@ -118,7 +123,7 @@ export function CourseQuizPage({
 
       setQuizStarted(true);
 
-      setTimeLeft(quiz.timeLimit * 60);
+      setTimeLeft(quiz?.timeLimit * 60);
       setNewUserQuiz(new_quiz);
 
       Object.assign(quiz, { userQuiz: new_quiz, enrolled: true });
@@ -136,42 +141,44 @@ export function CourseQuizPage({
     setQuizStarted(false);
     setQuizCompleted(false);
     setScore(null);
-    setTimeLeft(quiz.timeLimit * 60);
+    setTimeLeft(quiz?.timeLimit * 60);
   };
 
   if (!quizStarted) {
     return (
       <div className="flex-1 p-6">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Quizzes
-            </Button>
-          </div>
+          {showNav && (
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Quizzes
+              </Button>
+            </div>
+          )}
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">{quiz.title}</CardTitle>
-              <p className="text-gray-600">{quiz.description}</p>
+              <CardTitle className="text-2xl">{quiz?.title}</CardTitle>
+              <p className="text-gray-600">{quiz?.description}</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Questions</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {quiz.questions.length}
+                    {quiz?.questions.length}
                   </p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Time Limit</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {quiz.timeLimit} min
+                    {quiz?.timeLimit} min
                   </p>
                 </div>
               </div>
@@ -185,10 +192,10 @@ export function CourseQuizPage({
                     </h4>
                     <ul className="text-sm text-yellow-700 mt-2 space-y-1">
                       <li>
-                        • You have {quiz.timeLimit} minutes to complete this
+                        • You have {quiz?.timeLimit} minutes to complete this
                         quiz
                       </li>
-                      <li>• You need {quiz.passingScore}% to pass</li>
+                      <li>• You need {quiz?.passingScore}% to pass</li>
                       <li>• You can retake the quiz if needed</li>
                       <li>• Make sure you have a stable internet connection</li>
                     </ul>
@@ -197,7 +204,7 @@ export function CourseQuizPage({
               </div>
 
               <Button onClick={startQuiz} className="w-full" size="lg">
-                {quiz.enrolled && !quiz?.userQuiz?.passed
+                {quiz?.enrolled && !quiz?.userQuiz?.passed
                   ? "Retake Quiz"
                   : quiz?.userQuiz?.passed
                   ? "Review Quiz"
@@ -210,9 +217,6 @@ export function CourseQuizPage({
     );
   }
 
-  {
-    /* Confetti Celebration */
-  }
   <ConfettiCelebration
     onComplete={() => setCelebration(false)}
     isVisible={celebration}
@@ -221,27 +225,29 @@ export function CourseQuizPage({
   />;
   if (quizCompleted) {
     const _score = score ?? quiz?.userQuiz?.score;
-    const passed = _score >= quiz.passingScore;
+    const passed = _score >= quiz?.passingScore!;
 
     const questions =
       quiz?.enrolled && quiz?.userQuiz?.completed
-        ? quiz.userQuiz.items
-        : quiz.questions;
+        ? quiz?.userQuiz.items
+        : quiz?.questions;
 
     return (
       <div className="flex-1 p-6">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Quizzes
-            </Button>
-          </div>
+          {showNav && (
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Quizzes
+              </Button>
+            </div>
+          )}
 
           <Card>
             <CardHeader className="text-center">
@@ -273,7 +279,7 @@ export function CourseQuizPage({
                   variant={passed ? "default" : "destructive"}
                   className="mb-4"
                 >
-                  {passed ? "PASSED" : "FAILED"} (Need {quiz.passingScore}%)
+                  {passed ? "PASSED" : "FAILED"} (Need {quiz?.passingScore}%)
                 </Badge>
               </div>
 
@@ -295,7 +301,7 @@ export function CourseQuizPage({
                   return (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex items-start gap-2 mb-2">
-                        {isCorrect || question?.passed ? (
+                        {isCorrect || !question?.passed ? (
                           <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                         ) : (
                           <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
@@ -328,12 +334,14 @@ export function CourseQuizPage({
                 >
                   Retake Quiz
                 </Button>
-                <Button
-                  onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-                  className="flex-1"
-                >
-                  Back to Quizzes
-                </Button>
+                {showNav && (
+                  <Button
+                    onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+                    className="flex-1"
+                  >
+                    Back to Quizzes
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -342,8 +350,8 @@ export function CourseQuizPage({
     );
   }
 
-  const currentQ = quiz.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
+  const currentQ = quiz?.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / quiz?.questions.length) * 100;
 
   return (
     <div className="flex-1 p-6">
@@ -365,7 +373,7 @@ export function CourseQuizPage({
               {formatTime(timeLeft)}
             </div>
             <Badge variant="outline">
-              {currentQuestion + 1} of {quiz.questions.length}
+              {currentQuestion + 1} of {quiz?.questions.length}
             </Badge>
           </div>
         </div>
@@ -426,10 +434,10 @@ export function CourseQuizPage({
             Previous
           </Button>
 
-          {currentQuestion === quiz.questions.length - 1 ? (
+          {currentQuestion === quiz?.questions.length - 1 ? (
             <Button
               onClick={handleSubmitQuiz}
-              disabled={Object.keys(answers).length !== quiz.questions.length}
+              disabled={Object.keys(answers).length !== quiz?.questions.length}
             >
               Submit Quiz
             </Button>

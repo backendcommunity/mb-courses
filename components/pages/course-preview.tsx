@@ -65,10 +65,7 @@ export function CoursePreviewPage({
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Course not found</h1>
-          <Button
-            onClick={() => onNavigate?.("/dashboard/courses")}
-            className="mt-4"
-          >
+          <Button onClick={() => onNavigate?.("/courses")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Courses
           </Button>
