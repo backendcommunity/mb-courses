@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -19,9 +19,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null
+  );
   const auth = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +36,12 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -80,7 +88,7 @@ export default function RegisterPage() {
 
       setIsLoading(true);
 
-      const query: any = searchParams.get("query");
+      const query: any = searchParams?.get("query");
 
       // Simulate API call
       const isRegistered = await auth.register({
@@ -91,9 +99,9 @@ export default function RegisterPage() {
         subscribe: subscribeNewsletter,
         signedUpThrough: "MASTERINGBACKEND",
         source:
-          searchParams.get("ref") ??
-          searchParams.get("source") ??
-          searchParams.get("utm_source") ??
+          searchParams?.get("ref") ??
+          searchParams?.get("source") ??
+          searchParams?.get("utm_source") ??
           undefined,
       });
 

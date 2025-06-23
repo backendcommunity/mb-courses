@@ -16,9 +16,10 @@ import { useAuth } from "@/store/auth";
 import { toast } from "sonner";
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null
+  );
   const auth = useAuth();
-  const router = useRouter();
   const [verificationStatus, setVerificationStatus] = useState<
     "loading" | "success" | "error" | "expired" | "sent"
   >("sent");
@@ -28,8 +29,14 @@ export default function VerifyEmailPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!searchParams) return;
     const emailParam = searchParams.get("email");
-    console.log(emailParam);
     const sentQuery = searchParams.get("sent");
     setEmail(emailParam || "");
 

@@ -11,7 +11,9 @@ import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   const auth = useAuth();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +34,13 @@ export default function ResetPasswordPage() {
   });
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!searchParams) return;
     const tokenParam = searchParams.get("token");
     const emailToken = searchParams.get("email");
 
