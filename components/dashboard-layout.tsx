@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";

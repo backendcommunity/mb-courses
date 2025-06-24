@@ -7,20 +7,20 @@ export function middleware(request: NextRequest) {
 
   const isAuthenticated = !!token;
 
-  const isAuthPage = pathname.startsWith("/auth");
-  const isPublic = isAuthPage || pathname === "/";
+  const isAuthPage = pathname.startsWith("/auth/");
+  const isPublic = isAuthPage;
 
   // 1. If NOT authenticated and trying to access protected route
-  // if (!isAuthenticated && !isPublic) {
-  //   console.log(isPublic, "MD");
-  //   return NextResponse.redirect(new URL("/auth/login", request.url));
-  // }
+  if (!isAuthenticated && !isPublic) {
+    console.log(isPublic, "MD");
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
 
-  // // 2. If authenticated and trying to access auth pages
-  // if (isAuthenticated && isAuthPage) {
-  //   console.log(isAuthPage, "MD");
-  //   return NextResponse.redirect(new URL("/", request.url));
-  // }
+  // 2. If authenticated and trying to access auth pages
+  if (isAuthenticated && isAuthPage) {
+    console.log(isAuthPage, "MD");
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   console.log(pathname, "MD");
   // Otherwise, allow the request
