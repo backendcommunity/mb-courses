@@ -38,5 +38,4 @@ export const config = {
      */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|wav|mp3)).*)",
   ],
-  runtime: "nodejs",
 };
