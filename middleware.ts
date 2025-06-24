@@ -1,31 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { useUser } from "./hooks/use-user";
 
 export function middleware(request: NextRequest) {
-  // Get the pathname from the URL
   const { pathname } = request.nextUrl;
-  // const user = useUser();
-  // if (!user) return NextResponse.redirect(new URL("/auth/login", request.url));
-
   const token = request.cookies.get("mb_token");
 
-  // Check if the user is authenticated (this is a simplified example)
-  // In a real app, you would check for a valid session token
-  const isAuthenticated = !!token; // Replace with actual auth check
+  const isAuthenticated = !!token;
 
-  // If the user is not authenticated and trying to access a protected route
-  if (!isAuthenticated && !pathname.startsWith("/auth")) {
-    // Redirect to the login page
+  const isAuthPage = pathname.startsWith("/auth");
+  const isPublic = isAuthPage || pathname === "/";
+
+  // 1. If NOT authenticated and trying to access protected route
+  if (!isAuthenticated && !isPublic) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  // If the user is authenticated and trying to access the login page
-  if (isAuthenticated && ["auth"].includes(pathname)) {
-    // Redirect to the dashboard
+  // 2. If authenticated and trying to access auth pages
+  if (isAuthenticated && isAuthPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  // Otherwise, allow the request
   return NextResponse.next();
 }
 
