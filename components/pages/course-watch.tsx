@@ -1,12 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { VimeoPlayer } from "@/components/ui/vimeo-player";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "timeago.js";
 import {
   ArrowLeft,
   Play,
@@ -25,238 +33,399 @@ import {
   Brain,
   Code,
   Gamepad2,
-} from "lucide-react"
-import { useAppStore } from "@/lib/store"
-import { routes } from "@/lib/routes"
+  Code2,
+  Save,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
+import {
+  Chapter,
+  Course,
+  Note,
+  UserChapter,
+  UserCourse,
+  UserVideo,
+  Video,
+} from "@/lib/data";
+import { useUser } from "@/hooks/use-user";
+import DisqusCommentBlock from "../ui/comment";
+import { markVideoComlete } from "@/lib/courses";
+import { toast } from "sonner";
+import ConfettiCelebration from "../confetti-celebration";
+import { codeSample, handleShare } from "@/lib/utils";
+import { CourseQuizPage } from "./course-quiz";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface CourseWatchPageProps {
-  courseId: string
-  chapterId: string
-  videoId?: string
-  onNavigate?: (route: string) => void
+  slug: string;
+  chapterId: string;
+  videoId?: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: CourseWatchPageProps) {
-  const store = useAppStore()
-  const course = store.getCourses().find((c) => c.id === courseId)
-  const chapter = course?.chapters.find((ch) => ch.id === chapterId)
-  const currentVideo = videoId ? chapter?.videos.find((v) => v.id === videoId) : chapter?.videos[0]
+export function CourseWatchPage({
+  slug,
+  chapterId,
+  videoId,
+  onNavigate,
+}: CourseWatchPageProps) {
+  const store = useAppStore();
+  const [course, setCourse] = useState<Course>();
+  const [userCourse, setUserCourse] = useState<UserCourse>();
+  const chapter: Chapter | any = course?.chapters.find(
+    (ch: Chapter) => ch.slug === chapterId
+  );
+  const user = useUser();
+  const currentVideo = videoId
+    ? chapter?.videos.find((v: Video) => v.slug === videoId)
+    : chapter?.videos[0];
+  const [loading, setLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration] = useState(1800); // 30 minutes in seconds
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [celebration, setCelebration] = useState(false);
+  const [code, setCode] = useState(codeSample);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const [note, setNote] = useState("");
+  const path = usePathname();
 
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration] = useState(1800) // 30 minutes in seconds
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  useEffect(() => {
+    setLoading(true);
+    async function findUserCourse(slug: string) {
+      const userCourse = await store.getUserCourse(slug);
+      setCourse(userCourse.course);
+      setUserCourse(userCourse);
+
+      setLoading(false);
+    }
+    findUserCourse(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    async function loadNotes(courseId: string, videoId: string) {
+      const notes = await store.getVideoNotes(courseId, videoId);
+      setNotes(notes);
+    }
+
+    loadNotes(course?.id!, videoId!);
+  }, [course, videoId]);
+
+  if (loading) return <div>Loading...</div>;
 
   if (!course || !chapter) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Chapter not found</h1>
-          <Button onClick={() => onNavigate?.(routes.courseDetail(courseId))} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.(routes.courseDetail(slug))}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Course
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
-  const handleMarkComplete = () => {
-    if (currentVideo) {
-      // Mark current video as complete
-      const updatedChapters = course.chapters.map((ch) => {
-        if (ch.id === chapterId) {
-          const updatedVideos = ch.videos.map((v) => (v.id === currentVideo.id ? { ...v, completed: true } : v))
-          const allVideosComplete = updatedVideos.every((v) => v.completed)
-          const hasOtherContent = ch.quiz || ch.exercise || ch.playground
-          const chapterComplete = allVideosComplete && !hasOtherContent
+  const handleMarkComplete = async () => {
+    if (!currentVideo || !course || !chapter || !userCourse) return;
 
-          return { ...ch, videos: updatedVideos, completed: chapterComplete }
-        }
-        return ch
-      })
-
-      store.updateCourse(courseId, { chapters: updatedChapters })
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
     }
-  }
 
-  const nextVideo = chapter.videos.find((v, index) => {
-    const currentIndex = chapter.videos.findIndex((video) => video.id === currentVideo?.id)
-    return index === currentIndex + 1
-  })
+    try {
+      // Combine completed videos + the one being marked now
+      const completedVideoIds = new Set(
+        userCourse
+          ?.userVideos!.filter((v) => v.isCompleted)
+          .map((v) => v.videoId)
+      );
+      completedVideoIds.add(currentVideo.id); // include this one just marked
 
-  const prevVideo = chapter.videos.find((v, index) => {
-    const currentIndex = chapter.videos.findIndex((video) => video.id === currentVideo?.id)
-    return index === currentIndex - 1
-  })
+      // Check if all chapter videos are now complete
+      const allVideosComplete = chapter.videos.every((v: Video) =>
+        completedVideoIds.has(v.id)
+      );
 
-  const nextChapter = course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) + 1]
-  const prevChapter = course.chapters[course.chapters.findIndex((ch) => ch.id === chapterId) - 1]
+      const hasOtherContent =
+        chapter.quiz || chapter.exercise || chapter.playground;
+      const isChapterCompleted = allVideosComplete && !hasOtherContent;
 
-  const handleVideoClick = (video: any) => {
+      // Update local course state
+      const updatedChapters = course.chapters.map((ch) =>
+        ch.id === chapter.id
+          ? {
+              ...ch,
+              videos: ch.videos.map((v) =>
+                v.id === currentVideo.id ? { ...v, isCompleted: true } : v
+              ),
+              isCompleted: isChapterCompleted,
+            }
+          : ch
+      );
+
+      setCourse({ ...course, chapters: updatedChapters });
+
+      // Optionally update userCourse for UI
+      setUserCourse({
+        ...userCourse,
+        userVideos: [
+          ...userCourse?.userVideos!.filter(
+            (v) => v.videoId !== currentVideo.id
+          ),
+          { videoId: currentVideo.id, isCompleted: true },
+        ],
+        userChapters: isChapterCompleted
+          ? [
+              ...userCourse?.userChapters!.filter(
+                (ch) => ch.chapterId !== chapter.id
+              ),
+              { chapterId: chapter.id, isCompleted: true },
+            ]
+          : userCourse.userChapters,
+      });
+
+      // Backend update with proper `isChapterCompleted`
+      await markVideoComlete(course.id, chapter.id, currentVideo.id, {
+        isChapterCompleted,
+      });
+
+      toast.success("You just earned some points!");
+      setCelebration(true);
+    } catch (error) {
+      toast.error("An error occurred. Please try again");
+    }
+  };
+
+  const isChapterCompleted = (chapterId: string) => {
+    return userCourse?.userChapters?.find(
+      (ch: UserChapter) => ch.chapterId === chapterId
+    )?.isCompleted;
+  };
+
+  const isVideoCompleted = (videoId: string) => {
+    return userCourse?.userVideos?.find((ch: any) => ch.videoId === videoId)
+      ?.isCompleted;
+  };
+
+  const calculateProgess = (): number => {
+    return (userCourse?.userVideos?.length! / course?.totalContent || 0) * 100;
+  };
+
+  const next = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (video: Video) => video.id === currentVideo?.id
+      );
+      return index === currentIndex + 1;
+    });
+  };
+
+  const prev = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (video: Video) => video.id === currentVideo?.id
+      );
+      return index === currentIndex - 1;
+    });
+  };
+
+  const nextVideo = next();
+  const prevVideo = prev();
+
+  const nextChapter =
+    course.chapters[
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
+    ];
+  const prevChapter =
+    course.chapters[
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
+    ];
+
+  const handleVideoClick = (video: Video) => {
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
     if (onNavigate) {
-      onNavigate(routes.courseWatch(courseId, chapterId))
+      onNavigate(routes.courseWatch(slug, chapterId, video.slug));
     }
-  }
+  };
 
-  const handleChapterFeatureClick = (type: string, id: string) => {
-    if (!onNavigate) return
-
-    switch (type) {
+  const handleChapterFeatureClick = (type: string, id?: string) => {
+    if (!onNavigate) return;
+    let url = "";
+    switch (type?.toLowerCase()) {
       case "quiz":
-        onNavigate(routes.courseQuiz(courseId, id))
-        break
+        url = routes.courseQuizzes(slug);
+        break;
       case "exercise":
-        onNavigate(routes.courseExercise(courseId, id))
-        break
+        url = routes.courseExercises(slug);
+        break;
       case "playground":
-        onNavigate(routes.coursePlayground(courseId, id))
-        break
+        url = routes.coursePlaygrounds(slug);
+        break;
     }
-  }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleChapterClick = (next: boolean) => {
+    if (!onNavigate) return;
+
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
+    if (next) {
+      onNavigate(
+        routes.courseWatch(slug, nextChapter.slug, nextChapter?.videos[0]?.slug)
+      );
+      return;
+    }
+
+    onNavigate(
+      routes.courseWatch(
+        slug,
+        prevChapter.slug,
+        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
+      )
+    );
+  };
+
+  const handleSaveNotes = async () => {
+    if (!note) return;
+    try {
+      const saveNote = await store.saveNote(note, course.id, currentVideo.id);
+      setNotes([...notes, saveNote]);
+    } catch (error) {
+      toast.error("Error occurred adding note");
+    }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(routes.courseDetail(courseId))}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(routes.courseDetail(slug))}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{currentVideo ? currentVideo.title : chapter.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {currentVideo ? currentVideo.title : chapter.title}
+          </h1>
           <p className="text-muted-foreground">
             {course.title} • {chapter.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{chapter.type}</Badge>
-          <Badge variant="outline">{currentVideo?.duration || chapter.duration}</Badge>
+          <Badge variant="outline">
+            {currentVideo?.duration ?? chapter?.duration ?? 0} hours
+          </Badge>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Video Player */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 flex flex-col">
           {/* Video Player */}
-          <Card className="overflow-hidden">
-            <div className="aspect-video bg-black relative">
-              {/* Video placeholder */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-700">
-                <div className="text-center text-white">
-                  <Play className="h-16 w-16 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold">{currentVideo?.title || chapter.title}</h3>
-                  <p className="text-gray-300">{currentVideo?.description || chapter.description}</p>
-                </div>
+          {currentVideo?.type === "VIDEO" && (
+            <Card className="overflow-hidden">
+              <div className="aspect-video bg-black relative">
+                <VimeoPlayer video={currentVideo} />
               </div>
+            </Card>
+          )}
+          {currentVideo?.type === "QUIZ" && (
+            <Card className="overflow-hidden">
+              <CourseQuizPage
+                courseId={slug}
+                onNavigate={() => {}}
+                quiz={currentVideo?.quiz!}
+                showNav={false}
+                handleQuizSubmit={(passed) => {
+                  setQuizPassed(passed);
+                  if (!passed) {
+                  }
 
-              {/* Video Controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="space-y-2">
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2 text-white text-sm">
-                    <span>{formatTime(currentTime)}</span>
-                    <div className="flex-1">
-                      <Progress value={(currentTime / duration) * 100} className="h-1" />
-                    </div>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        disabled={!prevVideo}
-                        onClick={() => prevVideo && handleVideoClick(prevVideo)}
-                      >
-                        <SkipBack className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        disabled={!nextVideo}
-                        onClick={() => nextVideo && handleVideoClick(nextVideo)}
-                      >
-                        <SkipForward className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                      <select
-                        value={playbackSpeed}
-                        onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                        className="bg-transparent text-white text-sm border border-white/20 rounded px-2 py-1"
-                      >
-                        <option value={0.5}>0.5x</option>
-                        <option value={0.75}>0.75x</option>
-                        <option value={1}>1x</option>
-                        <option value={1.25}>1.25x</option>
-                        <option value={1.5}>1.5x</option>
-                        <option value={2}>2x</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                        <Maximize className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
+                  handleMarkComplete();
+                }}
+              />
+            </Card>
+          )}
           {/* Video Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                Like
-              </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                onClick={() => handleShare(currentVideo.title, path)}
+                variant="outline"
+                size="sm"
+              >
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={userCourse?.enrollmentType?.includes("SUBSCRIPTION")}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              {currentVideo && !currentVideo.completed && (
-                <Button onClick={handleMarkComplete}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Mark Complete
-                </Button>
-              )}
+              {currentVideo &&
+                currentVideo.type === "VIDEO" &&
+                !isVideoCompleted(currentVideo.id) && (
+                  <Button onClick={handleMarkComplete}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </Button>
+                )}
+
+              {(currentVideo && currentVideo.type === "QUIZ" && quizPassed) ||
+                (!currentVideo?.quiz?.required && (
+                  <Button onClick={handleMarkComplete}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </Button>
+                ))}
+
               {nextVideo && (
-                <Button onClick={() => handleVideoClick(nextVideo)}>
-                  Next Video
+                <Button
+                  onClick={() => handleVideoClick(nextVideo)}
+                  className="capitalize"
+                >
+                  Next {nextVideo?.type?.toLowerCase()}
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {!nextVideo && nextChapter && (
-                <Button onClick={() => onNavigate?.(routes.courseWatch(courseId, nextChapter.id))}>
+                <Button onClick={() => handleChapterClick(true)}>
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -264,81 +433,90 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
             </div>
           </div>
 
-          {/* Chapter Features */}
-          {(chapter.quiz || chapter.exercise || chapter.playground) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Chapter Activities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {chapter.quiz && (
-                    <Button
-                      variant="outline"
-                      className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("quiz", chapter.quiz!.id)}
-                    >
-                      <Brain className="h-6 w-6" />
-                      <span className="text-sm">{chapter.quiz.title}</span>
-                    </Button>
-                  )}
-                  {chapter.exercise && (
-                    <Button
-                      variant="outline"
-                      className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("exercise", chapter.exercise!.id)}
-                    >
-                      <Code className="h-6 w-6" />
-                      <span className="text-sm">{chapter.exercise.title}</span>
-                    </Button>
-                  )}
-                  {chapter.playground && (
-                    <Button
-                      variant="outline"
-                      className="h-20 flex-col gap-2"
-                      onClick={() => handleChapterFeatureClick("playground", chapter.playground!.id)}
-                    >
-                      <Gamepad2 className="h-6 w-6" />
-                      <span className="text-sm">{chapter.playground.title}</span>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card></Card>
 
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              <TabsTrigger value="code">Code Editor</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="resources">Resources</TabsTrigger>
               <TabsTrigger value="discussion">Discussion</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>{currentVideo ? "Video" : "Chapter"} Overview</CardTitle>
+                  <CardTitle>
+                    {currentVideo ? "Video" : "Chapter"} Overview
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">{currentVideo?.description || chapter.description}</p>
-                    {chapter.videos.length > 1 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Chapter Videos</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {chapter.videos.map((video, index) => (
-                            <li key={video.id}>
-                              • {video.title} ({video.duration})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <p
+                      className="text-muted-foreground"
+                      dangerouslySetInnerHTML={{
+                        __html: currentVideo?.summary ?? chapter.summary,
+                      }}
+                    ></p>
                   </div>
                 </CardContent>
+
+                {currentVideo?.description ??
+                  (chapter?.description && (
+                    <CardContent>
+                      <div className="space-y-4  pt-4">
+                        <div className="flex w-full justify-center items-center">
+                          <span className="border-t flex-1"></span>
+                          <div className="px-2 text-xs">description</div>
+                          <span className="border-t flex-1"></span>
+                        </div>
+                        <p
+                          className="text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              currentVideo?.description ?? chapter?.description,
+                          }}
+                        ></p>
+                      </div>
+                    </CardContent>
+                  ))}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="code">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code2 className="h-5 w-5" />
+                    Code Editor
+                  </CardTitle>
+                  <CardDescription>
+                    Follow along with the video and write your code here
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
+                      placeholder="Start coding your project here..."
+                    />
+                  </div>
+                </CardContent>
+                <div className="flex justify-between p-4">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                  <Button className="flex items-center gap-2">
+                    <Play className="h-4 w-4" />
+                    Run
+                  </Button>
+                </div>
               </Card>
             </TabsContent>
 
@@ -348,8 +526,45 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                   <CardTitle>Your Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Textarea placeholder="Take notes while watching the video..." className="min-h-[200px]" />
-                  <Button className="mt-2">Save Notes</Button>
+                  <Textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Take notes while watching the video..."
+                    className="min-h-[200px]"
+                  />
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => handleSaveNotes()}
+                      className="mt-2"
+                      disabled={!note}
+                    >
+                      Save Notes
+                    </Button>
+                  </div>
+                  <div className="border-t mt-5">
+                    <div className="space-y-3  pt-5">
+                      {notes?.map((note: Note) => (
+                        <div className="border rounded-lg p-3" key={note.id}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+                              {user.name
+                                .split(" ")
+                                .map((n: any) => n[0])
+                                .join("")}
+                            </div>
+                            <span className="font-medium text-sm">
+                              {user.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(note?.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm">{note.content}</p>
+                        </div>
+                      ))}
+                      {!notes.length && <div>No notes added yet</div>}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -361,24 +576,29 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      { title: "Design Patterns in JavaScript", type: "Article", url: "#" },
-                      { title: "Node.js Best Practices", type: "Documentation", url: "#" },
-                      { title: "Observer Pattern Examples", type: "Code", url: "#" },
-                    ].map((resource, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <BookOpen className="h-4 w-4 text-blue-600" />
-                          <div>
-                            <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">{resource.type}</p>
+                    {currentVideo?.resources?.map(
+                      (resource: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <h4 className="font-medium">{resource.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {resource.type}
+                              </p>
+                            </div>
                           </div>
+                          <Button asChild={true} variant="link">
+                            <a target="_blank" href={resource?.link}>
+                              View
+                            </a>
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -390,40 +610,13 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                   <CardTitle>Discussion</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Textarea placeholder="Ask a question or share your thoughts..." />
-                      <Button>Post Comment</Button>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          author: "Sarah Chen",
-                          time: "2 hours ago",
-                          comment: "Great explanation! The examples really helped me understand the concept.",
-                        },
-                        {
-                          author: "Mike Rodriguez",
-                          time: "5 hours ago",
-                          comment: "Can someone explain the difference between this and the previous pattern?",
-                        },
-                      ].map((comment, index) => (
-                        <div key={index} className="border rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                              {comment.author
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </div>
-                            <span className="font-medium text-sm">{comment.author}</span>
-                            <span className="text-xs text-muted-foreground">{comment.time}</span>
-                          </div>
-                          <p className="text-sm">{comment.comment}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <DisqusCommentBlock
+                    config={{
+                      identifier: currentVideo?.slug,
+                      title: currentVideo?.title,
+                      url: `/courses/${slug}/watch/${chapterId}/${videoId}`,
+                    }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -432,12 +625,19 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <Card>
                 <CardHeader>
                   <CardTitle>Video Transcript</CardTitle>
-                  <p className="text-sm text-muted-foreground">Auto-generated transcript with timestamps</p>
+                  <p className="text-sm text-muted-foreground">
+                    Auto-generated transcript with timestamps
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {[
-                      { time: "00:00", text: `Welcome to ${currentVideo?.title || chapter.title}.` },
+                      {
+                        time: "00:00",
+                        text: `Welcome to ${
+                          currentVideo?.title || chapter.title
+                        }.`,
+                      },
                       {
                         time: "00:15",
                         text: "In this section, we'll explore the key concepts and practical applications.",
@@ -456,11 +656,14 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                         className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
                         onClick={() =>
                           setCurrentTime(
-                            Number.parseInt(item.time.split(":")[0]) * 60 + Number.parseInt(item.time.split(":")[1]),
+                            Number.parseInt(item.time.split(":")[0]) * 60 +
+                              Number.parseInt(item.time.split(":")[1])
                           )
                         }
                       >
-                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">{item.time}</span>
+                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">
+                          {item.time}
+                        </span>
                         <span className="text-sm">{item.text}</span>
                       </div>
                     ))}
@@ -482,12 +685,17 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{course.progress}%</span>
+                  <span>{calculateProgess()}%</span>
                 </div>
-                <Progress value={course.progress} className="h-2" />
+                <Progress value={calculateProgess()} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {course.chapters.filter((ch) => ch.completed).length} of {course.chapters.length} chapters completed
+                {
+                  userCourse?.userVideos?.filter(
+                    (ch: UserVideo) => ch?.isCompleted
+                  ).length
+                }{" "}
+                of {course.totalContent} videos completed
               </div>
             </CardContent>
           </Card>
@@ -499,16 +707,18 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
             </CardHeader>
             <CardContent className="space-y-2">
               {/* Videos */}
-              {chapter.videos.map((video, index) => (
+              {chapter.videos.map((video: Video) => (
                 <div
                   key={video.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    video.id === currentVideo?.id ? "bg-blue-50 border border-blue-200" : ""
+                    video.id === currentVideo?.id
+                      ? "border border-blue-200"
+                      : ""
                   }`}
                   onClick={() => handleVideoClick(video)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {video.completed ? (
+                    {isVideoCompleted(video.id) ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Play className="h-4 w-4" />
@@ -518,9 +728,11 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
                     <p className="text-sm font-medium">{video.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{video.duration}</span>
+                      <span>
+                        {video?.duration ?? video.quiz?.timeLimit} mins
+                      </span>
                       <Badge variant="outline" className="text-xs">
-                        VIDEO
+                        {video?.type}
                       </Badge>
                     </div>
                   </div>
@@ -531,7 +743,9 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.quiz && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("quiz", chapter.quiz!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Brain className="h-4 w-4" />
@@ -552,16 +766,20 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.exercise && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("exercise", chapter.exercise!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick("exercise", chapter.exercise!.id)
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Code className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.exercise.title}</p>
+                    <p className="text-sm font-medium">
+                      {chapter?.exercise?.title}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
-                        {chapter.exercise.difficulty}
+                        {chapter?.exercise?.difficulty}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         EXERCISE
@@ -574,13 +792,20 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               {chapter.playground && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() => handleChapterFeatureClick("playground", chapter.playground!.id)}
+                  onClick={() =>
+                    handleChapterFeatureClick(
+                      "playground",
+                      chapter.playground!.id
+                    )
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Gamepad2 className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.playground.title}</p>
+                    <p className="text-sm font-medium">
+                      {chapter.playground.title}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
                         {chapter.playground.language.toUpperCase()}
@@ -601,25 +826,68 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <CardTitle className="text-lg">All Chapters</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {course.chapters.map((ch, index) => (
+              {course.chapters.map((ch: Chapter, index: number) => (
                 <div
-                  key={ch.id}
+                  key={ch.slug}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.id === chapterId ? "bg-blue-50 border border-blue-200" : ""
+                    ch.slug === chapterId ? "border border-blue-200" : ""
                   }`}
-                  onClick={() => onNavigate?.(routes.courseWatch(courseId, ch.id))}
+                  onClick={() =>
+                    onNavigate?.(
+                      routes.courseWatch(slug, ch.slug, ch?.videos[0]?.slug)
+                    )
+                  }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {ch.completed ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <span>{index + 1}</span>}
+                    {isChapterCompleted(ch?.id!) ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{ch.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{ch.duration}</span>
+                      <span>
+                        {ch.videos.reduce((a: number, c: any) => {
+                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
+                        }, 0)}{" "}
+                        mins
+                      </span>
                       <Badge variant="outline" className="text-xs">
-                        {ch.videos.length} videos
+                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                        videos
                       </Badge>
+
+                      {ch.videos.filter((v) => v.type === "QUIZ").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
+                          quizzes
+                        </Badge>
+                      )}
+                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "EXERCISE")
+                              .length
+                          }{" "}
+                          exercises
+                        </Badge>
+                      )}
+
+                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "PLAYGROUND")
+                              .length
+                          }{" "}
+                          playgrounds
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -633,7 +901,7 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.courseWatch(courseId, prevChapter.id))}
+                onClick={() => handleChapterClick(false)}
               >
                 <SkipBack className="mr-2 h-4 w-4" />
                 Previous: {prevChapter.title}
@@ -642,7 +910,7 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
             {nextChapter && (
               <Button
                 className="w-full justify-start"
-                onClick={() => onNavigate?.(routes.courseWatch(courseId, nextChapter.id))}
+                onClick={() => handleChapterClick(true)}
               >
                 Next: {nextChapter.title}
                 <SkipForward className="ml-2 h-4 w-4" />
@@ -651,6 +919,13 @@ export function CourseWatchPage({ courseId, chapterId, videoId, onNavigate }: Co
           </div>
         </div>
       </div>
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={course?.title!}
+        duration={2000}
+      />
     </div>
-  )
+  );
 }

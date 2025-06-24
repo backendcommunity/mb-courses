@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
   MessageSquare,
@@ -18,7 +18,7 @@ import {
   Award,
   Calendar,
   ExternalLink,
-} from "lucide-react"
+} from "lucide-react";
 
 export function CommunityPage() {
   const posts = [
@@ -58,7 +58,7 @@ export function CommunityPage() {
       comments: 15,
       tags: ["study-group", "interviews", "system-design"],
     },
-  ]
+  ];
 
   const events = [
     {
@@ -85,7 +85,7 @@ export function CommunityPage() {
       attendees: 78,
       type: "Webinar",
     },
-  ]
+  ];
 
   const leaderboard = [
     { rank: 1, name: "Alex Chen", points: 2450, badge: "🏆" },
@@ -93,20 +93,24 @@ export function CommunityPage() {
     { rank: 3, name: "Mike Rodriguez", points: 2250, badge: "🥉" },
     { rank: 4, name: "Emily Davis", points: 2100, badge: "" },
     { rank: 5, name: "John Smith", points: 1950, badge: "" },
-  ]
+  ];
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex- space-y-6 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Community</h1>
           <p className="text-muted-foreground">
-            Connect with fellow backend engineers, share knowledge, and grow together
+            Connect with fellow backend engineers, share knowledge, and grow
+            together
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             24 Online
           </Badge>
@@ -131,7 +135,9 @@ export function CommunityPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Discussions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Discussions
+            </CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -141,7 +147,9 @@ export function CommunityPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Knowledge Shared</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Knowledge Shared
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -151,7 +159,9 @@ export function CommunityPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Stories</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Success Stories
+            </CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -186,13 +196,22 @@ export function CommunityPage() {
                       <Textarea placeholder="Share your backend engineering journey, ask questions, or help others..." />
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2">
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
                             #question
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
                             #achievement
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                          >
                             #help
                           </Badge>
                         </div>
@@ -210,7 +229,9 @@ export function CommunityPage() {
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
                         <Avatar>
-                          <AvatarImage src={post.avatar || "/placeholder.svg"} />
+                          <AvatarImage
+                            src={post.avatar || "/placeholder.svg"}
+                          />
                           <AvatarFallback>
                             {post.author
                               .split(" ")
@@ -221,18 +242,26 @@ export function CommunityPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{post.author}</h3>
-                            <span className="text-sm text-muted-foreground">{post.timestamp}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {post.timestamp}
+                            </span>
                           </div>
                           <h4 className="font-medium mt-1">{post.title}</h4>
                         </div>
                       </div>
 
                       <div className="pl-12">
-                        <p className="text-sm whitespace-pre-line">{post.content}</p>
+                        <p className="text-sm whitespace-pre-line">
+                          {post.content}
+                        </p>
 
                         <div className="flex flex-wrap gap-2 mt-3">
                           {post.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                            >
                               #{tag}
                             </Badge>
                           ))}
@@ -262,7 +291,9 @@ export function CommunityPage() {
             <TabsContent value="trending">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Trending posts will appear here</p>
+                  <p className="text-center text-muted-foreground">
+                    Trending posts will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -270,7 +301,9 @@ export function CommunityPage() {
             <TabsContent value="questions">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Community questions will appear here</p>
+                  <p className="text-center text-muted-foreground">
+                    Community questions will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -278,7 +311,9 @@ export function CommunityPage() {
             <TabsContent value="achievements">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">Member achievements will appear here</p>
+                  <p className="text-center text-muted-foreground">
+                    Member achievements will appear here
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -310,7 +345,9 @@ export function CommunityPage() {
                 <div key={event.id} className="space-y-2 p-3 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">{event.type}</Badge>
-                    <span className="text-xs text-muted-foreground">{event.attendees} attending</span>
+                    <span className="text-xs text-muted-foreground">
+                      {event.attendees} attending
+                    </span>
                   </div>
                   <h4 className="font-medium text-sm">{event.title}</h4>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -335,12 +372,19 @@ export function CommunityPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {leaderboard.map((member) => (
-                <div key={member.rank} className="flex items-center justify-between">
+                <div
+                  key={member.rank}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium w-6">{member.badge || `#${member.rank}`}</span>
+                    <span className="text-sm font-medium w-6">
+                      {member.badge || `#${member.rank}`}
+                    </span>
                     <span className="text-sm">{member.name}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{member.points} pts</span>
+                  <span className="text-sm text-muted-foreground">
+                    {member.points} pts
+                  </span>
                 </div>
               ))}
             </CardContent>
@@ -352,19 +396,35 @@ export function CommunityPage() {
               <CardTitle>Quick Links</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Community Guidelines
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Discord Server
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 GitHub Repository
               </Button>
-              <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Resource Library
               </Button>
@@ -373,5 +433,5 @@ export function CommunityPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

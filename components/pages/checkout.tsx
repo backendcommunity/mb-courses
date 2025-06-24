@@ -1,31 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { usePathname } from "next/navigation"
-import { CreditCard, Shield, ArrowLeft, Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Separator } from "@/components/ui/separator"
-import { routes } from "@/lib/routes"
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { CreditCard, Shield, ArrowLeft, Check } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { routes } from "@/lib/routes";
 
 interface CheckoutPageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
 export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
-  const pathname = usePathname()
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("card")
+  const pathname = usePathname();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   // Extract checkout type and ID from the URL
-  const pathSegments = pathname?.split("/").filter(Boolean) || []
-  const checkoutType = pathSegments.length > 2 ? pathSegments[2] : "subscription"
-  const checkoutId = pathSegments.length > 3 ? pathSegments[3] : "pro"
+  const pathSegments = pathname?.split("/").filter(Boolean) || [];
+  const checkoutType =
+    pathSegments.length > 2 ? pathSegments[2] : "subscription";
+  const checkoutId = pathSegments.length > 3 ? pathSegments[3] : "pro";
 
   // Mock checkout data based on type and ID
   const checkoutData = {
@@ -59,34 +67,37 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
         type: "one-time",
       },
     },
-  }
+  };
 
   // Get the current checkout item
-  const currentItem = checkoutData[checkoutType as keyof typeof checkoutData]?.[checkoutId as any]
+  const currentItem =
+    checkoutData[checkoutType as keyof typeof checkoutData]?.[
+      checkoutId as any
+    ];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsProcessing(true)
+    e.preventDefault();
+    setIsProcessing(true);
 
     // Simulate payment processing
     setTimeout(() => {
-      setIsProcessing(false)
+      setIsProcessing(false);
       // Redirect to success page
-      onNavigate(routes.subscriptionSuccess)
-    }, 2000)
-  }
+      onNavigate(routes.subscriptionSuccess);
+    }, 2000);
+  };
 
   const handleBack = () => {
     if (checkoutType === "subscription") {
-      onNavigate(routes.subscriptionPlans)
+      onNavigate(routes.subscriptionPlans);
     } else if (checkoutType === "course") {
-      onNavigate(routes.courseDetail(checkoutId))
+      onNavigate(routes.courseDetail(checkoutId));
     } else if (checkoutType === "bootcamp") {
-      onNavigate(routes.bootcampDetail(checkoutId))
+      onNavigate(routes.bootcampDetail(checkoutId));
     } else {
-      onNavigate(routes.dashboard)
+      onNavigate(routes.dashboard);
     }
-  }
+  };
 
   if (!currentItem) {
     return (
@@ -97,15 +108,17 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             <CardDescription>The requested item was not found.</CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => onNavigate(routes.dashboard)}>Return to Dashboard</Button>
+            <Button onClick={() => onNavigate(routes.dashboard)}>
+              Return to Dashboard
+            </Button>
           </CardFooter>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="container ">
       <Button variant="ghost" size="sm" className="mb-8" onClick={handleBack}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
@@ -121,7 +134,9 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
           <CardContent className="space-y-5">
             <div>
               <h3 className="font-medium">{currentItem.name}</h3>
-              <p className="text-sm text-muted-foreground">{currentItem.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {currentItem.description}
+              </p>
             </div>
 
             <Separator />
@@ -147,7 +162,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             <div className="text-sm text-muted-foreground pt-2">
               {currentItem.billingCycle ? (
                 <p>
-                  You will be charged ${currentItem.price.toFixed(2)} every {currentItem.billingCycle}.
+                  You will be charged ${currentItem.price.toFixed(2)} every{" "}
+                  {currentItem.billingCycle}.
                 </p>
               ) : (
                 <p>One-time payment. No recurring charges.</p>
@@ -174,7 +190,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   className="grid grid-cols-3 gap-4"
                 >
                   <div>
-                    <RadioGroupItem value="card" id="card" className="peer sr-only" />
+                    <RadioGroupItem
+                      value="card"
+                      id="card"
+                      className="peer sr-only"
+                    />
                     <Label
                       htmlFor="card"
                       className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
@@ -184,22 +204,34 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                     </Label>
                   </div>
                   <div>
-                    <RadioGroupItem value="paypal" id="paypal" className="peer sr-only" />
+                    <RadioGroupItem
+                      value="paypal"
+                      id="paypal"
+                      className="peer sr-only"
+                    />
                     <Label
                       htmlFor="paypal"
                       className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
-                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold text-blue-600">P</div>
+                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold text-blue-600">
+                        P
+                      </div>
                       PayPal
                     </Label>
                   </div>
                   <div>
-                    <RadioGroupItem value="apple" id="apple" className="peer sr-only" />
+                    <RadioGroupItem
+                      value="apple"
+                      id="apple"
+                      className="peer sr-only"
+                    />
                     <Label
                       htmlFor="apple"
                       className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
-                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold">A</div>
+                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold">
+                        A
+                      </div>
                       Apple Pay
                     </Label>
                   </div>
@@ -217,7 +249,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
                     <div className="grid gap-2">
                       <Label htmlFor="card-number">Card Number</Label>
-                      <Input id="card-number" placeholder="1234 5678 9012 3456" required />
+                      <Input
+                        id="card-number"
+                        placeholder="1234 5678 9012 3456"
+                        required
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -253,7 +289,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
                     <div className="grid gap-2">
                       <Label htmlFor="country">Country</Label>
-                      <Input id="country" placeholder="United States" required />
+                      <Input
+                        id="country"
+                        placeholder="United States"
+                        required
+                      />
                     </div>
                   </div>
                 </>
@@ -273,7 +313,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
               {paymentMethod === "apple" && (
                 <div className="text-center py-10">
                   <p className="text-muted-foreground mb-4">
-                    You will be redirected to Apple Pay to complete your payment.
+                    You will be redirected to Apple Pay to complete your
+                    payment.
                   </p>
                   <div className="w-16 h-16 bg-black rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl">
                     A
@@ -288,7 +329,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full mt-4" disabled={isProcessing}>
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                disabled={isProcessing}
+              >
                 {isProcessing ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -321,5 +366,5 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
         </p>
       </div>
     </div>
-  )
+  );
 }

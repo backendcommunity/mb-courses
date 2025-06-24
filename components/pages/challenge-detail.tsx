@@ -1,16 +1,31 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Star, Clock, Zap, CheckCircle2, Lightbulb, Info, HelpCircle } from "lucide-react"
-import { getLandById, getStageById, getChallengeById, useHint, completeChallenge } from "@/lib/lands-data"
-import { routes } from "@/lib/routes"
-import { CodingChallengeComponent } from "./challenges/coding-challenge"
-import { QuizChallengeComponent } from "./challenges/quiz-challenge"
-import { PuzzleChallengeComponent } from "./challenges/puzzle-challenge"
-import { DebugChallengeComponent } from "./challenges/debug-challenge"
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Star,
+  Clock,
+  Zap,
+  CheckCircle2,
+  Lightbulb,
+  Info,
+  HelpCircle,
+} from "lucide-react";
+import {
+  getLandById,
+  getStageById,
+  getChallengeById,
+  useHint,
+  completeChallenge,
+} from "@/lib/lands-data";
+import { routes } from "@/lib/routes";
+import { CodingChallengeComponent } from "./challenges/coding-challenge";
+import { QuizChallengeComponent } from "./challenges/quiz-challenge";
+import { PuzzleChallengeComponent } from "./challenges/puzzle-challenge";
+import { DebugChallengeComponent } from "./challenges/debug-challenge";
 import {
   Dialog,
   DialogContent,
@@ -18,92 +33,101 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 interface ChallengeDetailPageProps {
-  landId: string
-  stageId: string
-  challengeId: string
-  onNavigate: (path: string) => void
+  landId: string;
+  stageId: string;
+  challengeId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }: ChallengeDetailPageProps) {
-  const [showKapDialog, setShowKapDialog] = useState(false)
-  const [kapQuestion, setKapQuestion] = useState("")
-  const [kapResponse, setKapResponse] = useState("")
-  const [isLoadingKap, setIsLoadingKap] = useState(false)
-  const [usedHintId, setUsedHintId] = useState<string | null>(null)
-  const [xpCost, setXpCost] = useState(0)
+export function ChallengeDetailPage({
+  landId,
+  stageId,
+  challengeId,
+  onNavigate,
+}: ChallengeDetailPageProps) {
+  const [showKapDialog, setShowKapDialog] = useState(false);
+  const [kapQuestion, setKapQuestion] = useState("");
+  const [kapResponse, setKapResponse] = useState("");
+  const [isLoadingKap, setIsLoadingKap] = useState(false);
+  const [usedHintId, setUsedHintId] = useState<string | null>(null);
+  const [xpCost, setXpCost] = useState(0);
 
-  const land = getLandById(landId)
-  const stage = getStageById(landId, stageId)
-  const challenge = getChallengeById(landId, stageId, challengeId)
+  const land = getLandById(landId);
+  const stage = getStageById(landId, stageId);
+  const challenge: any = getChallengeById(landId, stageId, challengeId);
 
   const handleUseHintEffect = useCallback(() => {
     if (usedHintId) {
-      const cost = useHint(landId, stageId, challengeId, usedHintId)
-      setXpCost(cost)
-      console.log(`Used hint, lost ${cost} XP`)
-      setUsedHintId(null)
+      const cost = useHint(landId, stageId, challengeId, usedHintId);
+      setXpCost(cost);
+      console.log(`Used hint, lost ${cost} MB`);
+      setUsedHintId(null);
     }
-  }, [usedHintId, landId, stageId, challengeId])
+  }, [usedHintId, landId, stageId, challengeId]);
 
   useEffect(() => {
-    handleUseHintEffect()
-  }, [handleUseHintEffect])
+    handleUseHintEffect();
+  }, [handleUseHintEffect]);
 
   if (!land || !stage || !challenge) {
     return (
       <div className="flex-1 p-6 flex flex-col items-center justify-center">
         <Info className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold mb-2">Challenge Not Found</h2>
-        <p className="text-muted-foreground mb-4">The challenge you're looking for doesn't exi</p>
-        <Button onClick={() => onNavigate(routes.stageDetail(landId, stageId))}>Back to Stage</Button>
+        <p className="text-muted-foreground mb-4">
+          The challenge you're looking for doesn't exi
+        </p>
+        <Button onClick={() => onNavigate(routes.stageDetail(landId, stageId))}>
+          Back to Stage
+        </Button>
       </div>
-    )
+    );
   }
 
   const handleUseHint = (hintId: string) => {
-    setUsedHintId(hintId)
-  }
+    setUsedHintId(hintId);
+  };
 
   const handleCompleteChallenge = () => {
-    const xpEarned = completeChallenge(landId, stageId, challengeId)
-    // In a real app, you'd update the user's XP here
-    console.log(`Challenge completed! Earned ${xpEarned} XP`)
-  }
+    const xpEarned = completeChallenge(landId, stageId, challengeId);
+    // In a real app, you'd update the user's MB here
+    console.log(`Challenge completed! Earned ${xpEarned} MB`);
+  };
 
   const handleAskKap = async () => {
-    if (!kapQuestion.trim()) return
+    if (!kapQuestion.trim()) return;
 
-    setIsLoadingKap(true)
+    setIsLoadingKap(true);
     // Simulate AI response
     setTimeout(() => {
       setKapResponse(
-        `Here's a hint for your question: "${kapQuestion}"\n\nBased on the challenge context, I suggest breaking down the problem into smaller steps. Remember to consider edge cases and test your solution thoroughly. This hint cost you 100 XP, but it should help you move forward!`,
-      )
-      setIsLoadingKap(false)
-      // Deduct XP for using Kap
-      console.log("Used Kap AI assistant, lost 100 XP")
-    }, 2000)
-  }
+        `Here's a hint for your question: "${kapQuestion}"\n\nBased on the challenge context, I suggest breaking down the problem into smaller steps. Remember to consider edge cases and test your solution thoroughly. This hint cost you 100 MB, but it should help you move forward!`
+      );
+      setIsLoadingKap(false);
+      // Deduct MB for using Kap
+      console.log("Used Kap AI assistant, lost 100 MB");
+    }, 2000);
+  };
 
   // Get challenge difficulty color
   const getChallengeDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-500/10 text-green-500 border-green-500/20"
+        return "bg-green-500/10 text-green-500 border-green-500/20";
       case "Medium":
-        return "bg-orange-500/10 text-orange-500 border-orange-500/20"
+        return "bg-orange-500/10 text-orange-500 border-orange-500/20";
       case "Hard":
-        return "bg-red-500/10 text-red-500 border-red-500/20"
+        return "bg-red-500/10 text-red-500 border-red-500/20";
       case "Expert":
-        return "bg-purple-500/10 text-purple-500 border-purple-500/20"
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
       default:
-        return "bg-muted"
+        return "bg-muted";
     }
-  }
+  };
 
   // Render challenge component based on type
   const renderChallengeComponent = () => {
@@ -116,14 +140,16 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
               title: challenge.title,
               description: challenge.description,
               difficulty: challenge.difficulty as "Easy" | "Medium" | "Hard",
-              timeLimit: challenge.timeEstimate ? Number.parseInt(challenge.timeEstimate.split(" ")[0]) : 30,
+              timeLimit: challenge.timeEstimate
+                ? Number.parseInt(challenge.timeEstimate.split(" ")[0])
+                : 30,
               points: challenge.xpReward,
               requirements: [
                 "Implement the function according to the specifications",
                 "Handle edge cases appropriately",
                 "Ensure all test cases pass",
               ],
-              testCases: challenge.testCases || [
+              testCases: challenge?.testCases || [
                 {
                   input: "5",
                   expectedOutput: "25",
@@ -131,7 +157,7 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
                 },
               ],
               starterCode:
-                challenge.starterCode ||
+                challenge?.starterCode ||
                 `function solution(input) {
   // Your code here
   return input;
@@ -140,23 +166,42 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
             }}
             onComplete={handleCompleteChallenge}
           />
-        )
+        );
       case "quiz":
-        return <QuizChallengeComponent challenge={challenge as any} onComplete={handleCompleteChallenge} />
+        return (
+          <QuizChallengeComponent
+            challenge={challenge as any}
+            onComplete={handleCompleteChallenge}
+          />
+        );
       case "puzzle":
-        return <PuzzleChallengeComponent challenge={challenge as any} onComplete={handleCompleteChallenge} />
+        return (
+          <PuzzleChallengeComponent
+            challenge={challenge as any}
+            onComplete={handleCompleteChallenge}
+          />
+        );
       case "debug":
-        return <DebugChallengeComponent challenge={challenge as any} onComplete={handleCompleteChallenge} />
+        return (
+          <DebugChallengeComponent
+            challenge={challenge as any}
+            onComplete={handleCompleteChallenge}
+          />
+        );
       default:
-        return <div>Challenge type not supported</div>
+        return <div>Challenge type not supported</div>;
     }
-  }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => onNavigate(routes.stageDetail(landId, stageId))}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigate(routes.stageDetail(landId, stageId))}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
@@ -164,22 +209,34 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
             <Badge variant="outline" className="bg-muted">
               {land.title}
             </Badge>
-            <Badge variant="outline" className="bg-[#13AECE]/10 text-[#13AECE] border-[#13AECE]/20">
+            <Badge
+              variant="outline"
+              className="bg-[#13AECE]/10 text-[#13AECE] border-[#13AECE]/20"
+            >
               {stage.title}
             </Badge>
-            <Badge variant="outline" className={getChallengeDifficultyColor(challenge.difficulty)}>
+            <Badge
+              variant="outline"
+              className={getChallengeDifficultyColor(challenge.difficulty)}
+            >
               {challenge.difficulty}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{challenge.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {challenge.title}
+          </h1>
           <p className="text-muted-foreground">{challenge.description}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <Zap className="h-4 w-4 text-[#F2C94C]" />
-            <span className="text-sm font-medium">{challenge.xpReward.toLocaleString()} XP</span>
+            <span className="text-sm font-medium">
+              {challenge.xpReward.toLocaleString()} MB
+            </span>
           </div>
-          {challenge.completed && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+          {challenge.completed && (
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+          )}
         </div>
       </div>
 
@@ -189,9 +246,11 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">XP Reward</span>
+              <span className="text-sm font-medium">MB Reward</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{challenge.xpReward.toLocaleString()}</p>
+            <p className="text-2xl font-bold mt-1">
+              {challenge.xpReward.toLocaleString()}
+            </p>
             <p className="text-xs text-muted-foreground">Upon completion</p>
           </CardContent>
         </Card>
@@ -203,7 +262,9 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
               <span className="text-sm font-medium">Time Estimate</span>
             </div>
             <p className="text-2xl font-bold mt-1">{challenge.timeEstimate}</p>
-            <p className="text-xs text-muted-foreground">Average completion time</p>
+            <p className="text-xs text-muted-foreground">
+              Average completion time
+            </p>
           </CardContent>
         </Card>
 
@@ -214,7 +275,9 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
               <span className="text-sm font-medium">Hints Available</span>
             </div>
             <p className="text-2xl font-bold mt-1">{challenge.hints.length}</p>
-            <p className="text-xs text-muted-foreground">{challenge.usedHints} used</p>
+            <p className="text-xs text-muted-foreground">
+              {challenge.usedHints} used
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -230,7 +293,7 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {/* Hints */}
-            {challenge.hints.map((hint, index) => (
+            {challenge.hints.map((hint: any, index: any) => (
               <Button
                 key={hint.id}
                 variant="outline"
@@ -240,16 +303,22 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
                 className="flex items-center gap-1"
               >
                 <Lightbulb className="h-3 w-3" />
-                {hint.used ? `Hint ${index + 1} (Used)` : `Hint ${index + 1} (-${hint.xpCost} XP)`}
+                {hint.used
+                  ? `Hint ${index + 1} (Used)`
+                  : `Hint ${index + 1} (-${hint.xpCost} MB)`}
               </Button>
             ))}
 
             {/* Kap AI Assistant */}
             <Dialog open={showKapDialog} onOpenChange={setShowKapDialog}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
                   <Star className="h-3 w-3" />
-                  Ask Kap (-100 XP)
+                  Ask Kap (-100 MB)
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
@@ -259,7 +328,8 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
                     Ask Kap AI Assistant
                   </DialogTitle>
                   <DialogDescription>
-                    Get personalized help from our AI assistant. This will cost you 100 XP.
+                    Get personalized help from our AI assistant. This will cost
+                    you 100 MB.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -276,18 +346,28 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
 
                   {kapResponse && (
                     <div>
-                      <label className="text-sm font-medium">Kap's Response</label>
+                      <label className="text-sm font-medium">
+                        Kap's Response
+                      </label>
                       <div className="mt-1 p-3 bg-muted rounded-md">
-                        <p className="text-sm whitespace-pre-wrap">{kapResponse}</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {kapResponse}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setShowKapDialog(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowKapDialog(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleAskKap} disabled={!kapQuestion.trim() || isLoadingKap}>
+                    <Button
+                      onClick={handleAskKap}
+                      disabled={!kapQuestion.trim() || isLoadingKap}
+                    >
                       {isLoadingKap ? "Asking Kap..." : "Ask Kap"}
                     </Button>
                   </div>
@@ -297,13 +377,13 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
           </div>
 
           {/* Show used hints */}
-          {challenge.hints.some((hint) => hint.used) && (
+          {challenge.hints.some((hint: any) => hint.used) && (
             <div className="mt-4 space-y-2">
               <Separator />
               <h4 className="font-medium text-sm">Used Hints:</h4>
               {challenge.hints
-                .filter((hint) => hint.used)
-                .map((hint, index) => (
+                .filter((hint: any) => hint.used)
+                .map((hint: any, index: any) => (
                   <div key={hint.id} className="p-2 bg-muted rounded text-sm">
                     <strong>Hint {index + 1}:</strong> {hint.content}
                   </div>
@@ -316,5 +396,5 @@ export function ChallengeDetailPage({ landId, stageId, challengeId, onNavigate }
       {/* Challenge Component */}
       {renderChallengeComponent()}
     </div>
-  )
+  );
 }

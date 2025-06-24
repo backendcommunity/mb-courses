@@ -1,30 +1,52 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Code2, Clock, Calendar, Search, Play, CheckCircle2 } from "lucide-react"
-import { useAppStore } from "@/lib/store"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Code2,
+  Clock,
+  Calendar,
+  Search,
+  Play,
+  CheckCircle2,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface ProjectsPageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
 export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
-  const store = useAppStore()
-  const projects = store.getProjects()
+  const store = useAppStore();
+  const projects = store.getProjects();
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-4 md:space-y-6 ">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">MB Projects</h1>
-          <p className="text-muted-foreground">
-            Build real-world projects to strengthen your backend development skills
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            MB Projects
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Build real-world projects to strengthen your backend development
+            skills
           </p>
         </div>
         <Button>
@@ -37,18 +59,24 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-            <Code2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Total Projects
+            </CardTitle>
+            <Code2 className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projects.length}</div>
+            <div className="text-lg md:text-2xl font-bold">
+              {projects.length}
+            </div>
             <p className="text-xs text-muted-foreground">+2 from last month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Completed
+            </CardTitle>
+            <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{projects.filter((p) => p.status === "Completed").length}</div>
@@ -57,8 +85,10 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Play className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              In Progress
+            </CardTitle>
+            <Play className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{projects.filter((p) => p.status === "In Progress").length}</div>
@@ -67,8 +97,10 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Avg. Time
+            </CardTitle>
+            <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2.5w</div>
@@ -125,8 +157,8 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                     project.difficulty === "Hard"
                       ? "destructive"
                       : project.difficulty === "Medium"
-                        ? "default"
-                        : "secondary"
+                      ? "default"
+                      : "secondary"
                   }
                 >
                   {project.difficulty}
@@ -137,15 +169,19 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                     project.status === "Completed"
                       ? "border-green-600 text-green-600"
                       : project.status === "In Progress"
-                        ? "border-blue-600 text-blue-600"
-                        : "border-gray-600 text-gray-600"
-                  }
+                      ? "border-blue-600 text-blue-600"
+                      : "border-gray-600 text-gray-600"
+                  }`}
                 >
                   {project.status}
                 </Badge>
               </div>
-              <CardTitle className="line-clamp-2">{project.title}</CardTitle>
-              <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+              <CardTitle className="line-clamp-2 text-sm md:text-base">
+                {project.title}
+              </CardTitle>
+              <CardDescription className="line-clamp-2 text-xs md:text-sm">
+                {project.description}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -184,13 +220,18 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                 )}
               </div>
 
-              <Button className="w-full" onClick={() => onNavigate(`/dashboard/projects/${project.id}`)}>
-                {project.status === "Not Started" ? "Start Project" : "Continue Project"}
+              <Button
+                className="w-full text-xs md:text-sm"
+                onClick={() => onNavigate(`/projects/${project.id}`)}
+              >
+                {project.status === "Not Started"
+                  ? "Start Project"
+                  : "Continue Project"}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
     </div>
-  )
+  );
 }

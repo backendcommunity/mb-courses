@@ -1,0 +1,41 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get("mb_token");
+
+  const isAuthenticated = !!token;
+
+  const isAuthPage = pathname.startsWith("/auth/");
+  const isSecret = !isAuthPage;
+
+  // 1. If NOT authenticated and trying to access protected route
+  if (!isAuthenticated && isSecret) {
+    console.log(isSecret, "Not Auth");
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
+  // 2. If authenticated and trying to access auth pages
+  if (isAuthenticated && isAuthPage) {
+    console.log(isAuthPage, "Auth");
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  console.log(pathname, "MD");
+  // Otherwise, allow the request
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|wav|mp3)).*)",
+  ],
+};

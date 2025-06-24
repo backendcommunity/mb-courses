@@ -1,7 +1,6 @@
-"use client"
+"use client";
 
-import type * as React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   Code2,
@@ -20,32 +19,22 @@ import {
   Gift,
   CreditCard,
   Award,
-} from "lucide-react"
+  LogOut,
+} from "lucide-react";
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useAppStore } from "@/lib/store"
-import { Button } from "@/components/ui/button"
-import { routes } from "@/lib/routes"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
+import { useUser } from "@/hooks/use-user";
+import { useLevel } from "@/hooks/use-level";
 
-interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  currentPath: string
-  onNavigate: (path: string) => void
+interface DashboardSidebarProps {
+  currentPath: string;
+  onNavigate: (path: string) => void;
+  isMobile: boolean;
 }
 
 const navigationData = {
@@ -108,7 +97,7 @@ const navigationData = {
     },
     {
       title: "Certifications",
-      url: "/dashboard/certifications",
+      url: "/certifications",
       icon: Award,
       badge: "1 Ready",
     },
@@ -119,32 +108,29 @@ const navigationData = {
       badge: "24 Online",
     },
   ],
-}
+};
 
-export function DashboardSidebar({ currentPath, onNavigate, ...props }: DashboardSidebarProps) {
-  const [mounted, setMounted] = useState(false)
-  const store = useAppStore()
+export function DashboardSidebar({
+  currentPath,
+  onNavigate,
+  isMobile,
+}: DashboardSidebarProps) {
+  const [mounted, setMounted] = useState(true);
+  const user = useUser();
+  const level = useLevel();
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
-  }
-
-  const user = store.getUser()
-
-  // Mock subscription data - in real app this would come from store
-  const subscription = {
-    plan: "Pro",
-    status: "active",
-    xpBalance: 2450,
+    return null;
   }
 
   return (
-    <Sidebar variant="inset" className="bg-sidebar border-r border-border" {...props}>
-      <SidebarHeader className="border-b border-border">
+    <div className="flex fixed w-72 flex-col h-full bg-sidebar border-r border-border overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-border">
         <button
           onClick={() => onNavigate(routes.dashboard)}
           className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 rounded-lg transition-colors sidebar-item"
@@ -156,7 +142,9 @@ export function DashboardSidebar({ currentPath, onNavigate, ...props }: Dashboar
             <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Masteringbackend
             </span>
-            <span className="truncate text-xs text-muted-foreground">Career Platform</span>
+            <span className="truncate text-xs text-muted-foreground">
+              Career Platform
+            </span>
           </div>
         </button>
 
@@ -164,28 +152,41 @@ export function DashboardSidebar({ currentPath, onNavigate, ...props }: Dashboar
         <div className="mx-4 rounded-lg border border-border bg-card p-3">
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 text-yellow-500" />
-            <span className="text-sm font-medium">Level {user.level} Engineer</span>
-            {subscription.plan !== "Free" && (
+            <span className="text-sm font-medium">
+              Level {user?.level} Engineer
+            </span>
+            {user.isPremium && user?.subscription ? (
               <Badge
                 variant="outline"
                 className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
               >
                 <Crown className="h-3 w-3 mr-1" />
-                {subscription.plan}
+                {user.subscription?.plan?.name}
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
+              >
+                Free
               </Badge>
             )}
           </div>
-          <Progress value={(user.xp / user.xpToNextLevel) * 100} className="h-2 mb-1" />
+          <Progress
+            value={(user.points / user?.xpToNextLevel) * 100}
+            className="h-2 mb-1"
+          />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{user.xp.toLocaleString()} XP</span>
+            <span>{user?.points?.toLocaleString()} MB</span>
             <span>
-              {user.xpToNextLevel.toLocaleString()} XP to Level {user.level + 1}
+              {level?.mbToNextLevel?.toLocaleString()} MB to Level{" "}
+              {user?.level + 1}
             </span>
           </div>
         </div>
 
-        {/* XP Balance - Clean button design */}
-        <div className="mx-4 mt-3">
+        {/* MB Balance */}
+        <div className="mt-3">
           <Button
             variant="outline"
             className="w-full justify-between border-border hover:bg-primary/10 hover:border-primary/50 transition-colors"
@@ -193,7 +194,9 @@ export function DashboardSidebar({ currentPath, onNavigate, ...props }: Dashboar
           >
             <div className="flex items-center gap-2">
               <Gift className="h-4 w-4 text-primary" />
-              <span className="text-primary">{subscription.xpBalance.toLocaleString()} XP</span>
+              <span className="text-primary">
+                {user.points.toLocaleString()} MB
+              </span>
             </div>
             <span className="text-xs text-primary">Redeem</span>
           </Button>
@@ -202,159 +205,110 @@ export function DashboardSidebar({ currentPath, onNavigate, ...props }: Dashboar
 
       <SidebarContent>
         {/* Learn Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground">Learn</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationData.learn.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={currentPath === item.url || currentPath.startsWith(item.url)}
-                    className="sidebar-item"
-                  >
-                    <button
-                      onClick={() => onNavigate(item.url)}
-                      className="flex w-full items-center justify-between hover:bg-primary/10 data-[active=true]:bg-primary/15 data-[active=true]:text-primary transition-colors"
-                      data-active={currentPath === item.url || currentPath.startsWith(item.url)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </div>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <div className="px-3 py-2">
+          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
+            Learn
+          </h3>
+          <div className="space-y-1">
+            {navigationData.learn.map((item) => (
+              <button
+                key={item.title}
+                onClick={() => onNavigate(item.url)}
+                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
+                  currentPath === item.url || currentPath.startsWith(item.url)
+                    ? "bg-primary/15 text-primary"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Build Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground">Build</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationData.build.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={currentPath === item.url || currentPath.startsWith(item.url)}
-                    className="sidebar-item"
-                  >
-                    <button
-                      onClick={() => onNavigate(item.url)}
-                      className="flex w-full items-center justify-between hover:bg-primary/10 data-[active=true]:bg-primary/15 data-[active=true]:text-primary transition-colors"
-                      data-active={currentPath === item.url || currentPath.startsWith(item.url)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </div>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <div className="px-3 py-2">
+          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
+            Build
+          </h3>
+          <div className="space-y-1">
+            {navigationData.build.map((item) => (
+              <button
+                key={item.title}
+                onClick={() => onNavigate(item.url)}
+                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
+                  currentPath === item.url || currentPath.startsWith(item.url)
+                    ? "bg-primary/15 text-primary"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Grow Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground">Grow</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationData.grow.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={currentPath === item.url || currentPath.startsWith(item.url)}
-                    className="sidebar-item"
-                  >
-                    <button
-                      onClick={() => onNavigate(item.url)}
-                      className="flex w-full items-center justify-between hover:bg-primary/10 data-[active=true]:bg-primary/15 data-[active=true]:text-primary transition-colors"
-                      data-active={currentPath === item.url || currentPath.startsWith(item.url)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </div>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <div className="px-3 py-2">
+          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
+            Grow
+          </h3>
+          <div className="space-y-1">
+            {navigationData.grow.map((item) => (
+              <button
+                key={item.title}
+                onClick={() => onNavigate(item.url)}
+                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
+                  currentPath === item.url || currentPath.startsWith(item.url)
+                    ? "bg-primary/15 text-primary"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-        {/* Settings Section */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={currentPath === routes.settings} className="sidebar-item">
-                  <button
-                    onClick={() => onNavigate(routes.settings)}
-                    className="flex w-full items-center gap-2 hover:bg-primary/10 data-[active=true]:bg-primary/15 data-[active=true]:text-primary transition-colors"
-                    data-active={currentPath === routes.settings}
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Settings</span>
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="border-t border-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-2 rounded-lg p-2 hover:bg-primary/10 transition-colors sidebar-item">
-              <Avatar className="h-8 w-8 border border-border">
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                  {user.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
-              </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[200px] border-border bg-popover">
-            <DropdownMenuItem onClick={() => onNavigate(routes.profile)} className="dropdown-item">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionManagement)} className="dropdown-item">
-              <Crown className="mr-2 h-4 w-4" />
-              <span>Subscription</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNavigate(routes.subscriptionPlans)} className="dropdown-item">
-              <Star className="mr-2 h-4 w-4" />
-              <span>Plans</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNavigate(routes.billing)} className="dropdown-item">
-              <CreditCard className="mr-2 h-4 w-4" />
-              <span>Billing</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNavigate(routes.xpStore)} className="dropdown-item">
-              <Gift className="mr-2 h-4 w-4" />
-              <span>XP Store</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNavigate(routes.logout)} className="dropdown-item">
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarFooter>
-
-      <SidebarRail />
-    </Sidebar>
-  )
+      {/* Footer */}
+      <div className="border-t border-border p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8 border border-border">
+              <AvatarImage
+                src={user?.avatar || "/placeholder.svg"}
+                alt={user?.name}
+              />
+              <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                {user?.name?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{user?.name}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {user?.email}
+              </span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onNavigate(routes.logout)}
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }

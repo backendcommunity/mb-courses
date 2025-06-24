@@ -1,29 +1,50 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, CheckCircle2, Clock, Search, Star, Users, Zap } from "lucide-react"
-import { useAppStore } from "@/lib/store"
-import { routes } from "@/lib/routes"
+"use client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Search,
+  Star,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 interface BootcampsPageProps {
-  onNavigate?: (url: string) => void
+  onNavigate?: (url: string) => void;
 }
 
 export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
-  const store = useAppStore()
-  const bootcamps = store.getBootcamps()
+  const store = useAppStore();
+  const bootcamps = store.getBootcamps();
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Bootcamps</h1>
           <p className="text-muted-foreground">
-            Intensive, cohort-based programs designed to accelerate your backend engineering skills
+            Intensive, cohort-based programs designed to accelerate your backend
+            engineering skills
           </p>
         </div>
         <Button>
@@ -46,7 +67,9 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Salary Increase</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Avg Salary Increase
+            </CardTitle>
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
@@ -123,8 +146,8 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                     bootcamp.level === "Advanced"
                       ? "destructive"
                       : bootcamp.level === "Intermediate"
-                        ? "default"
-                        : "secondary"
+                      ? "default"
+                      : "secondary"
                   }
                 >
                   {bootcamp.level}
@@ -135,7 +158,9 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                 </div>
               </div>
               <CardTitle className="line-clamp-2">{bootcamp.title}</CardTitle>
-              <CardDescription className="line-clamp-2">{bootcamp.description}</CardDescription>
+              <CardDescription className="line-clamp-2">
+                {bootcamp.description}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -145,7 +170,9 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Starts {new Date(bootcamp.startDate).toLocaleDateString()}</span>
+                  <span>
+                    Starts {new Date(bootcamp.startDate).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4 text-muted-foreground" />
@@ -159,28 +186,48 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
 
               {bootcamp.enrolled ? (
                 <div className="space-y-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 border-green-200"
+                  >
                     Enrolled
                   </Badge>
-                  <Button className="w-full" onClick={() => onNavigate?.(routes.bootcampDashboard(bootcamp.id))}>
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      onNavigate?.(routes.bootcampDashboard(bootcamp.id))
+                    }
+                  >
                     Access Bootcamp
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">${bootcamp.price.toLocaleString()}</span>
-                    <Badge variant="outline" className="text-orange-600 border-orange-200">
+                    <span className="text-2xl font-bold">
+                      ${bootcamp.price.toLocaleString()}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-orange-600 border-orange-200"
+                    >
                       {bootcamp.spotsLeft} spots left
                     </Badge>
                   </div>
-                  <Button className="w-full" onClick={() => onNavigate?.(routes.bootcampDetail(bootcamp.id))}>
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      onNavigate?.(routes.bootcampDetail(bootcamp.id))
+                    }
+                  >
                     View Details
                   </Button>
                 </div>
               )}
 
-              <div className="text-xs text-muted-foreground">Instructor: {bootcamp.instructor}</div>
+              <div className="text-xs text-muted-foreground">
+                Instructor: {bootcamp.instructor}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -199,7 +246,8 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                 <span className="font-medium">Live Instruction</span>
               </div>
               <p className="text-sm text-blue-100">
-                Learn from industry experts in real-time with interactive sessions
+                Learn from industry experts in real-time with interactive
+                sessions
               </p>
             </div>
             <div className="space-y-2">
@@ -208,7 +256,8 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                 <span className="font-medium">Peer Learning</span>
               </div>
               <p className="text-sm text-blue-100">
-                Collaborate with motivated peers and build lasting professional networks
+                Collaborate with motivated peers and build lasting professional
+                networks
               </p>
             </div>
             <div className="space-y-2">
@@ -216,11 +265,13 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                 <Star className="h-5 w-5" />
                 <span className="font-medium">Career Support</span>
               </div>
-              <p className="text-sm text-blue-100">Get personalized career coaching and job placement assistance</p>
+              <p className="text-sm text-blue-100">
+                Get personalized career coaching and job placement assistance
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,20 +1,39 @@
-"use client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Target, BookOpen, Code2, Play, Calendar, Trophy, Users } from "lucide-react"
-import { useAppStore } from "@/lib/store"
+"use client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ArrowLeft,
+  Target,
+  BookOpen,
+  Code2,
+  Play,
+  Calendar,
+  Trophy,
+  Users,
+} from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 interface RoadmapWatchPageProps {
-  roadmapId: string
-  onNavigate?: (route: string) => void
+  roadmapId: string;
+  onNavigate?: (route: string) => void;
 }
 
-export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProps) {
-  const store = useAppStore()
-  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId)
+export function RoadmapWatchPage({
+  roadmapId,
+  onNavigate,
+}: RoadmapWatchPageProps) {
+  const store = useAppStore();
+  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId);
 
   if (!roadmap) {
     return (
@@ -27,7 +46,7 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   // Mock current milestone data
@@ -37,24 +56,50 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
     description: "Learn to design scalable, distributed systems",
     progress: 65,
     tasks: [
-      { id: 1, title: "Complete System Design Course", completed: true, type: "course" },
-      { id: 2, title: "Design a URL Shortener", completed: true, type: "project" },
-      { id: 3, title: "Build Distributed Cache", completed: false, type: "project" },
-      { id: 4, title: "System Design Interview Prep", completed: false, type: "assessment" },
+      {
+        id: 1,
+        title: "Complete System Design Course",
+        completed: true,
+        type: "course",
+      },
+      {
+        id: 2,
+        title: "Design a URL Shortener",
+        completed: true,
+        type: "project",
+      },
+      {
+        id: 3,
+        title: "Build Distributed Cache",
+        completed: false,
+        type: "project",
+      },
+      {
+        id: 4,
+        title: "System Design Interview Prep",
+        completed: false,
+        type: "assessment",
+      },
     ],
-  }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.(`roadmap-detail/${roadmap.id}`)}>
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap.id}`)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Watch: {roadmap.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Watch: {roadmap.title}
+          </h1>
           <p className="text-muted-foreground">
-            Milestone {roadmap.currentMilestone} of 8 • {roadmap.progress}% Complete
+            Milestone {roadmap.currentMilestone} of 8 • {roadmap.progress}%
+            Complete
           </p>
         </div>
       </div>
@@ -66,7 +111,9 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
             <Target className="h-5 w-5" />
             Current Milestone: {currentMilestone.title}
           </CardTitle>
-          <CardDescription className="text-blue-100">{currentMilestone.description}</CardDescription>
+          <CardDescription className="text-blue-100">
+            {currentMilestone.description}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -78,11 +125,15 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
 
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">{roadmap.currentMilestone}</div>
+                <div className="text-2xl font-bold">
+                  {roadmap.currentMilestone}
+                </div>
                 <div className="text-xs text-blue-100">Current Milestone</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">{roadmap.completedMilestones}</div>
+                <div className="text-2xl font-bold">
+                  {roadmap.completedMilestones}
+                </div>
                 <div className="text-xs text-blue-100">Completed</div>
               </div>
               <div className="text-center">
@@ -105,13 +156,17 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
           <Card>
             <CardHeader>
               <CardTitle>Milestone Tasks</CardTitle>
-              <CardDescription>Complete these tasks to advance to the next milestone</CardDescription>
+              <CardDescription>
+                Complete these tasks to advance to the next milestone
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {currentMilestone.tasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`border rounded-lg p-4 ${task.completed ? "bg-green-50 border-green-200" : "bg-white"}`}
+                  className={`border rounded-lg p-4 ${
+                    task.completed ? "bg-green-50 border-green-200" : "bg-white"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <Checkbox
@@ -120,17 +175,32 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        {task.type === "course" && <BookOpen className="h-4 w-4 text-blue-600" />}
-                        {task.type === "project" && <Code2 className="h-4 w-4 text-green-600" />}
-                        {task.type === "assessment" && <Target className="h-4 w-4 text-purple-600" />}
-                        <span className={`font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                        {task.type === "course" && (
+                          <BookOpen className="h-4 w-4 text-blue-600" />
+                        )}
+                        {task.type === "project" && (
+                          <Code2 className="h-4 w-4 text-green-600" />
+                        )}
+                        {task.type === "assessment" && (
+                          <Target className="h-4 w-4 text-purple-600" />
+                        )}
+                        <span
+                          className={`font-medium ${
+                            task.completed
+                              ? "line-through text-muted-foreground"
+                              : ""
+                          }`}
+                        >
                           {task.title}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {task.completed ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200"
+                        >
                           Completed
                         </Badge>
                       ) : (
@@ -157,7 +227,9 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
             <CardContent className="space-y-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <h4 className="font-medium text-sm">Build Distributed Cache</h4>
-                <p className="text-xs text-muted-foreground">Implement Redis-based caching system</p>
+                <p className="text-xs text-muted-foreground">
+                  Implement Redis-based caching system
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Code2 className="h-3 w-3 text-green-600" />
                   <span className="text-xs">Project • Est. 6 hours</span>
@@ -232,15 +304,27 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <BookOpen className="mr-2 h-4 w-4" />
                 View All Resources
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Target className="mr-2 h-4 w-4" />
                 Set Daily Goal
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedule Study Time
               </Button>
@@ -249,5 +333,5 @@ export function RoadmapWatchPage({ roadmapId, onNavigate }: RoadmapWatchPageProp
         </div>
       </div>
     </div>
-  )
+  );
 }

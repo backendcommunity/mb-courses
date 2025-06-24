@@ -1,22 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, Save, Download, Share, Plus, X, File, Folder } from "lucide-react"
-import { routes } from "@/lib/routes"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Play,
+  Save,
+  Download,
+  Share,
+  Plus,
+  X,
+  File,
+  Folder,
+} from "lucide-react";
+import { routes } from "@/lib/routes";
 
 interface CoursePlaygroundPageProps {
-  courseId: string
-  playgroundId: string
-  onNavigate: (path: string) => void
+  courseId: string;
+  playgroundId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function CoursePlaygroundPage({ courseId, playgroundId, onNavigate }: CoursePlaygroundPageProps) {
-  const [activeFile, setActiveFile] = useState("index.js")
-  const [output, setOutput] = useState("")
-  const [isRunning, setIsRunning] = useState(false)
+export function CoursePlaygroundPage({
+  courseId,
+  playgroundId,
+  onNavigate,
+}: CoursePlaygroundPageProps) {
+  const [activeFile, setActiveFile] = useState("index.js");
+  const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
   const [files, setFiles] = useState({
     "index.js": `// Welcome to the JavaScript Playground!
 // Write your code here and click "Run" to see the output
@@ -50,7 +64,7 @@ export function capitalize(str) {
     "lodash": "^4.17.21"
   }
 }`,
-  })
+  });
 
   // Mock playground data
   const playground = {
@@ -59,64 +73,64 @@ export function capitalize(str) {
     description: "Experiment with JavaScript fundamentals",
     language: "JavaScript",
     isOwned: true,
-  }
+  };
 
   const runCode = async () => {
-    setIsRunning(true)
-    setOutput("Running code...\n")
+    setIsRunning(true);
+    setOutput("Running code...\n");
 
     // Simulate code execution
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Mock output - in a real implementation, this would execute the code safely
     const mockOutput = `Hello, World!
 Doubled numbers: [2, 4, 6, 8, 10]
 Hello, Developer! Welcome to the playground.
 
-✅ Code executed successfully!`
+✅ Code executed successfully!`;
 
-    setOutput(mockOutput)
-    setIsRunning(false)
-  }
+    setOutput(mockOutput);
+    setIsRunning(false);
+  };
 
   const savePlayground = () => {
     // Mock save functionality
-    console.log("Playground saved!")
-  }
+    console.log("Playground saved!");
+  };
 
   const addNewFile = () => {
-    const fileName = prompt("Enter file name:")
+    const fileName = prompt("Enter file name:");
     if (fileName && !files[fileName]) {
       setFiles((prev) => ({
         ...prev,
         [fileName]: "// New file\n",
-      }))
-      setActiveFile(fileName)
+      }));
+      setActiveFile(fileName);
     }
-  }
+  };
 
   const deleteFile = (fileName: string) => {
     if (Object.keys(files).length > 1) {
-      const newFiles = { ...files }
-      delete newFiles[fileName]
-      setFiles(newFiles)
+      const newFiles = { ...files };
+      delete newFiles[fileName];
+      setFiles(newFiles);
 
       if (activeFile === fileName) {
-        setActiveFile(Object.keys(newFiles)[0])
+        setActiveFile(Object.keys(newFiles)[0]);
       }
     }
-  }
+  };
 
   const getFileIcon = (fileName: string) => {
-    if (fileName.endsWith(".json")) return "📄"
-    if (fileName.endsWith(".js") || fileName.endsWith(".ts")) return "📜"
-    if (fileName.endsWith(".css")) return "🎨"
-    if (fileName.endsWith(".html")) return "🌐"
-    return "📄"
-  }
+    if (fileName.endsWith(".json")) return "📄";
+    if (fileName.endsWith(".js") || fileName.endsWith(".ts")) return "📜";
+    if (fileName.endsWith(".css")) return "🎨";
+    if (fileName.endsWith(".html")) return "🌐";
+    return "📄";
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -135,7 +149,9 @@ Hello, Developer! Welcome to the playground.
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-yellow-100 text-yellow-800">{playground.language}</Badge>
+          <Badge className="bg-yellow-100 text-yellow-800">
+            {playground.language}
+          </Badge>
           <Button variant="outline" size="sm" onClick={savePlayground}>
             <Save className="h-4 w-4 mr-2" />
             Save
@@ -167,7 +183,9 @@ Hello, Developer! Welcome to the playground.
                 <div
                   key={fileName}
                   className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
-                    activeFile === fileName ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100"
+                    activeFile === fileName
+                      ? "bg-blue-100 text-blue-800"
+                      : "hover:bg-gray-100"
                   }`}
                   onClick={() => setActiveFile(fileName)}
                 >
@@ -180,8 +198,8 @@ Hello, Developer! Welcome to the playground.
                       size="sm"
                       variant="ghost"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        deleteFile(fileName)
+                        e.stopPropagation();
+                        deleteFile(fileName);
                       }}
                       className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                     >
@@ -203,7 +221,11 @@ Hello, Developer! Welcome to the playground.
                   <File className="h-5 w-5" />
                   {activeFile}
                 </CardTitle>
-                <Button onClick={runCode} disabled={isRunning} className="flex items-center gap-2">
+                <Button
+                  onClick={runCode}
+                  disabled={isRunning}
+                  className="flex items-center gap-2"
+                >
                   <Play className="h-4 w-4" />
                   {isRunning ? "Running..." : "Run Code"}
                 </Button>
@@ -258,5 +280,5 @@ Hello, Developer! Welcome to the playground.
         </div>
       </div>
     </div>
-  )
+  );
 }

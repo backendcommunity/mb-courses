@@ -1,15 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Play,
   Save,
@@ -31,95 +41,100 @@ import {
   Clock,
   Code,
   TestTube,
-} from "lucide-react"
-import Editor from "@monaco-editor/react"
+} from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 interface CodingChallengeProps {
   challenge: {
-    id: string
-    title: string
-    description: string
-    difficulty: "Easy" | "Medium" | "Hard"
-    timeLimit: number
-    points: number
-    requirements: string[]
+    id: string;
+    title: string;
+    description: string;
+    difficulty: "Easy" | "Medium" | "Hard";
+    timeLimit: number;
+    points: number;
+    requirements: string[];
     testCases: Array<{
-      input: string
-      expectedOutput: string
-      description: string
-    }>
-    starterCode: string
-    language: string
-  }
-  onComplete: () => void
+      input: string;
+      expectedOutput: string;
+      description: string;
+    }>;
+    starterCode: string;
+    language: string;
+  };
+  onComplete: () => void;
 }
 
 interface FileNode {
-  name: string
-  type: "file" | "folder"
-  icon: string
-  children?: FileNode[]
-  content?: string
-  isOpen?: boolean
-  language?: string
+  name: string;
+  type: "file" | "folder";
+  icon: string;
+  children?: FileNode[];
+  content?: string;
+  isOpen?: boolean;
+  language?: string;
 }
 
-export function CodingChallengeComponent({ challenge, onComplete }: CodingChallengeProps) {
-  const [activeFile, setActiveFile] = useState("solution.js")
-  const [openFiles, setOpenFiles] = useState(["solution.js"])
-  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">("vs-dark")
-  const [fontSize, setFontSize] = useState(14)
+export function CodingChallengeComponent({
+  challenge,
+  onComplete,
+}: CodingChallengeProps) {
+  const [activeFile, setActiveFile] = useState("solution.js");
+  const [openFiles, setOpenFiles] = useState(["solution.js"]);
+  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">(
+    "vs-dark"
+  );
+  const [fontSize, setFontSize] = useState(14);
   const [terminalOutput, setTerminalOutput] = useState([
     "Welcome to Coding Challenge Terminal",
     "Ready to test your solution...",
     "",
-  ])
-  const [terminalInput, setTerminalInput] = useState("")
+  ]);
+  const [terminalInput, setTerminalInput] = useState("");
   const [testResults, setTestResults] = useState<
     Array<{
-      passed: boolean
-      input: string
-      expected: string
-      actual: string
-      description: string
+      passed: boolean;
+      input: string;
+      expected: string;
+      actual: string;
+      description: string;
     }>
-  >([])
-  const [score, setScore] = useState(0)
-  const [timeRemaining, setTimeRemaining] = useState(challenge.timeLimit * 60)
-  const [isRunning, setIsRunning] = useState(false)
-  const terminalRef = useRef<HTMLDivElement>(null)
-  const editorRef = useRef<any>(null)
+  >([]);
+  const [score, setScore] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(challenge.timeLimit * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<any>(null);
 
   const getLanguageFromFileName = (fileName: string): string => {
-    const extension = fileName.split(".").pop()?.toLowerCase()
+    const extension = fileName.split(".").pop()?.toLowerCase();
     switch (extension) {
       case "js":
       case "jsx":
-        return "javascript"
+        return "javascript";
       case "ts":
       case "tsx":
-        return "typescript"
+        return "typescript";
       case "py":
-        return "python"
+        return "python";
       case "java":
-        return "java"
+        return "java";
       case "cpp":
       case "c":
-        return "cpp"
+        return "cpp";
       case "cs":
-        return "csharp"
+        return "csharp";
       case "go":
-        return "go"
+        return "go";
       case "rs":
-        return "rust"
+        return "rust";
       case "php":
-        return "php"
+        return "php";
       case "rb":
-        return "ruby"
+        return "ruby";
       default:
-        return "javascript"
+        return "javascript";
     }
-  }
+  };
 
   const [fileTree, setFileTree] = useState<FileNode[]>([
     {
@@ -151,7 +166,9 @@ function runTests() {
   
   testCases.forEach((testCase, index) => {
     try {
-      const result = solution(${challenge.testCases.map((tc) => tc.input).join(", ")});
+      const result = solution(${challenge.testCases
+        .map((tc) => tc.input)
+        .join(", ")});
       const expected = ${challenge.testCases[0]?.expectedOutput || "null"};
       const success = JSON.stringify(result) === JSON.stringify(expected);
       
@@ -214,14 +231,16 @@ ${challenge.testCases
 - **Input:** ${tc.input}
 - **Expected Output:** ${tc.expectedOutput}
 - **Description:** ${tc.description}
-`,
+`
   )
   .join("\n")}`,
     },
-  ])
+  ]);
 
-  const [code, setCode] = useState(challenge.starterCode)
-  const [currentLanguage, setCurrentLanguage] = useState(challenge.language.toLowerCase())
+  const [code, setCode] = useState(challenge.starterCode);
+  const [currentLanguage, setCurrentLanguage] = useState(
+    challenge.language.toLowerCase()
+  );
 
   // Timer effect
   useEffect(() => {
@@ -229,110 +248,121 @@ ${challenge.testCases
       const timer = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            setIsRunning(false)
-            return 0
+            setIsRunning(false);
+            return 0;
           }
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(timer)
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
-  }, [isRunning, timeRemaining])
+  }, [isRunning, timeRemaining]);
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   const toggleFolder = (path: string[]) => {
-    const updateTree = (nodes: FileNode[], currentPath: string[]): FileNode[] => {
+    const updateTree = (
+      nodes: FileNode[],
+      currentPath: string[]
+    ): FileNode[] => {
       return nodes.map((node) => {
         if (currentPath.length === 1 && node.name === currentPath[0]) {
-          return { ...node, isOpen: !node.isOpen }
-        } else if (currentPath.length > 1 && node.name === currentPath[0] && node.children) {
+          return { ...node, isOpen: !node.isOpen };
+        } else if (
+          currentPath.length > 1 &&
+          node.name === currentPath[0] &&
+          node.children
+        ) {
           return {
             ...node,
             children: updateTree(node.children, currentPath.slice(1)),
-          }
+          };
         }
-        return node
-      })
-    }
-    setFileTree(updateTree(fileTree, path))
-  }
+        return node;
+      });
+    };
+    setFileTree(updateTree(fileTree, path));
+  };
 
   const findFile = (nodes: FileNode[], fileName: string): FileNode | null => {
     for (const node of nodes) {
       if (node.name === fileName && node.type === "file") {
-        return node
+        return node;
       }
       if (node.children) {
-        const found = findFile(node.children, fileName)
-        if (found) return found
+        const found = findFile(node.children, fileName);
+        if (found) return found;
       }
     }
-    return null
-  }
+    return null;
+  };
 
   const openFile = (fileName: string) => {
-    const file = findFile(fileTree, fileName)
+    const file = findFile(fileTree, fileName);
     if (file && file.content) {
-      setActiveFile(fileName)
-      setCode(file.content)
-      setCurrentLanguage(file.language || getLanguageFromFileName(fileName))
+      setActiveFile(fileName);
+      setCode(file.content);
+      setCurrentLanguage(file.language || getLanguageFromFileName(fileName));
       if (!openFiles.includes(fileName)) {
-        setOpenFiles([...openFiles, fileName])
+        setOpenFiles([...openFiles, fileName]);
       }
     }
-  }
+  };
 
   const closeFile = (fileName: string) => {
-    const newOpenFiles = openFiles.filter((f) => f !== fileName)
-    setOpenFiles(newOpenFiles)
+    const newOpenFiles = openFiles.filter((f) => f !== fileName);
+    setOpenFiles(newOpenFiles);
     if (activeFile === fileName && newOpenFiles.length > 0) {
-      setActiveFile(newOpenFiles[0])
-      const file = findFile(fileTree, newOpenFiles[0])
+      setActiveFile(newOpenFiles[0]);
+      const file = findFile(fileTree, newOpenFiles[0]);
       if (file?.content) {
-        setCode(file.content)
-        setCurrentLanguage(file.language || getLanguageFromFileName(newOpenFiles[0]))
+        setCode(file.content);
+        setCurrentLanguage(
+          file.language || getLanguageFromFileName(newOpenFiles[0])
+        );
       }
     }
-  }
+  };
 
   const handleTerminalSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (terminalInput.trim()) {
-      const command = terminalInput.trim()
-      let output = ""
+      const command = terminalInput.trim();
+      let output = "";
 
       switch (command) {
         case "run":
         case "test":
-          output = "Running tests..."
-          runTests()
-          break
+          output = "Running tests...";
+          runTests();
+          break;
         case "clear":
-          setTerminalOutput(["Welcome to Coding Challenge Terminal"])
-          setTerminalInput("")
-          return
+          setTerminalOutput(["Welcome to Coding Challenge Terminal"]);
+          setTerminalInput("");
+          return;
         case "help":
-          output = "Available commands: run, test, clear, help"
-          break
+          output = "Available commands: run, test, clear, help";
+          break;
         default:
-          output = `Command '${command}' not found. Type 'help' for available commands.`
+          output = `Command '${command}' not found. Type 'help' for available commands.`;
       }
 
-      setTerminalOutput((prev) => [...prev, `$ ${command}`, output, ""])
-      setTerminalInput("")
+      setTerminalOutput((prev) => [...prev, `$ ${command}`, output, ""]);
+      setTerminalInput("");
       setTimeout(() => {
-        terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight)
-      }, 100)
+        terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight);
+      }, 100);
     }
-  }
+  };
 
   const runTests = () => {
-    setIsRunning(true)
+    setIsRunning(true);
 
     setTimeout(() => {
       const mockResults = challenge.testCases.map((testCase, index) => ({
@@ -341,34 +371,37 @@ ${challenge.testCases
         expected: testCase.expectedOutput,
         actual: testCase.expectedOutput,
         description: testCase.description,
-      }))
+      }));
 
-      setTestResults(mockResults)
-      const passedTests = mockResults.filter((r) => r.passed).length
-      const newScore = Math.round((passedTests / mockResults.length) * challenge.points)
-      setScore(newScore)
+      setTestResults(mockResults);
+      const passedTests = mockResults.filter((r) => r.passed).length;
+      const newScore = Math.round(
+        (passedTests / mockResults.length) * challenge.points
+      );
+      setScore(newScore);
 
       setTerminalOutput((prev) => [
         ...prev,
         `Tests completed: ${passedTests}/${mockResults.length} passed`,
         `Score: ${newScore}/${challenge.points} points`,
         "",
-      ])
+      ]);
 
       // Call onComplete if all tests pass
       if (passedTests === mockResults.length) {
-        onComplete()
+        onComplete();
       }
 
-      setIsRunning(false)
-    }, 2000)
-  }
+      setIsRunning(false);
+    }, 2000);
+  };
 
   const handleEditorDidMount = (editor: any) => {
-    editorRef.current = editor
+    editorRef.current = editor;
     editor.updateOptions({
       fontSize: fontSize,
-      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+      fontFamily:
+        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
       lineHeight: 1.6,
       minimap: { enabled: true },
       scrollBeyondLastLine: false,
@@ -378,8 +411,8 @@ ${challenge.testCases
       insertSpaces: true,
       renderWhitespace: "selection",
       bracketPairColorization: { enabled: true },
-    })
-  }
+    });
+  };
 
   const renderFileTree = (nodes: FileNode[], path: string[] = []) => {
     return nodes.map((node) => (
@@ -391,15 +424,19 @@ ${challenge.testCases
           style={{ paddingLeft: `${(path.length + 1) * 12}px` }}
           onClick={() => {
             if (node.type === "folder") {
-              toggleFolder([...path, node.name])
+              toggleFolder([...path, node.name]);
             } else {
-              openFile(node.name)
+              openFile(node.name);
             }
           }}
         >
           {node.type === "folder" && (
             <span className="w-4 h-4 flex items-center justify-center">
-              {node.isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              {node.isOpen ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )}
             </span>
           )}
           <span className="text-xs">{node.icon}</span>
@@ -409,8 +446,8 @@ ${challenge.testCases
           <div>{renderFileTree(node.children, [...path, node.name])}</div>
         )}
       </div>
-    ))
-  }
+    ));
+  };
 
   return (
     <div className="flex-1 h-screen flex flex-col">
@@ -424,25 +461,34 @@ ${challenge.testCases
                   challenge.difficulty === "Hard"
                     ? "destructive"
                     : challenge.difficulty === "Medium"
-                      ? "default"
-                      : "secondary"
+                    ? "default"
+                    : "secondary"
                 }
               >
                 {challenge.difficulty}
               </Badge>
-              <Badge variant="outline" className="border-blue-600 text-blue-600">
+              <Badge
+                variant="outline"
+                className="border-blue-600 text-blue-600"
+              >
                 <Trophy className="w-3 h-3 mr-1" />
                 {challenge.points} pts
               </Badge>
               <Badge
                 variant="outline"
-                className={timeRemaining < 300 ? "border-red-600 text-red-600" : "border-green-600 text-green-600"}
+                className={
+                  timeRemaining < 300
+                    ? "border-red-600 text-red-600"
+                    : "border-green-600 text-green-600"
+                }
               >
                 <Clock className="w-3 h-3 mr-1" />
                 {formatTime(timeRemaining)}
               </Badge>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">{challenge.title}</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              {challenge.title}
+            </h1>
           </div>
         </div>
 
@@ -451,11 +497,20 @@ ${challenge.testCases
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setEditorTheme(editorTheme === "vs-dark" ? "light" : "vs-dark")}
+              onClick={() =>
+                setEditorTheme(editorTheme === "vs-dark" ? "light" : "vs-dark")
+              }
             >
-              {editorTheme === "vs-dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {editorTheme === "vs-dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </Button>
-            <Select value={fontSize.toString()} onValueChange={(value) => setFontSize(Number.parseInt(value))}>
+            <Select
+              value={fontSize.toString()}
+              onValueChange={(value) => setFontSize(Number.parseInt(value))}
+            >
               <SelectTrigger className="w-16 h-8">
                 <SelectValue />
               </SelectTrigger>
@@ -507,9 +562,13 @@ ${challenge.testCases
                 </h3>
               </div>
               <div className="p-2 border-b bg-muted/10">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">CHALLENGE</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                  CHALLENGE
+                </p>
               </div>
-              <ScrollArea className="flex-1 p-2">{renderFileTree(fileTree)}</ScrollArea>
+              <ScrollArea className="flex-1 p-2">
+                {renderFileTree(fileTree)}
+              </ScrollArea>
             </div>
           </ResizablePanel>
 
@@ -527,11 +586,13 @@ ${challenge.testCases
                       activeFile === fileName ? "bg-background" : ""
                     }`}
                     onClick={() => {
-                      setActiveFile(fileName)
-                      const file = findFile(fileTree, fileName)
+                      setActiveFile(fileName);
+                      const file = findFile(fileTree, fileName);
                       if (file?.content) {
-                        setCode(file.content)
-                        setCurrentLanguage(file.language || getLanguageFromFileName(fileName))
+                        setCode(file.content);
+                        setCurrentLanguage(
+                          file.language || getLanguageFromFileName(fileName)
+                        );
                       }
                     }}
                   >
@@ -539,8 +600,8 @@ ${challenge.testCases
                     <span>{fileName}</span>
                     <button
                       onClick={(e) => {
-                        e.stopPropagation()
-                        closeFile(fileName)
+                        e.stopPropagation();
+                        closeFile(fileName);
                       }}
                       className="hover:bg-muted rounded p-0.5"
                     >
@@ -561,7 +622,8 @@ ${challenge.testCases
                   onMount={handleEditorDidMount}
                   options={{
                     fontSize: fontSize,
-                    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                    fontFamily:
+                      "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
                     lineHeight: 1.6,
                     minimap: { enabled: true },
                     scrollBeyondLastLine: false,
@@ -587,21 +649,36 @@ ${challenge.testCases
           {/* Right Panel - Instructions, Tests, Terminal, Score */}
           <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
             <div className="h-full flex flex-col">
-              <Tabs defaultValue="instructions" className="h-full flex flex-col">
+              <Tabs
+                defaultValue="instructions"
+                className="h-full flex flex-col"
+              >
                 <TabsList className="grid w-full grid-cols-4 h-10">
-                  <TabsTrigger value="instructions" className="flex items-center gap-1 px-2">
+                  <TabsTrigger
+                    value="instructions"
+                    className="flex items-center gap-1 px-2"
+                  >
                     <BookOpen className="h-3 w-3" />
                     <span className="text-xs">Instructions</span>
                   </TabsTrigger>
-                  <TabsTrigger value="tests" className="flex items-center gap-1 px-2">
+                  <TabsTrigger
+                    value="tests"
+                    className="flex items-center gap-1 px-2"
+                  >
                     <TestTube className="h-3 w-3" />
                     <span className="text-xs">Tests</span>
                   </TabsTrigger>
-                  <TabsTrigger value="terminal" className="flex items-center gap-1 px-2">
+                  <TabsTrigger
+                    value="terminal"
+                    className="flex items-center gap-1 px-2"
+                  >
                     <Terminal className="h-3 w-3" />
                     <span className="text-xs">Terminal</span>
                   </TabsTrigger>
-                  <TabsTrigger value="score" className="flex items-center gap-1 px-2">
+                  <TabsTrigger
+                    value="score"
+                    className="flex items-center gap-1 px-2"
+                  >
                     <Trophy className="h-3 w-3" />
                     <span className="text-xs">Score</span>
                   </TabsTrigger>
@@ -622,7 +699,9 @@ ${challenge.testCases
                             <Target className="h-4 w-4" />
                             Description
                           </h4>
-                          <p className="text-sm text-muted-foreground">{challenge.description}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {challenge.description}
+                          </p>
                         </div>
 
                         <Separator />
@@ -634,9 +713,14 @@ ${challenge.testCases
                           </h4>
                           <div className="space-y-2">
                             {challenge.requirements.map((req, index) => (
-                              <div key={index} className="flex items-start gap-2 text-sm">
+                              <div
+                                key={index}
+                                className="flex items-start gap-2 text-sm"
+                              >
                                 <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                <span className="text-muted-foreground">{req}</span>
+                                <span className="text-muted-foreground">
+                                  {req}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -651,7 +735,10 @@ ${challenge.testCases
                           </h4>
                           <div className="space-y-3">
                             {challenge.testCases.map((testCase, index) => (
-                              <div key={index} className="p-3 bg-muted/30 rounded-lg">
+                              <div
+                                key={index}
+                                className="p-3 bg-muted/30 rounded-lg"
+                              >
                                 <div className="text-xs font-medium text-muted-foreground mb-1">
                                   Test Case {index + 1}
                                 </div>
@@ -660,9 +747,12 @@ ${challenge.testCases
                                     <strong>Input:</strong> {testCase.input}
                                   </div>
                                   <div>
-                                    <strong>Expected:</strong> {testCase.expectedOutput}
+                                    <strong>Expected:</strong>{" "}
+                                    {testCase.expectedOutput}
                                   </div>
-                                  <div className="text-muted-foreground">{testCase.description}</div>
+                                  <div className="text-muted-foreground">
+                                    {testCase.description}
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -700,10 +790,15 @@ ${challenge.testCases
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle2
-                                  className={`h-4 w-4 ${result.passed ? "text-green-600" : "text-red-600"}`}
+                                  className={`h-4 w-4 ${
+                                    result.passed
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }`}
                                 />
                                 <span className="text-sm font-medium">
-                                  Test {index + 1} {result.passed ? "Passed" : "Failed"}
+                                  Test {index + 1}{" "}
+                                  {result.passed ? "Passed" : "Failed"}
                                 </span>
                               </div>
                               <div className="text-xs space-y-1">
@@ -716,7 +811,9 @@ ${challenge.testCases
                                 <div>
                                   <strong>Actual:</strong> {result.actual}
                                 </div>
-                                <div className="text-muted-foreground">{result.description}</div>
+                                <div className="text-muted-foreground">
+                                  {result.description}
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -734,7 +831,11 @@ ${challenge.testCases
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-gray-400"
-                        onClick={() => setTerminalOutput(["Welcome to Coding Challenge Terminal"])}
+                        onClick={() =>
+                          setTerminalOutput([
+                            "Welcome to Coding Challenge Terminal",
+                          ])
+                        }
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -747,9 +848,10 @@ ${challenge.testCases
                             className={
                               line.startsWith("$")
                                 ? "text-yellow-400"
-                                : line.includes("passed") || line.includes("Score:")
-                                  ? "text-green-400"
-                                  : "text-gray-300"
+                                : line.includes("passed") ||
+                                  line.includes("Score:")
+                                ? "text-green-400"
+                                : "text-gray-300"
                             }
                           >
                             {line}
@@ -757,9 +859,14 @@ ${challenge.testCases
                         ))}
                       </div>
                     </ScrollArea>
-                    <form onSubmit={handleTerminalSubmit} className="p-3 border-t border-gray-700">
+                    <form
+                      onSubmit={handleTerminalSubmit}
+                      className="p-3 border-t border-gray-700"
+                    >
                       <div className="flex items-center gap-2">
-                        <span className="text-yellow-400 font-mono text-xs">$</span>
+                        <span className="text-yellow-400 font-mono text-xs">
+                          $
+                        </span>
                         <input
                           type="text"
                           value={terminalInput}
@@ -783,9 +890,16 @@ ${challenge.testCases
                     <ScrollArea className="flex-1 p-4">
                       <div className="space-y-6">
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-primary mb-2">{score}</div>
-                          <div className="text-sm text-muted-foreground">out of {challenge.points} points</div>
-                          <Progress value={(score / challenge.points) * 100} className="mt-3" />
+                          <div className="text-3xl font-bold text-primary mb-2">
+                            {score}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            out of {challenge.points} points
+                          </div>
+                          <Progress
+                            value={(score / challenge.points) * 100}
+                            className="mt-3"
+                          />
                         </div>
 
                         <Separator />
@@ -796,7 +910,11 @@ ${challenge.testCases
                             Time Remaining
                           </div>
                           <div
-                            className={`text-2xl font-mono ${timeRemaining < 300 ? "text-red-600" : "text-green-600"}`}
+                            className={`text-2xl font-mono ${
+                              timeRemaining < 300
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
                           >
                             {formatTime(timeRemaining)}
                           </div>
@@ -806,18 +924,27 @@ ${challenge.testCases
 
                         {testResults.length > 0 && (
                           <div>
-                            <h4 className="font-medium text-sm mb-3">Test Summary</h4>
+                            <h4 className="font-medium text-sm mb-3">
+                              Test Summary
+                            </h4>
                             <div className="space-y-2">
                               <div className="flex justify-between text-sm">
                                 <span>Tests Passed:</span>
                                 <span className="font-medium text-green-600">
-                                  {testResults.filter((r) => r.passed).length}/{testResults.length}
+                                  {testResults.filter((r) => r.passed).length}/
+                                  {testResults.length}
                                 </span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span>Success Rate:</span>
                                 <span className="font-medium">
-                                  {Math.round((testResults.filter((r) => r.passed).length / testResults.length) * 100)}%
+                                  {Math.round(
+                                    (testResults.filter((r) => r.passed)
+                                      .length /
+                                      testResults.length) *
+                                      100
+                                  )}
+                                  %
                                 </span>
                               </div>
                             </div>
@@ -827,16 +954,32 @@ ${challenge.testCases
                         <Separator />
 
                         <div className="space-y-2">
-                          <h4 className="font-medium text-sm mb-3">Quick Actions</h4>
-                          <Button variant="outline" className="w-full justify-start" size="sm" onClick={runTests}>
+                          <h4 className="font-medium text-sm mb-3">
+                            Quick Actions
+                          </h4>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            size="sm"
+                            onClick={runTests}
+                          >
                             <Play className="mr-2 h-4 w-4" />
                             Run All Tests
                           </Button>
-                          <Button variant="outline" className="w-full justify-start" size="sm">
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            size="sm"
+                          >
                             <Save className="mr-2 h-4 w-4" />
                             Save Progress
                           </Button>
-                          <Button variant="outline" className="w-full justify-start" size="sm" onClick={onComplete}>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            size="sm"
+                            onClick={onComplete}
+                          >
                             <Share className="mr-2 h-4 w-4" />
                             Submit Solution
                           </Button>
@@ -851,8 +994,8 @@ ${challenge.testCases
         </ResizablePanelGroup>
       </div>
     </div>
-  )
+  );
 }
 
 // Export both named and default for compatibility
-export default CodingChallengeComponent
+export default CodingChallengeComponent;

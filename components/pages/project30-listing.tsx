@@ -1,12 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   PlayCircle,
   Clock,
@@ -23,23 +35,26 @@ import {
   ChevronRight,
   Calendar,
   Trophy,
-} from "lucide-react"
+} from "lucide-react";
 
 interface Project30ListingPageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
-export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedLevel, setSelectedLevel] = useState("all")
+export function Project30ListingPage({
+  onNavigate,
+}: Project30ListingPageProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("all");
 
   // Mock Project30 courses data
   const project30Courses = [
     {
       id: "backend-fundamentals",
       title: "Backend Development Fundamentals",
-      description: "Master the essentials of backend development with Node.js, Express, and databases",
+      description:
+        "Master the essentials of backend development with Node.js, Express, and databases",
       instructor: "Sarah Johnson",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -65,7 +80,8 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
     {
       id: "fullstack-javascript",
       title: "Full-Stack JavaScript Mastery",
-      description: "Complete full-stack development course covering frontend, backend, and deployment",
+      description:
+        "Complete full-stack development course covering frontend, backend, and deployment",
       instructor: "Mike Chen",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -91,7 +107,8 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
     {
       id: "api-development",
       title: "API Development & Microservices",
-      description: "Learn to build scalable APIs and microservices architecture",
+      description:
+        "Learn to build scalable APIs and microservices architecture",
       instructor: "Alex Rodriguez",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -117,7 +134,8 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
     {
       id: "mobile-backend",
       title: "Mobile Backend Development",
-      description: "Build robust backends for mobile applications with real-time features",
+      description:
+        "Build robust backends for mobile applications with real-time features",
       instructor: "Emma Wilson",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -143,7 +161,8 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
     {
       id: "devops-fundamentals",
       title: "DevOps & Cloud Infrastructure",
-      description: "Learn deployment, monitoring, and scaling of backend applications",
+      description:
+        "Learn deployment, monitoring, and scaling of backend applications",
       instructor: "David Kim",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -159,12 +178,18 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
       isEnrolled: false,
       progress: 0,
       lastAccessed: null,
-      highlights: ["Infrastructure as Code", "CI/CD pipelines", "Monitoring & logging", "Auto-scaling strategies"],
+      highlights: [
+        "Infrastructure as Code",
+        "CI/CD pipelines",
+        "Monitoring & logging",
+        "Auto-scaling strategies",
+      ],
     },
     {
       id: "ai-backend",
       title: "AI-Powered Backend Development",
-      description: "Integrate AI and machine learning into your backend applications",
+      description:
+        "Integrate AI and machine learning into your backend applications",
       instructor: "Dr. Lisa Park",
       instructorAvatar: "/placeholder.svg?height=40&width=40",
       duration: "30 days",
@@ -180,9 +205,14 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
       isEnrolled: false,
       progress: 0,
       lastAccessed: null,
-      highlights: ["AI API integration", "Machine learning models", "Vector search systems", "Intelligent automation"],
+      highlights: [
+        "AI API integration",
+        "Machine learning models",
+        "Vector search systems",
+        "Intelligent automation",
+      ],
     },
-  ]
+  ];
 
   const categories = [
     { value: "all", label: "All Categories", icon: BookOpen },
@@ -191,55 +221,62 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
     { value: "Mobile", label: "Mobile", icon: Smartphone },
     { value: "DevOps", label: "DevOps", icon: Code2 },
     { value: "AI/ML", label: "AI/ML", icon: Brain },
-  ]
+  ];
 
   const levels = [
     { value: "all", label: "All Levels" },
     { value: "Beginner", label: "Beginner" },
     { value: "Intermediate", label: "Intermediate" },
     { value: "Advanced", label: "Advanced" },
-  ]
+  ];
 
   // Filter courses based on search and filters
   const filteredCourses = project30Courses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
-    const matchesLevel = selectedLevel === "all" || course.level === selectedLevel
+      course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || course.category === selectedCategory;
+    const matchesLevel =
+      selectedLevel === "all" || course.level === selectedLevel;
 
-    return matchesSearch && matchesCategory && matchesLevel
-  })
+    return matchesSearch && matchesCategory && matchesLevel;
+  });
 
-  const enrolledCourses = project30Courses.filter((course) => course.isEnrolled)
+  const enrolledCourses = project30Courses.filter(
+    (course) => course.isEnrolled
+  );
 
   const getCategoryIcon = (category: string) => {
-    const categoryData = categories.find((cat) => cat.value === category)
-    return categoryData ? categoryData.icon : BookOpen
-  }
+    const categoryData = categories.find((cat) => cat.value === category);
+    return categoryData ? categoryData.icon : BookOpen;
+  };
 
   const getLevelColor = (level: string) => {
     switch (level) {
       case "Beginner":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-green-100 text-green-800 border-green-200";
       case "Intermediate":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "Advanced":
-        return "bg-purple-100 text-purple-800 border-purple-200"
+        return "bg-purple-100 text-purple-800 border-purple-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Project30 Courses</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Project30 Courses
+          </h1>
           <p className="text-muted-foreground">
-            Choose from our collection of 30-day project-based courses to master backend development
+            Choose from our collection of 30-day project-based courses to master
+            backend development
           </p>
         </div>
         <div className="flex gap-2">
@@ -293,8 +330,12 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
       {/* Main Content */}
       <Tabs defaultValue="all-courses" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="all-courses">All Courses ({filteredCourses.length})</TabsTrigger>
-          <TabsTrigger value="my-courses">My Courses ({enrolledCourses.length})</TabsTrigger>
+          <TabsTrigger value="all-courses">
+            All Courses ({filteredCourses.length})
+          </TabsTrigger>
+          <TabsTrigger value="my-courses">
+            My Courses ({enrolledCourses.length})
+          </TabsTrigger>
           <TabsTrigger value="popular">Popular</TabsTrigger>
           <TabsTrigger value="new">New Releases</TabsTrigger>
         </TabsList>
@@ -302,10 +343,13 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
         <TabsContent value="all-courses" className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredCourses.map((course) => {
-              const CategoryIcon = getCategoryIcon(course.category)
+              const CategoryIcon = getCategoryIcon(course.category);
 
               return (
-                <Card key={course.id} className="group hover:shadow-lg transition-all duration-200 cursor-pointer">
+                <Card
+                  key={course.id}
+                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                >
                   <div className="relative">
                     <img
                       src={course.thumbnail || "/placeholder.svg"}
@@ -316,10 +360,15 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                       <PlayCircle className="h-12 w-12 text-white" />
                     </div>
                     <div className="absolute top-3 left-3">
-                      <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
+                      <Badge className={getLevelColor(course.level)}>
+                        {course.level}
+                      </Badge>
                     </div>
                     <div className="absolute top-3 right-3">
-                      <Badge variant="secondary" className="bg-black/70 text-white border-none">
+                      <Badge
+                        variant="secondary"
+                        className="bg-black/70 text-white border-none"
+                      >
                         ${course.price}
                       </Badge>
                     </div>
@@ -329,15 +378,23 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2 mb-2">
                         <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{course.category}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {course.category}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{course.rating}</span>
+                        <span className="text-sm font-medium">
+                          {course.rating}
+                        </span>
                       </div>
                     </div>
-                    <CardTitle className="text-lg leading-tight">{course.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                    <CardTitle className="text-lg leading-tight">
+                      {course.title}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {course.description}
+                    </CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
@@ -362,7 +419,9 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                         alt={course.instructor}
                         className="w-6 h-6 rounded-full"
                       />
-                      <span className="text-sm text-muted-foreground">{course.instructor}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {course.instructor}
+                      </span>
                     </div>
 
                     <div className="flex flex-wrap gap-1">
@@ -385,22 +444,31 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                           <span>{course.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-[#F2C94C] h-2 rounded-full" style={{ width: `${course.progress}%` }}></div>
+                          <div
+                            className="bg-[#F2C94C] h-2 rounded-full"
+                            style={{ width: `${course.progress}%` }}
+                          ></div>
                         </div>
-                        <Button className="w-full" onClick={() => onNavigate(`/dashboard/project30/${course.id}`)}>
+                        <Button
+                          className="w-full"
+                          onClick={() => onNavigate(`/project30/${course.id}`)}
+                        >
                           Continue Learning
                           <ChevronRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
-                      <Button className="w-full" onClick={() => onNavigate(`/dashboard/project30/${course.id}`)}>
+                      <Button
+                        className="w-full"
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                      >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     )}
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </TabsContent>
@@ -409,10 +477,13 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
           {enrolledCourses.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {enrolledCourses.map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category)
+                const CategoryIcon = getCategoryIcon(course.category);
 
                 return (
-                  <Card key={course.id} className="group hover:shadow-lg transition-all duration-200">
+                  <Card
+                    key={course.id}
+                    className="group hover:shadow-lg transition-all duration-200"
+                  >
                     <div className="relative">
                       <img
                         src={course.thumbnail || "/placeholder.svg"}
@@ -420,17 +491,25 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
                       <div className="absolute top-3 left-3">
-                        <Badge className="bg-green-100 text-green-800 border-green-200">Enrolled</Badge>
+                        <Badge className="bg-green-100 text-green-800 border-green-200">
+                          Enrolled
+                        </Badge>
                       </div>
                     </div>
 
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2 mb-2">
                         <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{course.category}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {course.category}
+                        </span>
                       </div>
-                      <CardTitle className="text-lg leading-tight">{course.title}</CardTitle>
-                      <CardDescription>Last accessed: {course.lastAccessed}</CardDescription>
+                      <CardTitle className="text-lg leading-tight">
+                        {course.title}
+                      </CardTitle>
+                      <CardDescription>
+                        Last accessed: {course.lastAccessed}
+                      </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
@@ -440,28 +519,38 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                           <span>{course.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-[#F2C94C] h-2 rounded-full" style={{ width: `${course.progress}%` }}></div>
+                          <div
+                            className="bg-[#F2C94C] h-2 rounded-full"
+                            style={{ width: `${course.progress}%` }}
+                          ></div>
                         </div>
                       </div>
 
-                      <Button className="w-full" onClick={() => onNavigate(`/dashboard/project30/${course.id}`)}>
+                      <Button
+                        className="w-full"
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                      >
                         Continue Learning
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
             </div>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No enrolled courses</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  No enrolled courses
+                </h3>
                 <p className="text-muted-foreground text-center mb-4">
                   Start your learning journey by enrolling in a Project30 course
                 </p>
-                <Button onClick={() => setSelectedCategory("all")}>Browse All Courses</Button>
+                <Button onClick={() => setSelectedCategory("all")}>
+                  Browse All Courses
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -473,10 +562,13 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
               .sort((a, b) => b.students - a.students)
               .slice(0, 6)
               .map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category)
+                const CategoryIcon = getCategoryIcon(course.category);
 
                 return (
-                  <Card key={course.id} className="group hover:shadow-lg transition-all duration-200">
+                  <Card
+                    key={course.id}
+                    className="group hover:shadow-lg transition-all duration-200"
+                  >
                     <div className="relative">
                       <img
                         src={course.thumbnail || "/placeholder.svg"}
@@ -495,15 +587,23 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 mb-2">
                           <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{course.category}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {course.category}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{course.rating}</span>
+                          <span className="text-sm font-medium">
+                            {course.rating}
+                          </span>
                         </div>
                       </div>
-                      <CardTitle className="text-lg leading-tight">{course.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                      <CardTitle className="text-lg leading-tight">
+                        {course.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {course.description}
+                      </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
@@ -518,13 +618,16 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                         </div>
                       </div>
 
-                      <Button className="w-full" onClick={() => onNavigate(`/dashboard/project30/${course.id}`)}>
+                      <Button
+                        className="w-full"
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                      >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
           </div>
         </TabsContent>
@@ -535,10 +638,13 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
               .slice(-3)
               .reverse()
               .map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category)
+                const CategoryIcon = getCategoryIcon(course.category);
 
                 return (
-                  <Card key={course.id} className="group hover:shadow-lg transition-all duration-200">
+                  <Card
+                    key={course.id}
+                    className="group hover:shadow-lg transition-all duration-200"
+                  >
                     <div className="relative">
                       <img
                         src={course.thumbnail || "/placeholder.svg"}
@@ -546,7 +652,9 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
                       <div className="absolute top-3 left-3">
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">New</Badge>
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                          New
+                        </Badge>
                       </div>
                     </div>
 
@@ -554,15 +662,23 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 mb-2">
                           <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{course.category}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {course.category}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{course.rating}</span>
+                          <span className="text-sm font-medium">
+                            {course.rating}
+                          </span>
                         </div>
                       </div>
-                      <CardTitle className="text-lg leading-tight">{course.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                      <CardTitle className="text-lg leading-tight">
+                        {course.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {course.description}
+                      </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
@@ -577,17 +693,20 @@ export function Project30ListingPage({ onNavigate }: Project30ListingPageProps) 
                         </div>
                       </div>
 
-                      <Button className="w-full" onClick={() => onNavigate(`/dashboard/project30/${course.id}`)}>
+                      <Button
+                        className="w-full"
+                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                      >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
           </div>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

@@ -1,28 +1,42 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { CheckCircle2, Circle, Target, TrendingUp, Clock, Award } from "lucide-react"
-import { getRoadmaps } from "@/lib/data"
-import { routes } from "@/lib/routes"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  CheckCircle2,
+  Circle,
+  Target,
+  TrendingUp,
+  Clock,
+  Award,
+} from "lucide-react";
+import { getRoadmaps } from "@/lib/data";
+import { routes } from "@/lib/routes";
 
 interface RoadmapsPageProps {
-  onNavigate?: (route: string) => void
+  onNavigate?: (route: string) => void;
 }
 
 export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
-  const roadmaps = getRoadmaps()
+  const roadmaps = getRoadmaps();
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Career Roadmaps</h1>
           <p className="text-muted-foreground">
-            Strategic career progression guides to help you reach your professional goals
+            Strategic career progression guides to help you reach your
+            professional goals
           </p>
         </div>
         <Button>
@@ -37,22 +51,36 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Your Career Roadmap: {roadmaps.find((r) => r.enrolled && r.started)?.title}
+              Your Career Roadmap:{" "}
+              {roadmaps.find((r) => r.enrolled && r.started)?.title}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span>Overall Progress</span>
-                <span>{roadmaps.find((r) => r.enrolled && r.started)?.progress}%</span>
+                <span>
+                  {roadmaps.find((r) => r.enrolled && r.started)?.progress}%
+                </span>
               </div>
-              <Progress value={roadmaps.find((r) => r.enrolled && r.started)?.progress} className="h-3" />
+              <Progress
+                value={roadmaps.find((r) => r.enrolled && r.started)?.progress}
+                className="h-3"
+              />
               <div className="flex items-center justify-between text-sm text-blue-100">
                 <span>
-                  Milestone {(roadmaps.find((r) => r.enrolled && r.started)?.currentMilestone || 0) + 1} of{" "}
-                  {roadmaps.find((r) => r.enrolled && r.started)?.milestones.length}
+                  Milestone{" "}
+                  {(roadmaps.find((r) => r.enrolled && r.started)
+                    ?.currentMilestone || 0) + 1}{" "}
+                  of{" "}
+                  {
+                    roadmaps.find((r) => r.enrolled && r.started)?.milestones
+                      .length
+                  }
                 </span>
-                <span>{roadmaps.find((r) => r.enrolled && r.started)?.estimatedTime}</span>
+                <span>
+                  {roadmaps.find((r) => r.enrolled && r.started)?.estimatedTime}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -74,16 +102,18 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
               </div>
               <div className="text-right">
                 <Badge variant="outline">{roadmap.timeframe}</Badge>
-                <p className="text-sm text-muted-foreground mt-1">{roadmap.difficulty}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {roadmap.difficulty}
+                </p>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {roadmap.milestones.map((milestone, index) => {
-                const isCompleted = milestone.completed
-                const isCurrent = index === roadmap.currentMilestone
-                const isUpcoming = index > roadmap.currentMilestone
+                const isCompleted = milestone.completed;
+                const isCurrent = index === roadmap.currentMilestone;
+                const isUpcoming = index > roadmap.currentMilestone;
 
                 return (
                   <div key={milestone.id} className="flex items-start gap-4">
@@ -93,58 +123,83 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                           isCompleted
                             ? "bg-green-600 border-green-600 text-white"
                             : isCurrent
-                              ? "bg-blue-600 border-blue-600 text-white"
-                              : "border-gray-300 text-gray-400"
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "border-gray-300 text-gray-400"
                         }`}
                       >
                         {isCompleted ? (
                           <CheckCircle2 className="h-4 w-4" />
                         ) : (
-                          <span className="text-sm font-medium">{index + 1}</span>
+                          <span className="text-sm font-medium">
+                            {index + 1}
+                          </span>
                         )}
                       </div>
                       {index < roadmap.milestones.length - 1 && (
-                        <div className={`w-0.5 h-12 mt-2 ${isCompleted ? "bg-green-600" : "bg-gray-300"}`} />
+                        <div
+                          className={`w-0.5 h-12 mt-2 ${
+                            isCompleted ? "bg-green-600" : "bg-gray-300"
+                          }`}
+                        />
                       )}
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between">
                         <h3
                           className={`font-medium ${
-                            isCompleted ? "text-green-700" : isCurrent ? "text-blue-700" : "text-gray-500"
+                            isCompleted
+                              ? "text-green-700"
+                              : isCurrent
+                              ? "text-blue-700"
+                              : "text-gray-500"
                           }`}
                         >
                           {milestone.title}
                         </h3>
                         <Badge
-                          variant={isCompleted ? "default" : isCurrent ? "secondary" : "outline"}
+                          variant={
+                            isCompleted
+                              ? "default"
+                              : isCurrent
+                              ? "secondary"
+                              : "outline"
+                          }
                           className={
                             isCompleted
                               ? "bg-green-100 text-green-800 border-green-200"
                               : isCurrent
-                                ? "bg-blue-100 text-blue-800 border-blue-200"
-                                : ""
+                              ? "bg-blue-100 text-blue-800 border-blue-200"
+                              : ""
                           }
                         >
-                          {isCompleted ? "Completed" : isCurrent ? "In Progress" : "Upcoming"}
+                          {isCompleted
+                            ? "Completed"
+                            : isCurrent
+                            ? "In Progress"
+                            : "Upcoming"}
                         </Badge>
                       </div>
                       {isCurrent && (
                         <div className="space-y-2">
-                          <Progress value={milestone.progress} className="h-2" />
+                          <Progress
+                            value={milestone.progress}
+                            className="h-2"
+                          />
                           <p className="text-sm text-muted-foreground">
-                            {milestone.progress}% complete - Continue building projects to reach this milestone
+                            {milestone.progress}% complete - Continue building
+                            projects to reach this milestone
                           </p>
                         </div>
                       )}
                       {isCompleted && (
                         <p className="text-sm text-green-600">
-                          ✓ Milestone achieved! Great progress on your career journey.
+                          ✓ Milestone achieved! Great progress on your career
+                          journey.
                         </p>
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </CardContent>
@@ -164,7 +219,10 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Backend Engineer Demand</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 border-green-200"
+                >
                   High
                 </Badge>
               </div>
@@ -222,14 +280,15 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                 <span className="font-medium">Complete Current Project</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Finish your e-commerce API project to advance to the next milestone
+                Finish your e-commerce API project to advance to the next
+                milestone
               </p>
               <Button
                 size="sm"
                 className="w-full"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  onNavigate?.(routes.roadmapWatch("1"))
+                  e.stopPropagation();
+                  onNavigate?.(routes.roadmapWatch("1"));
                 }}
               >
                 Continue Roadmap
@@ -241,7 +300,8 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                 <span className="font-medium">Schedule Mock Interview</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Practice your interview skills to prepare for senior-level positions
+                Practice your interview skills to prepare for senior-level
+                positions
               </p>
               <Button size="sm" variant="outline" className="w-full">
                 Schedule Now
@@ -252,7 +312,9 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                 <Award className="h-4 w-4 text-green-600" />
                 <span className="font-medium">Join Study Group</span>
               </div>
-              <p className="text-sm text-muted-foreground">Connect with peers working toward similar career goals</p>
+              <p className="text-sm text-muted-foreground">
+                Connect with peers working toward similar career goals
+              </p>
               <Button size="sm" variant="outline" className="w-full">
                 Find Groups
               </Button>
@@ -261,5 +323,5 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

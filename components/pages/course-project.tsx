@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   CheckCircle,
@@ -20,31 +20,38 @@ import {
   FileText,
   Video,
   Link,
-} from "lucide-react"
-import { routes } from "@/lib/routes"
+} from "lucide-react";
+import { routes } from "@/lib/routes";
 
 interface CourseProjectPageProps {
-  courseId: string
-  projectId: string
-  onNavigate: (path: string) => void
+  courseId: string;
+  projectId: string;
+  onNavigate: (path: string) => void;
 }
 
-export function CourseProjectPage({ courseId, projectId, onNavigate }: CourseProjectPageProps) {
-  const [checkedRequirements, setCheckedRequirements] = useState<Record<number, boolean>>({
+export function CourseProjectPage({
+  courseId,
+  projectId,
+  onNavigate,
+}: CourseProjectPageProps) {
+  const [checkedRequirements, setCheckedRequirements] = useState<
+    Record<number, boolean>
+  >({
     0: true,
     1: true,
     2: false,
     3: false,
     4: false,
-  })
-  const [submissionUrl, setSubmissionUrl] = useState("")
-  const [submissionNotes, setSubmissionNotes] = useState("")
+  });
+  const [submissionUrl, setSubmissionUrl] = useState("");
+  const [submissionNotes, setSubmissionNotes] = useState("");
 
   // Mock project data
   const project = {
     id: projectId,
     title: "Personal Portfolio Website",
-    description: "Build a responsive portfolio website using HTML, CSS, and JavaScript",
+    description:
+      "Build a responsive portfolio website using HTML, CSS, and JavaScript",
     difficulty: "Beginner",
     estimatedHours: 8,
     points: 200,
@@ -80,7 +87,8 @@ Create a personal portfolio website that showcases your skills and projects. You
       {
         id: 0,
         title: "Responsive Design",
-        description: "Website works well on desktop, tablet, and mobile devices",
+        description:
+          "Website works well on desktop, tablet, and mobile devices",
         completed: true,
       },
       {
@@ -92,7 +100,8 @@ Create a personal portfolio website that showcases your skills and projects. You
       {
         id: 2,
         title: "About Section",
-        description: "Professional about section with your background and skills",
+        description:
+          "Professional about section with your background and skills",
         completed: false,
       },
       {
@@ -134,58 +143,63 @@ Create a personal portfolio website that showcases your skills and projects. You
         description: "Generate beautiful color palettes for your design",
       },
     ],
-  }
+  };
 
   const toggleRequirement = (id: number) => {
     setCheckedRequirements((prev) => ({
       ...prev,
       [id]: !prev[id],
-    }))
-  }
+    }));
+  };
 
-  const completedRequirements = Object.values(checkedRequirements).filter(Boolean).length
-  const progress = (completedRequirements / project.requirements.length) * 100
+  const completedRequirements =
+    Object.values(checkedRequirements).filter(Boolean).length;
+  const progress = (completedRequirements / project.requirements.length) * 100;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Beginner":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Intermediate":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "Advanced":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getResourceIcon = (type: string) => {
     switch (type) {
       case "documentation":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "tutorial":
-        return <ExternalLink className="h-4 w-4" />
+        return <ExternalLink className="h-4 w-4" />;
       case "video":
-        return <Video className="h-4 w-4" />
+        return <Video className="h-4 w-4" />;
       case "tool":
-        return <Link className="h-4 w-4" />
+        return <Link className="h-4 w-4" />;
       default:
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
     }
-  }
+  };
 
   const handleSubmit = () => {
     if (submissionUrl.trim()) {
       // Mock submission
-      console.log("Project submitted:", { url: submissionUrl, notes: submissionNotes })
-      alert("Project submitted successfully!")
+      console.log("Project submitted:", {
+        url: submissionUrl,
+        notes: submissionNotes,
+      });
+      alert("Project submitted successfully!");
     }
-  }
+  };
 
-  const isOverdue = new Date(project.dueDate) < new Date() && !project.submitted
+  const isOverdue =
+    new Date(project.dueDate) < new Date() && !project.submitted;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -204,7 +218,9 @@ Create a personal portfolio website that showcases your skills and projects. You
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={getDifficultyColor(project.difficulty)}>{project.difficulty}</Badge>
+          <Badge className={getDifficultyColor(project.difficulty)}>
+            {project.difficulty}
+          </Badge>
           <Badge variant="outline" className="flex items-center gap-1">
             <Star className="h-3 w-3" />
             {project.points} pts
@@ -231,7 +247,9 @@ Create a personal portfolio website that showcases your skills and projects. You
               <Calendar className="h-5 w-5 text-orange-600" />
               <div>
                 <p className="text-sm text-gray-600">Due Date</p>
-                <p className="text-lg font-bold">{new Date(project.dueDate).toLocaleDateString()}</p>
+                <p className="text-lg font-bold">
+                  {new Date(project.dueDate).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -279,7 +297,8 @@ Create a personal portfolio website that showcases your skills and projects. You
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Overall Progress</span>
               <span className="font-medium">
-                {completedRequirements}/{project.requirements.length} requirements completed
+                {completedRequirements}/{project.requirements.length}{" "}
+                requirements completed
               </span>
             </div>
             <Progress value={progress} />
@@ -301,12 +320,16 @@ Create a personal portfolio website that showcases your skills and projects. You
             <CardHeader>
               <CardTitle>Project Requirements</CardTitle>
               <p className="text-sm text-gray-600">
-                Check off each requirement as you complete it to track your progress.
+                Check off each requirement as you complete it to track your
+                progress.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               {project.requirements.map((requirement) => (
-                <div key={requirement.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                <div
+                  key={requirement.id}
+                  className="flex items-start gap-3 p-3 border rounded-lg"
+                >
                   <button
                     onClick={() => toggleRequirement(requirement.id)}
                     className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
@@ -315,17 +338,23 @@ Create a personal portfolio website that showcases your skills and projects. You
                         : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
-                    {checkedRequirements[requirement.id] && <CheckCircle className="h-3 w-3 text-white" />}
+                    {checkedRequirements[requirement.id] && (
+                      <CheckCircle className="h-3 w-3 text-white" />
+                    )}
                   </button>
                   <div className="flex-1">
                     <h4
                       className={`font-medium ${
-                        checkedRequirements[requirement.id] ? "line-through text-gray-500" : ""
+                        checkedRequirements[requirement.id]
+                          ? "line-through text-gray-500"
+                          : ""
                       }`}
                     >
                       {requirement.title}
                     </h4>
-                    <p className="text-sm text-gray-600 mt-1">{requirement.description}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {requirement.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -340,7 +369,9 @@ Create a personal portfolio website that showcases your skills and projects. You
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap text-sm">{project.instructions}</pre>
+                <pre className="whitespace-pre-wrap text-sm">
+                  {project.instructions}
+                </pre>
               </div>
             </CardContent>
           </Card>
@@ -350,17 +381,26 @@ Create a personal portfolio website that showcases your skills and projects. You
           <Card>
             <CardHeader>
               <CardTitle>Helpful Resources</CardTitle>
-              <p className="text-sm text-gray-600">Use these resources to help you complete the project.</p>
+              <p className="text-sm text-gray-600">
+                Use these resources to help you complete the project.
+              </p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {project.resources.map((resource, index) => (
-                  <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div
+                    key={index}
+                    className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">{getResourceIcon(resource.type)}</div>
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        {getResourceIcon(resource.type)}
+                      </div>
                       <div className="flex-1">
                         <h4 className="font-medium">{resource.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{resource.description}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {resource.description}
+                        </p>
                         <Button
                           variant="outline"
                           size="sm"
@@ -383,7 +423,9 @@ Create a personal portfolio website that showcases your skills and projects. You
           <Card>
             <CardHeader>
               <CardTitle>Submit Your Project</CardTitle>
-              <p className="text-sm text-gray-600">Submit your completed project for review and feedback.</p>
+              <p className="text-sm text-gray-600">
+                Submit your completed project for review and feedback.
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -393,11 +435,15 @@ Create a personal portfolio website that showcases your skills and projects. You
                   value={submissionUrl}
                   onChange={(e) => setSubmissionUrl(e.target.value)}
                 />
-                <p className="text-xs text-gray-500">Provide a link to your GitHub repository or live demo</p>
+                <p className="text-xs text-gray-500">
+                  Provide a link to your GitHub repository or live demo
+                </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Additional Notes (Optional)</label>
+                <label className="text-sm font-medium">
+                  Additional Notes (Optional)
+                </label>
                 <Textarea
                   placeholder="Any additional information about your project, challenges faced, or features you're proud of..."
                   value={submissionNotes}
@@ -407,7 +453,9 @@ Create a personal portfolio website that showcases your skills and projects. You
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-800 mb-2">Before Submitting:</h4>
+                <h4 className="font-medium text-blue-800 mb-2">
+                  Before Submitting:
+                </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>✓ All requirements are completed</li>
                   <li>✓ Code is well-commented and organized</li>
@@ -416,7 +464,12 @@ Create a personal portfolio website that showcases your skills and projects. You
                 </ul>
               </div>
 
-              <Button onClick={handleSubmit} disabled={!submissionUrl.trim()} className="w-full" size="lg">
+              <Button
+                onClick={handleSubmit}
+                disabled={!submissionUrl.trim()}
+                className="w-full"
+                size="lg"
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Submit Project
               </Button>
@@ -425,5 +478,5 @@ Create a personal portfolio website that showcases your skills and projects. You
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

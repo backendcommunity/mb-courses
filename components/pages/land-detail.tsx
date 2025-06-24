@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   Trophy,
@@ -18,36 +24,44 @@ import {
   ChevronRight,
   Info,
   Lightbulb,
-} from "lucide-react"
-import { getLandById } from "@/lib/lands-data"
-import { routes } from "@/lib/routes"
+} from "lucide-react";
+import { getLandById } from "@/lib/lands-data";
+import { routes } from "@/lib/routes";
 
 interface LandDetailPageProps {
-  landId: string
-  onNavigate: (path: string) => void
+  landId: string;
+  onNavigate: (path: string) => void;
 }
 
 export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
-  const [activeTab, setActiveTab] = useState("stages")
+  const [activeTab, setActiveTab] = useState("stages");
 
-  const land = getLandById(landId)
+  const land = getLandById(landId);
 
   if (!land) {
     return (
       <div className="flex-1 p-6 flex flex-col items-center justify-center">
         <Info className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold mb-2">Land Not Found</h2>
-        <p className="text-muted-foreground mb-4">The land you're looking for doesn't exist</p>
-        <Button onClick={() => onNavigate(routes.lands)}>Back to MB Lands</Button>
+        <p className="text-muted-foreground mb-4">
+          The land you're looking for doesn't exist
+        </p>
+        <Button onClick={() => onNavigate(routes.lands)}>
+          Back to MB Lands
+        </Button>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => onNavigate(routes.lands)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigate(routes.lands)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -57,10 +71,10 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                 land.difficulty === "Beginner"
                   ? "secondary"
                   : land.difficulty === "Intermediate"
-                    ? "default"
-                    : land.difficulty === "Advanced"
-                      ? "destructive"
-                      : "outline"
+                  ? "default"
+                  : land.difficulty === "Advanced"
+                  ? "destructive"
+                  : "outline"
               }
             >
               {land.difficulty}
@@ -80,10 +94,14 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-[#F2C94C]" />
-              <span className="text-sm font-medium">Total XP</span>
+              <span className="text-sm font-medium">Total MB</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{land.totalXP.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{land.completedXP.toLocaleString()} earned</p>
+            <p className="text-2xl font-bold mt-1">
+              {land.totalXP.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {land.completedXP.toLocaleString()} earned
+            </p>
           </CardContent>
         </Card>
 
@@ -107,12 +125,18 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
               <span className="text-sm font-medium">Challenges</span>
             </div>
             <p className="text-2xl font-bold mt-1">
-              {land.stages.reduce((total, stage) => total + stage.challenges.length, 0)}
+              {land.stages.reduce(
+                (total, stage) => total + stage.challenges.length,
+                0
+              )}
             </p>
             <p className="text-xs text-muted-foreground">
               {land.stages.reduce(
-                (total, stage) => total + stage.challenges.filter((challenge) => challenge.completed).length,
-                0,
+                (total, stage) =>
+                  total +
+                  stage.challenges.filter((challenge) => challenge.completed)
+                    .length,
+                0
               )}{" "}
               completed
             </p>
@@ -126,7 +150,9 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
               <span className="text-sm font-medium">Estimated Time</span>
             </div>
             <p className="text-2xl font-bold mt-1">{land.estimatedTime}</p>
-            <p className="text-xs text-muted-foreground">To complete all stages</p>
+            <p className="text-xs text-muted-foreground">
+              To complete all stages
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -147,8 +173,11 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
             </div>
             <Progress value={land.progress} className="h-3" />
             <div className="flex justify-between text-sm text-blue-100">
-              <span>{land.completedXP.toLocaleString()} XP earned</span>
-              <span>{(land.totalXP - land.completedXP).toLocaleString()} XP remaining</span>
+              <span>{land.completedXP.toLocaleString()} MB earned</span>
+              <span>
+                {(land.totalXP - land.completedXP).toLocaleString()} MB
+                remaining
+              </span>
             </div>
           </div>
         </CardContent>
@@ -166,7 +195,10 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
         <TabsContent value="stages" className="space-y-6">
           <div className="space-y-6">
             {land.stages.map((stage, index) => (
-              <Card key={stage.id} className={!stage.unlocked ? "opacity-70" : ""}>
+              <Card
+                key={stage.id}
+                className={!stage.unlocked ? "opacity-70" : ""}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="bg-muted">
@@ -174,7 +206,9 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                     </Badge>
                     <div className="flex items-center gap-1">
                       <Zap className="h-4 w-4 text-[#F2C94C]" />
-                      <span className="text-sm font-medium">{stage.totalXP.toLocaleString()} XP</span>
+                      <span className="text-sm font-medium">
+                        {stage.totalXP.toLocaleString()} MB
+                      </span>
                     </div>
                   </div>
                   <CardTitle className="flex items-center justify-between">
@@ -210,10 +244,16 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                   <Button
                     className="w-full flex items-center justify-between"
                     disabled={!stage.unlocked}
-                    onClick={() => onNavigate(routes.stageDetail(land.id, stage.id))}
+                    onClick={() =>
+                      onNavigate(routes.stageDetail(land.id, stage.id))
+                    }
                   >
                     <span>
-                      {stage.progress > 0 && stage.progress < 100 ? "Continue" : stage.completed ? "Review" : "Start"}
+                      {stage.progress > 0 && stage.progress < 100
+                        ? "Continue"
+                        : stage.completed
+                        ? "Review"
+                        : "Start"}
                     </span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -279,7 +319,13 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { rank: 1, name: "Alex Chen", xp: land.totalXP, badge: "🥇", completion: "100%" },
+                  {
+                    rank: 1,
+                    name: "Alex Chen",
+                    xp: land.totalXP,
+                    badge: "🥇",
+                    completion: "100%",
+                  },
                   {
                     rank: 2,
                     name: "Sarah Johnson",
@@ -294,7 +340,13 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                     badge: "🥉",
                     completion: "88%",
                   },
-                  { rank: 4, name: "Emily Davis", xp: Math.round(land.totalXP * 0.76), badge: "", completion: "76%" },
+                  {
+                    rank: 4,
+                    name: "Emily Davis",
+                    xp: Math.round(land.totalXP * 0.76),
+                    badge: "",
+                    completion: "76%",
+                  },
                   {
                     rank: 5,
                     name: "John Doe",
@@ -307,22 +359,31 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
                   <div
                     key={player.rank}
                     className={`flex items-center justify-between p-3 rounded-lg ${
-                      player.isUser ? "bg-[#13AECE]/10 border border-[#13AECE]/20" : "bg-muted/50"
+                      player.isUser
+                        ? "bg-[#13AECE]/10 border border-[#13AECE]/20"
+                        : "bg-muted/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                        <span className="text-sm font-bold">{player.badge || `#${player.rank}`}</span>
+                        <span className="text-sm font-bold">
+                          {player.badge || `#${player.rank}`}
+                        </span>
                       </div>
                       <div>
                         <p className="font-medium">{player.name}</p>
-                        <p className="text-sm text-muted-foreground">{player.xp.toLocaleString()} XP</p>
+                        <p className="text-sm text-muted-foreground">
+                          {player.xp.toLocaleString()} MB
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{player.completion}</Badge>
                       {player.isUser && (
-                        <Badge variant="outline" className="bg-[#13AECE]/10 text-[#13AECE]">
+                        <Badge
+                          variant="outline"
+                          className="bg-[#13AECE]/10 text-[#13AECE]"
+                        >
                           You
                         </Badge>
                       )}
@@ -335,5 +396,5 @@ export function LandDetailPage({ landId, onNavigate }: LandDetailPageProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

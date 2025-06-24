@@ -171,7 +171,11 @@
   }
 
   .bg-gradient-brand {
-    background: linear-gradient(135deg, hsl(var(--mb-blue)), hsl(var(--mb-light-blue)));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--mb-blue)),
+      hsl(var(--mb-light-blue))
+    );
   }
 
   /* Light theme specific utilities */
@@ -210,16 +214,19 @@
   }
 
   .light .card-glow:hover {
-    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1), 0 0 8px 0 rgba(19, 174, 206, 0.15);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1),
+      0 0 8px 0 rgba(19, 174, 206, 0.15);
     transform: translateY(-1px);
   }
 
   .dark .card-glow {
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2), 0 0 8px 0 rgba(19, 174, 206, 0.1);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2),
+      0 0 8px 0 rgba(19, 174, 206, 0.1);
   }
 
   .dark .card-glow:hover {
-    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 0 10px 2px rgba(19, 174, 206, 0.2);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3),
+      0 0 10px 2px rgba(19, 174, 206, 0.2);
     transform: translateY(-2px);
   }
 
@@ -278,7 +285,11 @@
   /* Badges for both themes */
   .badge-level {
     @apply inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium;
-    background: linear-gradient(135deg, hsl(var(--mb-blue)), hsl(var(--mb-light-blue)));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--mb-blue)),
+      hsl(var(--mb-light-blue))
+    );
     color: hsl(var(--primary-foreground));
   }
 
@@ -290,14 +301,18 @@
     box-shadow: 0 0 8px 1px rgba(19, 174, 206, 0.3);
   }
 
-  /* XP bar for both themes */
+  /* MB bar for both themes */
   .xp-bar {
     @apply h-1.5 w-full overflow-hidden rounded-full bg-secondary;
   }
 
   .xp-bar-fill {
     @apply h-full rounded-full transition-all duration-500;
-    background: linear-gradient(90deg, hsl(var(--mb-dark-blue)), hsl(var(--mb-blue)));
+    background: linear-gradient(
+      90deg,
+      hsl(var(--mb-dark-blue)),
+      hsl(var(--mb-blue))
+    );
   }
 
   .light .xp-bar-fill {
@@ -311,7 +326,11 @@
   /* Achievement badges for both themes */
   .achievement-badge {
     @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium;
-    background: linear-gradient(135deg, hsl(var(--mb-very-dark-blue)), hsl(var(--mb-dark-blue)));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--mb-very-dark-blue)),
+      hsl(var(--mb-dark-blue))
+    );
     color: hsl(var(--primary-foreground));
     border: 1px solid hsl(var(--mb-blue) / 0.3);
   }
@@ -327,7 +346,11 @@
   /* Streak counter for both themes */
   .streak-counter {
     @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-lg font-bold;
-    background: radial-gradient(circle, hsl(var(--mb-blue)), hsl(var(--mb-dark-blue)));
+    background: radial-gradient(
+      circle,
+      hsl(var(--mb-blue)),
+      hsl(var(--mb-dark-blue))
+    );
     color: hsl(var(--primary-foreground));
   }
 
@@ -342,8 +365,8 @@
 
 /* Smooth transitions for theme changes */
 * {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s
-    ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 /* Light theme interaction states */
@@ -402,7 +425,12 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
   transform: rotate(45deg);
   transition: all 0.5s ease;
 }
@@ -498,7 +526,11 @@
 
 /* Text gradients for both themes */
 .text-gradient {
-  background: linear-gradient(90deg, hsl(var(--mb-blue)), hsl(var(--mb-light-blue)));
+  background: linear-gradient(
+    90deg,
+    hsl(var(--mb-blue)),
+    hsl(var(--mb-light-blue))
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -510,7 +542,11 @@
   border: 2px solid transparent;
   background-clip: padding-box, border-box;
   background-origin: padding-box, border-box;
-  background-image: linear-gradient(to right, hsl(var(--card)), hsl(var(--card))),
+  background-image: linear-gradient(
+      to right,
+      hsl(var(--card)),
+      hsl(var(--card))
+    ),
     linear-gradient(90deg, hsl(var(--mb-blue)), hsl(var(--mb-light-blue)));
 }
 
@@ -521,7 +557,12 @@
 
 .level-progress-fill {
   @apply h-full rounded-full transition-all duration-1000;
-  background: linear-gradient(90deg, hsl(var(--mb-very-dark-blue)), hsl(var(--mb-blue)), hsl(var(--mb-light-blue)));
+  background: linear-gradient(
+    90deg,
+    hsl(var(--mb-very-dark-blue)),
+    hsl(var(--mb-blue)),
+    hsl(var(--mb-light-blue))
+  );
 }
 
 .light .level-progress-fill {

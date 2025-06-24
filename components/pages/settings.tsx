@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Shield,
   Bell,
@@ -24,16 +30,17 @@ import {
   Users,
   Award,
   BookOpen,
-} from "lucide-react"
-import { useTheme } from "next-themes"
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { SoundSettings } from "../sound-settings";
 
 interface SettingsPageProps {
-  onNavigate: (path: string) => void
+  onNavigate: (path: string) => void;
 }
 
 export function SettingsPage({ onNavigate }: SettingsPageProps) {
-  const { theme, setTheme } = useTheme()
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -42,27 +49,29 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
     achievements: true,
     community: false,
     marketing: false,
-  })
+  });
   const [privacy, setPrivacy] = useState({
     profileVisible: true,
     progressVisible: true,
     allowMessages: true,
-  })
+  });
 
   const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications((prev) => ({ ...prev, [key]: value }))
-  }
+    setNotifications((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handlePrivacyChange = (key: string, value: boolean) => {
-    setPrivacy((prev) => ({ ...prev, [key]: value }))
-  }
+    setPrivacy((prev) => ({ ...prev, [key]: value }));
+  };
 
   return (
     <div className="px-4 py-6 md:py-8 lg:py-10 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -80,16 +89,28 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" placeholder="Enter current password" />
+                  <Input
+                    id="current-password"
+                    type="password"
+                    placeholder="Enter current password"
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" placeholder="Enter new password" />
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter new password"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input id="confirm-password" type="password" placeholder="Confirm new password" />
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirm new password"
+                    />
                   </div>
                 </div>
                 <Button className="gap-2">
@@ -104,7 +125,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Smartphone className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Two-Factor Authentication</span>
+                    <span className="font-medium">
+                      Two-Factor Authentication
+                    </span>
                     {twoFactorEnabled && (
                       <Badge
                         variant="secondary"
@@ -114,9 +137,14 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security to your account
+                  </p>
                 </div>
-                <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
+                <Switch
+                  checked={twoFactorEnabled}
+                  onCheckedChange={setTwoFactorEnabled}
+                />
               </div>
             </CardContent>
           </Card>
@@ -140,7 +168,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.email}
-                      onCheckedChange={(value) => handleNotificationChange("email", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("email", value)
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -150,7 +180,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.push}
-                      onCheckedChange={(value) => handleNotificationChange("push", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("push", value)
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -160,7 +192,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.sms}
-                      onCheckedChange={(value) => handleNotificationChange("sms", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("sms", value)
+                      }
                     />
                   </div>
                 </div>
@@ -178,7 +212,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.courseUpdates}
-                      onCheckedChange={(value) => handleNotificationChange("courseUpdates", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("courseUpdates", value)
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -188,7 +224,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.achievements}
-                      onCheckedChange={(value) => handleNotificationChange("achievements", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("achievements", value)
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -198,7 +236,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.community}
-                      onCheckedChange={(value) => handleNotificationChange("community", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("community", value)
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -208,7 +248,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     </div>
                     <Switch
                       checked={notifications.marketing}
-                      onCheckedChange={(value) => handleNotificationChange("marketing", value)}
+                      onCheckedChange={(value) =>
+                        handleNotificationChange("marketing", value)
+                      }
                     />
                   </div>
                 </div>
@@ -228,31 +270,43 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="font-medium">Public Profile</span>
-                  <p className="text-sm text-muted-foreground">Allow others to view your profile information</p>
+                  <p className="text-sm text-muted-foreground">
+                    Allow others to view your profile information
+                  </p>
                 </div>
                 <Switch
                   checked={privacy.profileVisible}
-                  onCheckedChange={(value) => handlePrivacyChange("profileVisible", value)}
+                  onCheckedChange={(value) =>
+                    handlePrivacyChange("profileVisible", value)
+                  }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="font-medium">Progress Sharing</span>
-                  <p className="text-sm text-muted-foreground">Share your learning progress with the community</p>
+                  <p className="text-sm text-muted-foreground">
+                    Share your learning progress with the community
+                  </p>
                 </div>
                 <Switch
                   checked={privacy.progressVisible}
-                  onCheckedChange={(value) => handlePrivacyChange("progressVisible", value)}
+                  onCheckedChange={(value) =>
+                    handlePrivacyChange("progressVisible", value)
+                  }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="font-medium">Direct Messages</span>
-                  <p className="text-sm text-muted-foreground">Allow other users to send you direct messages</p>
+                  <p className="text-sm text-muted-foreground">
+                    Allow other users to send you direct messages
+                  </p>
                 </div>
                 <Switch
                   checked={privacy.allowMessages}
-                  onCheckedChange={(value) => handlePrivacyChange("allowMessages", value)}
+                  onCheckedChange={(value) =>
+                    handlePrivacyChange("allowMessages", value)
+                  }
                 />
               </div>
             </CardContent>
@@ -285,6 +339,8 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
               </div>
             </CardContent>
           </Card>
+
+          <SoundSettings />
 
           {/* Language & Region */}
           <Card>
@@ -358,7 +414,7 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default SettingsPage
+export default SettingsPage;

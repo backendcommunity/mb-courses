@@ -1,25 +1,25 @@
 export interface KapMessage {
-  id: string
-  content: string
-  sender: "user" | "kap"
-  timestamp: Date
-  type?: "text" | "code" | "suggestion"
+  id: string;
+  content: string;
+  sender: "user" | "kap";
+  timestamp: Date;
+  type?: "text" | "code" | "suggestion";
 }
 
 export interface KapConversation {
-  id: string
-  title: string
-  messages: KapMessage[]
-  createdAt: Date
-  updatedAt: Date
-  category?: "general" | "navigation" | "technical" | "learning"
+  id: string;
+  title: string;
+  messages: KapMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+  category?: "general" | "navigation" | "technical" | "learning";
 }
 
 export interface KapSuggestedQuestion {
-  id: string
-  question: string
-  category: "navigation" | "learning" | "technical" | "platform"
-  icon: string
+  id: string;
+  question: string;
+  category: "navigation" | "learning" | "technical" | "platform";
+  icon: string;
 }
 
 // Mock conversations data
@@ -33,7 +33,8 @@ export const mockConversations: KapConversation[] = [
     messages: [
       {
         id: "1",
-        content: "Hi Kap! I'm new to the platform. Can you help me get started with the Node.js course?",
+        content:
+          "Hi Kap! I'm new to the platform. Can you help me get started with the Node.js course?",
         sender: "user",
         timestamp: new Date("2024-01-15T10:00:00"),
       },
@@ -46,14 +47,15 @@ export const mockConversations: KapConversation[] = [
       },
       {
         id: "3",
-        content: "Yes, that would be great! Also, how long does it typically take to complete?",
+        content:
+          "Yes, that would be great! Also, how long does it typically take to complete?",
         sender: "user",
         timestamp: new Date("2024-01-15T10:02:00"),
       },
       {
         id: "4",
         content:
-          "Perfect! The Node.js course typically takes 4-6 weeks if you dedicate 2-3 hours per week. Here's the breakdown:\n\n• **Week 1-2**: Fundamentals and Setup\n• **Week 3-4**: Advanced Concepts and APIs\n• **Week 5-6**: Projects and Real-world Applications\n\nI can navigate you to the course now. Just click [here](/dashboard/courses/nodejs-fundamentals) or I can guide you through the dashboard!",
+          "Perfect! The Node.js course typically takes 4-6 weeks if you dedicate 2-3 hours per week. Here's the breakdown:\n\n• **Week 1-2**: Fundamentals and Setup\n• **Week 3-4**: Advanced Concepts and APIs\n• **Week 5-6**: Projects and Real-world Applications\n\nI can navigate you to the course now. Just click [here](/courses/nodejs-fundamentals) or I can guide you through the dashboard!",
         sender: "kap",
         timestamp: new Date("2024-01-15T10:03:00"),
       },
@@ -68,7 +70,8 @@ export const mockConversations: KapConversation[] = [
     messages: [
       {
         id: "5",
-        content: "What are the best practices for database design in backend development?",
+        content:
+          "What are the best practices for database design in backend development?",
         sender: "user",
         timestamp: new Date("2024-01-10T14:00:00"),
       },
@@ -90,20 +93,21 @@ export const mockConversations: KapConversation[] = [
     messages: [
       {
         id: "7",
-        content: "I'm having trouble finding the interview preparation section. Can you help?",
+        content:
+          "I'm having trouble finding the interview preparation section. Can you help?",
         sender: "user",
         timestamp: new Date("2024-01-08T16:00:00"),
       },
       {
         id: "8",
         content:
-          "The interview preparation section is one of my favorite features. Here's how to access it:\n\n**Method 1: Sidebar Navigation**\n• Look for \"Interviews\" in the left sidebar\n• Click on it to see all interview types\n\n**Method 2: Direct Navigation**\n• I can take you there directly: [Interview Section](/dashboard/interviews)\n\n**What you'll find:**\n• 🧠 Algorithm Challenges\n• 💼 Project-based Interviews\n• 🎯 Mock Interview Sessions\n• 📊 Performance Analytics\n\nWhich type of interview prep are you most interested in?",
+          "The interview preparation section is one of my favorite features. Here's how to access it:\n\n**Method 1: Sidebar Navigation**\n• Look for \"Interviews\" in the left sidebar\n• Click on it to see all interview types\n\n**Method 2: Direct Navigation**\n• I can take you there directly: [Interview Section](/interviews)\n\n**What you'll find:**\n• 🧠 Algorithm Challenges\n• 💼 Project-based Interviews\n• 🎯 Mock Interview Sessions\n• 📊 Performance Analytics\n\nWhich type of interview prep are you most interested in?",
         sender: "kap",
         timestamp: new Date("2024-01-08T16:01:00"),
       },
     ],
   },
-]
+];
 
 // Suggested questions
 export const suggestedQuestions: KapSuggestedQuestion[] = [
@@ -155,7 +159,7 @@ export const suggestedQuestions: KapSuggestedQuestion[] = [
     category: "navigation",
     icon: "🏆",
   },
-]
+];
 
 // Kap's personality and knowledge base
 export const kapPersonality = {
@@ -178,38 +182,53 @@ export const kapPersonality = {
     "Practical and solution-oriented",
     "Encouraging and supportive",
   ],
-}
+};
 
 // Platform knowledge for Kap
 export const platformKnowledge = {
   courses: {
     description: "Comprehensive backend development courses",
     features: ["Video lessons", "Hands-on projects", "Quizzes", "Certificates"],
-    navigation: "/dashboard/courses",
+    navigation: "/courses",
   },
   bootcamps: {
     description: "Intensive, structured learning programs",
-    features: ["Weekly modules", "Live sessions", "Mentorship", "Career support"],
-    navigation: "/dashboard/bootcamps",
+    features: [
+      "Weekly modules",
+      "Live sessions",
+      "Mentorship",
+      "Career support",
+    ],
+    navigation: "/bootcamps",
   },
   interviews: {
     description: "Technical interview preparation",
-    features: ["Algorithm challenges", "Project interviews", "Mock sessions", "Analytics"],
-    navigation: "/dashboard/interviews",
+    features: [
+      "Algorithm challenges",
+      "Project interviews",
+      "Mock sessions",
+      "Analytics",
+    ],
+    navigation: "/interviews",
   },
   projects: {
     description: "Real-world project portfolio",
     features: ["Guided projects", "Code reviews", "Deployment", "Showcase"],
-    navigation: "/dashboard/projects",
+    navigation: "/projects",
   },
   community: {
     description: "Connect with fellow developers",
     features: ["Discussions", "Code sharing", "Mentorship", "Events"],
-    navigation: "/dashboard/community",
+    navigation: "/community",
   },
   roadmaps: {
     description: "Structured learning paths",
-    features: ["Career guidance", "Skill progression", "Industry insights", "Milestones"],
-    navigation: "/dashboard/roadmaps",
+    features: [
+      "Career guidance",
+      "Skill progression",
+      "Industry insights",
+      "Milestones",
+    ],
+    navigation: "/roadmaps",
   },
-}
+};

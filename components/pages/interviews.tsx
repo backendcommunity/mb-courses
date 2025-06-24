@@ -1,11 +1,23 @@
-"use client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+"use client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Briefcase,
   Clock,
@@ -21,60 +33,65 @@ import {
   Play,
   RotateCcw,
   Eye,
-} from "lucide-react"
-import { routes } from "@/lib/routes"
-import { getInterviewProjects, getInterviewProjectsByType } from "@/lib/interview-data"
+} from "lucide-react";
+import { routes } from "@/lib/routes";
+import {
+  getInterviewProjects,
+  getInterviewProjectsByType,
+} from "@/lib/interview-data";
 
 interface InterviewsPageProps {
-  onNavigate?: (route: string) => void
+  onNavigate?: (route: string) => void;
 }
 
 export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
-  const allProjects = getInterviewProjects()
-  const fullProjects = getInterviewProjectsByType("full-project")
-  const algorithmProjects = getInterviewProjectsByType("algorithm")
+  const allProjects = getInterviewProjects();
+  const fullProjects = getInterviewProjectsByType("full-project");
+  const algorithmProjects = getInterviewProjectsByType("algorithm");
 
   const stats = {
     completed: allProjects.filter((p) => p.status === "Completed").length,
     inProgress: allProjects.filter((p) => p.status === "In Progress").length,
     averageScore: Math.round(
-      allProjects.filter((p) => p.score).reduce((acc, p) => acc + (p.score || 0), 0) /
-        allProjects.filter((p) => p.score).length || 0,
+      allProjects
+        .filter((p) => p.score)
+        .reduce((acc, p) => acc + (p.score || 0), 0) /
+        allProjects.filter((p) => p.score).length || 0
     ),
     totalProjects: allProjects.length,
-  }
+  };
 
   const handleNavigate = (route: string) => {
     if (onNavigate) {
-      onNavigate(route)
+      onNavigate(route);
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
-        return "bg-green-500"
+        return "bg-green-500";
       case "In Progress":
-        return "bg-blue-500"
+        return "bg-blue-500";
       case "Graded":
-        return "bg-purple-500"
+        return "bg-purple-500";
       default:
-        return "bg-gray-500"
+        return "bg-gray-500";
     }
-  }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "text-green-600 bg-green-50 border-green-200"
+        return "text-green-600 bg-green-50 border-green-200";
       case "Medium":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200"
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
       case "Hard":
-        return "text-red-600 bg-red-50 border-red-200"
+        return "text-red-600 bg-red-50 border-red-200";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200"
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
-  }
+  };
 
   const ProjectCard = ({ project }: { project: any }) => (
     <Card className="hover:shadow-lg transition-shadow">
@@ -87,15 +104,21 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
               ) : (
                 <Code className="h-4 w-4 text-green-600" />
               )}
-              <CardTitle className="text-lg">{project.title}</CardTitle>
+              <CardTitle className="text-sm md:text-lg truncate">
+                {project.title}
+              </CardTitle>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Building className="h-3 w-3" />
               {project.company} • {project.position}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <Badge className={getDifficultyColor(project.difficulty)}>{project.difficulty}</Badge>
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <Badge
+              className={`${getDifficultyColor(project.difficulty)} text-xs`}
+            >
+              {project.difficulty}
+            </Badge>
             {project.score && (
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500" />
@@ -106,7 +129,9 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
             )}
           </div>
         </div>
-        <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+        <CardDescription className="line-clamp-2 text-xs md:text-sm">
+          {project.description}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -119,7 +144,11 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
               <Badge variant="outline">{project.category}</Badge>
             </div>
             <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`} />
+              <div
+                className={`w-2 h-2 rounded-full ${getStatusColor(
+                  project.status
+                )}`}
+              />
               <span className="text-xs">{project.status}</span>
             </div>
           </div>
@@ -141,29 +170,51 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
 
           <div className="flex gap-2">
             {project.status === "Available" && (
-              <Button size="sm" onClick={() => handleNavigate(routes.interviewDetail(project.id))} className="flex-1">
+              <Button
+                size="sm"
+                onClick={() =>
+                  handleNavigate(routes.interviewDetail(project.id))
+                }
+                className="flex-1 text-xs"
+              >
                 <Play className="h-3 w-3 mr-1" />
                 Start Interview
               </Button>
             )}
             {project.status === "In Progress" && (
-              <Button size="sm" onClick={() => handleNavigate(routes.interviewDetail(project.id))} className="flex-1">
+              <Button
+                size="sm"
+                onClick={() =>
+                  handleNavigate(routes.interviewDetail(project.id))
+                }
+                className="flex-1 text-xs"
+              >
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Continue
               </Button>
             )}
-            {(project.status === "Completed" || project.status === "Graded") && (
+            {(project.status === "Completed" ||
+              project.status === "Graded") && (
               <>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleNavigate(routes.interviewResults(project.id))}
-                  className="flex-1"
+                  onClick={() =>
+                    handleNavigate(routes.interviewResults(project.id))
+                  }
+                  className="flex-1 text-xs"
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   View Results
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleNavigate(routes.interviewDetail(project.id))}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    handleNavigate(routes.interviewDetail(project.id))
+                  }
+                  className="text-xs"
+                >
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Retry
                 </Button>
@@ -173,15 +224,19 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-4 md:space-y-6 ">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">MB Interviews</h1>
-          <p className="text-muted-foreground">Practice real-world interview projects and algorithmic challenges</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            MB Interviews
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Practice real-world interview projects and algorithmic challenges
+          </p>
         </div>
         <Button>
           <Trophy className="mr-2 h-4 w-4" />
@@ -193,38 +248,56 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Interviews Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Interviews Completed
+            </CardTitle>
+            <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completed}</div>
-            <p className="text-xs text-muted-foreground">out of {stats.totalProjects} total</p>
+            <div className="text-lg md:text-2xl font-bold">
+              {stats.completed}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              out of {stats.totalProjects} total
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              In Progress
+            </CardTitle>
+            <Clock className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.inProgress}</div>
+            <div className="text-lg md:text-2xl font-bold">
+              {stats.inProgress}
+            </div>
             <p className="text-xs text-muted-foreground">active interviews</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <Target className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Average Score
+            </CardTitle>
+            <Target className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageScore}%</div>
-            <p className="text-xs text-muted-foreground">across all interviews</p>
+            <div className="text-lg md:text-2xl font-bold">
+              {stats.averageScore}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              across all interviews
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Interview Ready</CardTitle>
-            <Brain className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs md:text-sm font-medium">
+              Interview Ready
+            </CardTitle>
+            <Brain className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">8.5/10</div>
@@ -324,9 +397,15 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
       {/* Interview Projects */}
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="all">All Interviews ({allProjects.length})</TabsTrigger>
-          <TabsTrigger value="full-projects">Full Projects ({fullProjects.length})</TabsTrigger>
-          <TabsTrigger value="algorithms">Algorithms ({algorithmProjects.length})</TabsTrigger>
+          <TabsTrigger value="all">
+            All Interviews ({allProjects.length})
+          </TabsTrigger>
+          <TabsTrigger value="full-projects">
+            Full Projects ({fullProjects.length})
+          </TabsTrigger>
+          <TabsTrigger value="algorithms">
+            Algorithms ({algorithmProjects.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
@@ -354,5 +433,5 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
