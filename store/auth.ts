@@ -61,6 +61,7 @@ export const useAuth = create<AuthState>((set) => ({
     const { data } = await login(email, password);
     localStorage.setItem("mb_token", data.token);
     updateUser(data.user);
+    return data.user;
   },
 
   register: async (data: NewUser) => {

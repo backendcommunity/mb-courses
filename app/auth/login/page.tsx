@@ -5,7 +5,6 @@ import type React from "react";
 import { useState } from "react";
 import { Eye, EyeOff, Github, ArrowLeft, Loader2 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/store/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,7 @@ export default function LoginPage() {
       setIsLoading(false);
       // Handle login logic here
       console.log("Here", user);
-      return router.push("/courses");
+      return router.push("/");
     } catch (error: any) {
       console.log("Error", error);
       const message = error?.response?.data?.message ?? error?.message;
