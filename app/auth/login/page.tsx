@@ -33,8 +33,10 @@ export default function LoginPage() {
 
       setIsLoading(false);
       // Handle login logic here
-      return router.push("/");
+      console.log("Here", user);
+      return router.push("/courses");
     } catch (error: any) {
+      console.log("Error", error);
       const message = error?.response?.data?.message ?? error?.message;
       if (message.includes("Confirm your email"))
         router.push("/auth/email/verify?sent=true");
