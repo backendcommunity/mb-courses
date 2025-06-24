@@ -12,14 +12,17 @@ export function middleware(request: NextRequest) {
 
   // 1. If NOT authenticated and trying to access protected route
   if (!isAuthenticated && !isPublic) {
+    console.log(isPublic, "MD");
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   // 2. If authenticated and trying to access auth pages
   if (isAuthenticated && isAuthPage) {
+    console.log(isAuthPage, "MD");
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  console.log(pathname, "MD");
   // Otherwise, allow the request
   return NextResponse.next();
 }
