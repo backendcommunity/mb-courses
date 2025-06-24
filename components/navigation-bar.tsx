@@ -10,7 +10,6 @@ import {
   Settings,
   LogOut,
   BookOpen,
-  ChevronDown,
   Code,
   Users,
   Crown,

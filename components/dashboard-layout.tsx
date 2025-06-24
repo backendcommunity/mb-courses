@@ -6,19 +6,19 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { useMobile } from "@/hooks/use-mobile";
 import { useAppStore } from "@/lib/store";
 import { User } from "@/lib/data";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const isMobile = useMobile();
   const pathname = usePathname();
   const store = useAppStore();
   const router = useRouter();
-  const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [user, setUser] = useState<User | null>(null);
 
@@ -85,11 +85,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
         <main className="flex-1 overflow-auto p-8">{children}</main>
       </div>
-      <KapAIAssistant
-        onNavigate={(path) => setCurrentPage(path.replace("/dashboard/", ""))}
-      />
     </div>
   );
 }
-
-export default DashboardLayout;

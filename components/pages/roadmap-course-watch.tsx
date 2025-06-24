@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Play,
   Pause,
@@ -25,25 +31,25 @@ import {
   Trophy,
   ChevronDown,
   ChevronRight,
-} from "lucide-react"
+} from "lucide-react";
 import {
   getCourseById,
   getRoadmapById,
   getRoadmapMilestoneById,
   markVideoComplete,
   markChapterComplete,
-} from "@/lib/data"
+} from "@/lib/data";
 
 interface RoadmapCourseWatchProps {
-  roadmapId: string
-  milestoneId: string
-  courseId: string
-  chapterId?: string
-  videoId?: string
-  onBack: () => void
-  onNavigateToQuiz: (quizId: string) => void
-  onNavigateToExercise: (exerciseId: string) => void
-  onNavigateToPlayground: (playgroundId: string) => void
+  roadmapId: string;
+  milestoneId: string;
+  courseId: string;
+  chapterId?: string;
+  videoId?: string;
+  onBack: () => void;
+  onNavigateToQuiz: (quizId: string) => void;
+  onNavigateToExercise: (exerciseId: string) => void;
+  onNavigateToPlayground: (playgroundId: string) => void;
 }
 
 export function RoadmapCourseWatch({
@@ -57,119 +63,138 @@ export function RoadmapCourseWatch({
   onNavigateToExercise,
   onNavigateToPlayground,
 }: RoadmapCourseWatchProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(300) // 5 minutes default
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set())
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(300); // 5 minutes default
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
+    new Set()
+  );
 
-  const roadmap = getRoadmapById(roadmapId)
-  const milestone = getRoadmapMilestoneById(roadmapId, milestoneId)
-  const course = getCourseById(courseId)
+  const roadmap = getRoadmapById(roadmapId);
+  const milestone = getRoadmapMilestoneById(roadmapId, milestoneId);
+  const course = getCourseById(courseId);
 
   const [currentChapter, setCurrentChapter] = useState(
-    chapterId ? course.chapters.find((c) => c.id === chapterId) : course.chapters[0],
-  )
-  const [currentVideo, setCurrentVideo] = useState<any>(null)
+    chapterId
+      ? course?.chapters.find((c) => c.id === chapterId)
+      : course?.chapters[0]
+  );
+  const [currentVideo, setCurrentVideo] = useState<any>(null);
 
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (chapterId) {
-      setCurrentChapter(course.chapters.find((c) => c.id === chapterId) || course.chapters[0])
+      setCurrentChapter(
+        course?.chapters.find((c) => c.id === chapterId) || course?.chapters[0]
+      );
     } else {
-      setCurrentChapter(course.chapters[0])
+      setCurrentChapter(course?.chapters[0]);
     }
-  }, [chapterId, course.chapters])
+  }, [chapterId, course?.chapters]);
 
   useEffect(() => {
     if (currentChapter) {
       if (videoId) {
-        setCurrentVideo(currentChapter.videos.find((v) => v.id === videoId) || currentChapter.videos[0])
+        setCurrentVideo(
+          currentChapter.videos.find((v) => v.id === videoId) ||
+            currentChapter.videos[0]
+        );
       } else {
-        setCurrentVideo(currentChapter.videos[0])
+        setCurrentVideo(currentChapter.videos[0]);
       }
     }
-  }, [videoId, currentChapter])
+  }, [videoId, currentChapter]);
 
   useEffect(() => {
     if (currentChapter) {
-      setExpandedChapters((prev) => new Set([...prev, currentChapter.id]))
+      setExpandedChapters((prev) => new Set([...prev, currentChapter.id]));
     }
-  }, [currentChapter])
+  }, [currentChapter]);
 
   if (!roadmap || !milestone || !course) {
-    return <div>Course not found</div>
+    return <div>Course not found</div>;
   }
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying)
-  }
+    setIsPlaying(!isPlaying);
+  };
 
   const handleVideoComplete = () => {
     if (currentVideo && currentChapter) {
-      markVideoComplete(courseId, currentChapter.id, currentVideo.id)
+      markVideoComplete(courseId, currentChapter.id, currentVideo.id);
 
       // Check if all videos in chapter are complete
-      const allVideosComplete = currentChapter.videos.every((v) => v.completed || v.id === currentVideo.id)
+      const allVideosComplete = currentChapter.videos.every(
+        (v) => v.completed || v.id === currentVideo.id
+      );
       if (allVideosComplete) {
-        markChapterComplete(courseId, currentChapter.id)
+        markChapterComplete(courseId, currentChapter.id);
       }
     }
-  }
+  };
 
   const toggleChapterExpansion = (chapterId: string) => {
     setExpandedChapters((prev) => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(chapterId)) {
-        newSet.delete(chapterId)
+        newSet.delete(chapterId);
       } else {
-        newSet.add(chapterId)
+        newSet.add(chapterId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const getNextVideo = () => {
-    if (!currentChapter || !currentVideo) return null
+    if (!currentChapter || !currentVideo) return null;
 
-    const currentVideoIndex = currentChapter.videos.findIndex((v) => v.id === currentVideo.id)
+    const currentVideoIndex = currentChapter.videos.findIndex(
+      (v) => v.id === currentVideo.id
+    );
     if (currentVideoIndex < currentChapter.videos.length - 1) {
-      return currentChapter.videos[currentVideoIndex + 1]
+      return currentChapter.videos[currentVideoIndex + 1];
     }
 
     // Look for next chapter
-    const currentChapterIndex = course.chapters.findIndex((c) => c.id === currentChapter.id)
-    if (currentChapterIndex < course.chapters.length - 1) {
-      const nextChapter = course.chapters[currentChapterIndex + 1]
-      return nextChapter.videos[0]
+    const currentChapterIndex = course?.chapters.findIndex(
+      (c) => c.id === currentChapter.id
+    );
+    if (currentChapterIndex < course?.chapters.length - 1) {
+      const nextChapter = course?.chapters[currentChapterIndex + 1];
+      return nextChapter.videos[0];
     }
 
-    return null
-  }
+    return null;
+  };
 
   const getPreviousVideo = () => {
-    if (!currentChapter || !currentVideo) return null
+    if (!currentChapter || !currentVideo) return null;
 
-    const currentVideoIndex = currentChapter.videos.findIndex((v) => v.id === currentVideo.id)
+    const currentVideoIndex = currentChapter.videos.findIndex(
+      (v) => v.id === currentVideo.id
+    );
     if (currentVideoIndex > 0) {
-      return currentChapter.videos[currentVideoIndex - 1]
+      return currentChapter.videos[currentVideoIndex - 1];
     }
 
     // Look for previous chapter
-    const currentChapterIndex = course.chapters.findIndex((c) => c.id === currentChapter.id)
+    const currentChapterIndex = course?.chapters.findIndex(
+      (c) => c.id === currentChapter.id
+    );
     if (currentChapterIndex > 0) {
-      const prevChapter = course.chapters[currentChapterIndex - 1]
-      return prevChapter.videos[prevChapter.videos.length - 1]
+      const prevChapter = course?.chapters[currentChapterIndex - 1];
+      return prevChapter.videos[prevChapter.videos.length - 1];
     }
 
-    return null
-  }
+    return null;
+  };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -187,7 +212,7 @@ export function RoadmapCourseWatch({
                 <span>•</span>
                 <span>{milestone.title}</span>
                 <span>•</span>
-                <span>{course.title}</span>
+                <span>{course?.title}</span>
               </div>
             </div>
 
@@ -213,9 +238,14 @@ export function RoadmapCourseWatch({
                     <div className="text-white text-center">
                       <div className="text-6xl mb-4">🎥</div>
                       <h3 className="text-xl font-semibold mb-2">
-                        {currentVideo?.title || "Select a video to start learning"}
+                        {currentVideo?.title ||
+                          "Select a video to start learning"}
                       </h3>
-                      {currentVideo && <p className="text-gray-300 mb-4">{currentVideo.description}</p>}
+                      {currentVideo && (
+                        <p className="text-gray-300 mb-4">
+                          {currentVideo.description}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -228,7 +258,11 @@ export function RoadmapCourseWatch({
                         className="text-white hover:bg-white/20"
                         onClick={handlePlayPause}
                       >
-                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        {isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
                       </Button>
 
                       <Button
@@ -250,25 +284,41 @@ export function RoadmapCourseWatch({
                       </Button>
 
                       <div className="flex-1 flex items-center gap-2">
-                        <span className="text-sm">{formatTime(currentTime)}</span>
+                        <span className="text-sm">
+                          {formatTime(currentTime)}
+                        </span>
                         <div className="flex-1 bg-white/30 rounded-full h-1">
                           <div
                             className="bg-white rounded-full h-1 transition-all duration-300"
-                            style={{ width: `${(currentTime / duration) * 100}%` }}
+                            style={{
+                              width: `${(currentTime / duration) * 100}%`,
+                            }}
                           />
                         </div>
                         <span className="text-sm">{formatTime(duration)}</span>
                       </div>
 
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Volume2 className="h-4 w-4" />
                       </Button>
 
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Settings className="h-4 w-4" />
                       </Button>
 
-                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-white/20"
+                      >
                         <Maximize className="h-4 w-4" />
                       </Button>
                     </div>
@@ -283,7 +333,8 @@ export function RoadmapCourseWatch({
                         {currentVideo?.title || "Select a video"}
                       </h1>
                       <p className="text-gray-600 mb-4">
-                        {currentVideo?.description || "Choose a video from the course curriculum to start learning."}
+                        {currentVideo?.description ||
+                          "Choose a video from the course curriculum to start learning."}
                       </p>
 
                       {currentVideo && (
@@ -294,7 +345,12 @@ export function RoadmapCourseWatch({
                           </div>
                           <div className="flex items-center gap-1">
                             <BookOpen className="h-4 w-4" />
-                            <span>Chapter {course.chapters.findIndex((c) => c.id === currentChapter?.id) + 1}</span>
+                            <span>
+                              Chapter{" "}
+                              {course?.chapters.findIndex(
+                                (c) => c.id === currentChapter?.id
+                              ) + 1}
+                            </span>
                           </div>
                         </div>
                       )}
@@ -310,12 +366,19 @@ export function RoadmapCourseWatch({
 
                   {/* Navigation Buttons */}
                   <div className="flex items-center justify-between pt-4 border-t">
-                    <Button variant="outline" disabled={!getPreviousVideo()} className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={!getPreviousVideo()}
+                      className="flex items-center gap-2"
+                    >
                       <ArrowLeft className="h-4 w-4" />
                       Previous Video
                     </Button>
 
-                    <Button disabled={!getNextVideo()} className="flex items-center gap-2">
+                    <Button
+                      disabled={!getNextVideo()}
+                      className="flex items-center gap-2"
+                    >
                       Next Video
                       <ArrowRight className="h-4 w-4" />
                     </Button>
@@ -336,27 +399,38 @@ export function RoadmapCourseWatch({
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Overall Progress</span>
-                      <span className="text-sm text-gray-600">{course.progress}%</span>
+                      <span className="text-sm font-medium">
+                        Overall Progress
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {course?.progress}%
+                      </span>
                     </div>
-                    <Progress value={course.progress} className="h-2" />
+                    <Progress value={course?.progress} className="h-2" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-gray-600">Completed Videos</div>
                       <div className="font-medium">
-                        {course.chapters.reduce(
-                          (acc, chapter) => acc + chapter.videos.filter((v) => v.completed).length,
-                          0,
+                        {course?.chapters.reduce(
+                          (acc, chapter) =>
+                            acc +
+                            chapter.videos.filter((v) => v.completed).length,
+                          0
                         )}{" "}
-                        / {course.chapters.reduce((acc, chapter) => acc + chapter.videos.length, 0)}
+                        /{" "}
+                        {course?.chapters.reduce(
+                          (acc, chapter) => acc + chapter.videos.length,
+                          0
+                        )}
                       </div>
                     </div>
                     <div>
                       <div className="text-gray-600">Completed Chapters</div>
                       <div className="font-medium">
-                        {course.chapters.filter((c) => c.completed).length} / {course.chapters.length}
+                        {course?.chapters.filter((c) => c.completed).length} /{" "}
+                        {course?.chapters.length}
                       </div>
                     </div>
                   </div>
@@ -377,9 +451,13 @@ export function RoadmapCourseWatch({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">{milestone.title}</div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    {milestone.title}
+                  </div>
                   <Progress value={milestone.progress} className="h-2" />
-                  <div className="text-xs text-gray-500 mt-1">{milestone.progress}% complete</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {milestone.progress}% complete
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -389,14 +467,21 @@ export function RoadmapCourseWatch({
               <CardHeader>
                 <CardTitle className="text-base">Course Curriculum</CardTitle>
                 <CardDescription>
-                  {course.chapters.length} chapters • {course.chapters.reduce((acc, c) => acc + c.videos.length, 0)}{" "}
+                  {course?.chapters.length} chapters •{" "}
+                  {course?.chapters.reduce(
+                    (acc, c) => acc + c.videos.length,
+                    0
+                  )}{" "}
                   videos
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-96 overflow-y-auto">
-                  {course.chapters.map((chapter, chapterIndex) => (
-                    <div key={chapter.id} className="border-b border-gray-100 last:border-b-0">
+                  {course?.chapters.map((chapter, chapterIndex) => (
+                    <div
+                      key={chapter.id}
+                      className="border-b border-gray-100 last:border-b-0"
+                    >
                       <button
                         onClick={() => toggleChapterExpansion(chapter.id)}
                         className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
@@ -407,12 +492,18 @@ export function RoadmapCourseWatch({
                               {chapterIndex + 1}
                             </div>
                             <div className="flex-1">
-                              <div className="font-medium text-sm text-gray-900">{chapter.title}</div>
-                              <div className="text-xs text-gray-500">{chapter.duration}</div>
+                              <div className="font-medium text-sm text-gray-900">
+                                {chapter.title}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {chapter.duration}
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {chapter.completed && <CheckCircle className="h-4 w-4 text-green-500" />}
+                            {chapter.completed && (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            )}
                             {expandedChapters.has(chapter.id) ? (
                               <ChevronDown className="h-4 w-4 text-gray-400" />
                             ) : (
@@ -430,7 +521,9 @@ export function RoadmapCourseWatch({
                               key={video.id}
                               onClick={() => setCurrentVideo(video)}
                               className={`w-full p-3 pl-12 text-left hover:bg-gray-50 transition-colors ${
-                                currentVideo?.id === video.id ? "bg-blue-50 border-r-2 border-blue-500" : ""
+                                currentVideo?.id === video.id
+                                  ? "bg-blue-50 border-r-2 border-blue-500"
+                                  : ""
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -442,8 +535,12 @@ export function RoadmapCourseWatch({
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">{video.title}</div>
-                                  <div className="text-xs text-gray-500">{video.duration}</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {video.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {video.duration}
+                                  </div>
                                 </div>
                               </div>
                             </button>
@@ -458,44 +555,64 @@ export function RoadmapCourseWatch({
                               <div className="flex items-center gap-3">
                                 <FileText className="h-4 w-4 text-blue-500" />
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">{chapter.quiz.title}</div>
-                                  <div className="text-xs text-gray-500">Quiz • {chapter.quiz.timeLimit} min</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {chapter.quiz.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Quiz • {chapter.quiz.timeLimit} min
+                                  </div>
                                 </div>
-                                {chapter.quiz.completed && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                {chapter.quiz.completed && (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                )}
                               </div>
                             </button>
                           )}
 
                           {chapter.exercise && (
                             <button
-                              onClick={() => onNavigateToExercise(chapter.exercise!.id)}
+                              onClick={() =>
+                                onNavigateToExercise(chapter.exercise!.id)
+                              }
                               className="w-full p-3 pl-12 text-left hover:bg-gray-50 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 <Code className="h-4 w-4 text-purple-500" />
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">{chapter.exercise.title}</div>
-                                  <div className="text-xs text-gray-500">Exercise • {chapter.exercise.difficulty}</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {chapter.exercise.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Exercise • {chapter.exercise.difficulty}
+                                  </div>
                                 </div>
-                                {chapter.exercise.completed && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                {chapter.exercise.completed && (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                )}
                               </div>
                             </button>
                           )}
 
                           {chapter.playground && (
                             <button
-                              onClick={() => onNavigateToPlayground(chapter.playground!.id)}
+                              onClick={() =>
+                                onNavigateToPlayground(chapter.playground!.id)
+                              }
                               className="w-full p-3 pl-12 text-left hover:bg-gray-50 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 <Zap className="h-4 w-4 text-orange-500" />
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">{chapter.playground.title}</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {chapter.playground.title}
+                                  </div>
                                   <div className="text-xs text-gray-500">
                                     Playground • {chapter.playground.language}
                                   </div>
                                 </div>
-                                {chapter.playground.completed && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                {chapter.playground.completed && (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                )}
                               </div>
                             </button>
                           )}
@@ -510,7 +627,7 @@ export function RoadmapCourseWatch({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export { RoadmapCourseWatch as RoadmapCourseWatchPage }
+export { RoadmapCourseWatch as RoadmapCourseWatchPage };

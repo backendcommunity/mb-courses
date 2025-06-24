@@ -12,12 +12,9 @@ import {
   Target,
   TrendingUp,
   Settings,
-  User,
-  ChevronDown,
   Sparkles,
   Crown,
   Gift,
-  CreditCard,
   Award,
   LogOut,
 } from "lucide-react";
@@ -43,19 +40,16 @@ const navigationData = {
       title: "Courses",
       url: routes.courses,
       icon: BookOpen,
-      badge: "12 Active",
     },
     {
       title: "Bootcamps",
       url: routes.bootcamps,
       icon: Zap,
-      badge: "2 New",
     },
     {
       title: "Learning Paths",
       url: routes.paths,
       icon: Target,
-      badge: "5 Available",
     },
     {
       title: "Roadmaps",
@@ -68,19 +62,16 @@ const navigationData = {
       title: "MB Projects",
       url: routes.projects,
       icon: Code2,
-      badge: "3 In Progress",
     },
     {
       title: "Project30",
       url: routes.project30,
       icon: Sparkles,
-      badge: "Day 15",
     },
     {
       title: "MB Lands",
       url: routes.lands,
       icon: Trophy,
-      badge: "Level 8",
     },
   ],
   grow: [
@@ -88,7 +79,6 @@ const navigationData = {
       title: "MB Interviews",
       url: routes.interviews,
       icon: Briefcase,
-      badge: "2 Pending",
     },
     {
       title: "Mock Interviews",
@@ -99,13 +89,11 @@ const navigationData = {
       title: "Certifications",
       url: "/certifications",
       icon: Award,
-      badge: "1 Ready",
     },
     {
       title: "Community",
       url: routes.community,
       icon: Users,
-      badge: "24 Online",
     },
   ],
 };
@@ -133,7 +121,7 @@ export function DashboardSidebar({
       <div className="p-4 border-b border-border">
         <button
           onClick={() => onNavigate(routes.dashboard)}
-          className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 rounded-lg transition-colors sidebar-item"
+          className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 rounded-lg transition-colors w-full"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <span className="text-sm font-bold">MB</span>
@@ -148,8 +136,8 @@ export function DashboardSidebar({
           </div>
         </button>
 
-        {/* User Progress Card - Clean minimal design */}
-        <div className="mx-4 rounded-lg border border-border bg-card p-3">
+        {/* User Progress Card */}
+        <div className="mt-4 rounded-lg border border-border bg-card p-3">
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 text-yellow-500" />
             <span className="text-sm font-medium">
@@ -201,9 +189,10 @@ export function DashboardSidebar({
             <span className="text-xs text-primary">Redeem</span>
           </Button>
         </div>
-      </SidebarHeader>
+      </div>
 
-      <SidebarContent>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto py-2">
         {/* Learn Section */}
         <div className="px-3 py-2">
           <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">

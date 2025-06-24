@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
+import { CommunityPage } from "@/components/pages/community";
 import { useRouter } from "next/navigation";
 
 interface CertificationRouteProps {
@@ -18,7 +19,7 @@ export default function CertificationRoute({
 
   return (
     <DashboardLayout>
-      <div>test</div>
+      <CommunityPage />
     </DashboardLayout>
   );
 }
