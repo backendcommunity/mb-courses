@@ -5,8 +5,8 @@ import { useUser } from "./hooks/use-user";
 export function middleware(request: NextRequest) {
   // Get the pathname from the URL
   const { pathname } = request.nextUrl;
-  const user = useUser();
-  if (!user) return NextResponse.redirect(new URL("/auth/login", request.url));
+  // const user = useUser();
+  // if (!user) return NextResponse.redirect(new URL("/auth/login", request.url));
 
   const token = request.cookies.get("mb_token");
 

@@ -22,7 +22,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (user: NewUser) => Promise<boolean>;
   verifyEmail: (data: { code: string; email: string }) => Promise<boolean>;
   logout: () => Promise<void>;

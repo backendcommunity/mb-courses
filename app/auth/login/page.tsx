@@ -30,10 +30,17 @@ export default function LoginPage() {
       const { email, password } = formData;
       const user = await auth.login(email, password);
 
+      if (!user) {
+        toast.error("Login failed");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(false);
       // Handle login logic here
       console.log("Here", user);
-      return router.push("/");
+      await router.push("/");
+      console.log("Redirect triggered");
     } catch (error: any) {
       console.log("Error", error);
       const message = error?.response?.data?.message ?? error?.message;
