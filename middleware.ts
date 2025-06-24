@@ -8,17 +8,17 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!token;
 
   const isAuthPage = pathname.startsWith("/auth/");
-  const isPublic = isAuthPage;
+  const isSecret = !isAuthPage;
 
   // 1. If NOT authenticated and trying to access protected route
-  if (!isAuthenticated && !isPublic) {
-    console.log(isPublic, "MD");
+  if (!isAuthenticated && isSecret) {
+    console.log(isSecret, "Not Auth");
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   // 2. If authenticated and trying to access auth pages
   if (isAuthenticated && isAuthPage) {
-    console.log(isAuthPage, "MD");
+    console.log(isAuthPage, "Auth");
     return NextResponse.redirect(new URL("/", request.url));
   }
 
