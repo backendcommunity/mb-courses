@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,21 +28,30 @@ import {
 import { useAppStore } from "@/lib/store";
 
 interface RoadmapVideoWatchPageProps {
-  roadmapId: string;
+  slug: string;
   videoId: string;
   onNavigate?: (route: string) => void;
 }
 
 export function RoadmapVideoWatchPage({
-  roadmapId,
+  slug,
   videoId,
   onNavigate,
 }: RoadmapVideoWatchPageProps) {
   const store = useAppStore();
-  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [roadmap, setRoadmap] = useState({});
   const [duration] = useState(2400); // 40 minutes in seconds
+
+  useEffect(() => {
+    async function loadData() {
+      const roadmap = await store.getRoadmapBySlug(slug);
+      setRoadmap(roadmap);
+    }
+
+    loadData();
+  }, []);
 
   // Mock video data based on roadmap
   const video = {
@@ -88,7 +97,7 @@ export function RoadmapVideoWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/roadmaps/${roadmapId}/watch`)}
+          onClick={() => onNavigate?.(`/roadmaps/${slug}/watch`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

@@ -50,8 +50,10 @@ interface AppState {
   getInterviews: () => Interview[];
   getBootcamps: () => Bootcamp[];
   getLearningPaths: () => LearningPath[];
-  getRoadmaps: () => Roadmap[];
+  getRoadmaps: () => Roadmap[] | any;
   getQuiz: (id: string) => Quiz | any;
+  getRoadmapBySlug: (slug: string) => any;
+  getRoadmapMilestones: (slug: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => void;
@@ -146,7 +148,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   getInterviews: () => dataStore.interviews,
   getBootcamps: () => dataStore.bootcamps,
   getLearningPaths: () => dataStore.learningPaths,
-  getRoadmaps: () => dataStore.roadmaps,
+  getRoadmaps: async () => {
+    const { data } = await api.get("/roadmaps");
+    return data?.data?.roadmaps;
+  },
+
+  getRoadmapBySlug: async (slug: string) => {
+    console.log("asas");
+    const { data } = await api.get("/roadmaps/" + slug);
+
+    console.log(data.data);
+    return data?.data;
+  },
+
+  getRoadmapMilestones: async (slug: string) => {
+    const roadmap = await get().getRoadmapBySlug(slug);
+    return roadmap ? roadmap.topics : [];
+  },
 
   // Force re-render system
   version: 0,

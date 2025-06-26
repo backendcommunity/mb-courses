@@ -22,20 +22,30 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { useEffect, useState } from "react";
 
 interface RoadmapWatchPageProps {
-  roadmapId: string;
+  slug: string;
   onNavigate?: (route: string) => void;
 }
 
-export function RoadmapWatchPage({
-  roadmapId,
-  onNavigate,
-}: RoadmapWatchPageProps) {
+export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
   const store = useAppStore();
-  const roadmap = store.getRoadmaps().find((r) => r.id === roadmapId);
+  const [roadmap, setRoadmap] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  if (!roadmap) {
+  async function loadData() {
+    const roadmap = await store.getRoadmapBySlug(slug);
+    setRoadmap(roadmap);
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    loadData();
+    setLoading(false);
+  }, [slug]);
+
+  if (loading && !roadmap) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -50,7 +60,32 @@ export function RoadmapWatchPage({
   }
 
   // Mock current milestone data
-  const currentMilestone = {
+  const currentMilestone = roadmap?.userRoadmap?.currentTopic;
+
+  console.log(roadmap?.userRoadmap);
+
+  function nextUp() {
+    return (
+      <div className="space-y-4">
+        <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
+          <h4 className="font-medium text-sm">Build Distributed Cache</h4>
+          <p className="text-xs text-muted-foreground">
+            Implement Redis-based caching system
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <Code2 className="h-3 w-3 text-green-600" />
+            <span className="text-xs">Project • Est. 6 hours</span>
+          </div>
+        </div>
+        <Button className="w-full" size="sm">
+          <Play className="mr-2 h-4 w-4" />
+          Start Project
+        </Button>
+      </div>
+    );
+  }
+
+  const f = {
     id: 3,
     title: "System Design Mastery",
     description: "Learn to design scalable, distributed systems",
@@ -89,17 +124,17 @@ export function RoadmapWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap.id}`)}
+          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap.slug}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Watch: {roadmap.title}
+            Watch: {roadmap?.title}
           </h1>
           <p className="text-muted-foreground">
-            Milestone {roadmap.currentMilestone} of 8 • {roadmap.progress}%
-            Complete
+            Milestone {roadmap?.topics?.map((t: any) => t.completed)?.length} of
+            8 • {roadmap?.progress}% Complete
           </p>
         </div>
       </div>
@@ -109,30 +144,30 @@ export function RoadmapWatchPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            Current Milestone: {currentMilestone.title}
+            Current Milestone: {currentMilestone?.title}
           </CardTitle>
           <CardDescription className="text-blue-100">
-            {currentMilestone.description}
+            {currentMilestone?.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Milestone Progress</span>
-              <span>{currentMilestone.progress}%</span>
+              <span>{currentMilestone?.progress}%</span>
             </div>
-            <Progress value={currentMilestone.progress} className="h-3" />
+            <Progress value={currentMilestone?.progress} className="h-3" />
 
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {roadmap.currentMilestone}
+                  {roadmap?.currentTopic}
                 </div>
                 <div className="text-xs text-blue-100">Current Milestone</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {roadmap.completedMilestones}
+                  {roadmap?.topics?.map((t: any) => t.completed)?.length}
                 </div>
                 <div className="text-xs text-blue-100">Completed</div>
               </div>
@@ -161,42 +196,50 @@ export function RoadmapWatchPage({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentMilestone.tasks.map((task) => (
+              {currentMilestone?.courses?.map((userCourse: any) => (
                 <div
-                  key={task.id}
+                  key={userCourse.course.id}
                   className={`border rounded-lg p-4 ${
-                    task.completed ? "bg-green-50 border-green-200" : "bg-white"
+                    userCourse.isCompleted
+                      ? "bg-green-50 border-green-200"
+                      : "bg-blue-50 dark:bg-gray-800"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <Checkbox
-                      checked={task.completed}
+                      checked={userCourse.isCompleted}
                       className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        {task.type === "course" && (
+                        {userCourse.type === "course" && (
                           <BookOpen className="h-4 w-4 text-blue-600" />
                         )}
-                        {task.type === "project" && (
+                        {userCourse.type === "project" && (
                           <Code2 className="h-4 w-4 text-green-600" />
                         )}
-                        {task.type === "assessment" && (
+                        {userCourse.type === "assessment" && (
                           <Target className="h-4 w-4 text-purple-600" />
                         )}
                         <span
                           className={`font-medium ${
-                            task.completed
+                            userCourse.isCompleted
                               ? "line-through text-muted-foreground"
                               : ""
                           }`}
                         >
-                          {task.title}
+                          {userCourse.course.title}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {task.completed ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700 border-green-200"
+                      >
+                        {userCourse?.type ?? "Course"}
+                      </Badge>
+                      {userCourse.isCompleted ? (
                         <Badge
                           variant="outline"
                           className="bg-green-50 text-green-700 border-green-200"
@@ -225,7 +268,7 @@ export function RoadmapWatchPage({
               <CardTitle className="text-lg">Next Up</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
                 <h4 className="font-medium text-sm">Build Distributed Cache</h4>
                 <p className="text-xs text-muted-foreground">
                   Implement Redis-based caching system
@@ -265,9 +308,9 @@ export function RoadmapWatchPage({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{currentMilestone.progress}%</span>
+                  <span>{currentMilestone?.progress}%</span>
                 </div>
-                <Progress value={currentMilestone.progress} className="h-2" />
+                <Progress value={currentMilestone?.progress} className="h-2" />
               </div>
             </CardContent>
           </Card>

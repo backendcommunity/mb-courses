@@ -112,9 +112,9 @@ export function RoadmapCourseWatch({
     }
   }, [currentChapter]);
 
-  if (!roadmap || !milestone || !course) {
-    return <div>Course not found</div>;
-  }
+  // if (!roadmap || !milestone || !course) {
+  //   return <div>Course not found</div>;
+  // }
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -208,9 +208,9 @@ export function RoadmapCourseWatch({
                 Back to Roadmap
               </Button>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>{roadmap.title}</span>
+                <span>{roadmap?.title}</span>
                 <span>•</span>
-                <span>{milestone.title}</span>
+                <span>{milestone?.title}</span>
                 <span>•</span>
                 <span>{course?.title}</span>
               </div>
@@ -452,11 +452,11 @@ export function RoadmapCourseWatch({
               <CardContent className="space-y-3">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">
-                    {milestone.title}
+                    {milestone?.title}
                   </div>
-                  <Progress value={milestone.progress} className="h-2" />
+                  <Progress value={milestone?.progress} className="h-2" />
                   <div className="text-xs text-gray-500 mt-1">
-                    {milestone.progress}% complete
+                    {milestone?.progress}% complete
                   </div>
                 </div>
               </CardContent>

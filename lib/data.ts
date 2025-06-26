@@ -1,3 +1,4 @@
+import api from "./api";
 import { fetchUser } from "./auth";
 export interface User {
   id: string;
@@ -276,7 +277,7 @@ export interface Video {
   quizId?: string;
   quiz?: Quiz;
   resources?: any;
-  video: Number
+  video: Number;
 }
 
 export interface Quiz {
@@ -1624,12 +1625,12 @@ export const updateCourseProgress = (courseId: string, progress: number) => {
   }
 };
 
-// export const markChapterComplete = (courseId: string, chapterId: string) => {
-//   const chapter = getCourseChapterById(courseId, chapterId);
-//   if (chapter) {
-//     chapter.isCompleted = true;
-//   }
-// };
+export const markChapterComplete = (courseId: string, chapterId: string) => {
+  const chapter = getCourseChapterById(courseId, chapterId);
+  if (chapter) {
+    chapter.isCompleted = true;
+  }
+};
 
 export const markVideoComplete = (
   courseId: string,
@@ -1718,12 +1719,10 @@ export const enrollInLearningPath = (pathId: string) => {
   }
 };
 
-export const enrollInRoadmap = (roadmapId: string) => {
-  const roadmap = getRoadmapById(roadmapId);
-  if (roadmap) {
-    roadmap.enrolled = true;
-    roadmap.started = true;
-  }
+export const enrollInRoadmap = async (slug: string) => {
+  const { data } = await api.post("/roadmaps/" + slug);
+  console.log(data);
+  return data?.data;
 };
 
 export const updateRoadmapProgress = (

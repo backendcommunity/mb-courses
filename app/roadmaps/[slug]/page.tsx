@@ -2,29 +2,28 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { RoadmapDetailPage } from "@/components/pages/roadmap-detail";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
 interface RoadmapDetailPageRouteProps {
   params: {
-    roadmapId: string;
+    slug: string;
   };
 }
 
 export default function RoadmapDetailPageRoute({
   params,
 }: RoadmapDetailPageRouteProps) {
+  const { slug } = useParams() as { slug: string };
   const router = useRouter();
 
   const handleNavigate = (path: string) => {
     router.push(path);
   };
 
-  const { roadmapId } = React.use(params);
-
   return (
     <DashboardLayout>
-      <RoadmapDetailPage roadmapId={roadmapId} onNavigate={handleNavigate} />
+      <RoadmapDetailPage slug={slug} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -33,52 +33,72 @@ import {
   CheckCheck,
   BarChart3,
 } from "lucide-react";
-import {
-  getRoadmapById,
-  getRoadmapMilestones,
-  getRoadmapCoursesByMilestone,
-  getRoadmapProjectsByMilestone,
-  getRoadmapAssessmentsByMilestone,
-  enrollInRoadmap,
-} from "@/lib/data";
+import { enrollInRoadmap } from "@/lib/data";
 import { routes } from "@/lib/routes";
+import { useAppStore } from "@/lib/store";
+import DisqusCommentBlock from "../ui/comment";
+import { PaymentDialog } from "../payment-dialog";
+import { useUser } from "@/hooks/use-user";
 
 interface RoadmapDetailPageProps {
-  roadmapId: string;
+  slug: string;
   onNavigate?: (route: string) => void;
 }
 
 export function RoadmapDetailPage({
-  roadmapId,
+  slug,
   onNavigate,
 }: RoadmapDetailPageProps) {
+  const store = useAppStore();
+  const user = useUser();
   const [activeTab, setActiveTab] = useState("overview");
-  const roadmap = getRoadmapById(roadmapId);
-  const milestones = getRoadmapMilestones(roadmapId);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [roadmap, setRoadmap] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [milestones, setMilestones] = useState([]);
 
-  if (!roadmap) {
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const roadmap = await store.getRoadmapBySlug(slug);
+      const milestones = await store.getRoadmapMilestones(slug);
+
+      setRoadmap(roadmap);
+      setMilestones(milestones);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (loading && !roadmap) {
     return <div className="p-6">Roadmap not found</div>;
   }
 
-  const handleEnroll = () => {
-    enrollInRoadmap(roadmapId);
+  const handleEnroll = async () => {
+    if (!user.isPremium && !user?.subscription) {
+      setShowPaymentDialog(!showPaymentDialog);
+      return;
+    }
+
+    const data = await enrollInRoadmap(slug);
     // Force re-render
+    setRoadmap(data);
     setActiveTab(activeTab);
   };
 
   const handleContinue = () => {
-    if (roadmap.currentMilestone < milestones?.length) {
-      const currentMilestone = milestones[roadmap.currentMilestone];
-      if (currentMilestone.courses?.length > 0) {
-        onNavigate?.(
-          routes.roadmapVideoWatch(roadmap.id, currentMilestone.courses[0]?.id)
-        );
-      } else if (currentMilestone.projects?.length > 0) {
-        onNavigate?.(routes.projectDetail(currentMilestone.projects[0]));
-      } else {
-        onNavigate?.(routes.roadmapWatch(roadmapId));
-      }
-    }
+    // const currentTopic = roadmap?.userRoadmap?.currentTopic;
+
+    // if (currentTopic?.courses?.length > 0) {
+    //   onNavigate?.(
+    //     routes.roadmapVideoWatch(roadmap?.slug, currentTopic?.courses[0]?.id)
+    //   );
+    // } else if (currentTopic?.projects?.length > 0) {
+    //   onNavigate?.(routes.projectDetail(currentTopic?.projects[0]));
+    // } else {
+    onNavigate?.(routes.roadmapWatch(slug));
+    // }
+    // }
   };
 
   return (
@@ -87,7 +107,7 @@ export function RoadmapDetailPage({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{roadmap.title}</h1>
-          <p className="text-muted-foreground">{roadmap.description}</p>
+          <p className="text-muted-foreground">{roadmap.summary}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           {!roadmap.enrolled ? (
@@ -120,8 +140,8 @@ export function RoadmapDetailPage({
                   Current Milestone
                 </div>
                 <div className="font-medium">
-                  {roadmap.currentMilestone < milestones?.length
-                    ? milestones[roadmap.currentMilestone].title
+                  {roadmap?.currentTopic < milestones?.length
+                    ? roadmap?.currentTopic?.title
                     : "Completed"}
                 </div>
               </div>
@@ -136,7 +156,8 @@ export function RoadmapDetailPage({
                   Milestones Completed
                 </div>
                 <div className="font-medium">
-                  {roadmap.completedMilestones} of {milestones?.length}
+                  {roadmap?.topics?.map((t) => t.completed)?.length ?? 0} of{" "}
+                  {milestones?.length}
                 </div>
               </div>
             </div>
@@ -166,7 +187,7 @@ export function RoadmapDetailPage({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="prose max-w-none">
-                <p>{roadmap.longDescription}</p>
+                <p>{roadmap.description}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -203,12 +224,14 @@ export function RoadmapDetailPage({
                 <div>
                   <h3 className="text-lg font-medium mb-2">Prerequisites</h3>
                   <ul className="space-y-1">
-                    {roadmap.prerequisites?.map((prerequisite, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span className="text-sm">{prerequisite}</span>
-                      </li>
-                    ))}
+                    {roadmap?.prerequisites?.map(
+                      (prerequisite: string, index: number) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">{prerequisite}</span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               </div>
@@ -268,7 +291,7 @@ export function RoadmapDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {roadmap.skills?.map((skill, index) => (
+                  {roadmap?.skills?.map((skill: string, index: number) => (
                     <Badge key={index} variant="secondary">
                       {skill}
                     </Badge>
@@ -310,10 +333,10 @@ export function RoadmapDetailPage({
 
         {/* Milestones Tab */}
         <TabsContent value="milestones" className="space-y-6">
-          {milestones.map((milestone, index) => {
-            const isCompleted = milestone.completed;
-            const isCurrent = index === roadmap.currentMilestone;
-            const isUpcoming = index > roadmap.currentMilestone;
+          {milestones?.map((milestone: any, index) => {
+            const isCompleted = milestone?.completed;
+            const isCurrent = index === roadmap?.userRoadmap?.currentTopic;
+            const isUpcoming = index > roadmap?.userRoadmap?.currentTopic;
 
             return (
               <Card
@@ -395,23 +418,20 @@ export function RoadmapDetailPage({
                         Courses
                       </h4>
                       <div className="space-y-1">
-                        {getRoadmapCoursesByMilestone(milestone.id).map(
-                          (course) => (
-                            <div
-                              key={course.id}
-                              className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onNavigate?.(routes.courseDetail(course.id));
-                              }}
-                            >
-                              <span>{course.title}</span>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )
-                        )}
-                        {getRoadmapCoursesByMilestone(milestone.id)?.length ===
-                          0 && (
+                        {milestone?.courses?.map((course: any) => (
+                          <div
+                            key={course.id}
+                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-500 p-1 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate?.(routes.courseDetail(course.slug));
+                            }}
+                          >
+                            <span>{course.title}</span>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        ))}
+                        {milestone?.courses?.length === 0 && (
                           <div className="text-sm text-muted-foreground">
                             No courses in this milestone
                           </div>
@@ -425,23 +445,20 @@ export function RoadmapDetailPage({
                         Projects
                       </h4>
                       <div className="space-y-1">
-                        {getRoadmapProjectsByMilestone(milestone.id).map(
-                          (project) => (
-                            <div
-                              key={project.id}
-                              className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onNavigate?.(routes.projectDetail(project.id));
-                              }}
-                            >
-                              <span>{project.title}</span>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )
-                        )}
-                        {getRoadmapProjectsByMilestone(milestone.id).length ===
-                          0 && (
+                        {milestone?.projects?.map((project: any) => (
+                          <div
+                            key={project.id}
+                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate?.(routes.projectDetail(project.id));
+                            }}
+                          >
+                            <span>{project.title}</span>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        ))}
+                        {!milestone?.projects?.length && (
                           <div className="text-sm text-muted-foreground">
                             No projects in this milestone
                           </div>
@@ -455,21 +472,18 @@ export function RoadmapDetailPage({
                         Assessments
                       </h4>
                       <div className="space-y-1">
-                        {getRoadmapAssessmentsByMilestone(milestone.id).map(
-                          (assessment) => (
-                            <div
-                              key={assessment.id}
-                              className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
-                            >
-                              <span>{assessment.title}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {assessment.type}
-                              </Badge>
-                            </div>
-                          )
-                        )}
-                        {getRoadmapAssessmentsByMilestone(milestone.id)
-                          ?.length === 0 && (
+                        {milestone?.assessments?.map((assessment: any) => (
+                          <div
+                            key={assessment.id}
+                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
+                          >
+                            <span>{assessment.title}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {assessment.type}
+                            </Badge>
+                          </div>
+                        ))}
+                        {!milestone?.assessments?.length && (
                           <div className="text-sm text-muted-foreground">
                             No assessments in this milestone
                           </div>
@@ -488,15 +502,11 @@ export function RoadmapDetailPage({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const courses = getRoadmapCoursesByMilestone(
-                            milestone.id
-                          );
+                          const courses = milestone?.courses;
                           if (courses?.length > 0) {
                             onNavigate?.(routes.courseDetail(courses[0].id));
                           } else {
-                            const projects = getRoadmapProjectsByMilestone(
-                              milestone.id
-                            );
+                            const projects = milestone?.projects;
                             if (projects?.length > 0) {
                               onNavigate?.(
                                 routes.projectDetail(projects[0].id)
@@ -526,7 +536,7 @@ export function RoadmapDetailPage({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {milestones.map((milestone, index) => (
+              {milestones?.map((milestone: any, index) => (
                 <div key={milestone.id} className="space-y-4">
                   <h3 className="text-lg font-medium flex items-center gap-2">
                     <div
@@ -541,192 +551,179 @@ export function RoadmapDetailPage({
 
                   <div className="space-y-4 pl-8">
                     {/* Courses */}
-                    {getRoadmapCoursesByMilestone(milestone.id)?.length > 0 && (
+                    {milestone?.courses?.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-blue-600" />
                           Courses
                         </h4>
                         <div className="space-y-2">
-                          {getRoadmapCoursesByMilestone(milestone.id).map(
-                            (course) => (
-                              <Card key={course.id} className="overflow-hidden">
-                                <div className="flex flex-col md:flex-row">
-                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
-                                    <img
-                                      src={
-                                        course.thumbnail || "/placeholder.svg"
-                                      }
-                                      alt={course.title}
-                                      className="w-full h-full object-cover"
-                                    />
+                          {milestone?.courses?.map((course: any) => (
+                            <Card key={course.id} className="overflow-hidden">
+                              <div className="flex flex-col md:flex-row">
+                                <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                  <img
+                                    src={course?.banner || "/placeholder.svg"}
+                                    alt={course?.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1 p-4">
+                                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                    <div>
+                                      <h5 className="font-medium">
+                                        {course?.title}
+                                      </h5>
+                                      <p className="text-sm text-muted-foreground">
+                                        {course?.summary}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline">
+                                        {course.type}
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {course?.totalDuration ?? 0}
+                                      </Badge>
+                                    </div>
                                   </div>
-                                  <div className="flex-1 p-4">
-                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                      <div>
-                                        <h5 className="font-medium">
-                                          {course.title}
-                                        </h5>
-                                        <p className="text-sm text-muted-foreground">
-                                          {course.description}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Badge variant="outline">
-                                          {course.level}
-                                        </Badge>
-                                        <Badge variant="outline">
-                                          {course.duration}
-                                        </Badge>
-                                      </div>
+                                  <div className="mt-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <PlayCircle className="h-4 w-4 text-blue-600" />
+                                      <span className="text-sm">
+                                        {course.chapters?.length} chapters
+                                      </span>
                                     </div>
-                                    <div className="mt-4 flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        <PlayCircle className="h-4 w-4 text-blue-600" />
-                                        <span className="text-sm">
-                                          {course.chapters?.length} chapters
-                                        </span>
-                                      </div>
-                                      <Button
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onNavigate?.(
-                                            routes.courseDetail(course.id)
-                                          );
-                                        }}
-                                      >
-                                        View Course
-                                      </Button>
-                                    </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onNavigate?.(
+                                          routes.courseDetail(course?.id)
+                                        );
+                                      }}
+                                    >
+                                      View Course
+                                    </Button>
                                   </div>
                                 </div>
-                              </Card>
-                            )
-                          )}
+                              </div>
+                            </Card>
+                          ))}
                         </div>
                       </div>
                     )}
 
                     {/* Projects */}
-                    {getRoadmapProjectsByMilestone(milestone.id)?.length >
-                      0 && (
+                    {milestone?.projects?.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <Code className="h-4 w-4 text-green-600" />
                           Projects
                         </h4>
                         <div className="space-y-2">
-                          {getRoadmapProjectsByMilestone(milestone.id).map(
-                            (project) => (
-                              <Card
-                                key={project.id}
-                                className="overflow-hidden"
-                              >
-                                <div className="flex flex-col md:flex-row">
-                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
-                                    <img
-                                      src={
-                                        project.thumbnail || "/placeholder.svg"
-                                      }
-                                      alt={project.title}
-                                      className="w-full h-full object-cover"
-                                    />
+                          {milestone?.projects?.map((project: any) => (
+                            <Card key={project.id} className="overflow-hidden">
+                              <div className="flex flex-col md:flex-row">
+                                <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                  <img
+                                    src={
+                                      project.thumbnail || "/placeholder.svg"
+                                    }
+                                    alt={project.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1 p-4">
+                                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                    <div>
+                                      <h5 className="font-medium">
+                                        {project.title}
+                                      </h5>
+                                      <p className="text-sm text-muted-foreground">
+                                        {project.description}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline">
+                                        {project.difficulty}
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {project.estimatedTime}
+                                      </Badge>
+                                    </div>
                                   </div>
-                                  <div className="flex-1 p-4">
-                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                      <div>
-                                        <h5 className="font-medium">
-                                          {project.title}
-                                        </h5>
-                                        <p className="text-sm text-muted-foreground">
-                                          {project.description}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Badge variant="outline">
-                                          {project.difficulty}
-                                        </Badge>
-                                        <Badge variant="outline">
-                                          {project.estimatedTime}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                    <div className="mt-4 flex items-center justify-between">
-                                      <div className="flex flex-wrap gap-2">
-                                        {project.technologies
-                                          .slice(0, 3)
-                                          .map((tech, i) => (
-                                            <Badge key={i} variant="secondary">
-                                              {tech}
-                                            </Badge>
-                                          ))}
-                                        {project.technologies?.length > 3 && (
-                                          <Badge variant="secondary">
-                                            +{project.technologies?.length - 3}{" "}
-                                            more
+                                  <div className="mt-4 flex items-center justify-between">
+                                    <div className="flex flex-wrap gap-2">
+                                      {project.technologies
+                                        .slice(0, 3)
+                                        .map((tech: string, i: number) => (
+                                          <Badge key={i} variant="secondary">
+                                            {tech}
                                           </Badge>
-                                        )}
-                                      </div>
-                                      <Button
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onNavigate?.(
-                                            routes.projectDetail(project.id)
-                                          );
-                                        }}
-                                      >
-                                        View Project
-                                      </Button>
+                                        ))}
+                                      {project.technologies?.length > 3 && (
+                                        <Badge variant="secondary">
+                                          +{project.technologies?.length - 3}{" "}
+                                          more
+                                        </Badge>
+                                      )}
                                     </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onNavigate?.(
+                                          routes.projectDetail(project.id)
+                                        );
+                                      }}
+                                    >
+                                      View Project
+                                    </Button>
                                   </div>
                                 </div>
-                              </Card>
-                            )
-                          )}
+                              </div>
+                            </Card>
+                          ))}
                         </div>
                       </div>
                     )}
 
                     {/* Assessments */}
-                    {getRoadmapAssessmentsByMilestone(milestone.id)?.length >
-                      0 && (
+                    {milestone?.assessments?.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <FileText className="h-4 w-4 text-purple-600" />
                           Assessments
                         </h4>
                         <div className="space-y-2">
-                          {getRoadmapAssessmentsByMilestone(milestone.id).map(
-                            (assessment) => (
-                              <Card key={assessment.id}>
-                                <CardContent className="p-4">
-                                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                    <div>
-                                      <h5 className="font-medium">
-                                        {assessment.title}
-                                      </h5>
-                                      <p className="text-sm text-muted-foreground">
-                                        {assessment.description}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Badge
-                                        variant="outline"
-                                        className="capitalize"
-                                      >
-                                        {assessment.type}
-                                      </Badge>
-                                      <Badge variant="outline">
-                                        {assessment.duration}
-                                      </Badge>
-                                    </div>
+                          {milestone?.assessments?.map((assessment: any) => (
+                            <Card key={assessment.id}>
+                              <CardContent className="p-4">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                  <div>
+                                    <h5 className="font-medium">
+                                      {assessment.title}
+                                    </h5>
+                                    <p className="text-sm text-muted-foreground">
+                                      {assessment.description}
+                                    </p>
                                   </div>
-                                </CardContent>
-                              </Card>
-                            )
-                          )}
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="capitalize"
+                                    >
+                                      {assessment.type}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {assessment.duration}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -882,7 +879,7 @@ export function RoadmapDetailPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {milestones.map((milestone, index) => (
+                {milestones?.map((milestone: any, index) => (
                   <div key={milestone.id} className="space-y-2">
                     <h3 className="text-md font-medium flex items-center gap-2">
                       <div
@@ -972,84 +969,27 @@ export function RoadmapDetailPage({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {[
-                {
-                  name: "Alex Johnson",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 5,
-                  date: "May 15, 2024",
-                  comment:
-                    "This roadmap completely transformed my career. I went from a junior developer to a senior backend engineer in just 14 months by following this structured path. The projects were challenging but incredibly rewarding.",
-                },
-                {
-                  name: "Sarah Miller",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 4,
-                  date: "April 22, 2024",
-                  comment:
-                    "Great roadmap with excellent content. The microservices section was particularly helpful for my current role. I would have liked more content on cloud-native development, but overall it was very comprehensive.",
-                },
-                {
-                  name: "Michael Chen",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 5,
-                  date: "March 10, 2024",
-                  comment:
-                    "The system design milestone prepared me perfectly for technical interviews. I was able to confidently discuss complex architectural decisions and trade-offs, which helped me land my dream job at a top tech company.",
-                },
-              ].map((review, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={review.avatar || "/placeholder.svg"}
-                      alt={review.name}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <div className="font-medium">{review.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {review.date}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < review.rating
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm">{review.comment}</p>
-                </div>
-              ))}
+              <DisqusCommentBlock
+                config={{
+                  url: "/roadmaps/" + slug,
+                  identifier: slug,
+                  title: roadmap?.title,
+                }}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
 
-function Star(props: React.ComponentProps<typeof LucideIcon>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
+      {showPaymentDialog && (
+        <PaymentDialog
+          onClose={() => setShowPaymentDialog(false)}
+          open={showPaymentDialog}
+          data={roadmap}
+          onHandlePreview={() => {}}
+          onHandlePurchase={() => {}}
+        />
+      )}
+    </div>
   );
 }

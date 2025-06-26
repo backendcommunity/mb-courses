@@ -18,15 +18,32 @@ import {
   Clock,
   Award,
 } from "lucide-react";
-import { getRoadmaps } from "@/lib/data";
 import { routes } from "@/lib/routes";
+import { useAppStore } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { getRoadmaps } from "@/lib/data";
 
 interface RoadmapsPageProps {
   onNavigate?: (route: string) => void;
 }
 
 export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
-  const roadmaps = getRoadmaps();
+  const store = useAppStore();
+  const road = getRoadmaps();
+  const [roadmaps, setRoadmaps] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    const loadRoadmaps = async () => {
+      const roadmaps = await store.getRoadmaps();
+      setRoadmaps(roadmaps);
+    };
+    loadRoadmaps();
+    setLoading(false);
+  }, []);
+
+  if (loading && !roadmaps.length) return <div>loading...</div>;
 
   return (
     <div className="flex-1 space-y-6">
@@ -46,40 +63,34 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
       </div>
 
       {/* Current Roadmap Progress */}
-      {roadmaps.some((r) => r.enrolled && r.started) && (
+      {roadmaps.some((r: any) => r.enrolled) && (
         <Card className="bg-gradient-to-r from-[#0E1F33] to-[#13AECE] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
               Your Career Roadmap:{" "}
-              {roadmaps.find((r) => r.enrolled && r.started)?.title}
+              {roadmaps.find((r: any) => r.enrolled)?.title}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span>Overall Progress</span>
-                <span>
-                  {roadmaps.find((r) => r.enrolled && r.started)?.progress}%
-                </span>
+                <span>{roadmaps.find((r: any) => r.enrolled)?.progress}%</span>
               </div>
               <Progress
-                value={roadmaps.find((r) => r.enrolled && r.started)?.progress}
+                value={roadmaps.find((r: any) => r.enrolled)?.progress}
                 className="h-3"
               />
               <div className="flex items-center justify-between text-sm text-blue-100">
                 <span>
                   Milestone{" "}
-                  {(roadmaps.find((r) => r.enrolled && r.started)
-                    ?.currentMilestone || 0) + 1}{" "}
-                  of{" "}
-                  {
-                    roadmaps.find((r) => r.enrolled && r.started)?.milestones
-                      .length
-                  }
+                  {(roadmaps.find((r: any) => r.enrolled)?.currentTopic || 0) +
+                    1}{" "}
+                  of {roadmaps.find((r: any) => r.enrolled)?.topics.length}
                 </span>
                 <span>
-                  {roadmaps.find((r) => r.enrolled && r.started)?.estimatedTime}
+                  {roadmaps.find((r: any) => r.enrolled)?.estimatedTime}
                 </span>
               </div>
             </div>
@@ -88,35 +99,39 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
       )}
 
       {/* Roadmap Details */}
-      {roadmaps.map((roadmap) => (
+      {roadmaps.map((roadmap: any) => (
         <Card
           key={roadmap.id}
           className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => onNavigate?.(routes.roadmapDetail(roadmap.id))}
+          onClick={() => onNavigate?.(routes.roadmapDetail(roadmap.slug))}
         >
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>{roadmap.title}</CardTitle>
-                <CardDescription>{roadmap.description}</CardDescription>
+                <CardDescription>{roadmap.summary}</CardDescription>
               </div>
               <div className="text-right">
-                <Badge variant="outline">{roadmap.timeframe}</Badge>
+                <Badge variant="outline">
+                  {roadmap?.timeframe ?? "4-6 months"}
+                </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {roadmap.difficulty}
+                  {roadmap.level}
                 </p>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {roadmap.milestones.map((milestone, index) => {
-                const isCompleted = milestone.completed;
-                const isCurrent = index === roadmap.currentMilestone;
-                const isUpcoming = index > roadmap.currentMilestone;
+              {roadmap?.topics?.map((topic: any, index: number) => {
+                const isCompleted = topic?.completed;
+                const isCurrent = index === roadmap?.userRoadmap?.currentTopic;
+                const isUpcoming = index > roadmap?.userRoadmap?.currentTopic;
+
+                console.log(roadmap.currentTopic);
 
                 return (
-                  <div key={milestone.id} className="flex items-start gap-4">
+                  <div key={topic.id} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
                       <div
                         className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
@@ -135,7 +150,7 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                           </span>
                         )}
                       </div>
-                      {index < roadmap.milestones.length - 1 && (
+                      {index < roadmap.topics.length - 1 && (
                         <div
                           className={`w-0.5 h-12 mt-2 ${
                             isCompleted ? "bg-green-600" : "bg-gray-300"
@@ -154,7 +169,7 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                               : "text-gray-500"
                           }`}
                         >
-                          {milestone.title}
+                          {topic.title}
                         </h3>
                         <Badge
                           variant={
@@ -181,12 +196,9 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                       </div>
                       {isCurrent && (
                         <div className="space-y-2">
-                          <Progress
-                            value={milestone.progress}
-                            className="h-2"
-                          />
+                          <Progress value={topic.progress} className="h-2" />
                           <p className="text-sm text-muted-foreground">
-                            {milestone.progress}% complete - Continue building
+                            {topic.progress}% complete - Continue building
                             projects to reach this milestone
                           </p>
                         </div>

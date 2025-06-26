@@ -2,22 +2,19 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { RoadmapCourseWatchPage } from "@/components/pages/roadmap-course-watch";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 interface RoadmapVideoPageRouteProps {
-  params: {
-    roadmapId: string;
-    videoId: string;
-    courseId: string;
-    chapterId: string;
-  };
+  roadmapId: string;
+  videoId: string;
+  courseId: string;
+  chapterId: string;
 }
 
-export default function RoadmapVideoWatchRoute({
-  params,
-}: RoadmapVideoPageRouteProps) {
+export default function RoadmapVideoWatchRoute({}) {
   const router = useRouter();
-
+  const { roadmapId, videoId, courseId, chapterId } =
+    useParams as RoadmapVideoPageRouteProps;
   const handleNavigate = (path: string) => {
     router.push(path);
   };
@@ -25,11 +22,11 @@ export default function RoadmapVideoWatchRoute({
   return (
     <DashboardLayout>
       <RoadmapCourseWatchPage
-        roadmapId={params.roadmapId}
-        videoId={params.videoId}
-        courseId={params.courseId}
+        roadmapId={roadmapId}
+        videoId={videoId}
+        courseId={courseId}
         milestoneId={"m1"}
-        chapterId={params.chapterId}
+        chapterId={chapterId}
         onBack={() => router.back()}
         onNavigateToExercise={() => {}}
         onNavigateToPlayground={() => {}}

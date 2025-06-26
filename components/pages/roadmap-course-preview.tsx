@@ -63,35 +63,35 @@ export function RoadmapCoursePreview({
 
   console.log(roadmap, milestone, course);
 
-  if (!roadmap || !milestone || !course) {
-    return <div>Course not found</div>;
-  }
+  // if (!roadmap || !milestone || !course) {
+  //   return <div>Course not found</div>;
+  // }
 
   const handleEnroll = () => {
     enrollInCourse(courseId);
     onEnroll();
   };
 
-  const totalVideos = course.chapters.reduce(
+  const totalVideos = course?.chapters?.reduce(
     (acc, chapter) => acc + chapter.videos.length,
     0
   );
-  const completedVideos = course.chapters.reduce(
+  const completedVideos = course?.chapters?.reduce(
     (acc, chapter) =>
       acc + chapter.videos.filter((video) => video.completed).length,
     0
   );
 
-  const quizzes = course.chapters.filter((chapter) => chapter?.quiz).length;
-  const exercises = course.chapters.filter(
+  const quizzes = course?.chapters?.filter((chapter) => chapter?.quiz).length;
+  const exercises = course?.chapters?.filter(
     (chapter) => chapter?.exercise
   ).length;
-  const playgrounds = course.chapters.filter(
+  const playgrounds = course?.chapters?.filter(
     (chapter) => chapter?.playground
   ).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-500">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -101,9 +101,9 @@ export function RoadmapCoursePreview({
               Back to Roadmap
             </Button>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{roadmap.title}</span>
+              <span>{roadmap?.title}</span>
               <span>•</span>
-              <span>{milestone.title}</span>
+              <span>{milestone?.title}</span>
             </div>
           </div>
         </div>
@@ -118,66 +118,66 @@ export function RoadmapCoursePreview({
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary">{course.level}</Badge>
+                    <Badge variant="secondary">{course?.level}</Badge>
                     <Badge variant="outline">Roadmap Course</Badge>
                   </div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {course.title}
+                    {course?.title}
                   </h1>
                   <p className="text-lg text-gray-600 mb-4">
-                    {course.description}
+                    {course?.description}
                   </p>
 
                   <div className="flex items-center gap-6 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      <span>{course.duration}</span>
+                      <span>{course?.duration}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{course.students.toLocaleString()} students</span>
+                      <span>{course?.students.toLocaleString()} students</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span>{course.rating}</span>
+                      <span>{course?.rating}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex-shrink-0 ml-6">
                   <img
-                    src={course.thumbnail || "/placeholder.svg"}
-                    alt={course.title}
+                    src={course?.thumbnail || "/placeholder.svg"}
+                    alt={course?.title}
                     className="w-32 h-20 object-cover rounded-lg"
                   />
                 </div>
               </div>
 
               {/* Progress Bar (if enrolled) */}
-              {course.enrolled && (
+              {course?.enrolled && (
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">
                       Progress
                     </span>
                     <span className="text-sm text-gray-600">
-                      {course.progress}%
+                      {course?.progress}%
                     </span>
                   </div>
-                  <Progress value={course.progress} className="h-2" />
+                  <Progress value={course?.progress} className="h-2" />
                 </div>
               )}
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
-                {course.enrolled ? (
+                {course?.enrolled ? (
                   <Button
                     onClick={onStartWatching}
                     size="lg"
                     className="flex items-center gap-2"
                   >
                     <Play className="h-4 w-4" />
-                    {course.progress > 0
+                    {course?.progress > 0
                       ? "Continue Learning"
                       : "Start Learning"}
                   </Button>
@@ -192,7 +192,7 @@ export function RoadmapCoursePreview({
                   </Button>
                 )}
 
-                {course.enrolled && (
+                {course?.enrolled && (
                   <Button variant="outline" size="lg">
                     <Trophy className="h-4 w-4 mr-2" />
                     View Certificate
@@ -221,7 +221,7 @@ export function RoadmapCoursePreview({
                       What you'll learn
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {course.tags.map((tag, index) => (
+                      {course?.tags.map((tag, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                           <span className="text-sm text-gray-700">
@@ -232,13 +232,13 @@ export function RoadmapCoursePreview({
                     </div>
                   </div>
 
-                  {course.longDescription && (
+                  {course?.longDescription && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">
                         Course Description
                       </h3>
                       <div className="prose prose-sm max-w-none text-gray-700">
-                        {course.longDescription
+                        {course?.longDescription
                           .split("\n\n")
                           .map((paragraph, index) => (
                             <p key={index} className="mb-4">
@@ -292,13 +292,13 @@ export function RoadmapCoursePreview({
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Course Curriculum</h3>
                     <div className="text-sm text-gray-600">
-                      {course.chapters.length} chapters • {totalVideos} videos •{" "}
-                      {course.duration}
+                      {course?.chapters?.length} chapters • {totalVideos} videos
+                      • {course?.duration}
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {course.chapters.map((chapter, index) => (
+                    {course?.chapters?.map((chapter, index) => (
                       <Card key={chapter.id} className="border border-gray-200">
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
@@ -327,7 +327,7 @@ export function RoadmapCoursePreview({
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                     Completed
                                   </>
-                                ) : course.enrolled ? (
+                                ) : course?.enrolled ? (
                                   "Available"
                                 ) : (
                                   <>
@@ -353,7 +353,7 @@ export function RoadmapCoursePreview({
                                 <div className="flex items-center justify-center w-6 h-6">
                                   {video.completed ? (
                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course.enrolled ? (
+                                  ) : course?.enrolled ? (
                                     <Play className="h-4 w-4 text-gray-400" />
                                   ) : (
                                     <Lock className="h-4 w-4 text-gray-400" />
@@ -379,7 +379,7 @@ export function RoadmapCoursePreview({
                                 <div className="flex items-center justify-center w-6 h-6">
                                   {chapter?.quiz?.completed ? (
                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course.enrolled ? (
+                                  ) : course?.enrolled ? (
                                     <FileText className="h-4 w-4 text-blue-500" />
                                   ) : (
                                     <Lock className="h-4 w-4 text-gray-400" />
@@ -404,7 +404,7 @@ export function RoadmapCoursePreview({
                                 <div className="flex items-center justify-center w-6 h-6">
                                   {chapter.exercise.completed ? (
                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course.enrolled ? (
+                                  ) : course?.enrolled ? (
                                     <Code className="h-4 w-4 text-purple-500" />
                                   ) : (
                                     <Lock className="h-4 w-4 text-gray-400" />
@@ -429,7 +429,7 @@ export function RoadmapCoursePreview({
                                 <div className="flex items-center justify-center w-6 h-6">
                                   {chapter.playground.completed ? (
                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course.enrolled ? (
+                                  ) : course?.enrolled ? (
                                     <Zap className="h-4 w-4 text-orange-500" />
                                   ) : (
                                     <Lock className="h-4 w-4 text-gray-400" />
@@ -462,7 +462,7 @@ export function RoadmapCoursePreview({
                     <Avatar className="h-16 w-16">
                       <AvatarImage src="/placeholder.svg?height=64&width=64" />
                       <AvatarFallback>
-                        {course.instructor
+                        {course?.instructor
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
@@ -470,15 +470,15 @@ export function RoadmapCoursePreview({
                     </Avatar>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {course.instructor}
+                        {course?.instructor}
                       </h3>
                       <p className="text-gray-600 mb-3">
                         Senior Backend Engineer & Technical Instructor
                       </p>
                       <p className="text-sm text-gray-700 leading-relaxed">
                         With over 8 years of experience in backend development,{" "}
-                        {course.instructor} has worked at top tech companies and
-                        has taught thousands of students. Specializes in
+                        {course?.instructor} has worked at top tech companies
+                        and has taught thousands of students. Specializes in
                         Node.js, system design, and scalable architecture
                         patterns.
                       </p>
@@ -517,7 +517,7 @@ export function RoadmapCoursePreview({
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <div className="text-4xl font-bold text-gray-900">
-                        {course.rating}
+                        {course?.rating}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
@@ -660,21 +660,23 @@ export function RoadmapCoursePreview({
                   <div className="text-sm font-medium text-gray-900 mb-1">
                     Current Roadmap
                   </div>
-                  <div className="text-sm text-gray-600">{roadmap.title}</div>
+                  <div className="text-sm text-gray-600">{roadmap?.title}</div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900 mb-1">
                     Current Milestone
                   </div>
-                  <div className="text-sm text-gray-600">{milestone.title}</div>
+                  <div className="text-sm text-gray-600">
+                    {milestone?.title}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900 mb-2">
                     Milestone Progress
                   </div>
-                  <Progress value={milestone.progress} className="h-2" />
+                  <Progress value={milestone?.progress} className="h-2" />
                   <div className="text-xs text-gray-500 mt-1">
-                    {milestone.progress}% complete
+                    {milestone?.progress}% complete
                   </div>
                 </div>
               </CardContent>
@@ -741,7 +743,7 @@ export function RoadmapCoursePreview({
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {course.tags.map((tag) => (
+                  {course?.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
