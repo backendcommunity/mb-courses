@@ -110,7 +110,10 @@ export function CourseQuizPage({
 
     setQuizCompleted(true);
     setCelebration(finalScore >= quiz?.passingScore);
-    handleQuizSubmit(finalScore >= quiz?.passingScore);
+  };
+
+  const handleClose = () => {
+    handleQuizSubmit(true);
   };
 
   const startQuiz = async () => {
@@ -210,6 +213,12 @@ export function CourseQuizPage({
                   ? "Review Quiz"
                   : "Start Quiz"}
               </Button>
+
+              {score! >= quiz?.passingScore && (
+                <Button onClick={handleClose} className="w-full" size="lg">
+                  Close Quiz
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -326,7 +335,7 @@ export function CourseQuizPage({
                 })}
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-col">
                 <Button
                   onClick={resetQuiz}
                   variant="outline"
@@ -334,6 +343,16 @@ export function CourseQuizPage({
                 >
                   Retake Quiz
                 </Button>
+                {score! >= quiz?.passingScore && (
+                  <Button
+                    variant={"destructive"}
+                    onClick={handleClose}
+                    className="w-full"
+                    size="lg"
+                  >
+                    Close Quiz
+                  </Button>
+                )}
                 {showNav && (
                   <Button
                     onClick={() => onNavigate(routes.courseQuizzes(courseId))}
@@ -358,15 +377,17 @@ export function CourseQuizPage({
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Exit Quiz
-          </Button>
+          {showNav && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Exit Quiz
+            </Button>
+          )}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
@@ -401,7 +422,7 @@ export function CourseQuizPage({
                 }
                 className={`w-full text-left p-4 rounded-lg border transition-colors ${
                   answers[currentQuestion] === index.toString()
-                    ? "border-blue-500 bg-blue-50"
+                    ? "border-primary bg-primary"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -409,7 +430,7 @@ export function CourseQuizPage({
                   <div
                     className={`w-4 h-4 rounded-full border-2 ${
                       answers[currentQuestion] === index.toString()
-                        ? "border-blue-500 bg-blue-500"
+                        ? "border-primary bg-primary"
                         : "border-gray-300"
                     }`}
                   >

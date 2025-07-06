@@ -31,27 +31,47 @@ export const routes = {
   // Roadmaps
   roadmaps: "/roadmaps",
   roadmapDetail: (roadmapId: string) => `/roadmaps/${roadmapId}`,
-  roadmapWatch: (roadmapId: string) => `/roadmaps/${roadmapId}/watch`,
-  roadmapVideoWatch: (roadmapId: string, videoId: string) =>
-    `/roadmaps/${roadmapId}/video/${videoId}`,
-  roadmapCoursePreview: (roadmapId: string, courseId: string) =>
-    `/roadmaps/${roadmapId}/courses/${courseId}`,
+  roadmapWatch: (roadmapId: string, topicId: string) =>
+    `/roadmaps/${roadmapId}/topics/${topicId}`,
+  roadmapVideoWatch: (
+    roadmapId: string,
+    topicId: string,
+    course: string,
+    chapterId: string,
+    videoId: string
+  ) =>
+    `/roadmaps/${roadmapId}/topics/${topicId}/courses/${course}/${chapterId}/videos/${videoId}`,
+  roadmapCoursePreview: (
+    roadmapId: string,
+    topicId: string,
+    courseId: string
+  ) => `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}`,
   roadmapCourseWatch: (
     roadmapId: string,
     courseId: string,
     chapterId: string
   ) => `/roadmaps/${roadmapId}/courses/${courseId}/watch/${chapterId}`,
-  roadmapCourseQuizzes: (roadmapId: string, courseId: string) =>
-    `/roadmaps/${roadmapId}/courses/${courseId}/quizzes`,
-  roadmapCourseQuiz: (roadmapId: string, courseId: string, quizId: string) =>
-    `/roadmaps/${roadmapId}/courses/${courseId}/quizzes/${quizId}`,
+  roadmapCourseQuizzes: (
+    roadmapId: string,
+    topicId: string,
+    courseId: string
+  ) => `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/quizzes`,
+  roadmapCourseQuiz: (
+    roadmapId: string,
+    topicId: string,
+    courseId: string,
+    quizId: string
+  ) =>
+    `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/quizzes/${quizId}`,
   roadmapCourseExercises: (roadmapId: string, courseId: string) =>
     `/roadmaps/${roadmapId}/courses/${courseId}/exercises`,
   roadmapCourseExercise: (
     roadmapId: string,
+    topicId: string,
     courseId: string,
     exerciseId: string
-  ) => `/roadmaps/${roadmapId}/courses/${courseId}/exercises/${exerciseId}`,
+  ) =>
+    `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/exercises/${exerciseId}`,
   roadmapCoursePlaygrounds: (roadmapId: string, courseId: string) =>
     `/roadmaps/${roadmapId}/courses/${courseId}/playgrounds`,
   roadmapCoursePlayground: (

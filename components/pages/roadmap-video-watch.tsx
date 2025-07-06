@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,68 +16,119 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Play,
-  Pause,
   SkipForward,
-  SkipBack,
-  Volume2,
-  Settings,
-  Maximize,
   CheckCircle2,
   BookOpen,
   Download,
   Share,
-  ThumbsUp,
   Clock,
   Target,
-  Trophy,
+  Save,
+  Code2,
+  Gamepad2,
+  Code,
+  Brain,
+  Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import {
+  Chapter,
+  Course,
+  Milestone,
+  Note,
+  Roadmap,
+  UserChapter,
+  UserCourse,
+  Video,
+} from "@/lib/data";
+import { codeSample, handleShare } from "@/lib/utils";
+import { toast } from "sonner";
+import { useUser } from "@/hooks/use-user";
+import { format } from "timeago.js";
+import DisqusCommentBlock from "../ui/comment";
+import { routes } from "@/lib/routes";
+import { usePathname } from "next/navigation";
+import ConfettiCelebration from "../confetti-celebration";
+import { VimeoPlayer } from "../ui/vimeo-player";
+import { CourseQuizPage } from "./course-quiz";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
   videoId: string;
+  topicId: string;
+  courseId: string;
+  chapterId: string;
   onNavigate?: (route: string) => void;
 }
 
 export function RoadmapVideoWatchPage({
   slug,
   videoId,
+  topicId,
+  chapterId,
+  courseId,
   onNavigate,
 }: RoadmapVideoWatchPageProps) {
   const store = useAppStore();
+  const user = useUser();
+  const path = usePathname();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [roadmap, setRoadmap] = useState({});
+  const [roadmap, setRoadmap] = useState<Roadmap>();
+  const [userCourse, setUserCourse] = useState<UserCourse>();
+  const [course, setCourse] = useState<Course>();
   const [duration] = useState(2400); // 40 minutes in seconds
+  const [code, setCode] = useState(codeSample);
+  const [note, setNote] = useState("");
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const [celebration, setCelebration] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [milestone, setMilestone] = useState<Milestone | any>();
+  const [completedItems, setCompletedItems] = useState<any>([]);
+  const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
+
+  const chapter: Chapter | any = course?.chapters.find(
+    (ch: Chapter) => ch.slug === chapterId
+  );
+
+  const video = videoId
+    ? chapter?.videos.find((v: Video) => v.slug === videoId)
+    : chapter?.videos[0];
 
   useEffect(() => {
     async function loadData() {
       const roadmap = await store.getRoadmapBySlug(slug);
       setRoadmap(roadmap);
+
+      const milestone = await store.getMilestone(slug, topicId);
+      setMilestone(milestone);
+
+      const course = await store.getCourse(courseId);
+      setCourse(course);
+      setUserCourse(course?.userCourse);
+
+      const completedItems = await store.getRoadmapItems(slug, topicId);
+      setCompletedItems(completedItems);
+
+      const completed =
+        completedItems.find((c: any) => c.itemId === course.id)?.completed ??
+        false;
+
+      setCompleted(completed);
     }
 
     loadData();
   }, []);
 
-  // Mock video data based on roadmap
-  const video = {
-    id: videoId,
-    title: "System Design Fundamentals",
-    description:
-      "Learn the core principles of designing scalable distributed systems",
-    duration: "40 min",
-    milestone: "System Design Mastery",
-    milestoneProgress: 65,
-    topics: [
-      "Scalability Principles",
-      "Load Balancing",
-      "Database Sharding",
-      "Caching Strategies",
-      "Microservices Architecture",
-    ],
-  };
+  useEffect(() => {
+    if (video?.type === "QUIZ" && video?.quiz?.required && !quizPassed) {
+      setShowRequiredQuiz(true);
+    } else setShowRequiredQuiz(false);
+  }, [video, quizPassed]);
 
-  if (!roadmap) {
+  if (!roadmap || !course) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -85,10 +142,236 @@ export function RoadmapVideoWatchPage({
     );
   }
 
+  const nextChapter =
+    course.chapters[
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
+    ];
+
+  const prevChapter =
+    course.chapters[
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
+    ];
+
+  const next = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (vid: Video) => vid.id === video?.id
+      );
+      return index === currentIndex + 1;
+    });
+  };
+
+  const prev = () => {
+    return chapter.videos.find((v: Video, index: number) => {
+      const currentIndex = chapter.videos.findIndex(
+        (vid: Video) => vid.id === video?.id
+      );
+      return index === currentIndex - 1;
+    });
+  };
+
+  const nextVideo = next();
+  const prevVideo = prev();
+
+  const handleSaveNotes = async () => {
+    if (!note) return;
+    try {
+      const saveNote = await store.saveNote(note, course.id, video?.id!);
+      setNotes([...notes, saveNote]);
+    } catch (error) {
+      toast.error("Error occurred adding note");
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const isChapterCompleted = (chapterId: string) => {
+    return userCourse?.userChapters?.find(
+      (ch: UserChapter) => ch.chapterId === chapterId
+    )?.isCompleted;
+  };
+
+  const isVideoCompleted = (videoId: string) => {
+    return completedItems?.find((ci: any) => ci.itemId === videoId)?.completed;
+  };
+
+  const handleVideoClick = (vid: Video) => {
+    if (!vid) return;
+    if (onNavigate) {
+      onNavigate(
+        routes.roadmapVideoWatch(
+          slug,
+          topicId,
+          course.slug,
+          chapterId,
+          vid.slug
+        )
+      );
+    }
+  };
+
+  const handleChapterClick = (next: boolean) => {
+    if (!onNavigate) return;
+
+    if (video?.type == "QUIZ") {
+      if (!quizPassed && video?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
+    if (next) {
+      onNavigate(
+        routes.roadmapVideoWatch(
+          slug,
+          topicId,
+          course.slug,
+          nextChapter.slug,
+          nextChapter?.videos[0]?.slug
+        )
+      );
+      return;
+    }
+
+    onNavigate(
+      routes.roadmapVideoWatch(
+        slug,
+        topicId,
+        course.slug,
+        prevChapter.slug,
+        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
+      )
+    );
+  };
+
+  const handleChapterFeatureClick = (type: string, id?: string) => {
+    if (!onNavigate) return;
+    let url = "";
+    switch (type?.toLowerCase()) {
+      case "quiz":
+        url = routes.courseQuizzes(slug);
+        break;
+      case "exercise":
+        url = routes.courseExercises(slug);
+        break;
+      case "playground":
+        url = routes.coursePlaygrounds(slug);
+        break;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleMarkComplete = async () => {
+    if (!video || !course || !chapter || !userCourse) return;
+
+    try {
+      // Combine completed videos + the one being marked now
+      const completedVideoIds = new Set(
+        userCourse
+          ?.userVideos!.filter((v) => v.isCompleted)
+          .map((v) => v.videoId)
+      );
+      completedVideoIds.add(video.id); // include this one just marked
+      // Check if all chapter videos are now complete
+      const allVideosComplete = chapter.videos.every((v: Video) =>
+        completedVideoIds.has(v.id)
+      );
+
+      const hasOtherContent =
+        chapter.quizzes || chapter.exercises || chapter.playgrounds;
+      const isChapterCompleted = allVideosComplete && !hasOtherContent;
+
+      // Update local course state
+      const updatedChapters = course.chapters.map((ch) =>
+        ch.id === chapter.id
+          ? {
+              ...ch,
+              videos: ch.videos.map((v) =>
+                v.id === video.id ? { ...v, isCompleted: true } : v
+              ),
+              isCompleted: isChapterCompleted,
+            }
+          : ch
+      );
+
+      setCourse({ ...course, chapters: updatedChapters });
+
+      // Optionally update userCourse for UI
+      setUserCourse({
+        ...userCourse,
+        userVideos: [
+          ...userCourse?.userVideos!.filter((v) => v.videoId !== video.id),
+          { videoId: video.id, isCompleted: true },
+        ],
+        userChapters: isChapterCompleted
+          ? [
+              ...userCourse?.userChapters!.filter(
+                (ch) => ch.chapterId !== chapter.id
+              ),
+              { chapterId: chapter.id, isCompleted: true },
+            ]
+          : userCourse.userChapters,
+      });
+
+      if (video?.type === "QUIZ")
+        return await markQuizAsCompleted(isChapterCompleted);
+
+      // Backend update with proper `isChapterCompleted`
+
+      await store.markRoadmapVideoCompleted(slug, topicId, {
+        itemId: video.id,
+        type: "VIDEO",
+        isChapterCompleted,
+      });
+
+      toast.success("You just earned some points!");
+      setCelebration(true);
+      handleVideoClick(nextVideo);
+    } catch (error: any) {
+      console.log(error.message);
+      toast.error("An error occurred. Please try again");
+    }
+  };
+
+  const markCourseAsCompleted = async () => {
+    try {
+      const completed = await store.markRoadmapItemCompleted(
+        slug,
+        topicId,
+        courseId,
+        {
+          type: "COURSE",
+        }
+      );
+
+      setCelebration(true);
+      setCompleted(true);
+      toast.success(
+        `You've earned ${completed?.totalPoints} MB from the course`
+      );
+      onNavigate?.(routes.roadmapWatch(slug, topicId));
+    } catch (error: any) {
+      console.log(error?.message);
+      toast.error("An error occurred updating your points. Try again");
+      setCompleted(false);
+    }
+  };
+
+  const markQuizAsCompleted = async (isChapterCompleted?: boolean) => {
+    await store.markRoadmapVideoCompleted(slug, topicId, {
+      itemId: video.id,
+      type: "QUIZ",
+      isChapterCompleted,
+    });
+
+    handleVideoClick(nextVideo);
+
+    return;
   };
 
   return (
@@ -97,18 +380,24 @@ export function RoadmapVideoWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/roadmaps/${slug}/watch`)}
+          onClick={() =>
+            onNavigate?.(
+              `/roadmaps/${slug}/topics/${milestone.id}/courses/${course.slug}`
+            )
+          }
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{video.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{video?.title}</h1>
           <p className="text-muted-foreground">
-            {roadmap.title} • {video.milestone}
+            {roadmap.title} • {course.title} • {chapter.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{video.duration}</Badge>
+          <Badge variant="outline">
+            {video?.duration ?? video?.quiz?.timeLimit} mins
+          </Badge>
           <Badge className="bg-blue-600">Milestone Content</Badge>
         </div>
       </div>
@@ -118,100 +407,60 @@ export function RoadmapVideoWatchPage({
         <div className="lg:col-span-2 space-y-4">
           {/* Video Player */}
           <Card className="overflow-hidden">
-            <div className="aspect-video bg-black relative">
-              {/* Video placeholder */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
-                <div className="text-center text-white">
-                  <Target className="h-16 w-16 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold">{video.title}</h3>
-                  <p className="text-blue-200">
-                    Roadmap milestone video content
-                  </p>
+            {video?.type === "VIDEO" && (
+              <Card className="overflow-hidden">
+                <div className="aspect-video bg-black relative">
+                  <VimeoPlayer video={video} />
                 </div>
-              </div>
-
-              {/* Video Controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="space-y-2">
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2 text-white text-sm">
-                    <span>{formatTime(currentTime)}</span>
-                    <div className="flex-1">
-                      <Progress
-                        value={(currentTime / duration) * 100}
-                        className="h-1"
-                      />
+              </Card>
+            )}
+            {video?.type === "QUIZ" &&
+              (showRequiredQuiz ? (
+                <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-lg flex items-center justify-center p-4">
+                  <Card className="w-full max-w-4xl  overflow-y-auto relative">
+                    <div className="absolute top-4 right-4">
+                      <Badge variant={"destructive"}>Required</Badge>
                     </div>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <SkipBack className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <SkipForward className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Maximize className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                    <CourseQuizPage
+                      courseId={courseId}
+                      onNavigate={(path) => onNavigate?.(path)}
+                      quiz={video?.quiz!}
+                      showNav={false}
+                      handleQuizSubmit={(passed) => {
+                        setQuizPassed(passed);
+                        handleMarkComplete();
+                      }}
+                    />
+                  </Card>
                 </div>
-              </div>
-            </div>
+              ) : (
+                <Card className="overflow-hidden">
+                  <CourseQuizPage
+                    courseId={courseId}
+                    onNavigate={(path) => onNavigate?.(path)}
+                    quiz={video?.quiz!}
+                    showNav={false}
+                    handleQuizSubmit={(passed) => {
+                      setQuizPassed(passed);
+                      handleMarkComplete();
+                    }}
+                  />
+                </Card>
+              ))}
           </Card>
 
           {/* Video Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              {/* <Button variant="outline" size="sm">
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Helpful
-              </Button>
-              <Button variant="outline" size="sm">
+              </Button> */}
+              <Button
+                onClick={() => handleShare(video?.title!, path)}
+                variant="outline"
+                size="sm"
+              >
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
@@ -220,17 +469,66 @@ export function RoadmapVideoWatchPage({
                 Download
               </Button>
             </div>
-            <Button>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Mark as Watched
-            </Button>
-          </div>
 
+            <div className="flex items-center gap-2">
+              {video &&
+                video.type === "VIDEO" &&
+                !isVideoCompleted(video.id) && (
+                  <Button onClick={handleMarkComplete}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </Button>
+                )}
+
+              {nextVideo && (
+                <Button
+                  onClick={() => handleVideoClick(nextVideo)}
+                  className="capitalize"
+                >
+                  Next {nextVideo?.type?.toLowerCase()}
+                  <SkipForward className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {!nextVideo && nextChapter && (
+                <Button onClick={() => handleChapterClick(true)}>
+                  Next Chapter
+                  <SkipForward className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+
+              {!nextVideo && !nextChapter && (
+                <div>
+                  {!completed ? (
+                    <Button
+                      variant={"destructive"}
+                      onClick={() => markCourseAsCompleted()}
+                    >
+                      Earn Your Rewards
+                      <Crown className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant={"outline"}
+                      onClick={() =>
+                        onNavigate?.(routes.courseCertificate(courseId))
+                      }
+                    >
+                      View Your Certificate
+                      <SkipForward className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <Card></Card>
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="code">Code Editor</TabsTrigger>
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="resources">Resources</TabsTrigger>
               <TabsTrigger value="discussion">Discussion</TabsTrigger>
             </TabsList>
@@ -242,34 +540,29 @@ export function RoadmapVideoWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">{video.description}</p>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Topics Covered</h4>
-                      <div className="grid gap-2">
-                        {video.topics.map((topic, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            <span className="text-sm">{topic}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-medium mb-2">Milestone Progress</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>{video.milestone}</span>
-                          <span>{video.milestoneProgress}%</span>
-                        </div>
-                        <Progress
-                          value={video.milestoneProgress}
-                          className="h-2"
-                        />
-                      </div>
-                    </div>
+                    <p className="text-muted-foreground">{video?.summary}</p>
                   </div>
+                </CardContent>
+                <CardContent>
+                  {video?.description ??
+                    (nextChapter?.description && (
+                      <CardContent>
+                        <div className="space-y-4  pt-4">
+                          <div className="flex w-full justify-center items-center">
+                            <span className="border-t flex-1"></span>
+                            <div className="px-2 text-xs">description</div>
+                            <span className="border-t flex-1"></span>
+                          </div>
+                          <p
+                            className="text-muted-foreground"
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                video?.description ?? nextChapter?.description,
+                            }}
+                          ></p>
+                        </div>
+                      </CardContent>
+                    ))}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -313,6 +606,89 @@ export function RoadmapVideoWatchPage({
               </Card>
             </TabsContent>
 
+            <TabsContent value="code">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code2 className="h-5 w-5" />
+                    Code Editor
+                  </CardTitle>
+                  <CardDescription>
+                    Follow along with the video and write your code here
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
+                      placeholder="Start coding your project here..."
+                    />
+                  </div>
+                </CardContent>
+                <div className="flex justify-between p-4">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                  <Button className="flex items-center gap-2">
+                    <Play className="h-4 w-4" />
+                    Run
+                  </Button>
+                </div>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="notes" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Notes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Take notes while watching the video..."
+                    className="min-h-[200px]"
+                  />
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => handleSaveNotes()}
+                      className="mt-2"
+                      disabled={!note}
+                    >
+                      Save Notes
+                    </Button>
+                  </div>
+                  <div className="border-t mt-5">
+                    <div className="space-y-3  pt-5">
+                      {notes?.map((note: Note) => (
+                        <div className="border rounded-lg p-3" key={note.id}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+                              {user.name
+                                .split(" ")
+                                .map((n: any) => n[0])
+                                .join("")}
+                            </div>
+                            <span className="font-medium text-sm">
+                              {user.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(note?.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm">{note.content}</p>
+                        </div>
+                      ))}
+                      {!notes.length && <div>No notes added yet</div>}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="resources" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -320,28 +696,7 @@ export function RoadmapVideoWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      {
-                        title: "System Design Interview Guide",
-                        type: "PDF",
-                        url: "#",
-                      },
-                      {
-                        title: "Scalability Patterns",
-                        type: "Article",
-                        url: "#",
-                      },
-                      {
-                        title: "Load Balancer Configuration",
-                        type: "Code",
-                        url: "#",
-                      },
-                      {
-                        title: "Database Sharding Examples",
-                        type: "Tutorial",
-                        url: "#",
-                      },
-                    ].map((resource, index) => (
+                    {video?.resources?.map((resource: any, index: number) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-3 border rounded-lg"
@@ -355,8 +710,10 @@ export function RoadmapVideoWatchPage({
                             </p>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                          View
+                        <Button asChild={true} variant="link">
+                          <a target="_blank" href={resource?.link}>
+                            View
+                          </a>
                         </Button>
                       </div>
                     ))}
@@ -371,46 +728,13 @@ export function RoadmapVideoWatchPage({
                   <CardTitle>Discussion</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Textarea placeholder="Ask a question about this milestone content..." />
-                      <Button>Post Question</Button>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          author: "Alex Chen",
-                          time: "1 hour ago",
-                          comment:
-                            "This really helped me understand when to use horizontal vs vertical scaling. Great examples!",
-                        },
-                        {
-                          author: "Sarah Johnson",
-                          time: "3 hours ago",
-                          comment:
-                            "Can you explain more about consistent hashing in the context of database sharding?",
-                        },
-                      ].map((comment, index) => (
-                        <div key={index} className="border rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center">
-                              {comment.author
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </div>
-                            <span className="font-medium text-sm">
-                              {comment.author}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {comment.time}
-                            </span>
-                          </div>
-                          <p className="text-sm">{comment.comment}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <DisqusCommentBlock
+                    config={{
+                      identifier: `roadmap-${video?.slug}`,
+                      title: video?.title,
+                      url: `/roadmaps/${slug}/courses/${course.slug}/watch/${chapterId}/${videoId}`,
+                    }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -430,13 +754,18 @@ export function RoadmapVideoWatchPage({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{video.milestone}</span>
-                  <span>{video.milestoneProgress}%</span>
+                  <span>{milestone.title}</span>
+                  <span>{milestone?.userTopic?.progress ?? 0}%</span>
                 </div>
-                <Progress value={video.milestoneProgress} className="h-2" />
+                <Progress
+                  value={milestone?.userTopic?.progress ?? 0}
+                  className="h-2"
+                />
               </div>
               <div className="text-sm text-muted-foreground">
-                3 of 5 videos watched in this milestone
+                {milestone?.userTopic?.totalTaskCompleted ?? 0} of{" "}
+                {milestone?.userTopic?.totalTasks ?? 0} videos watched in this
+                milestone
               </div>
             </CardContent>
           </Card>
@@ -447,54 +776,26 @@ export function RoadmapVideoWatchPage({
               <CardTitle className="text-lg">Milestone Videos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {[
-                {
-                  id: "1",
-                  title: "System Design Fundamentals",
-                  duration: "40 min",
-                  completed: false,
-                  current: true,
-                },
-                {
-                  id: "2",
-                  title: "Database Design Patterns",
-                  duration: "35 min",
-                  completed: true,
-                  current: false,
-                },
-                {
-                  id: "3",
-                  title: "Caching Strategies",
-                  duration: "30 min",
-                  completed: true,
-                  current: false,
-                },
-                {
-                  id: "4",
-                  title: "Microservices Architecture",
-                  duration: "45 min",
-                  completed: false,
-                  current: false,
-                },
-                {
-                  id: "5",
-                  title: "System Design Interview",
-                  duration: "50 min",
-                  completed: false,
-                  current: false,
-                },
-              ].map((vid) => (
+              {chapter?.videos.map((vid: Video) => (
                 <div
                   key={vid.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    vid.current ? "bg-blue-50 border border-blue-200" : ""
+                    vid.slug === videoId ? "border border-blue-200" : ""
                   }`}
                   onClick={() =>
-                    onNavigate?.(`/roadmaps/${roadmapId}/video/${vid.id}`)
+                    onNavigate?.(
+                      routes.roadmapVideoWatch(
+                        slug,
+                        topicId,
+                        course.slug,
+                        chapterId,
+                        vid.slug
+                      )
+                    )
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {vid.completed ? (
+                    {isVideoCompleted(vid.id) ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Play className="h-3 w-3" />
@@ -504,34 +805,186 @@ export function RoadmapVideoWatchPage({
                     <p className="text-sm font-medium">{vid.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{vid.duration}</span>
+                      <span>{vid.duration} mins</span>
+
+                      <Badge variant="outline" className="text-xs">
+                        {vid?.type}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Chapter Features */}
+              {chapter.quiz && (
+                <div
+                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                  onClick={() =>
+                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    <Brain className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{chapter.quiz.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{chapter.quiz.timeLimit} min</span>
+                      <Badge variant="outline" className="text-xs">
+                        QUIZ
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chapter.exercise && (
+                <div
+                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                  onClick={() =>
+                    handleChapterFeatureClick("exercise", chapter.exercise!.id)
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    <Code className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {chapter?.exercise?.title}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-xs">
+                        {chapter?.exercise?.difficulty}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        EXERCISE
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chapter.playground && (
+                <div
+                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                  onClick={() =>
+                    handleChapterFeatureClick(
+                      "playground",
+                      chapter.playground!.id
+                    )
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    <Gamepad2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {chapter.playground.title}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-xs">
+                        {chapter.playground.language.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        PLAYGROUND
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Chapter Navigation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">All Chapters</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {course.chapters.map((ch: Chapter, index: number) => (
+                <div
+                  key={ch.slug}
+                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                    ch.slug === chapterId ? "border border-blue-200" : ""
+                  }`}
+                  onClick={() =>
+                    onNavigate?.(
+                      routes.roadmapVideoWatch(
+                        slug,
+                        topicId,
+                        course.slug,
+                        ch.slug,
+                        ch?.videos[0]?.slug
+                      )
+                    )
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    {isChapterCompleted(ch?.id!) ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{ch.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {ch.videos.reduce((a: number, c: any) => {
+                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
+                        }, 0)}{" "}
+                        mins
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                        videos
+                      </Badge>
+
+                      {ch.videos.filter((v) => v.type === "QUIZ").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
+                          quizzes
+                        </Badge>
+                      )}
+                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "EXERCISE")
+                              .length
+                          }{" "}
+                          exercises
+                        </Badge>
+                      )}
+
+                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
+                        0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {
+                            ch.videos.filter((v) => v.type === "PLAYGROUND")
+                              .length
+                          }{" "}
+                          playgrounds
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
-
-          {/* Next Steps */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Next Steps</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 bg-green-50 rounded-lg">
-                <h4 className="font-medium text-sm">Complete Milestone</h4>
-                <p className="text-xs text-muted-foreground">
-                  Watch 2 more videos to complete this milestone
-                </p>
-              </div>
-              <Button className="w-full" size="sm">
-                <Trophy className="mr-2 h-4 w-4" />
-                View Milestone Rewards
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={course?.title!}
+        duration={2000}
+      />
     </div>
   );
 }

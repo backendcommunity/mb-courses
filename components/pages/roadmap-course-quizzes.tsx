@@ -1,57 +1,128 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, Clock, Trophy, CheckCircle, AlertCircle, Target, FileText, Play, Star } from "lucide-react"
-import { getCourseById, getRoadmapById, getRoadmapMilestoneById, getCourseQuizzes } from "@/lib/data"
+"use client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  Clock,
+  Trophy,
+  CheckCircle,
+  AlertCircle,
+  Target,
+  FileText,
+  Play,
+  Star,
+} from "lucide-react";
+import { getCourseQuizzes, Roadmap, Milestone, Course, Quiz } from "@/lib/data";
+import { useEffect, useState } from "react";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 interface RoadmapCourseQuizzesProps {
-  roadmapId: string
-  milestoneId: string
-  courseId: string
-  onBack: () => void
-  onStartQuiz: (quizId: string) => void
+  roadmapId: string;
+  topicId: string;
+  courseId: string;
+  onNavigate: (path: string) => void;
+  onStartQuiz: (quizId: string) => void;
 }
 
 export function RoadmapCourseQuizzes({
   roadmapId,
-  milestoneId,
+  topicId,
   courseId,
-  onBack,
+  onNavigate,
   onStartQuiz,
 }: RoadmapCourseQuizzesProps) {
-  const roadmap = getRoadmapById(roadmapId)
-  const milestone = getRoadmapMilestoneById(roadmapId, milestoneId)
-  const course = getCourseById(courseId)
-  const quizzes = getCourseQuizzes(courseId)
+  const store = useAppStore();
+  const [roadmap, setRoadmap] = useState<Roadmap>();
+  const [milestone, setMilestone] = useState<Milestone | any>();
+  const [loading, setLoading] = useState(false);
+  const [course, setCourse] = useState<Course>();
+  const [quizzes, setQuizzes] = useState<Quiz[] | any>();
 
-  if (!roadmap || !milestone || !course) {
-    return <div>Course not found</div>
+  async function loadQuizzes() {
+    const quizzes = await store.getCourseQuizzes(courseId);
+    setQuizzes(quizzes);
   }
 
-  const completedQuizzes = quizzes.filter((q) => q.completed).length
-  const totalQuizzes = quizzes.length
+  async function findRoadmap(slug: string) {
+    const roadmap = await store.getRoadmapBySlug(slug);
+    setRoadmap(roadmap);
+
+    const milestone = await store.getMilestone(slug, topicId);
+    setMilestone(milestone);
+  }
+
+  async function findCourse(slug: string) {
+    const course = await store.getCourse(slug, { isRoadmap: true });
+    setCourse(course);
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    findRoadmap(roadmapId);
+    findCourse(courseId);
+    loadQuizzes();
+    setLoading(false);
+  }, [roadmapId, courseId]);
+
+  if (loading || !roadmap || !milestone || !course) {
+    return <div>Course not found</div>;
+  }
+
+  console.log(quizzes);
+
+  const completedQuizzes = quizzes.filter(
+    ({ userQuiz, enrolled }: any) => enrolled && userQuiz?.completed
+  ).length;
+
+  // const filteredQuizzes = quizzes.filter(({ userQuiz, enrolled }: any) => {
+  //   if (filter === "completed") return enrolled && userQuiz?.completed;
+  //   if (filter === "pending") return !enrolled || !userQuiz?.completed;
+  //   return true;
+  // });
+
+  const totalQuizzes = quizzes.length;
   const averageScore =
-    quizzes.filter((q) => q.score !== undefined).reduce((acc, q) => acc + (q.score || 0), 0) /
-    Math.max(1, quizzes.filter((q) => q.score !== undefined).length)
+    quizzes
+      .filter((q: any) => q?.quiz?.score !== undefined)
+      .reduce((acc: number, q: any) => acc + (q?.quiz?.score || 0), 0) /
+    Math.max(
+      1,
+      quizzes.filter((q: any) => q?.quiz?.score !== undefined).length
+    );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-whit border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                onNavigate(
+                  routes.roadmapCoursePreview(roadmapId, topicId, courseId)
+                )
+              }
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Course
             </Button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{roadmap.title}</span>
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span>{roadmap?.title}</span>
               <span>•</span>
-              <span>{milestone.title}</span>
+              <span>{milestone?.title}</span>
               <span>•</span>
-              <span>{course.title}</span>
+              <span>{course?.title}</span>
               <span>•</span>
               <span>Quizzes</span>
             </div>
@@ -65,15 +136,19 @@ export function RoadmapCourseQuizzes({
           <div className="lg:col-span-3">
             {/* Page Header */}
             <div className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
+              {/* <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <FileText className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Course Quizzes</h1>
-                  <p className="text-gray-600">Test your knowledge with interactive quizzes</p>
+                  <h1 className="text-3xl font-bold text-gray-100">
+                    Course Quizzes
+                  </h1>
+                  <p className="text-gray-300">
+                    Test your knowledge with interactive quizzes
+                  </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Progress Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -84,8 +159,10 @@ export function RoadmapCourseQuizzes({
                         <CheckCircle className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-gray-900">{completedQuizzes}</div>
-                        <div className="text-sm text-gray-600">Completed</div>
+                        <div className="text-2xl font-bold text-gray-400">
+                          {completedQuizzes}
+                        </div>
+                        <div className="text-sm text-gray-400">Completed</div>
                       </div>
                     </div>
                   </CardContent>
@@ -98,8 +175,12 @@ export function RoadmapCourseQuizzes({
                         <FileText className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-gray-900">{totalQuizzes}</div>
-                        <div className="text-sm text-gray-600">Total Quizzes</div>
+                        <div className="text-2xl font-bold text-gray-400">
+                          {totalQuizzes}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          Total Quizzes
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -112,10 +193,15 @@ export function RoadmapCourseQuizzes({
                         <Star className="h-5 w-5 text-yellow-600" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {isNaN(averageScore) ? "--" : Math.round(averageScore)}%
+                        <div className="text-2xl font-bold text-gray-400">
+                          {isNaN(averageScore)
+                            ? "--"
+                            : Math.round(averageScore)}
+                          %
                         </div>
-                        <div className="text-sm text-gray-600">Average Score</div>
+                        <div className="text-sm text-gray-400">
+                          Average Score
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -129,13 +215,20 @@ export function RoadmapCourseQuizzes({
                 <Card>
                   <CardContent className="p-8 text-center">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Quizzes Available</h3>
-                    <p className="text-gray-600">This course doesn't have any quizzes yet.</p>
+                    <h3 className="text-lg font-semibold text-gray-400 mb-2">
+                      No Quizzes Available
+                    </h3>
+                    <p className="text-gray-300">
+                      This course doesn't have any quizzes yet.
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                quizzes.map((quiz, index) => (
-                  <Card key={quiz.id} className="hover:shadow-md transition-shadow">
+                quizzes.map((course: any, index: number) => (
+                  <Card
+                    key={course?.quiz?.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-4">
@@ -143,28 +236,36 @@ export function RoadmapCourseQuizzes({
                             {index + 1}
                           </div>
                           <div className="flex-1">
-                            <CardTitle className="text-xl mb-2">{quiz.title}</CardTitle>
-                            <CardDescription className="text-base mb-3">{quiz.description}</CardDescription>
+                            <CardTitle className="text-xl mb-2">
+                              {course?.quiz?.title}
+                            </CardTitle>
+                            <CardDescription className="text-base mb-3">
+                              {course?.quiz?.description}
+                            </CardDescription>
 
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-4 text-sm text-gray-300">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
-                                <span>{quiz.timeLimit} minutes</span>
+                                <span>{course?.quiz?.timeLimit} minutes</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <FileText className="h-4 w-4" />
-                                <span>{quiz.questions.length} questions</span>
+                                <span>
+                                  {course?.quiz?.questions?.length} questions
+                                </span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <Trophy className="h-4 w-4" />
-                                <span>{quiz.passingScore}% to pass</span>
+                                <span>
+                                  {course?.quiz?.passingScore}% to pass
+                                </span>
                               </div>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-col items-end gap-2">
-                          {quiz.completed ? (
+                          {course?.userQuiz?.completed ? (
                             <Badge variant="default" className="bg-green-500">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Completed
@@ -173,10 +274,14 @@ export function RoadmapCourseQuizzes({
                             <Badge variant="secondary">Not Started</Badge>
                           )}
 
-                          {quiz.score !== undefined && (
+                          {course?.userQuiz?.score !== undefined && (
                             <div className="text-right">
-                              <div className="text-lg font-bold text-gray-900">{quiz.score}%</div>
-                              <div className="text-xs text-gray-500">Best Score</div>
+                              <div className="text-lg font-bold text-gray-400">
+                                {course?.userQuiz?.bestScore}%
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Best Score
+                              </div>
                             </div>
                           )}
                         </div>
@@ -187,37 +292,46 @@ export function RoadmapCourseQuizzes({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Attempts: </span>
+                            <span className="text-gray-300">Attempts: </span>
                             <span className="font-medium">
-                              {quiz.attempts} / {quiz.maxAttempts}
+                              {course?.userQuiz?.attempts} /{" "}
+                              {course?.quiz?.maxAttempts}
                             </span>
                           </div>
 
-                          {quiz.completed && quiz.score !== undefined && (
-                            <div className="flex items-center gap-1">
-                              {quiz.score >= quiz.passingScore ? (
-                                <>
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
-                                  <span className="text-green-600 font-medium">Passed</span>
-                                </>
-                              ) : (
-                                <>
-                                  <AlertCircle className="h-4 w-4 text-red-500" />
-                                  <span className="text-red-600 font-medium">Failed</span>
-                                </>
-                              )}
-                            </div>
-                          )}
+                          {course?.userQuiz?.completed &&
+                            course?.userQuiz?.score !== undefined && (
+                              <div className="flex items-center gap-1">
+                                {course?.userQuiz?.score >=
+                                course?.quiz?.passingScore ? (
+                                  <>
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    <span className="text-green-600 font-medium">
+                                      Passed
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertCircle className="h-4 w-4 text-red-500" />
+                                    <span className="text-red-600 font-medium">
+                                      Failed
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {quiz.completed &&
-                            quiz.score !== undefined &&
-                            quiz.score < quiz.passingScore &&
-                            quiz.attempts < quiz.maxAttempts && (
+                          {course?.userQuiz?.completed &&
+                            course?.userQuiz?.score !== undefined &&
+                            course?.userQuiz?.score <
+                              course?.quiz.passingScore &&
+                            course?.userQuiz?.attempts <
+                              course?.quiz?.maxAttempts && (
                               <Button
                                 variant="outline"
-                                onClick={() => onStartQuiz(quiz.id)}
+                                onClick={() => onStartQuiz(course?.quiz?.id)}
                                 className="flex items-center gap-2"
                               >
                                 <Play className="h-4 w-4" />
@@ -225,29 +339,45 @@ export function RoadmapCourseQuizzes({
                               </Button>
                             )}
 
-                          {!quiz.completed && quiz.attempts < quiz.maxAttempts && (
-                            <Button onClick={() => onStartQuiz(quiz.id)} className="flex items-center gap-2">
-                              <Play className="h-4 w-4" />
-                              {quiz.attempts > 0 ? "Continue Quiz" : "Start Quiz"}
-                            </Button>
-                          )}
+                          {!course?.userQuiz?.completed &&
+                            course?.userQuiz?.attempts <
+                              course?.quiz.maxAttempts && (
+                              <Button
+                                onClick={() => onStartQuiz(course?.quiz?.id)}
+                                className="flex items-center gap-2"
+                              >
+                                <Play className="h-4 w-4" />
+                                {course?.quiz?.attempts > 0
+                                  ? "Continue Quiz"
+                                  : "Start Quiz"}
+                              </Button>
+                            )}
 
-                          {quiz.attempts >= quiz.maxAttempts && !quiz.completed && (
-                            <Badge variant="destructive">Max Attempts Reached</Badge>
-                          )}
+                          {course?.userQuiz?.attempts >=
+                            course?.quiz.maxAttempts &&
+                            !course?.userQuiz?.completed && (
+                              <Badge variant="destructive">
+                                Max Attempts Reached
+                              </Badge>
+                            )}
                         </div>
                       </div>
 
                       {/* Progress bar for partial completion */}
-                      {quiz.attempts > 0 && !quiz.completed && (
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">Progress</span>
-                            <span className="text-sm text-gray-600">In Progress</span>
+                      {course?.userQuiz?.attempts > 0 &&
+                        !course?.userQuiz?.completed && (
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-300">
+                                Progress
+                              </span>
+                              <span className="text-sm text-gray-300">
+                                In Progress
+                              </span>
+                            </div>
+                            <Progress value={50} className="h-2" />
                           </div>
-                          <Progress value={50} className="h-2" />
-                        </div>
-                      )}
+                        )}
                     </CardContent>
                   </Card>
                 ))
@@ -267,17 +397,30 @@ export function RoadmapCourseQuizzes({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Current Roadmap</div>
-                  <div className="text-sm text-gray-600">{roadmap.title}</div>
+                  <div className="text-sm font-medium text-gray-400 mb-1">
+                    Current Roadmap
+                  </div>
+                  <div className="text-sm text-gray-300">{roadmap?.title}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Current Milestone</div>
-                  <div className="text-sm text-gray-600">{milestone.title}</div>
+                  <div className="text-sm font-medium text-gray-400 mb-1">
+                    Current Milestone
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    {milestone?.title}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-2">Milestone Progress</div>
-                  <Progress value={milestone.progress} className="h-2" />
-                  <div className="text-xs text-gray-500 mt-1">{milestone.progress}% complete</div>
+                  <div className="text-sm font-medium text-gray-400 mb-2">
+                    Milestone Progress
+                  </div>
+                  <Progress
+                    value={milestone?.userTopic?.progress}
+                    className="h-2"
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    {milestone?.userTopic?.progress}% complete
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -306,33 +449,11 @@ export function RoadmapCourseQuizzes({
                 </div>
               </CardContent>
             </Card>
-
-            {/* Course Progress */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Course Progress</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Overall Progress</span>
-                      <span className="text-sm text-gray-600">{course.progress}%</span>
-                    </div>
-                    <Progress value={course.progress} className="h-2" />
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    Complete quizzes to test your understanding and track your progress through the course.
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export { RoadmapCourseQuizzes as RoadmapCourseQuizzesPage }
+export { RoadmapCourseQuizzes as RoadmapCourseQuizzesPage };

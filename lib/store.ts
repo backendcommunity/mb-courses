@@ -23,6 +23,7 @@ import {
   Note,
   updateUserCourse,
   Quiz,
+  Milestone,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -40,7 +41,7 @@ interface AppState {
   // Data getters
   getUser: () => User | any;
   getCourses: (queries?: CoursesQuery) => Course[] | any;
-  getCourse: (slug: string) => Course | any;
+  getCourse: (slug: string, params?: any) => Course | any;
   getUserCourse: (slug: string) => UserCourse | any;
   getUserCourses: (queries?: CoursesQuery) => UserCourse[] | any;
   getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
@@ -54,6 +55,8 @@ interface AppState {
   getQuiz: (id: string) => Quiz | any;
   getRoadmapBySlug: (slug: string) => any;
   getRoadmapMilestones: (slug: string) => any;
+  getMilestone: (slug: string, topicId: string) => Milestone | any;
+  getRoadmapItems: (slug: string, topicId: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => void;
@@ -67,9 +70,26 @@ interface AppState {
   completeChallenge: (challengeId: string) => void;
   addXP: (amount: number) => void;
   handleCourseEnrollment: (courseId: string) => UserCourse | any;
+  handleRoadmapCourseEnrollment: (
+    slug: string,
+    courseId: string
+  ) => UserCourse | any;
   startQuiz: (id: string, data: { userQuizId: string }) => any;
   submitQuiz: (id: string, questions: any) => any;
   saveNote: (note: string, courseId: string, videoId: string) => any;
+  startMilestone: (slug: string, topicId: string, data: any) => any;
+  markRoadmapItemCompleted: (
+    slug: string,
+    topicId: string,
+    itemId: string,
+    data: any
+  ) => any;
+
+  markRoadmapVideoCompleted: (
+    slug: string,
+    topicId: string,
+    payload: { type: string; itemId: string; isChapterCompleted?: boolean }
+  ) => any;
 
   // Force re-render trigger
   version: number;
@@ -86,6 +106,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+  getRoadmapItems: async (slug: string, topicId: string) => {
+    const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}/items`);
+    return data?.data;
   },
   getCourses: async (queries?: CoursesQuery) => {
     try {
@@ -122,9 +146,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  getCourse: async (slug: string) => {
+  getCourse: async (slug: string, params?: any) => {
     try {
-      const res = await fetchCourse(slug);
+      const res = await fetchCourse(slug, params);
       return res.data;
     } catch (error) {
       throw error;
@@ -143,6 +167,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get("/quizzes/" + id);
     return data?.data;
   },
+  getMilestone: async (slug: string, topicId: string) => {
+    const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}`);
+    return data?.data;
+  },
   getProjects: () => dataStore.projects,
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
@@ -154,10 +182,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   getRoadmapBySlug: async (slug: string) => {
-    console.log("asas");
     const { data } = await api.get("/roadmaps/" + slug);
-
-    console.log(data.data);
     return data?.data;
   },
 
@@ -178,10 +203,43 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  markRoadmapItemCompleted: async (
+    slug: string,
+    topicId: string,
+    courseId: string,
+    input: any
+  ) => {
+    const { data } = await api.post(
+      `/roadmaps/${slug}/topics/${topicId}/courses/${courseId}`,
+      input
+    );
+    return data?.data;
+  },
+
+  markRoadmapVideoCompleted: async (
+    slug: string,
+    topicId: string,
+    payload: { type: string; itemId: string; isChapterCompleted?: boolean }
+  ) => {
+    const { data } = await api.post(
+      `/roadmaps/${slug}/topics/${topicId}/video`,
+      payload
+    );
+    return data?.data;
+  },
+
   saveNote: async (note: string, courseId: string, videoId: string) => {
     const { data } = await api.post(
       `/courses/${courseId}/videos/${videoId}/notes`,
       { note: note }
+    );
+    return data?.data;
+  },
+
+  startMilestone: async (slug: string, topicId: string, payload: any = {}) => {
+    const { data } = await api.post(
+      `/roadmaps/${slug}/topics/${topicId}`,
+      payload
     );
     return data?.data;
   },
@@ -205,6 +263,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   ): Promise<UserCourse | any> => {
     const res = await handleCourseEnrollment(courseId);
     return res.data;
+  },
+
+  handleRoadmapCourseEnrollment: async (slug: string, courseId: string) => {
+    const { data } = await api.post(`/roadmaps/${slug}/courses/${courseId}`);
+
+    return data;
   },
 
   updateProject: (id, updates) => {

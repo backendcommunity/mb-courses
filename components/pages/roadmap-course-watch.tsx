@@ -69,7 +69,6 @@ export function RoadmapCourseWatch({
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
     new Set()
   );
-
   const roadmap = getRoadmapById(roadmapId);
   const milestone = getRoadmapMilestoneById(roadmapId, milestoneId);
   const course = getCourseById(courseId);
@@ -80,8 +79,6 @@ export function RoadmapCourseWatch({
       : course?.chapters[0]
   );
   const [currentVideo, setCurrentVideo] = useState<any>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (chapterId) {
@@ -112,9 +109,9 @@ export function RoadmapCourseWatch({
     }
   }, [currentChapter]);
 
-  // if (!roadmap || !milestone || !course) {
-  //   return <div>Course not found</div>;
-  // }
+  if (!roadmap || !milestone || !course) {
+    return <div>Course not found</div>;
+  }
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -126,7 +123,7 @@ export function RoadmapCourseWatch({
 
       // Check if all videos in chapter are complete
       const allVideosComplete = currentChapter.videos.every(
-        (v) => v.completed || v.id === currentVideo.id
+        (v) => v.isCompleted || v.id === currentVideo.id
       );
       if (allVideosComplete) {
         markChapterComplete(courseId, currentChapter.id);
@@ -157,12 +154,12 @@ export function RoadmapCourseWatch({
     }
 
     // Look for next chapter
-    const currentChapterIndex = course?.chapters.findIndex(
+    const currentChapterIndex = course?.chapters?.findIndex(
       (c) => c.id === currentChapter.id
     );
-    if (currentChapterIndex < course?.chapters.length - 1) {
-      const nextChapter = course?.chapters[currentChapterIndex + 1];
-      return nextChapter.videos[0];
+    if (currentChapterIndex! < course?.chapters!?.length - 1) {
+      const nextChapter = course?.chapters[currentChapterIndex! + 1];
+      return nextChapter?.videos[0];
     }
 
     return null;
@@ -182,9 +179,9 @@ export function RoadmapCourseWatch({
     const currentChapterIndex = course?.chapters.findIndex(
       (c) => c.id === currentChapter.id
     );
-    if (currentChapterIndex > 0) {
-      const prevChapter = course?.chapters[currentChapterIndex - 1];
-      return prevChapter.videos[prevChapter.videos.length - 1];
+    if (currentChapterIndex! > 0) {
+      const prevChapter = course?.chapters[currentChapterIndex! - 1];
+      return prevChapter?.videos[prevChapter?.videos.length - 1];
     }
 
     return null;
@@ -196,10 +193,12 @@ export function RoadmapCourseWatch({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  console.log(course?.chapters);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className=" border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -347,7 +346,7 @@ export function RoadmapCourseWatch({
                             <BookOpen className="h-4 w-4" />
                             <span>
                               Chapter{" "}
-                              {course?.chapters.findIndex(
+                              {course?.chapters!?.findIndex(
                                 (c) => c.id === currentChapter?.id
                               ) + 1}
                             </span>
@@ -416,7 +415,7 @@ export function RoadmapCourseWatch({
                         {course?.chapters.reduce(
                           (acc, chapter) =>
                             acc +
-                            chapter.videos.filter((v) => v.completed).length,
+                            chapter.videos.filter((v) => v.isCompleted).length,
                           0
                         )}{" "}
                         /{" "}
@@ -429,7 +428,7 @@ export function RoadmapCourseWatch({
                     <div>
                       <div className="text-gray-600">Completed Chapters</div>
                       <div className="font-medium">
-                        {course?.chapters.filter((c) => c.completed).length} /{" "}
+                        {course?.chapters.filter((c) => c.isCompleted).length} /{" "}
                         {course?.chapters.length}
                       </div>
                     </div>
@@ -501,7 +500,7 @@ export function RoadmapCourseWatch({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {chapter.completed && (
+                            {chapter.isCompleted && (
                               <CheckCircle className="h-4 w-4 text-green-500" />
                             )}
                             {expandedChapters.has(chapter.id) ? (
@@ -528,7 +527,7 @@ export function RoadmapCourseWatch({
                             >
                               <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center w-5 h-5">
-                                  {video.completed ? (
+                                  {video.isCompleted ? (
                                     <CheckCircle className="h-4 w-4 text-green-500" />
                                   ) : (
                                     <Play className="h-3 w-3 text-gray-400" />
@@ -547,9 +546,11 @@ export function RoadmapCourseWatch({
                           ))}
 
                           {/* Additional Content */}
-                          {chapter.quiz && (
+                          {chapter?.quizzes!?.length > 0 && (
                             <button
-                              onClick={() => onNavigateToQuiz(chapter.quiz!.id)}
+                              onClick={() =>
+                                onNavigateToQuiz(chapter?.quiz!.id)
+                              }
                               className="w-full p-3 pl-12 text-left hover:bg-gray-50 transition-colors"
                             >
                               <div className="flex items-center gap-3">

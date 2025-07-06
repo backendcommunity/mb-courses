@@ -18,17 +18,12 @@ import { format } from "timeago.js";
 import {
   ArrowLeft,
   Play,
-  Pause,
   SkipForward,
   SkipBack,
-  Volume2,
-  Settings,
-  Maximize,
   CheckCircle2,
   BookOpen,
   Download,
   Share,
-  ThumbsUp,
   Clock,
   Brain,
   Code,
@@ -49,12 +44,11 @@ import {
 } from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
 import DisqusCommentBlock from "../ui/comment";
-import { markVideoComlete } from "@/lib/courses";
+import { markVideoComplete } from "@/lib/courses";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { codeSample, handleShare } from "@/lib/utils";
 import { CourseQuizPage } from "./course-quiz";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface CourseWatchPageProps {
@@ -81,10 +75,10 @@ export function CourseWatchPage({
     ? chapter?.videos.find((v: Video) => v.slug === videoId)
     : chapter?.videos[0];
   const [loading, setLoading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration] = useState(1800); // 30 minutes in seconds
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  // const [duration] = useState(1800); // 30 minutes in seconds
+  // const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
   const [code, setCode] = useState(codeSample);
@@ -201,7 +195,7 @@ export function CourseWatchPage({
       });
 
       // Backend update with proper `isChapterCompleted`
-      await markVideoComlete(course.id, chapter.id, currentVideo.id, {
+      await markVideoComplete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
       });
 
@@ -252,6 +246,7 @@ export function CourseWatchPage({
     course.chapters[
       course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
     ];
+
   const prevChapter =
     course.chapters[
       course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1

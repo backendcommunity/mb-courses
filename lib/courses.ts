@@ -19,8 +19,10 @@ export const fetchUserCourses = async (
   return data;
 };
 
-export const fetchCourse = async (courseId: string) => {
-  const { data } = await api.get("/courses/" + courseId);
+export const fetchCourse = async (courseId: string, params?: any) => {
+  const { data } = await api.get(
+    "/courses/" + courseId + "?isRoadmap=" + params?.isRoadmap
+  );
 
   return data;
 };
@@ -49,7 +51,7 @@ export const handleCourseEnrollment = async (courseId: string) => {
   return data;
 };
 
-export const markVideoComlete = async (
+export const markVideoComplete = async (
   courseId: string,
   chapterId: string,
   videoId: string,

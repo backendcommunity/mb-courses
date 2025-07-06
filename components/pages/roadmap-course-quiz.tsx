@@ -1,442 +1,508 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { ArrowLeft, Clock, CheckCircle, AlertCircle, Target, Trophy, RotateCcw, ArrowRight } from "lucide-react"
-import { getCourseById, getRoadmapById, getRoadmapMilestoneById, getQuizById, submitQuizAttempt } from "@/lib/data"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+} from "lucide-react";
+import { Quiz, Course, Roadmap } from "@/lib/data";
+import { useAppStore } from "@/lib/store";
+import ConfettiCelebration from "../confetti-celebration";
+import { toast } from "sonner";
+import { routes } from "@/lib/routes";
 
 interface RoadmapCourseQuizProps {
-  roadmapId: string
-  milestoneId: string
-  courseId: string
-  quizId: string
-  onBack: () => void
-  onComplete: () => void
+  roadmapId: string;
+  courseId: string;
+  quizId: string;
+  showNav?: boolean;
+  handleQuizSubmit: (passed: boolean) => void;
+  onNavigate: (path: string) => void;
 }
 
 export function RoadmapCourseQuiz({
   roadmapId,
-  milestoneId,
   courseId,
   quizId,
-  onBack,
-  onComplete,
+  showNav = true,
+  onNavigate,
+  handleQuizSubmit,
 }: RoadmapCourseQuizProps) {
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [score, setScore] = useState<number | null>(null)
-  const [showResults, setShowResults] = useState(false)
+  const store = useAppStore();
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [score, setScore] = useState<number | null>(null);
+  const [roadmap, setRoadmap] = useState<Roadmap>();
+  const [course, setCourse] = useState<Course>();
+  const [quiz, setQuiz] = useState<Quiz>();
+  const [celebration, setCelebration] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [newUserQuiz, setNewUserQuiz] = useState<any>();
+  const [quizCompleted, setQuizCompleted] = useState(
+    quiz?.userQuiz?.passed ?? false
+  );
 
-  const roadmap = getRoadmapById(roadmapId)
-  const milestone = getRoadmapMilestoneById(roadmapId, milestoneId)
-  const course = getCourseById(courseId)
-  const quiz = getQuizById(courseId, quizId)
+  async function loadData() {
+    const roadmap = await store.getRoadmapBySlug(roadmapId);
+    setRoadmap(roadmap);
+    const course = await store.getCourse(courseId);
+    setCourse(course);
+
+    const quiz = await store.getQuiz(quizId);
+
+    setQuiz(quiz);
+  }
 
   useEffect(() => {
-    if (quiz && !isSubmitted) {
-      setTimeLeft(quiz.timeLimit * 60) // Convert minutes to seconds
-    }
-  }, [quiz, isSubmitted])
+    loadData();
+  }, []);
+
+  const handleSubmitQuiz = async () => {
+    let totalPoints = 0;
+    let earnedPoints = 0;
+    let result: any = [];
+
+    if (!quiz) return;
+
+    quiz?.questions.forEach((question, index) => {
+      const userAnswerIndex = parseInt(answers[index]);
+
+      // If user didn't answer, skip
+      if (isNaN(userAnswerIndex)) return;
+
+      const userAnswerValue = question?.options![userAnswerIndex];
+      const correctAnswerValue = question.correctAnswer;
+      const questionPoints = question.points || 0;
+
+      totalPoints += questionPoints;
+
+      if (userAnswerValue === correctAnswerValue) {
+        earnedPoints += questionPoints;
+        result.push({
+          ...question,
+          passed: true,
+        });
+      }
+    });
+
+    // Avoid division by 0
+    const finalScore =
+      totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+
+    setScore(finalScore);
+
+    await store.submitQuiz(quiz?.id!, {
+      items: result,
+      userQuizId: quiz?.userQuiz?.id ?? newUserQuiz?.id,
+      score: finalScore,
+    });
+
+    setQuizCompleted(true);
+    setCelebration(finalScore >= quiz?.passingScore!);
+    handleQuizSubmit(finalScore >= quiz?.passingScore!);
+  };
 
   useEffect(() => {
-    if (timeLeft > 0 && !isSubmitted) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timer)
-    } else if (timeLeft === 0 && !isSubmitted) {
-      handleSubmit()
+    if (quizStarted && !quizCompleted && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0 && !quizCompleted) {
+      handleSubmitQuiz();
     }
-  }, [timeLeft, isSubmitted])
+  }, [quizStarted, quizCompleted, timeLeft]);
 
-  if (!roadmap || !milestone || !course || !quiz) {
-    return <div>Quiz not found</div>
+  if (!roadmap || !course || !quiz) {
+    return <div>Quiz not found</div>;
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
-  const handleAnswerChange = (questionId: string, answer: string) => {
+  const handleAnswerSelect = (questionIndex: number, answerIndex: string) => {
     setAnswers((prev) => ({
       ...prev,
-      [questionId]: answer,
-    }))
-  }
+      [questionIndex]: answerIndex,
+    }));
+  };
 
-  const calculateScore = () => {
-    let correct = 0
-    quiz.questions.forEach((question) => {
-      if (answers[question.id] === question.correctAnswer) {
-        correct++
-      }
-    })
-    return Math.round((correct / quiz.questions.length) * 100)
-  }
+  const startQuiz = async () => {
+    try {
+      const new_quiz = await store.startQuiz(quiz?.id, {
+        userQuizId: quiz?.userQuiz?.id,
+      });
 
-  const handleSubmit = () => {
-    const finalScore = calculateScore()
-    setScore(finalScore)
-    setIsSubmitted(true)
-    setShowResults(true)
+      if (!new_quiz) return;
 
-    // Submit to data store
-    submitQuizAttempt(courseId, quizId, finalScore)
-  }
+      setQuizStarted(true);
 
-  const handleRetake = () => {
-    setCurrentQuestion(0)
-    setAnswers({})
-    setTimeLeft(quiz.timeLimit * 60)
-    setIsSubmitted(false)
-    setScore(null)
-    setShowResults(false)
-  }
+      setTimeLeft(quiz?.timeLimit * 60);
+      setNewUserQuiz(new_quiz);
 
-  const currentQuestionData = quiz.questions[currentQuestion]
-  const progress = ((currentQuestion + 1) / quiz.questions.length) * 100
+      Object.assign(quiz, { userQuiz: new_quiz, enrolled: true });
+      if (!quiz?.userQuiz?.passed)
+        toast.success("Quiz started and your time starts now");
+    } catch (error: any) {
+      console.log(error?.message);
+      toast.error("An error occured. Please try again");
+    }
+  };
 
-  if (showResults) {
+  const resetQuiz = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setQuizStarted(false);
+    setQuizCompleted(false);
+    setScore(null);
+    setTimeLeft(quiz?.timeLimit * 60);
+  };
+
+  if (!quizStarted) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Quizzes
-              </Button>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>{roadmap.title}</span>
-                <span>•</span>
-                <span>{milestone.title}</span>
-                <span>•</span>
-                <span>{course.title}</span>
-                <span>•</span>
-                <span>{quiz.title}</span>
+      <div className="flex-1 p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {showNav && (
+            <div className="border-b">
+              <div className="px-1 sm:px-3 lg:px-2 py-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate(routes.roadmapDetail(roadmapId))}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Roadmap
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span>{roadmap?.title ?? "Roadmap title"}</span>
+                    <span>•</span>
+                    {/* <span>{milestone?.title ?? "Milestone title"}</span> */}
+                    {/* <span>•</span> */}
+                    <span>{course?.title ?? "Course title"}</span>
+                    <span>•</span>
+                    <span>{quiz?.title ?? "Quiz title"}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Results Header */}
-          <Card className="mb-8">
-            <CardContent className="p-8 text-center">
-              <div className="mb-6">
-                {score !== null && score >= quiz.passingScore ? (
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                  </div>
-                ) : (
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                    <AlertCircle className="h-8 w-8 text-red-600" />
-                  </div>
-                )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">{quiz?.title}</CardTitle>
+              <p className="text-gray-600">{quiz?.description}</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Questions</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {quiz?.questions.length}
+                  </p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Time Limit</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {quiz?.timeLimit} min
+                  </p>
+                </div>
               </div>
 
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {score !== null && score >= quiz.passingScore ? "Congratulations!" : "Quiz Complete"}
-              </h1>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-yellow-800">
+                      Quiz Instructions
+                    </h4>
+                    <ul className="text-sm text-yellow-700 mt-2 space-y-1">
+                      <li>
+                        • You have {quiz?.timeLimit} minutes to complete this
+                        quiz
+                      </li>
+                      <li>• You need {quiz?.passingScore}% to pass</li>
+                      <li>• You can retake the quiz if needed</li>
+                      <li>• Make sure you have a stable internet connection</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
 
-              <p className="text-lg text-gray-600 mb-6">
-                {score !== null && score >= quiz.passingScore
+              <Button onClick={startQuiz} className="w-full" size="lg">
+                {quiz?.enrolled && !quiz?.userQuiz?.passed
+                  ? "Retake Quiz"
+                  : quiz?.userQuiz?.passed
+                  ? "Review Quiz"
+                  : "Start Quiz"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  <ConfettiCelebration
+    onComplete={() => setCelebration(false)}
+    isVisible={celebration}
+    celebrationType="completion"
+    courseName={quiz?.title!}
+  />;
+
+  if (quizCompleted) {
+    const _score = score ?? quiz?.userQuiz?.score;
+    const passed = _score >= quiz?.passingScore!;
+
+    const questions =
+      quiz?.enrolled && quiz?.userQuiz?.completed
+        ? quiz?.userQuiz.items
+        : quiz?.questions;
+
+    return (
+      <div className="flex-1 p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {showNav && (
+            <div className="border-b">
+              <div className="px-1 sm:px-3 lg:px-2 py-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate(routes.roadmapDetail(roadmapId))}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Roadmap
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span>{roadmap?.title ?? "Roadmap title"}</span>
+                    <span>•</span>
+                    {/* <span>{milestone?.title ?? "Milestone title"}</span> */}
+                    {/* <span>•</span> */}
+                    <span>{course?.title ?? "Course title"}</span>
+                    <span>•</span>
+                    <span>{quiz?.title ?? "Quiz title"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4">
+                {passed ? (
+                  <CheckCircle className="h-16 w-16 text-green-600" />
+                ) : (
+                  <XCircle className="h-16 w-16 text-red-600" />
+                )}
+              </div>
+              <CardTitle className="text-2xl">
+                {passed ? "Congratulations!" : "Quiz Complete"}
+              </CardTitle>
+              <p className="text-gray-600">
+                {passed
                   ? "You passed the quiz!"
                   : "You can retake the quiz to improve your score."}
               </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">{score}%</div>
-                  <div className="text-sm text-gray-600">Your Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">{quiz.passingScore}%</div>
-                  <div className="text-sm text-gray-600">Passing Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">
-                    {quiz.questions.filter((q) => answers[q.id] === q.correctAnswer).length}/{quiz.questions.length}
-                  </div>
-                  <div className="text-sm text-gray-600">Correct Answers</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Question Review */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Question Review</CardTitle>
-              <CardDescription>Review your answers and explanations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {quiz.questions.map((question, index) => {
-                const userAnswer = answers[question.id]
-                const isCorrect = userAnswer === question.correctAnswer
+              <div className="text-center">
+                <div
+                  className="text-4xl font-bold mb-2"
+                  style={{ color: passed ? "#16a34a" : "#dc2626" }}
+                >
+                  {_score}%
+                </div>
+                <Badge
+                  variant={passed ? "default" : "destructive"}
+                  className="mb-4"
+                >
+                  {passed ? "PASSED" : "FAILED"} (Need {quiz?.passingScore}%)
+                </Badge>
+              </div>
 
-                return (
-                  <div key={question.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div
-                        className={`flex items-center justify-center w-6 h-6 rounded-full text-sm font-medium ${
-                          isCorrect ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 mb-2">{question.question}</h3>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Quiz Review</h4>
+                {questions.map((question: any, index: number) => {
+                  const userAnswerIndex = parseInt(answers[index]);
+                  const userAnswer = question?.options![userAnswerIndex];
+                  const isCorrect = userAnswer === question.correctAnswer;
 
-                        {question.type === "multiple-choice" && question.options && (
-                          <div className="space-y-2 mb-3">
-                            {question.options.map((option) => (
-                              <div
-                                key={option}
-                                className={`p-2 rounded border text-sm ${
-                                  option === question.correctAnswer
-                                    ? "bg-green-50 border-green-200 text-green-800"
-                                    : option === userAnswer && !isCorrect
-                                      ? "bg-red-50 border-red-200 text-red-800"
-                                      : "bg-gray-50 border-gray-200"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  {option === question.correctAnswer && (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                  )}
-                                  {option === userAnswer && !isCorrect && (
-                                    <AlertCircle className="h-4 w-4 text-red-600" />
-                                  )}
-                                  <span>{option}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                  const text = () => {
+                    if (userAnswer) return userAnswer;
+                    if (question.passed) return question.correctAnswer;
+                    return quiz?.userQuiz?.completed
+                      ? "Not available"
+                      : "Not answered";
+                  };
+
+                  return (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-2">
+                        {isCorrect || !question?.passed ? (
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
                         )}
-
-                        <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                          <div className="text-sm font-medium text-blue-900 mb-1">Explanation:</div>
-                          <div className="text-sm text-blue-800">{question.explanation}</div>
+                        <div className="flex-1">
+                          <p className="font-medium">{question.question}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Your answer: {text()}
+                          </p>
+                          {(!isCorrect || !question?.passed) && (
+                            <p className="text-sm text-green-600 mt-1">
+                              Correct answer: {question?.correctAnswer}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-500 mt-2">
+                            {question.explanation}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={onBack}>
-              Back to Quizzes
-            </Button>
-
-            <div className="flex items-center gap-3">
-              {score !== null && score < quiz.passingScore && quiz.attempts < quiz.maxAttempts && (
-                <Button onClick={handleRetake} className="flex items-center gap-2">
-                  <RotateCcw className="h-4 w-4" />
+              <div className="flex gap-4">
+                <Button
+                  onClick={resetQuiz}
+                  variant="outline"
+                  className="flex-1"
+                >
                   Retake Quiz
                 </Button>
-              )}
-
-              <Button onClick={onComplete} className="flex items-center gap-2">
-                Continue Learning
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+                {showNav && (
+                  <Button
+                    onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+                    className="flex-1"
+                  >
+                    Back to Quizzes
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    )
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Quizzes
-              </Button>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>{roadmap.title}</span>
-                <span>•</span>
-                <span>{milestone.title}</span>
-                <span>•</span>
-                <span>{course.title}</span>
-                <span>•</span>
-                <span>{quiz.title}</span>
-              </div>
-            </div>
+  const currentQ = quiz?.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / quiz?.questions.length) * 100;
 
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="text-xs">
-                <Target className="h-3 w-3 mr-1" />
-                Roadmap Quiz
-              </Badge>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className={timeLeft < 60 ? "text-red-600 font-medium" : "text-gray-700"}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
+  return (
+    <div className="flex-1 p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Exit Quiz
+          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4" />
+              {formatTime(timeLeft)}
             </div>
+            <Badge variant="outline">
+              {currentQuestion + 1} of {quiz?.questions.length}
+            </Badge>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quiz Progress */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
-              <Badge variant="secondary">
-                Question {currentQuestion + 1} of {quiz.questions.length}
-              </Badge>
-            </div>
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} />
+        </div>
 
-            <Progress value={progress} className="h-2 mb-4" />
-
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>{quiz.description}</span>
-              <span>{Math.round(progress)}% complete</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Current Question */}
-        <Card className="mb-8">
+        {/* Question */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-xl">{currentQuestionData.question}</CardTitle>
-            <CardDescription>Select the best answer from the options below</CardDescription>
+            <CardTitle className="text-xl">{currentQ.question}</CardTitle>
           </CardHeader>
-
-          <CardContent>
-            {currentQuestionData.type === "multiple-choice" && currentQuestionData.options && (
-              <RadioGroup
-                value={answers[currentQuestionData.id] || ""}
-                onValueChange={(value) => handleAnswerChange(currentQuestionData.id, value)}
-                className="space-y-3"
+          <CardContent className="space-y-4">
+            {currentQ?.options?.map((option, index) => (
+              <button
+                key={index}
+                onClick={() =>
+                  handleAnswerSelect(currentQuestion, index.toString())
+                }
+                className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                  answers[currentQuestion] === index.toString()
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
               >
-                {currentQuestionData.options.map((option, index) => (
-                  <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50">
-                    <RadioGroupItem value={option} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                      {option}
-                    </Label>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-4 h-4 rounded-full border-2 ${
+                      answers[currentQuestion] === index.toString()
+                        ? "border-blue-500 bg-blue-500"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {answers[currentQuestion] === index.toString() && (
+                      <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5" />
+                    )}
                   </div>
-                ))}
-              </RadioGroup>
-            )}
-
-            {currentQuestionData.type === "true-false" && currentQuestionData.options && (
-              <RadioGroup
-                value={answers[currentQuestionData.id] || ""}
-                onValueChange={(value) => handleAnswerChange(currentQuestionData.id, value)}
-                className="space-y-3"
-              >
-                {currentQuestionData.options.map((option, index) => (
-                  <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50">
-                    <RadioGroupItem value={option} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-
-            {currentQuestionData.type === "fill-blank" && (
-              <div className="space-y-3">
-                <Label htmlFor="fill-blank-answer">Your Answer:</Label>
-                <Input
-                  id="fill-blank-answer"
-                  value={answers[currentQuestionData.id] || ""}
-                  onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
-                  placeholder="Type your answer here..."
-                  className="w-full"
-                />
-              </div>
-            )}
+                  <span>{option}</span>
+                </div>
+              </button>
+            ))}
           </CardContent>
         </Card>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between">
           <Button
             variant="outline"
-            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+            onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
             disabled={currentQuestion === 0}
           >
-            Previous Question
+            Previous
           </Button>
 
-          <div className="flex items-center gap-3">
-            {currentQuestion < quiz.questions.length - 1 ? (
-              <Button
-                onClick={() => setCurrentQuestion(currentQuestion + 1)}
-                disabled={!answers[currentQuestionData.id]}
-              >
-                Next Question
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!answers[currentQuestionData.id]}
-                className="flex items-center gap-2"
-              >
-                <Trophy className="h-4 w-4" />
-                Submit Quiz
-              </Button>
-            )}
-          </div>
+          {currentQuestion === quiz?.questions.length - 1 ? (
+            <Button
+              onClick={handleSubmitQuiz}
+              disabled={Object.keys(answers).length !== quiz?.questions.length}
+            >
+              Submit Quiz
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCurrentQuestion((prev) => prev + 1)}
+              disabled={!answers[currentQuestion]}
+            >
+              Next
+            </Button>
+          )}
         </div>
-
-        {/* Quiz Info Sidebar */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="text-base">Quiz Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Time Limit:</span>
-              <span className="font-medium">{quiz.timeLimit} minutes</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Passing Score:</span>
-              <span className="font-medium">{quiz.passingScore}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Attempts:</span>
-              <span className="font-medium">
-                {quiz.attempts + 1} / {quiz.maxAttempts}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Questions:</span>
-              <span className="font-medium">{quiz.questions.length}</span>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
-  )
+  );
 }
 
-export { RoadmapCourseQuiz as RoadmapCourseQuizPage }
+export { RoadmapCourseQuiz as RoadmapCourseQuizPage };

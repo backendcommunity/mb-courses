@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,79 +9,81 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Play,
+  CheckCircle2,
   Clock,
-  Users,
   Star,
   BookOpen,
-  CheckCircle,
+  Award,
+  Share,
+  Heart,
   Lock,
   ArrowLeft,
+  Brain,
+  Code,
+  Gamepad2,
+  FolderOpen,
+  ChevronDown,
+  ChevronUp,
+  BadgeIcon as Certificate,
   Trophy,
   Target,
-  Zap,
-  Code,
-  FileText,
   PlayCircle,
-  Award,
+  FileText,
+  Zap,
+  CheckCircle,
 } from "lucide-react";
-import {
-  getCourseById,
-  getRoadmapById,
-  getRoadmapMilestoneById,
-  enrollInCourse,
-} from "@/lib/data";
+import { useAppStore } from "@/lib/store";
+import { routes } from "@/lib/routes";
+import DisqusCommentBlock from "../ui/comment";
+import { PaymentDialog } from "../payment-dialog";
+import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
+import { toast } from "sonner";
+import ConfettiCelebration from "@/components/confetti-celebration";
+import { useUser } from "@/hooks/use-user";
 
 interface RoadmapCoursePreviewProps {
   roadmapId: string;
-  milestoneId: string;
-  courseId: string;
+  topicId: string;
   onBack: () => void;
   onEnroll: () => void;
   onStartWatching: () => void;
+  slug: string;
+  onNavigate: (path: string) => void;
 }
 
-export function RoadmapCoursePreview({
+export function CourseDetailPage({
+  slug,
+  topicId,
   roadmapId,
-  milestoneId,
-  courseId,
-  onBack,
-  onEnroll,
-  onStartWatching,
+  onNavigate,
 }: RoadmapCoursePreviewProps) {
-  const [activeTab, setActiveTab] = useState("overview");
-
-  const roadmap = getRoadmapById(roadmapId);
-  const milestone = getRoadmapMilestoneById(roadmapId, milestoneId);
-  const course = getCourseById(courseId);
-
-  console.log(roadmap, milestone, course);
-
-  // if (!roadmap || !milestone || !course) {
-  //   return <div>Course not found</div>;
-  // }
-
-  const handleEnroll = () => {
-    enrollInCourse(courseId);
-    onEnroll();
-  };
+  const store = useAppStore();
+  const [course, setCourse] = useState<Course>();
+  const [roadmap, setRoadmap] = useState<Roadmap>();
+  const { updateCourse } = store;
+  const [milestone, setMilestone] = useState<Milestone | any>();
+  const [currentChapter] = useState(course?.chapters[0]);
+  const [loading, setLoading] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [celebration, setCelebration] = useState(false);
+  const [completedItems, setCompletedItems] = useState<any>([]);
 
   const totalVideos = course?.chapters?.reduce(
-    (acc, chapter) => acc + chapter.videos.length,
-    0
-  );
-  const completedVideos = course?.chapters?.reduce(
     (acc, chapter) =>
-      acc + chapter.videos.filter((video) => video.completed).length,
+      acc + chapter.videos.filter((v) => v.type === "VIDEO").length,
     0
   );
 
-  const quizzes = course?.chapters?.filter((chapter) => chapter?.quiz).length;
+  const quizzes = course?.chapters?.filter(
+    (chapter) => chapter?.quizzes
+  ).length;
   const exercises = course?.chapters?.filter(
     (chapter) => chapter?.exercise
   ).length;
@@ -90,636 +91,292 @@ export function RoadmapCoursePreview({
     (chapter) => chapter?.playground
   ).length;
 
+  async function findRoadmap(slug: string) {
+    const roadmap = await store.getRoadmapBySlug(slug);
+    setRoadmap(roadmap);
+
+    const milestone = await store.getMilestone(slug, topicId);
+    setMilestone(milestone);
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    async function findCourse(slug: string) {
+      const course = await store.getCourse(slug, { isRoadmap: true });
+      setCourse(course);
+
+      const completedItems = await store.getRoadmapItems(roadmapId, topicId);
+      setCompletedItems(completedItems);
+
+      setLoading(false);
+    }
+    findCourse(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    setLoading(true);
+    findRoadmap(roadmapId);
+    setLoading(false);
+  }, [roadmapId]);
+
+  const isChapterCompleted = (chapterId: string) => {
+    return course?.userCourse?.userChapters?.find(
+      (ch: any) => ch.chapterId === chapterId
+    )?.isCompleted;
+  };
+
+  const handleChapterComplete = (chapterId: string) => {
+    const updatedChapters = course?.chapters.map((chapter) =>
+      chapter.id === chapterId ? { ...chapter, completed: true } : chapter
+    );
+    const completedCount = updatedChapters?.filter((c) => c.isCompleted).length;
+    const newProgress = Math.round(
+      (completedCount! / updatedChapters?.length!) * 100
+    );
+
+    updateCourse(slug, {
+      chapters: updatedChapters,
+      progress: newProgress,
+    });
+  };
+
+  const handleEnrollNow = async () => {
+    try {
+      if (!course) return;
+      await handleEnrollment(course?.id!);
+
+      updateCourse(course?.id!, { enrolled: true });
+      Object.assign(course!, { enrolled: true });
+
+      // Trigger celebration for first-time enrollment
+      setCelebration(true);
+      toast.success("You have successfully enrolled");
+    } catch (error) {
+      toast.error("An error occurred. Please try again");
+    }
+  };
+
+  const handleEnrollment = async (courseId: string) => {
+    return await store.handleRoadmapCourseEnrollment(roadmapId, courseId);
+  };
+
+  const handlePreviewCourse = () => {
+    //TODO: Add user to course and set preview true
+    const previewPath = routes.coursePreview(slug);
+    onNavigate(previewPath);
+  };
+
+  const handleContinueLearning = () => {
+    // Navigate to first incomplete chapter or continue from current
+
+    const videos = course?.chapters?.flatMap((ch: Chapter) =>
+      ch.videos.flatMap((v) => ({
+        ...v,
+      }))
+    );
+
+    const videoIds = videos?.map((v) => v.id);
+
+    const completedIds = completedItems.map((ci: any) => ci.itemId);
+    const remainingVideoIds = videoIds?.filter(
+      (vi) => !completedIds.includes(vi)
+    );
+
+    const video =
+      videos?.find((v: Video | any) => {
+        return remainingVideoIds?.includes(v.id);
+      }) || course?.chapters[0]?.videos[0];
+
+    const nextChapter =
+      course?.chapters.find((c) => c.id === video?.chapterId) ||
+      course?.chapters[0];
+
+    const watchPath = routes.roadmapVideoWatch(
+      roadmap?.slug!,
+      milestone.id,
+      course?.slug!,
+      nextChapter?.slug!,
+      video?.slug!
+    );
+    onNavigate(watchPath);
+  };
+
+  const handleChapterClick = (chapter: Chapter, index: number) => {
+    if (course?.enrolled) {
+      // Default to video watch
+      const watchPath = routes.roadmapVideoWatch(
+        roadmapId,
+        topicId,
+        course.slug,
+        chapter.slug,
+        chapter?.videos[0]?.slug
+      );
+      onNavigate(watchPath);
+    } else {
+      handlePreviewCourse();
+    }
+  };
+
+  if (loading) return <div>loading...</div>;
+
+  const calculateCourseProgress = () => {
+    const totalVideos = course?.chapters?.reduce(
+      (acc, chapter) => acc + chapter.videos.length,
+      0
+    );
+
+    const videoIds = course?.chapters.flatMap((ch) =>
+      ch.videos
+        .flatMap((v) => ({
+          id: v.id,
+        }))
+        .map((v) => v.id)
+    );
+
+    const completedIds = completedItems.map((ci: any) => ci.itemId);
+
+    const totalCompleted = videoIds?.filter((vi) =>
+      completedIds.includes(vi)
+    )?.length;
+
+    return (Number(totalCompleted ?? 0) / Number(totalVideos! ?? 0)) * 100;
+  };
+
+  const courseProgress = calculateCourseProgress();
+  const isCompleted = courseProgress! >= 100;
+  const canEarnCertificate = course?.enrolled && isCompleted;
+
   return (
-    <div className="min-h-screen bg-gray-500">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Roadmap
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{roadmap?.title}</span>
-              <span>•</span>
-              <span>{milestone?.title}</span>
-            </div>
+    <div className="flex-1 space-y-6">
+      {/* Course Header */}
+      <div className="flex justify-between border-b items-center gap-4 mb-6">
+        <div className="px-4 flex gap-3 sm:px-6 lg:px-8 py-4">
+          <Button
+            variant="outline"
+            onClick={() =>
+              onNavigate(routes.roadmapWatch(roadmapId, milestone?.id))
+            }
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Roadmap
+          </Button>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>{roadmap?.title}</span>
+            <span>•</span>
+            <span>{milestone?.title}</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Course Header */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary">{course?.level}</Badge>
-                    <Badge variant="outline">Roadmap Course</Badge>
-                  </div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {course?.title}
-                  </h1>
-                  <p className="text-lg text-gray-600 mb-4">
-                    {course?.description}
-                  </p>
-
-                  <div className="flex items-center gap-6 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{course?.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      <span>{course?.students.toLocaleString()} students</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span>{course?.rating}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0 ml-6">
-                  <img
-                    src={course?.thumbnail || "/placeholder.svg"}
-                    alt={course?.title}
-                    className="w-32 h-20 object-cover rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* Progress Bar (if enrolled) */}
-              {course?.enrolled && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      Progress
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      {course?.progress}%
-                    </span>
-                  </div>
-                  <Progress value={course?.progress} className="h-2" />
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                {course?.enrolled ? (
-                  <Button
-                    onClick={onStartWatching}
-                    size="lg"
-                    className="flex items-center gap-2"
-                  >
-                    <Play className="h-4 w-4" />
-                    {course?.progress > 0
-                      ? "Continue Learning"
-                      : "Start Learning"}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleEnroll}
-                    size="lg"
-                    className="flex items-center gap-2"
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    Enroll in Course
-                  </Button>
-                )}
-
-                {course?.enrolled && (
-                  <Button variant="outline" size="lg">
-                    <Trophy className="h-4 w-4 mr-2" />
-                    View Certificate
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Course Content Tabs */}
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="bg-white rounded-lg shadow-sm"
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={
+                course?.level === "Advanced"
+                  ? "destructive"
+                  : course?.level === "Intermediate"
+                  ? "default"
+                  : "secondary"
+              }
             >
-              <TabsList className="grid w-full grid-cols-4 p-1 m-6 mb-0">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-                <TabsTrigger value="instructor">Instructor</TabsTrigger>
-                <TabsTrigger value="reviews">Reviews</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="p-6 pt-4">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">
-                      What you'll learn
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {course?.tags.map((tag, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">
-                            Master {tag} concepts and best practices
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {course?.longDescription && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">
-                        Course Description
-                      </h3>
-                      <div className="prose prose-sm max-w-none text-gray-700">
-                        {course?.longDescription
-                          .split("\n\n")
-                          .map((paragraph, index) => (
-                            <p key={index} className="mb-4">
-                              {paragraph}
-                            </p>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">
-                      Course Statistics
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <PlayCircle className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-gray-900">
-                          {totalVideos}
-                        </div>
-                        <div className="text-sm text-gray-600">Videos</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <FileText className="h-6 w-6 text-green-500 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-gray-900">
-                          {quizzes}
-                        </div>
-                        <div className="text-sm text-gray-600">Quizzes</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <Code className="h-6 w-6 text-purple-500 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-gray-900">
-                          {exercises}
-                        </div>
-                        <div className="text-sm text-gray-600">Exercises</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <Zap className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-gray-900">
-                          {playgrounds}
-                        </div>
-                        <div className="text-sm text-gray-600">Playgrounds</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="curriculum" className="p-6 pt-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Course Curriculum</h3>
-                    <div className="text-sm text-gray-600">
-                      {course?.chapters?.length} chapters • {totalVideos} videos
-                      • {course?.duration}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {course?.chapters?.map((chapter, index) => (
-                      <Card key={chapter.id} className="border border-gray-200">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
-                                {index + 1}
-                              </div>
-                              <div>
-                                <CardTitle className="text-base">
-                                  {chapter.title}
-                                </CardTitle>
-                                <CardDescription className="text-sm">
-                                  {chapter.description}
-                                </CardDescription>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={
-                                  chapter.completed ? "default" : "secondary"
-                                }
-                                className="text-xs"
-                              >
-                                {chapter.completed ? (
-                                  <>
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Completed
-                                  </>
-                                ) : course?.enrolled ? (
-                                  "Available"
-                                ) : (
-                                  <>
-                                    <Lock className="h-3 w-3 mr-1" />
-                                    Locked
-                                  </>
-                                )}
-                              </Badge>
-                              <span className="text-sm text-gray-500">
-                                {chapter.duration}
-                              </span>
-                            </div>
-                          </div>
-                        </CardHeader>
-
-                        <CardContent className="pt-0">
-                          <div className="space-y-2">
-                            {chapter.videos.map((video) => (
-                              <div
-                                key={video.id}
-                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
-                              >
-                                <div className="flex items-center justify-center w-6 h-6">
-                                  {video.completed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course?.enrolled ? (
-                                    <Play className="h-4 w-4 text-gray-400" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {video.title}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {video.description}
-                                  </div>
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {video.duration}
-                                </div>
-                              </div>
-                            ))}
-
-                            {/* Show additional content types */}
-                            {chapter?.quiz && (
-                              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center justify-center w-6 h-6">
-                                  {chapter?.quiz?.completed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course?.enrolled ? (
-                                    <FileText className="h-4 w-4 text-blue-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {chapter.quiz.title}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Quiz • {chapter.quiz.timeLimit} minutes
-                                  </div>
-                                </div>
-                                <Badge variant="outline" className="text-xs">
-                                  Quiz
-                                </Badge>
-                              </div>
-                            )}
-
-                            {chapter.exercise && (
-                              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center justify-center w-6 h-6">
-                                  {chapter.exercise.completed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course?.enrolled ? (
-                                    <Code className="h-4 w-4 text-purple-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {chapter.exercise.title}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Exercise • {chapter.exercise.difficulty}
-                                  </div>
-                                </div>
-                                <Badge variant="outline" className="text-xs">
-                                  Exercise
-                                </Badge>
-                              </div>
-                            )}
-
-                            {chapter.playground && (
-                              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center justify-center w-6 h-6">
-                                  {chapter.playground.completed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : course?.enrolled ? (
-                                    <Zap className="h-4 w-4 text-orange-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {chapter.playground.title}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Playground • {chapter.playground.language}
-                                  </div>
-                                </div>
-                                <Badge variant="outline" className="text-xs">
-                                  Playground
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="instructor" className="p-6 pt-4">
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src="/placeholder.svg?height=64&width=64" />
-                      <AvatarFallback>
-                        {course?.instructor
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {course?.instructor}
-                      </h3>
-                      <p className="text-gray-600 mb-3">
-                        Senior Backend Engineer & Technical Instructor
-                      </p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        With over 8 years of experience in backend development,{" "}
-                        {course?.instructor} has worked at top tech companies
-                        and has taught thousands of students. Specializes in
-                        Node.js, system design, and scalable architecture
-                        patterns.
-                      </p>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">15</div>
-                      <div className="text-sm text-gray-600">Courses</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">
-                        12K+
-                      </div>
-                      <div className="text-sm text-gray-600">Students</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">
-                        4.8
-                      </div>
-                      <div className="text-sm text-gray-600">Rating</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">8</div>
-                      <div className="text-sm text-gray-600">Years</div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="reviews" className="p-6 pt-4">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-900">
-                        {course?.rating}
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                          />
-                        ))}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        Course Rating
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="space-y-2">
-                        {[5, 4, 3, 2, 1].map((rating) => (
-                          <div key={rating} className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm text-gray-600">
-                                {rating}
-                              </span>
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            </div>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-yellow-400 h-2 rounded-full"
-                                style={{
-                                  width: `${
-                                    rating === 5
-                                      ? 70
-                                      : rating === 4
-                                      ? 20
-                                      : rating === 3
-                                      ? 8
-                                      : rating === 2
-                                      ? 2
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm text-gray-600 w-8">
-                              {rating === 5
-                                ? "70%"
-                                : rating === 4
-                                ? "20%"
-                                : rating === 3
-                                ? "8%"
-                                : rating === 2
-                                ? "2%"
-                                : "0%"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    {[
-                      {
-                        name: "Alex Johnson",
-                        rating: 5,
-                        date: "2 weeks ago",
-                        comment:
-                          "Excellent course! The instructor explains complex concepts in a very clear and understandable way. The hands-on exercises really helped solidify my understanding.",
-                      },
-                      {
-                        name: "Sarah Chen",
-                        rating: 5,
-                        date: "1 month ago",
-                        comment:
-                          "This course exceeded my expectations. The content is up-to-date and the projects are very practical. I feel much more confident in my backend skills now.",
-                      },
-                      {
-                        name: "Mike Rodriguez",
-                        rating: 4,
-                        date: "2 months ago",
-                        comment:
-                          "Great course overall. The pace is good and the examples are relevant. Would have liked a bit more depth on some advanced topics, but still highly recommend.",
-                      },
-                    ].map((review, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-gray-200 pb-4 last:border-b-0"
-                      >
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>
-                              {review.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900">
-                                {review.name}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {[...Array(review.rating)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-sm text-gray-500">
-                                {review.date}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700">
-                              {review.comment}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+              {course?.level}
+            </Badge>
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm">{course?.rating ?? 4.5}</span>
+              <span className="text-sm text-muted-foreground">
+                ({course?.students?.toLocaleString()} students)
+              </span>
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Roadmap Context Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-500" />
-                  Roadmap Context
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">
-                    Current Roadmap
-                  </div>
-                  <div className="text-sm text-gray-600">{roadmap?.title}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">
-                    Current Milestone
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {milestone?.title}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900 mb-2">
-                    Milestone Progress
-                  </div>
-                  <Progress value={milestone?.progress} className="h-2" />
-                  <div className="text-xs text-gray-500 mt-1">
-                    {milestone?.progress}% complete
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <h1 className="text-3xl font-bold tracking-tight">{course?.title}</h1>
 
-            {/* Course Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Course Features</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <PlayCircle className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm">{totalVideos} video lessons</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">{quizzes} interactive quizzes</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Code className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm">{exercises} coding exercises</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Zap className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm">
-                    {playgrounds} code playgrounds
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Award className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm">Certificate of completion</span>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Short Description */}
+          <p className="text-lg text-muted-foreground">{course?.summary}</p>
 
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              {course?.totalDuration} hours
+            </div>
+            <div className="flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              {course?.chapters.length} chapters
+            </div>
+            <div className="flex items-center gap-1">
+              <Award className="h-4 w-4" />
+              Certificate included
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {course?.tags.map((tag) => (
+              <Badge key={tag} variant="outline">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Expandable Long Description */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Course Overview
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setIsDescriptionExpanded(!isDescriptionExpanded)
+                  }
+                >
+                  {isDescriptionExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`space-y-4 ${
+                  isDescriptionExpanded ? "" : "line-clamp-3"
+                }`}
+              >
+                {course?.description
+                  ?.split("\n\n")
+                  .map((paragraph: string, index: number) => (
+                    <article
+                      dangerouslySetInnerHTML={{ __html: paragraph }}
+                      key={index}
+                      className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                    >
+                      {/* {paragraph} */}
+                    </article>
+                  ))}
+              </div>
+              {!isDescriptionExpanded && (
+                <Button
+                  variant="link"
+                  className="p-0 h-auto mt-2"
+                  onClick={() => setIsDescriptionExpanded(true)}
+                >
+                  Read more
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-5 justify-center">
             {/* Prerequisites */}
-            <Card>
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle>Prerequisites</CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm text-gray-700">
+                <ul className="space-y-2 text-sm text-gray-400">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                     <span>Basic JavaScript knowledge</span>
@@ -730,14 +387,14 @@ export function RoadmapCoursePreview({
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Problem-solving mindset</span>
+                    <span>Problem-solving mindset </span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
             {/* Tags */}
-            <Card>
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle>Technologies</CardTitle>
               </CardHeader>
@@ -752,10 +409,469 @@ export function RoadmapCoursePreview({
               </CardContent>
             </Card>
           </div>
+
+          {/* Course Features Section */}
+          {/* {course?.enrolled && ( */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Features</CardTitle>
+              <CardDescription>
+                Interactive learning tools and resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {course?.hasQuizzes && (
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col gap-2"
+                    onClick={() =>
+                      onNavigate(
+                        routes.roadmapCourseQuizzes(roadmapId, topicId, slug)
+                      )
+                    }
+                  >
+                    <Brain className="h-6 w-6" />
+                    <span className="text-sm">Quizzes</span>
+                  </Button>
+                )}
+                {course?.hasExercises && (
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col gap-2"
+                    onClick={() => onNavigate(routes.courseExercises(slug))}
+                  >
+                    <Code className="h-6 w-6" />
+                    <span className="text-sm">Exercises</span>
+                  </Button>
+                )}
+                {course?.hasPlaygrounds && (
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col gap-2"
+                    onClick={() => onNavigate(routes.coursePlaygrounds(slug))}
+                  >
+                    <Gamepad2 className="h-6 w-6" />
+                    <span className="text-sm">Playgrounds</span>
+                  </Button>
+                )}
+                {course?.hasProjects && (
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col gap-2"
+                    onClick={() => onNavigate(routes.courseProjects(slug))}
+                  >
+                    <FolderOpen className="h-6 w-6" />
+                    <span className="text-sm">Projects</span>
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          {/* )} */}
+        </div>
+
+        <div className="space-y-6">
+          {/* Roadmap Context Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-500" />
+                Roadmap Context
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="text-sm font-medium  mb-1">Current Roadmap</div>
+                <div className="text-sm text-gray-600">{roadmap?.title}</div>
+              </div>
+              <div>
+                <div className="text-sm font-medium  mb-1">
+                  Current Milestone
+                </div>
+                <div className="text-sm text-gray-600">{milestone?.title}</div>
+              </div>
+              <div>
+                <div className="text-sm font-medium  mb-2">
+                  Milestone Progress
+                </div>
+                <Progress
+                  value={milestone?.userTopic?.progress}
+                  className="h-2"
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  {milestone?.userTopic?.progress}% complete
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Course Enrollment Card */}
+          <Card>
+            <CardHeader>
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                <img
+                  src={course?.banner ?? "/placeholder.svg"}
+                  alt={course?.title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {roadmap?.enrolled && course?.enrolled ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Your Progress</span>
+                    <span>{courseProgress ?? 0}%</span>
+                  </div>
+                  <Progress value={courseProgress ?? 0} className="h-2" />
+                  <Button className="w-full" onClick={handleContinueLearning}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Continue Learning
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Button className="w-full" onClick={handleEnrollNow}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Start Learning
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handlePreviewCourse}
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Preview Course
+                  </Button>
+                </div>
+              )}
+              {showPaymentDialog && (
+                <PaymentDialog
+                  onClose={() => setShowPaymentDialog(false)}
+                  open={showPaymentDialog}
+                  data={course}
+                  onHandlePreview={() => {}}
+                  onHandlePurchase={() => {}}
+                />
+              )}
+              <Separator />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Heart className="mr-2 h-4 w-4" />
+                  Wishlist
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Share className="mr-2 h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Course Features */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Features</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                <PlayCircle className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">{totalVideos} video lessons</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <FileText className="h-4 w-4 text-green-500" />
+                <span className="text-sm">{quizzes} interactive quizzes</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Code className="h-4 w-4 text-purple-500" />
+                <span className="text-sm">{exercises} coding exercises</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Zap className="h-4 w-4 text-orange-500" />
+                <span className="text-sm">{playgrounds} code playgrounds</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Award className="h-4 w-4 text-yellow-500" />
+                <span className="text-sm">Certificate of completion</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Certification Card */}
+          <Card
+            className={`${
+              canEarnCertificate
+                ? "border-green-200 bg-green-50/50"
+                : "border-orange-200 bg-orange-50/50"
+            }`}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2 rounded-lg ${
+                    canEarnCertificate ? "bg-green-100" : "bg-orange-100"
+                  }`}
+                >
+                  {canEarnCertificate ? (
+                    <Trophy className="h-6 w-6 text-green-600" />
+                  ) : (
+                    <Certificate className="h-6 w-6 text-orange-600" />
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Course Certificate</CardTitle>
+                  <CardDescription className="text-sm">
+                    {canEarnCertificate
+                      ? "Ready to claim!"
+                      : "Complete course to earn"}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {canEarnCertificate
+                    ? "Congratulations! You've completed the course and earned your certificate."
+                    : "Complete all chapters and pass the final assessment to earn your verified certificate."}
+                </p>
+
+                {course?.enrolled && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Progress to Certificate</span>
+                      <span>{courseProgress}%</span>
+                    </div>
+                    <Progress value={courseProgress} className="h-2" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Shareable on LinkedIn</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Verifiable credential</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Industry recognized</span>
+                </div>
+              </div>
+
+              {canEarnCertificate ? (
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={() => onNavigate(routes.courseCertificate(slug))}
+                >
+                  <Certificate className="mr-2 h-4 w-4" />
+                  View Certificate
+                </Button>
+              ) : course?.enrolled ? (
+                <Button variant="outline" className="w-full" disabled>
+                  <Certificate className="mr-2 h-4 w-4" />
+                  Complete Course to Earn
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleEnrollNow}
+                >
+                  <Certificate className="mr-2 h-4 w-4" />
+                  Enroll to Earn Certificate
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Course Content */}
+      <Tabs defaultValue="curriculum" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+          <TabsTrigger value="instructor">Instructor</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="curriculum" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Curriculum</CardTitle>
+              <CardDescription>
+                {course?.chapters.length} chapters •{" "}
+                {course?.totalDuration ?? 0} total hours
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {course?.chapters.map((chapter: Chapter, index) => {
+                  return (
+                    <div
+                      key={chapter.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
+                        currentChapter?.id === chapter.id ? "bg-muted" : ""
+                      }`}
+                      onClick={() => handleChapterClick(chapter, index)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                          {isChapterCompleted(chapter.id) ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          ) : course?.enrolled || !chapter.isPremium ? (
+                            <span className="text-sm font-medium">
+                              {index + 1}
+                            </span>
+                          ) : (
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium">{chapter.title}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${
+                                !chapter.isPremium
+                                  ? "border-green-600 text-green-600"
+                                  : course?.enrolled
+                                  ? "border-blue-600 text-blue-600"
+                                  : "border-orange-600 text-orange-600"
+                              }`}
+                            >
+                              {!chapter.isPremium
+                                ? "FREE"
+                                : course?.enrolled
+                                ? "ENROLLED"
+                                : "PREMIUM"}
+                            </Badge>
+                            <span>{chapter.duration}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {chapter?.type?.toUpperCase()}
+                            </Badge>
+                            {/* Feature indicators */}
+                            {chapter?.quizzes?.length! > 0 && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-purple-600 text-purple-600"
+                              >
+                                QUIZ
+                              </Badge>
+                            )}
+                            {chapter.exercise && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-blue-600 text-blue-600"
+                              >
+                                EXERCISE
+                              </Badge>
+                            )}
+                            {chapter.playground && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-green-600 text-green-600"
+                              >
+                                PLAYGROUND
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            course?.enrolled &&
+                            isChapterCompleted(chapter.id)
+                          ) {
+                            handleChapterComplete(chapter.id);
+                          }
+                        }}
+                      >
+                        {isChapterCompleted(chapter.id) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : course?.enrolled || !chapter.isPremium ? (
+                          <Play className="h-4 w-4" />
+                        ) : (
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="instructor">
+          <Card>
+            <CardHeader>
+              <CardTitle>About the Instructor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-4">
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                  {course?.instructor
+                    ?.split(" ")
+                    .map((n: string) => n.charAt(0))
+                    .join("") ?? "MB"}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">
+                    {course?.instructor ?? "Mastering Backend"}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Senior Backend Engineer with 8+ years of experience building
+                    scalable systems. Previously worked at Google and Netflix.
+                  </p>
+                  <div className="flex gap-4 text-sm text-muted-foreground">
+                    <span>15 courses</span>
+                    <span>50k+ students</span>
+                    <span>4.9 rating</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reviews">
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <DisqusCommentBlock
+                  config={{
+                    url: "/courses/" + slug,
+                    identifier: slug,
+                    title: course?.title,
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={course?.title!}
+      />
     </div>
   );
 }
 
-export { RoadmapCoursePreview as RoadmapCoursePreviewPage };
+export { CourseDetailPage as RoadmapCoursePreviewPage };

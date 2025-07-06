@@ -32,13 +32,22 @@ import {
   Calendar,
   CheckCheck,
   BarChart3,
+  Loader2,
 } from "lucide-react";
-import { enrollInRoadmap } from "@/lib/data";
+import {
+  Chapter,
+  Course,
+  enrollInRoadmap,
+  Milestone,
+  Roadmap,
+} from "@/lib/data";
 import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import DisqusCommentBlock from "../ui/comment";
 import { PaymentDialog } from "../payment-dialog";
 import { useUser } from "@/hooks/use-user";
+import { toast } from "sonner";
+import ConfettiCelebration from "../confetti-celebration";
 
 interface RoadmapDetailPageProps {
   slug: string;
@@ -53,9 +62,12 @@ export function RoadmapDetailPage({
   const user = useUser();
   const [activeTab, setActiveTab] = useState("overview");
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [roadmap, setRoadmap] = useState({});
+  const [roadmap, setRoadmap] = useState<Roadmap>();
   const [loading, setLoading] = useState(false);
-  const [milestones, setMilestones] = useState([]);
+  const [celebration, setCelebration] = useState(false);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [completed, setCompleted] = useState(false);
+  const [completedItems, setCompletedItems] = useState<any>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -65,10 +77,21 @@ export function RoadmapDetailPage({
 
       setRoadmap(roadmap);
       setMilestones(milestones);
+
       setLoading(false);
     }
     loadData();
   }, []);
+
+  const getAssessments = (milestone: any) => {
+    return milestone.courses.flatMap((c: Course) => {
+      return c.chapters.flatMap((ch) => {
+        return ch.videos
+          .filter((v) => v.type === "QUIZ" || v.type === "EXERCISE")
+          .map((v) => ({ ...v, courseSlug: c.slug }));
+      });
+    });
+  };
 
   if (loading && !roadmap) {
     return <div className="p-6">Roadmap not found</div>;
@@ -87,30 +110,60 @@ export function RoadmapDetailPage({
   };
 
   const handleContinue = () => {
-    // const currentTopic = roadmap?.userRoadmap?.currentTopic;
+    const milestone =
+      roadmap?.topics?.find((m) => !m?.userTopic?.completed) ||
+      roadmap?.topics?.[0];
 
-    // if (currentTopic?.courses?.length > 0) {
-    //   onNavigate?.(
-    //     routes.roadmapVideoWatch(roadmap?.slug, currentTopic?.courses[0]?.id)
-    //   );
-    // } else if (currentTopic?.projects?.length > 0) {
-    //   onNavigate?.(routes.projectDetail(currentTopic?.projects[0]));
-    // } else {
-    onNavigate?.(routes.roadmapWatch(slug));
-    // }
-    // }
+    onNavigate?.(routes.roadmapWatch(slug, milestone?.id));
   };
+
+  const startMilestone = async (milestoneId: string) => {
+    try {
+      setLoading(true);
+      await store.startMilestone(slug, milestoneId, {
+        completed: false,
+      });
+
+      setCelebration(true);
+      setCompleted(true);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Error occurred. Please try again");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const firstStartableMilestoneId = (() => {
+    for (let i = 0; i < milestones.length - 1; i++) {
+      const current = milestones[i];
+      const next = milestones[i + 1];
+
+      let currentCompleted = false;
+      if (current?.userTopic?.topicId === current.id)
+        currentCompleted = current?.userTopic?.completed;
+
+      const nextStarted = next?.userTopic?.topicId === next.id;
+
+      if (currentCompleted && !nextStarted) {
+        return next.id;
+      }
+    }
+
+    return null;
+  })();
 
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{roadmap.title}</h1>
-          <p className="text-muted-foreground">{roadmap.summary}</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {roadmap?.title}
+          </h1>
+          <p className="text-muted-foreground">{roadmap?.summary}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          {!roadmap.enrolled ? (
+          {!roadmap?.enrolled ? (
             <Button onClick={handleEnroll}>Enroll in Roadmap</Button>
           ) : (
             <Button onClick={handleContinue}>Continue Roadmap</Button>
@@ -120,7 +173,7 @@ export function RoadmapDetailPage({
       </div>
 
       {/* Progress Overview */}
-      {roadmap.enrolled && (
+      {roadmap?.enrolled && (
         <Card>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -129,9 +182,9 @@ export function RoadmapDetailPage({
                   Overall Progress
                 </div>
                 <div className="flex items-center gap-2">
-                  <Progress value={roadmap.progress} className="h-2 flex-1" />
+                  <Progress value={roadmap?.progress} className="h-2 flex-1" />
                   <span className="text-sm font-medium">
-                    {roadmap.progress}%
+                    {roadmap?.progress}%
                   </span>
                 </div>
               </div>
@@ -140,24 +193,23 @@ export function RoadmapDetailPage({
                   Current Milestone
                 </div>
                 <div className="font-medium">
-                  {roadmap?.currentTopic < milestones?.length
-                    ? roadmap?.currentTopic?.title
-                    : "Completed"}
+                  {roadmap?.userRoadmap?.currentTopic?.title}
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">
                   Estimated Time Remaining
                 </div>
-                <div className="font-medium">{roadmap.estimatedTime}</div>
+                <div className="font-medium">{roadmap?.estimatedTime ?? 0}</div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">
                   Milestones Completed
                 </div>
                 <div className="font-medium">
-                  {roadmap?.topics?.map((t) => t.completed)?.length ?? 0} of{" "}
-                  {milestones?.length}
+                  {roadmap?.topics?.filter((t) => t.userTopic?.completed)
+                    ?.length ?? 0}{" "}
+                  of {milestones?.length}
                 </div>
               </div>
             </div>
@@ -187,7 +239,7 @@ export function RoadmapDetailPage({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="prose max-w-none">
-                <p>{roadmap.description}</p>
+                <p>{roadmap?.description}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -197,25 +249,25 @@ export function RoadmapDetailPage({
                     <li className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Level:</strong> {roadmap.level}
+                        <strong>Level:</strong> {roadmap?.level}
                       </span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Duration:</strong> {roadmap.timeframe}
+                        <strong>Duration:</strong> {roadmap?.timeframe}
                       </span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Layers className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Difficulty:</strong> {roadmap.difficulty}
+                        <strong>Difficulty:</strong> {roadmap?.difficulty}
                       </span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Instructor:</strong> {roadmap.instructor}
+                        <strong>Instructor:</strong> {roadmap?.instructor}
                       </span>
                     </li>
                   </ul>
@@ -334,14 +386,23 @@ export function RoadmapDetailPage({
         {/* Milestones Tab */}
         <TabsContent value="milestones" className="space-y-6">
           {milestones?.map((milestone: any, index) => {
-            const isCompleted = milestone?.completed;
-            const isCurrent = index === roadmap?.userRoadmap?.currentTopic;
-            const isUpcoming = index > roadmap?.userRoadmap?.currentTopic;
+            const isCompleted = milestone?.userTopic?.completed;
+
+            const isCurrent =
+              milestone.id === roadmap?.userRoadmap?.currentUserTopic.topicId;
+
+            const isUpcoming = !isCurrent && !isCompleted;
 
             return (
               <Card
                 key={milestone.id}
-                className={isUpcoming ? "opacity-70" : ""}
+                className={`border hover:border-gray-200 cursor-pointer ${
+                  isUpcoming && milestone.id !== firstStartableMilestoneId
+                    ? "opacity-60"
+                    : isCompleted
+                    ? "border-green-600 bg-green-900/20"
+                    : ""
+                }`}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -372,28 +433,32 @@ export function RoadmapDetailPage({
                         </CardDescription>
                       </div>
                     </div>
-                    <Badge
-                      variant={
-                        isCompleted
-                          ? "default"
+                    <div className="gap-2 flex">
+                      <Badge
+                        variant={
+                          isCompleted
+                            ? "default"
+                            : isCurrent
+                            ? "secondary"
+                            : "outline"
+                        }
+                        className={
+                          isCompleted
+                            ? "bg-green-100 text-green-800 border-green-200"
+                            : isCurrent
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : ""
+                        }
+                      >
+                        {isCompleted
+                          ? "Completed"
                           : isCurrent
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className={
-                        isCompleted
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : isCurrent
-                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                          : ""
-                      }
-                    >
-                      {isCompleted
-                        ? "Completed"
-                        : isCurrent
-                        ? "In Progress"
-                        : "Upcoming"}
-                    </Badge>
+                          ? "In Progress"
+                          : "Upcoming"}
+                      </Badge>
+
+                      <Badge variant={"default"}>{milestone?.level}</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -404,10 +469,17 @@ export function RoadmapDetailPage({
                           Progress
                         </span>
                         <span className="text-sm font-medium">
-                          {milestone.progress}%
+                          {milestone?.userTopic?.completed
+                            ? 100
+                            : milestone?.progress}
+                          %
                         </span>
                       </div>
-                      <Progress value={milestone.progress} className="h-2" />
+                      {milestone?.userTopic?.completed ? (
+                        <Progress value={100} className="h-2" />
+                      ) : (
+                        <Progress value={milestone?.progress} className="h-2" />
+                      )}
                     </div>
                   )}
 
@@ -424,7 +496,13 @@ export function RoadmapDetailPage({
                             className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-500 p-1 rounded"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onNavigate?.(routes.courseDetail(course.slug));
+                              onNavigate?.(
+                                routes.roadmapCoursePreview(
+                                  roadmap?.slug!,
+                                  milestone.id,
+                                  course?.slug
+                                )
+                              );
                             }}
                           >
                             <span>{course.title}</span>
@@ -472,10 +550,28 @@ export function RoadmapDetailPage({
                         Assessments
                       </h4>
                       <div className="space-y-1">
-                        {milestone?.assessments?.map((assessment: any) => (
+                        {getAssessments(milestone)?.map((assessment: any) => (
                           <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate?.(
+                                assessment.type?.includes("QUIZ")
+                                  ? routes.roadmapCourseQuiz(
+                                      roadmap?.slug!,
+                                      milestone.id,
+                                      assessment?.courseSlug,
+                                      assessment?.quizId
+                                    )
+                                  : routes.roadmapCourseExercise(
+                                      roadmap?.slug!,
+                                      milestone.id,
+                                      assessment?.courseSlug,
+                                      assessment?.exerciseId
+                                    )
+                              );
+                            }}
                             key={assessment.id}
-                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
+                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-700 p-1 rounded"
                           >
                             <span>{assessment.title}</span>
                             <Badge variant="outline" className="text-xs">
@@ -483,7 +579,7 @@ export function RoadmapDetailPage({
                             </Badge>
                           </div>
                         ))}
-                        {!milestone?.assessments?.length && (
+                        {!getAssessments(milestone)?.length && (
                           <div className="text-sm text-muted-foreground">
                             No assessments in this milestone
                           </div>
@@ -497,27 +593,39 @@ export function RoadmapDetailPage({
                       <Calendar className="h-4 w-4" />
                       <span>Estimated duration: {milestone.duration}</span>
                     </div>
-                    {isCurrent && (
+                    {isCurrent || completed ? (
                       <Button
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const courses = milestone?.courses;
-                          if (courses?.length > 0) {
-                            onNavigate?.(routes.courseDetail(courses[0].id));
-                          } else {
-                            const projects = milestone?.projects;
-                            if (projects?.length > 0) {
-                              onNavigate?.(
-                                routes.projectDetail(projects[0].id)
-                              );
-                            }
-                          }
+                          onNavigate?.(
+                            routes.roadmapWatch(slug, milestone?.id)
+                          );
                         }}
                       >
-                        Continue Milestone
+                        {isCompleted
+                          ? "Review Milestone"
+                          : "Continue Milestone"}
                       </Button>
-                    )}
+                    ) : milestone.id === firstStartableMilestoneId ? (
+                      <Button
+                        disabled={loading}
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          startMilestone(milestone.id);
+                        }}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Start...</span>
+                          </>
+                        ) : (
+                          <span>Start Milestone</span>
+                        )}
+                      </Button>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -599,7 +707,11 @@ export function RoadmapDetailPage({
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         onNavigate?.(
-                                          routes.courseDetail(course?.id)
+                                          routes.roadmapCoursePreview(
+                                            roadmap?.slug!,
+                                            milestone.id,
+                                            course?.slug
+                                          )
                                         );
                                       }}
                                     >
@@ -690,14 +802,14 @@ export function RoadmapDetailPage({
                     )}
 
                     {/* Assessments */}
-                    {milestone?.assessments?.length > 0 && (
+                    {getAssessments(milestone)?.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <FileText className="h-4 w-4 text-purple-600" />
                           Assessments
                         </h4>
                         <div className="space-y-2">
-                          {milestone?.assessments?.map((assessment: any) => (
+                          {getAssessments(milestone)?.map((assessment: any) => (
                             <Card key={assessment.id}>
                               <CardContent className="p-4">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
@@ -717,7 +829,7 @@ export function RoadmapDetailPage({
                                       {assessment.type}
                                     </Badge>
                                     <Badge variant="outline">
-                                      {assessment.duration}
+                                      {assessment?.timeLimit ?? 5} min
                                     </Badge>
                                   </div>
                                 </div>
@@ -990,6 +1102,15 @@ export function RoadmapDetailPage({
           onHandlePurchase={() => {}}
         />
       )}
+
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        duration={1500}
+        celebrationType="enrollment"
+        courseName={roadmap?.title!}
+      />
     </div>
   );
 }

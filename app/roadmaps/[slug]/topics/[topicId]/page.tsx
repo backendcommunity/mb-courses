@@ -1,21 +1,22 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { RoadmapVideoWatchPage } from "@/components/pages/roadmap-video-watch";
+import { RoadmapWatchPage } from "@/components/pages/roadmap-watch";
 import { useParams, useRouter } from "next/navigation";
 
-export default function RoadmapVideoWatchRoute({}) {
+export default function RoadmapWatchPageRoute({}) {
+  const { slug, topicId } = useParams() as { slug: string; topicId: string };
   const router = useRouter();
-  const { slug, videoId } = useParams() as { slug: string; videoId: string };
+
   const handleNavigate = (path: string) => {
     router.push(path);
   };
 
   return (
     <DashboardLayout>
-      <RoadmapVideoWatchPage
+      <RoadmapWatchPage
         slug={slug}
-        videoId={videoId}
+        topicId={topicId}
         onNavigate={handleNavigate}
       />
     </DashboardLayout>

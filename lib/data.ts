@@ -140,7 +140,7 @@ export interface Course {
   duration: string;
   level: string; //"Beginner" | "Intermediate" | "Advanced";
   progress: number;
-  thumbnail: string;
+  isCompleted?: boolean;
   chapters: Chapter[];
   enrolled: boolean;
   rating: number;
@@ -270,6 +270,7 @@ export interface Video {
   isCompleted?: boolean;
   slug: string;
   videoUrl?: string;
+  chapterId?: string;
   description: string;
   summary: string;
   order: number;
@@ -439,6 +440,8 @@ export interface LearningPath {
 export interface Roadmap {
   id: string;
   title: string;
+  slug?: string;
+  summary?: string;
   description: string;
   milestones: Milestone[];
   timeframe: string;
@@ -450,6 +453,8 @@ export interface Roadmap {
   estimatedTime: string;
   longDescription?: string;
   thumbnail?: string;
+  userRoadmap?: any;
+  topics?: Milestone[] | any[];
   instructor?: string;
   level?: string;
   skills?: string[];
@@ -462,9 +467,9 @@ export interface Milestone {
   title: string;
   description: string;
   courses: string[];
-  projects: string[];
-  assessments: string[];
+  projects?: string[];
   order: number;
+  userTopic?: any;
   completed: boolean;
   progress: number;
   duration: string;

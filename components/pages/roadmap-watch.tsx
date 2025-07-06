@@ -23,20 +23,36 @@ import {
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import { useEffect, useState } from "react";
+import { Course, Milestone, Roadmap } from "@/lib/data";
+import { toast } from "sonner";
 
 interface RoadmapWatchPageProps {
   slug: string;
+  topicId: string;
   onNavigate?: (route: string) => void;
 }
 
-export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
+export function RoadmapWatchPage({
+  topicId,
+  slug,
+  onNavigate,
+}: RoadmapWatchPageProps) {
   const store = useAppStore();
-  const [roadmap, setRoadmap] = useState({});
+  const [roadmap, setRoadmap] = useState<Roadmap>();
+  const [milestone, setMilestone] = useState<Milestone | any>();
   const [loading, setLoading] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [completedItems, setCompletedItems] = useState<any>([]);
 
   async function loadData() {
     const roadmap = await store.getRoadmapBySlug(slug);
     setRoadmap(roadmap);
+
+    const milestone = await store.getMilestone(slug, topicId);
+    setMilestone(milestone);
+
+    const completedItems = await store.getRoadmapItems(slug, topicId);
+    setCompletedItems(completedItems);
   }
 
   useEffect(() => {
@@ -50,7 +66,10 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
       <div className="flex-1 p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Roadmap not found</h1>
-          <Button onClick={() => onNavigate?.("roadmaps")} className="mt-4">
+          <Button
+            onClick={() => onNavigate?.("/roadmaps/" + slug)}
+            className="mt-4"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Roadmaps
           </Button>
@@ -59,64 +78,123 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
     );
   }
 
-  // Mock current milestone data
-  const currentMilestone = roadmap?.userRoadmap?.currentTopic;
+  const getAssessments = (milestone: any) => {
+    return milestone?.courses?.flatMap((c: Course) => {
+      return c?.chapters?.flatMap((ch) => {
+        return ch?.videos
+          ?.filter((v) => v.type === "QUIZ" || v.type === "EXERCISE")
+          ?.map((v) => ({ ...v, courseSlug: c.slug }));
+      });
+    });
+  };
 
-  console.log(roadmap?.userRoadmap);
+  const getCompletedTasks = (itemId: string, topicId: string) => {
+    return completedItems?.find((ci: any) => {
+      return ci.itemId === itemId && ci.userTopicId === topicId;
+    });
+  };
+
+  const handleStart = (course: any) => {
+    if (course?.type === "VIDEO")
+      onNavigate?.(
+        routes.roadmapCoursePreview(slug, milestone.id, course?.slug)
+      );
+
+    if (course?.type === "QUIZ")
+      onNavigate?.(
+        routes.roadmapCourseQuiz(
+          slug,
+          milestone.id,
+          course?.courseSlug,
+          course?.quizId
+        )
+      );
+  };
+
+  const handleCompleted = async () => {
+    try {
+      setLoading(true);
+      if (!milestone?.userTopic) return;
+      const completed = await store.startMilestone(
+        slug,
+        milestone?.userTopic?.id,
+        {
+          completed: true,
+        }
+      );
+
+      setMilestone(Object.assign(milestone, { userTopic: completed }));
+      // setCelebration(true)
+      toast.success("Milestone completed successfully");
+      setCompleted(false);
+    } catch (error: any) {
+      toast.error(error?.message ?? "An error occurred");
+      setLoading(false);
+    }
+  };
 
   function nextUp() {
-    return (
-      <div className="space-y-4">
-        <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
-          <h4 className="font-medium text-sm">Build Distributed Cache</h4>
-          <p className="text-xs text-muted-foreground">
-            Implement Redis-based caching system
-          </p>
-          <div className="flex items-center gap-2 mt-2">
-            <Code2 className="h-3 w-3 text-green-600" />
-            <span className="text-xs">Project • Est. 6 hours</span>
-          </div>
-        </div>
-        <Button className="w-full" size="sm">
-          <Play className="mr-2 h-4 w-4" />
-          Start Project
-        </Button>
-      </div>
-    );
-  }
+    {
+      const next = [
+        ...(milestone?.courses ?? []),
+        getAssessments(milestone) ?? [],
+      ]
+        ?.flatMap((c: any) =>
+          [
+            ...(c?.userCourses ?? []),
+            ...(c?.userQuizzes ?? []),
+            ...(c?.userExercies ?? []),
+          ].flatMap((c) => {
+            const completedTasks = getCompletedTasks(
+              c.id,
+              milestone?.userTopic?.id
+            );
 
-  const f = {
-    id: 3,
-    title: "System Design Mastery",
-    description: "Learn to design scalable, distributed systems",
-    progress: 65,
-    tasks: [
-      {
-        id: 1,
-        title: "Complete System Design Course",
-        completed: true,
-        type: "course",
-      },
-      {
-        id: 2,
-        title: "Design a URL Shortener",
-        completed: true,
-        type: "project",
-      },
-      {
-        id: 3,
-        title: "Build Distributed Cache",
-        completed: false,
-        type: "project",
-      },
-      {
-        id: 4,
-        title: "System Design Interview Prep",
-        completed: false,
-        type: "assessment",
-      },
-    ],
-  };
+            return completedTasks?.completed;
+          })
+        )
+        .filter((c) => c)[0];
+
+      if (!next)
+        return (
+          <div>
+            <span>You're all caught up. Great work!</span>
+            <Button
+              disabled={milestone?.userTopic?.completed ?? completed}
+              onClick={() => handleCompleted()}
+              className="w-full my-5 capitalize"
+              size="sm"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Mark as completed
+            </Button>
+          </div>
+        );
+
+      return (
+        <div className="space-y-4">
+          <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
+            <h4 className="font-medium text-sm">{next?.title}</h4>
+            <p className="text-xs text-muted-foreground">{next?.summary}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <Code2 className="h-3 w-3 text-green-600" />
+              <span className="text-xs capitalize">
+                {next?.type?.toLowerCase()}
+              </span>
+            </div>
+          </div>
+          <Button
+            onClick={() => handleStart(next)}
+            className="w-full capitalize"
+            size="sm"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Start {next?.type?.toLowerCase()}
+          </Button>
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="flex-1 space-y-6">
@@ -124,7 +202,7 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap.slug}`)}
+          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap?.slug}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -133,8 +211,9 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
             Watch: {roadmap?.title}
           </h1>
           <p className="text-muted-foreground">
-            Milestone {roadmap?.topics?.map((t: any) => t.completed)?.length} of
-            8 • {roadmap?.progress}% Complete
+            Milestone{" "}
+            {roadmap?.topics!?.findIndex((t: any) => t.id === topicId) + 1} of{" "}
+            {roadmap?.topics?.length} • {roadmap?.progress}% Complete
           </p>
         </div>
       </div>
@@ -144,39 +223,55 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            Current Milestone: {currentMilestone?.title}
+            Current Milestone: {milestone?.title}
           </CardTitle>
           <CardDescription className="text-blue-100">
-            {currentMilestone?.description}
+            {milestone?.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Milestone Progress</span>
-              <span>{currentMilestone?.progress}%</span>
+              <span className="text-sm font-medium">
+                {milestone?.userTopic?.completed
+                  ? 100
+                  : milestone?.userTopic?.progress}
+                %
+              </span>
             </div>
-            <Progress value={currentMilestone?.progress} className="h-3" />
+            {milestone?.userTopic?.completed ? (
+              <Progress value={100} className="h-3" />
+            ) : (
+              <Progress
+                value={milestone?.userTopic?.progress}
+                className="h-3"
+              />
+            )}
 
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">
-                  {roadmap?.currentTopic}
-                </div>
+                <div className="text-2xl font-bold">{milestone?.title}</div>
                 <div className="text-xs text-blue-100">Current Milestone</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {roadmap?.topics?.map((t: any) => t.completed)?.length}
+                  {milestone?.userTopic?.totalTasks ?? 0}
                 </div>
-                <div className="text-xs text-blue-100">Completed</div>
+                <div className="text-xs text-blue-100">Total Tasks</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">2</div>
+                <div className="text-2xl font-bold">
+                  {" "}
+                  {milestone?.userTopic?.totalTaskCompleted}
+                </div>
                 <div className="text-xs text-blue-100">Tasks Done</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">2</div>
+                <div className="text-2xl font-bold">
+                  {(milestone?.userTopic?.totalTasks ?? 0) -
+                    (milestone?.userTopic?.totalTaskCompleted ?? 0)}
+                </div>
                 <div className="text-xs text-blue-100">Tasks Left</div>
               </div>
             </div>
@@ -195,67 +290,99 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
                 Complete these tasks to advance to the next milestone
               </CardDescription>
             </CardHeader>
+            {/* getAssessments(milestone) */}
             <CardContent className="space-y-4">
-              {currentMilestone?.courses?.map((userCourse: any) => (
-                <div
-                  key={userCourse.course.id}
-                  className={`border rounded-lg p-4 ${
-                    userCourse.isCompleted
-                      ? "bg-green-50 border-green-200"
-                      : "bg-blue-50 dark:bg-gray-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={userCourse.isCompleted}
-                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {userCourse.type === "course" && (
-                          <BookOpen className="h-4 w-4 text-blue-600" />
-                        )}
-                        {userCourse.type === "project" && (
-                          <Code2 className="h-4 w-4 text-green-600" />
-                        )}
-                        {userCourse.type === "assessment" && (
-                          <Target className="h-4 w-4 text-purple-600" />
-                        )}
-                        <span
-                          className={`font-medium ${
-                            userCourse.isCompleted
-                              ? "line-through text-muted-foreground"
-                              : ""
-                          }`}
-                        >
-                          {userCourse.course.title}
-                        </span>
+              {[
+                ...(milestone?.courses ?? []),
+                ...(getAssessments(milestone) ?? []),
+              ]?.length <= 0 && <div>No tasks found...</div>}
+              {[
+                ...(milestone?.courses ?? []),
+                ...(getAssessments(milestone) ?? []),
+              ]?.map((course: any) => {
+                const found = course?.userCourses?.find(
+                  (uc: any) => uc.courseId === course.id && uc.isRoadmap
+                );
+
+                const completedTasks = getCompletedTasks(
+                  course.id,
+                  milestone?.userTopic?.id
+                );
+
+                const completed = completedTasks?.completed ?? false;
+                const isActive = !!found;
+
+                return (
+                  <div
+                    key={course?.id}
+                    className={`border rounded-lg p-4 ${
+                      completed
+                        ? "bg-green-200/20 border-green-200/30"
+                        : "bg-blue-50 dark:bg-gray-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={completed}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {course?.type === "VIDEO" && (
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                          )}
+                          {(course?.type === "PROJECT" ||
+                            course?.type === "PLAYGROUND") && (
+                            <Code2 className="h-4 w-4 text-green-600" />
+                          )}
+                          {(course?.type === "QUIZ" ||
+                            course?.type === "EXERCISE") && (
+                            <Target className="h-4 w-4 text-purple-600" />
+                          )}
+                          <span
+                            className={`font-medium ${
+                              completed
+                                ? "line-through text-muted-foreground"
+                                : ""
+                            }`}
+                          >
+                            {course?.title}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="bg-green-50 text-green-700 border-green-200"
-                      >
-                        {userCourse?.type ?? "Course"}
-                      </Badge>
-                      {userCourse.isCompleted ? (
+                      <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
                           className="bg-green-50 text-green-700 border-green-200"
                         >
-                          Completed
+                          {course?.type ?? "Course"}
                         </Badge>
-                      ) : (
-                        <Button size="sm">
-                          <Play className="mr-2 h-4 w-4" />
-                          Start
-                        </Button>
-                      )}
+                        {course?.isCompleted ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
+                            Completed
+                          </Badge>
+                        ) : (
+                          <Button
+                            onClick={() => handleStart(course)}
+                            size="sm"
+                            className="capitalize"
+                          >
+                            <Play className="mr-2 h-4 w-4" />
+                            {completed
+                              ? `Review ${course.type?.toLowerCase()}`
+                              : isActive
+                              ? `Continue Learning`
+                              : `Start ${course.type?.toLowerCase()}`}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>
@@ -267,22 +394,7 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
             <CardHeader>
               <CardTitle className="text-lg">Next Up</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
-                <h4 className="font-medium text-sm">Build Distributed Cache</h4>
-                <p className="text-xs text-muted-foreground">
-                  Implement Redis-based caching system
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Code2 className="h-3 w-3 text-green-600" />
-                  <span className="text-xs">Project • Est. 6 hours</span>
-                </div>
-              </div>
-              <Button className="w-full" size="sm">
-                <Play className="mr-2 h-4 w-4" />
-                Start Project
-              </Button>
-            </CardContent>
+            <CardContent className="space-y-3">{nextUp()}</CardContent>
           </Card>
 
           {/* Milestone Progress */}
@@ -294,24 +406,69 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Tasks Completed</span>
-                  <span>2/4</span>
+                  <span>
+                    {milestone?.userTopic?.totalTaskCompleted ?? 0}/
+                    {milestone?.userTopic?.totalTasks ?? 0}
+                  </span>
                 </div>
-                <Progress value={50} className="h-2" />
+                <Progress
+                  value={Number(milestone?.userTopic?.totalTaskCompleted ?? 0)}
+                  className="h-2"
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Time Invested</span>
-                  <span>12/20 hours</span>
+                  <span>{milestone?.userTopic?.timeInvested}</span>
                 </div>
-                <Progress value={60} className="h-2" />
+                <Progress
+                  value={Number(
+                    milestone?.userTopic?.timeInvested?.split("/")[0]
+                  )}
+                  className="h-2"
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{currentMilestone?.progress}%</span>
+                  <span>{milestone?.userTopic?.progress}%</span>
                 </div>
-                <Progress value={currentMilestone?.progress} className="h-2" />
+                <Progress
+                  value={milestone?.userTopic?.progress}
+                  className="h-2"
+                />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Next Steps */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Milestone Rewards</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div
+                className={`p-3  rounded-lg ${
+                  milestone?.userTopic?.completed
+                    ? "bg-green-900/40"
+                    : "bg-green-900"
+                }`}
+              >
+                <h4 className="font-medium text-sm">Complete Milestone</h4>
+                <p className="text-xs text-muted-foreground">
+                  Watch{" "}
+                  {milestone?.userTopic?.totalTasks -
+                    milestone?.userTopic?.totalTaskCompleted}{" "}
+                  more videos to complete this milestone
+                </p>
+              </div>
+              <Badge
+                variant={"secondary"}
+                className="w-full py-2 flex items-center justify-center"
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                Gain a total of {milestone?.totalMB} MB from this milestone
+              </Badge>
             </CardContent>
           </Card>
 
@@ -326,16 +483,21 @@ export function RoadmapWatchPage({ slug, onNavigate }: RoadmapWatchPageProps) {
                   <Users className="h-4 w-4" />
                   Others on this milestone
                 </span>
-                <span>234</span>
+                <span>{milestone?.userTopic?.totalStudents ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
                   <Trophy className="h-4 w-4" />
                   Completed this milestone
                 </span>
-                <span>1,089</span>
+                <span>{milestone?.userTopic?.totalCompletedStudents ?? 0}</span>
               </div>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button
+                onClick={() => onNavigate?.("/community?milestone=" + topicId)}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
                 Join Discussion
               </Button>
             </CardContent>
