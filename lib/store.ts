@@ -24,6 +24,7 @@ import {
   updateUserCourse,
   Quiz,
   Milestone,
+  Exercise,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -46,6 +47,7 @@ interface AppState {
   getUserCourses: (queries?: CoursesQuery) => UserCourse[] | any;
   getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
   getCourseQuizzes: (courseId: string) => Quiz[] | any;
+  getCourseExercises: (courseId: string) => Quiz[] | any;
   getProjects: () => Project[];
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
@@ -57,6 +59,7 @@ interface AppState {
   getRoadmapMilestones: (slug: string) => any;
   getMilestone: (slug: string, topicId: string) => Milestone | any;
   getRoadmapItems: (slug: string, topicId: string) => any;
+  getExercise: (id: string) => Quiz | any;
 
   // Actions
   updateUser: (updates: Partial<User>) => void;
@@ -88,7 +91,12 @@ interface AppState {
   markRoadmapVideoCompleted: (
     slug: string,
     topicId: string,
-    payload: { type: string; itemId: string; isChapterCompleted?: boolean }
+    payload: {
+      type: string;
+      itemId: string;
+      isChapterCompleted?: boolean;
+      courseId: string;
+    }
   ) => any;
 
   // Force re-render trigger
@@ -163,8 +171,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     const res = await fetchCourseQuizzes(courseId);
     return res.data;
   },
+  getCourseExercises: async (courseId: string): Promise<Exercise[] | any> => {
+    const { data } = await api.get(`/courses/${courseId}/exercises`);
+    return data.data;
+  },
   getQuiz: async (id: string): Promise<Quiz | any> => {
     const { data } = await api.get("/quizzes/" + id);
+    return data?.data;
+  },
+  getExercise: async (id: string): Promise<Exercise | any> => {
+    const { data } = await api.get("/exercises/" + id);
     return data?.data;
   },
   getMilestone: async (slug: string, topicId: string) => {

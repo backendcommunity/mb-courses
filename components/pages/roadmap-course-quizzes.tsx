@@ -20,7 +20,7 @@ import {
   Play,
   Star,
 } from "lucide-react";
-import { getCourseQuizzes, Roadmap, Milestone, Course, Quiz } from "@/lib/data";
+import { Roadmap, Milestone, Course, Quiz } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -77,26 +77,18 @@ export function RoadmapCourseQuizzes({
     return <div>Course not found</div>;
   }
 
-  console.log(quizzes);
-
   const completedQuizzes = quizzes.filter(
     ({ userQuiz, enrolled }: any) => enrolled && userQuiz?.completed
   ).length;
 
-  // const filteredQuizzes = quizzes.filter(({ userQuiz, enrolled }: any) => {
-  //   if (filter === "completed") return enrolled && userQuiz?.completed;
-  //   if (filter === "pending") return !enrolled || !userQuiz?.completed;
-  //   return true;
-  // });
-
   const totalQuizzes = quizzes.length;
   const averageScore =
     quizzes
-      .filter((q: any) => q?.quiz?.score !== undefined)
-      .reduce((acc: number, q: any) => acc + (q?.quiz?.score || 0), 0) /
+      .filter((q: any) => q?.userQuiz?.score !== undefined)
+      .reduce((acc: number, q: any) => acc + (q?.userQuiz?.score || 0), 0) /
     Math.max(
       1,
-      quizzes.filter((q: any) => q?.quiz?.score !== undefined).length
+      quizzes.filter((q: any) => q?.userQuiz?.score !== undefined).length
     );
 
   return (
@@ -226,7 +218,7 @@ export function RoadmapCourseQuizzes({
               ) : (
                 quizzes.map((course: any, index: number) => (
                   <Card
-                    key={course?.quiz?.id}
+                    key={course?.quiz?.id + index}
                     className="hover:shadow-md transition-shadow"
                   >
                     <CardHeader>
@@ -362,22 +354,6 @@ export function RoadmapCourseQuizzes({
                             )}
                         </div>
                       </div>
-
-                      {/* Progress bar for partial completion */}
-                      {course?.userQuiz?.attempts > 0 &&
-                        !course?.userQuiz?.completed && (
-                          <div className="mt-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-gray-300">
-                                Progress
-                              </span>
-                              <span className="text-sm text-gray-300">
-                                In Progress
-                              </span>
-                            </div>
-                            <Progress value={50} className="h-2" />
-                          </div>
-                        )}
                     </CardContent>
                   </Card>
                 ))

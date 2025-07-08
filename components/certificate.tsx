@@ -13,8 +13,9 @@ interface CertificateProps {
   courseName: string;
   studentName: string;
   instructorName: string;
+  type: string;
   completionDate: string;
-  course: Course;
+  course: Course | any;
   onDownload?: () => void;
   onShare?: () => void;
 }
@@ -23,6 +24,7 @@ export function Certificate({
   courseName,
   studentName,
   course,
+  type = "course",
   instructorName,
   completionDate,
   onDownload,
@@ -78,6 +80,8 @@ export function Certificate({
     // Download the file
     pdf.save(`${studentName}-certificate.pdf`);
     setIsGeneratingPDF(false);
+
+    onDownload?.();
   };
 
   return (
@@ -113,7 +117,7 @@ export function Certificate({
         }
       >
         {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600"></div>
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-background  to-primary"></div>
 
         <div
           className={
@@ -133,13 +137,15 @@ export function Certificate({
           {/* Header */}
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">MB</span>
+              <div className="flex flex-col items-center justify-center h-xs w-md">
+                <img src="/logo.png" alt="logo" />
+
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Masteringbackend
+                </h1>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              MasteringBackend
-            </h1>
+
             <p className="text-lg text-gray-600">Certificate of Completion</p>
           </div>
 
@@ -156,7 +162,7 @@ export function Certificate({
               <p className="text-lg text-gray-700">
                 has successfully completed the course
               </p>
-              <h3 className="text-2xl font-semibold text-blue-700">
+              <h3 className="text-2xl font-semibold text-primary">
                 {courseName}
               </h3>
             </div>
@@ -228,23 +234,40 @@ export function Certificate({
           <h3 className="text-lg font-semibold mb-4">Certificate Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Course Duration:</span>
-                <span className="font-medium">
-                  {course.totalDuration} hours
-                </span>
-              </div>
+              {type.includes("Roadmap") ? (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Roadmap Duration:</span>
+                  <span className="font-medium">{course?.timeframe}</span>
+                </div>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Course Duration:</span>
+                  <span className="font-medium">
+                    {course?.totalDuration ?? course?.duration} hours
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Skill Level:</span>
                 <span className="font-medium">{course.level}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Chapters Completed:</span>
-                <span className="font-medium">
-                  {course?.userCourse?.userChapters?.length ?? 0}/
-                  {course?.chapters?.length}
-                </span>
-              </div>
+              {type.includes("Roadmap") ? (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Milestones Completed:</span>
+                  <span className="font-medium">
+                    {course?.userRoadmap?.userTopics?.length ?? 0}/
+                    {course?.topics?.length}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Chapters Completed:</span>
+                  <span className="font-medium">
+                    {course?.userCourse?.userChapters?.length ?? 0}/
+                    {course?.chapters?.length}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">

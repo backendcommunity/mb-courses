@@ -276,7 +276,9 @@ export interface Video {
   order: number;
   type?: string;
   quizId?: string;
+  exerciseId?: string;
   quiz?: Quiz;
+  exercise?: Exercise;
   resources?: any;
   video: Number;
 }
@@ -317,14 +319,18 @@ export interface Exercise {
   solution: string;
   testCases: TestCase[];
   hints: string[];
+  hint?: string;
+  points?: number;
   completed: boolean;
   attempts: number;
+  instructions?: string;
 }
 
 export interface TestCase {
   id: string;
   input: string;
   expectedOutput: string;
+  expected?: string;
   description: string;
 }
 

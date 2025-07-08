@@ -53,6 +53,8 @@ export function RoadmapWatchPage({
 
     const completedItems = await store.getRoadmapItems(slug, topicId);
     setCompletedItems(completedItems);
+
+    // console.log(completedItems);
   }
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export function RoadmapWatchPage({
       setMilestone(Object.assign(milestone, { userTopic: completed }));
       // setCelebration(true)
       toast.success("Milestone completed successfully");
-      setCompleted(false);
+      setCompleted(true);
     } catch (error: any) {
       toast.error(error?.message ?? "An error occurred");
       setLoading(false);
@@ -137,23 +139,17 @@ export function RoadmapWatchPage({
     {
       const next = [
         ...(milestone?.courses ?? []),
-        getAssessments(milestone) ?? [],
+        ...(getAssessments(milestone) ?? []),
       ]
-        ?.flatMap((c: any) =>
-          [
-            ...(c?.userCourses ?? []),
-            ...(c?.userQuizzes ?? []),
-            ...(c?.userExercies ?? []),
-          ].flatMap((c) => {
-            const completedTasks = getCompletedTasks(
-              c.id,
-              milestone?.userTopic?.id
-            );
+        ?.filter((c) => {
+          const completedTask = getCompletedTasks(
+            c.id,
+            milestone?.userTopic?.id
+          );
+          if (!completedTask?.completed) return c;
+        })
 
-            return completedTasks?.completed;
-          })
-        )
-        .filter((c) => c)[0];
+        ?.at(0);
 
       if (!next)
         return (
@@ -304,13 +300,13 @@ export function RoadmapWatchPage({
                   (uc: any) => uc.courseId === course.id && uc.isRoadmap
                 );
 
-                const completedTasks = getCompletedTasks(
+                const completedTask = getCompletedTasks(
                   course.id,
                   milestone?.userTopic?.id
                 );
 
-                const completed = completedTasks?.completed ?? false;
-                const isActive = !!found;
+                const completed = completedTask?.completed ?? false;
+                const isActive = !!completedTask;
 
                 return (
                   <div
@@ -414,6 +410,7 @@ export function RoadmapWatchPage({
                 <Progress
                   value={Number(milestone?.userTopic?.totalTaskCompleted ?? 0)}
                   className="h-2"
+                  max={Number(milestone?.userTopic?.totalTasks)}
                 />
               </div>
               <div className="space-y-2">

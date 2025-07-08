@@ -33,6 +33,7 @@ import {
   CheckCheck,
   BarChart3,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Chapter,
@@ -48,6 +49,7 @@ import { PaymentDialog } from "../payment-dialog";
 import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
+import { Certificate } from "../certificate";
 
 interface RoadmapDetailPageProps {
   slug: string;
@@ -152,6 +154,10 @@ export function RoadmapDetailPage({
     return null;
   })();
 
+  const handleBackToCourse = () => {};
+  const handleDownload = () => {};
+  const handleShare = () => {};
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -198,9 +204,9 @@ export function RoadmapDetailPage({
               </div>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">
-                  Estimated Time Remaining
+                  Estimated Time
                 </div>
-                <div className="font-medium">{roadmap?.estimatedTime ?? 0}</div>
+                <div className="font-medium">{roadmap?.timeframe ?? 0}</div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">
@@ -223,12 +229,13 @@ export function RoadmapDetailPage({
         value={activeTab}
         onValueChange={setActiveTab}
       >
-        <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-4">
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          <TabsTrigger value="certificate">Certificate</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -593,6 +600,7 @@ export function RoadmapDetailPage({
                       <Calendar className="h-4 w-4" />
                       <span>Estimated duration: {milestone.duration}</span>
                     </div>
+
                     {isCurrent || completed ? (
                       <Button
                         size="sm"
@@ -625,7 +633,21 @@ export function RoadmapDetailPage({
                           <span>Start Milestone</span>
                         )}
                       </Button>
-                    ) : null}
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate?.(
+                            routes.roadmapWatch(slug, milestone?.id)
+                          );
+                        }}
+                      >
+                        {isCompleted
+                          ? "Review Milestone"
+                          : "Continue Milestone"}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1088,6 +1110,53 @@ export function RoadmapDetailPage({
                   title: roadmap?.title,
                 }}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="certificate" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Certification</CardTitle>
+              <CardDescription>
+                See what others are saying about this roadmap
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {roadmap?.progress != 100 ? (
+                <div className="flex-1 space-y-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Button variant="outline" onClick={handleBackToCourse}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back to Course
+                    </Button>
+                  </div>
+                  <div className="text-center py-12">
+                    <h2 className="text-2xl font-bold mb-4">
+                      Certificate Not Available
+                    </h2>
+                    <p className="text-muted-foreground mb-6">
+                      Complete the course to earn your certificate.
+                    </p>
+                    <Button onClick={handleBackToCourse}>
+                      Continue Learning
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 space-y-6">
+                  <Certificate
+                    courseName={roadmap.title}
+                    type="Roadmap"
+                    studentName={user.name}
+                    instructorName={roadmap?.instructor ?? "Solomon Eseme"}
+                    completionDate={"December 8, 2024"}
+                    course={roadmap}
+                    onDownload={handleDownload}
+                    onShare={handleShare}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -51,6 +51,14 @@ import { usePathname } from "next/navigation";
 import ConfettiCelebration from "../confetti-celebration";
 import { VimeoPlayer } from "../ui/vimeo-player";
 import { CourseQuizPage } from "./course-quiz";
+import { ExercisePage } from "../exercise";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -196,7 +204,16 @@ export function RoadmapVideoWatchPage({
   };
 
   const isVideoCompleted = (videoId: string) => {
-    return completedItems?.find((ci: any) => ci.itemId === videoId)?.completed;
+    return completedItems?.find((ci: any) => {
+      return ci.itemId === videoId;
+    })?.completed;
+  };
+
+  const isCourseCompleted = () => {
+    return (
+      milestone?.userTopic?.totalTaskCompleted ===
+      milestone?.userTopic?.totalTasks
+    );
   };
 
   const handleVideoClick = (vid: Video) => {
@@ -327,6 +344,7 @@ export function RoadmapVideoWatchPage({
         itemId: video.id,
         type: "VIDEO",
         isChapterCompleted,
+        courseId: course.slug,
       });
 
       toast.success("You just earned some points!");
@@ -346,6 +364,7 @@ export function RoadmapVideoWatchPage({
         courseId,
         {
           type: "COURSE",
+          courseId: courseId,
         }
       );
 
@@ -367,6 +386,7 @@ export function RoadmapVideoWatchPage({
       itemId: video.id,
       type: "QUIZ",
       isChapterCompleted,
+      courseId: video.quizId,
     });
 
     handleVideoClick(nextVideo);
@@ -396,7 +416,10 @@ export function RoadmapVideoWatchPage({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            {video?.duration ?? video?.quiz?.timeLimit} mins
+            {video?.duration ??
+              video?.quiz?.timeLimit ??
+              video?.exercise?.duration}{" "}
+            mins
           </Badge>
           <Badge className="bg-blue-600">Milestone Content</Badge>
         </div>
@@ -447,15 +470,19 @@ export function RoadmapVideoWatchPage({
                   />
                 </Card>
               ))}
+
+            {video?.type === "EXERCISE" && (
+              <ExercisePage
+                courseId={courseId}
+                onNavigate={(path) => onNavigate?.(path)}
+                exercise={video?.exercise!}
+              />
+            )}
           </Card>
 
           {/* Video Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {/* <Button variant="outline" size="sm">
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                Helpful
-              </Button> */}
               <Button
                 onClick={() => handleShare(video?.title!, path)}
                 variant="outline"
@@ -464,10 +491,12 @@ export function RoadmapVideoWatchPage({
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Download
-              </Button>
+              {video.type === "VIDEO" && (
+                <Button variant="outline" size="sm">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -496,7 +525,8 @@ export function RoadmapVideoWatchPage({
                 </Button>
               )}
 
-              {!nextVideo && !nextChapter && (
+              {/* TODO: Add check for Everything task/video is completed */}
+              {!nextVideo && !nextChapter && isCourseCompleted() && (
                 <div>
                   {!completed ? (
                     <Button
@@ -526,8 +556,12 @@ export function RoadmapVideoWatchPage({
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="code">Code Editor</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              {video.type === "VIDEO" && (
+                <>
+                  <TabsTrigger value="code">Code Editor</TabsTrigger>
+                  <TabsTrigger value="transcript">Transcript</TabsTrigger>
+                </>
+              )}
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="resources">Resources</TabsTrigger>
               <TabsTrigger value="discussion">Discussion</TabsTrigger>
@@ -536,7 +570,9 @@ export function RoadmapVideoWatchPage({
             <TabsContent value="overview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Video Overview</CardTitle>
+                  <CardTitle className="capitalize">
+                    {video?.type?.toLowerCase()} Overview
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -567,79 +603,108 @@ export function RoadmapVideoWatchPage({
               </Card>
             </TabsContent>
 
-            <TabsContent value="transcript" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Video Transcript</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">
-                        00:00
-                      </span>
-                      <p>
-                        Welcome to this comprehensive guide on system design
-                        fundamentals...
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">
-                        00:30
-                      </span>
-                      <p>
-                        Today we'll cover the core principles that every backend
-                        engineer needs to know...
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <span className="text-muted-foreground min-w-[60px]">
-                        01:15
-                      </span>
-                      <p>
-                        Let's start with scalability. When we talk about
-                        scalable systems...
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {video.type === "VIDEO" && (
+              <>
+                <TabsContent value="transcript" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Video Transcript</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex gap-3">
+                          <span className="text-muted-foreground min-w-[60px]">
+                            00:00
+                          </span>
+                          <p>
+                            Welcome to this comprehensive guide on system design
+                            fundamentals...
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-muted-foreground min-w-[60px]">
+                            00:30
+                          </span>
+                          <p>
+                            Today we'll cover the core principles that every
+                            backend engineer needs to know...
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-muted-foreground min-w-[60px]">
+                            01:15
+                          </span>
+                          <p>
+                            Let's start with scalability. When we talk about
+                            scalable systems...
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="code">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Code2 className="h-5 w-5" />
-                    Code Editor
-                  </CardTitle>
-                  <CardDescription>
-                    Follow along with the video and write your code here
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
-                    <textarea
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
-                      placeholder="Start coding your project here..."
-                    />
-                  </div>
-                </CardContent>
-                <div className="flex justify-between p-4">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Save
-                  </Button>
-                  <Button className="flex items-center gap-2">
-                    <Play className="h-4 w-4" />
-                    Run
-                  </Button>
-                </div>
-              </Card>
-            </TabsContent>
-
+                <TabsContent value="code">
+                  <Card>
+                    <CardHeader className="flex flex-row justify-between items-center w-full">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Code2 className="h-5 w-5" />
+                          Code Editor
+                        </CardTitle>
+                        <CardDescription>
+                          Follow along with the video and write your code here
+                        </CardDescription>
+                      </div>
+                      <div>
+                        <Select>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Save code samples" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              Fibonacci Series
+                            </SelectItem>
+                            <SelectItem value="beginner">
+                              Two sum Algorithms
+                            </SelectItem>
+                            <SelectItem value="intermediate">
+                              Find the sum of two triangles
+                            </SelectItem>
+                            <SelectItem value="advanced">
+                              Multiples of two Algorithms
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
+                        <textarea
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
+                          placeholder="Start coding your project here..."
+                        />
+                      </div>
+                    </CardContent>
+                    <div className="flex justify-between p-4">
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save
+                      </Button>
+                      <Button className="flex items-center gap-2">
+                        <Play className="h-4 w-4" />
+                        Run
+                      </Button>
+                    </div>
+                  </Card>
+                </TabsContent>
+              </>
+            )}
             <TabsContent value="notes" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -933,7 +998,14 @@ export function RoadmapVideoWatchPage({
                       <Clock className="h-3 w-3" />
                       <span>
                         {ch.videos.reduce((a: number, c: any) => {
-                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
+                          return (
+                            a +
+                            Number(
+                              c?.duration ??
+                                c?.quiz?.timeLimit ??
+                                c?.exercise?.duration
+                            )
+                          );
                         }, 0)}{" "}
                         mins
                       </span>

@@ -2,18 +2,17 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { RoadmapCourseExercisesPage } from "@/components/pages/roadmap-course-exercises";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-interface RoadmapCourseExercisesPageRouteProps {
-  params: {
-    roadmapId: string;
-    courseId: string;
-  };
-}
+type RoadmapCourseExercisesPageRouteProps = {
+  slug: string;
+  topicId: string;
+  course: string;
+};
 
-export default function RoadmapCourseExercisesPageRoute({
-  params,
-}: RoadmapCourseExercisesPageRouteProps) {
+export default function RoadmapCourseExercisesPageRoute() {
+  const { course, slug, topicId } =
+    useParams() as RoadmapCourseExercisesPageRouteProps;
   const router = useRouter();
 
   const handleNavigate = (path: string) => {
@@ -23,10 +22,10 @@ export default function RoadmapCourseExercisesPageRoute({
   return (
     <DashboardLayout>
       <RoadmapCourseExercisesPage
-        roadmapId={params.roadmapId}
-        courseId={params.courseId}
-        milestoneId="m1"
-        onBack={() => router.back()}
+        roadmapId={slug}
+        courseId={course}
+        topicId={topicId}
+        onNavigate={handleNavigate}
         onStartExercise={() => {}}
       />
     </DashboardLayout>
