@@ -2,10 +2,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/*"
-  to = "https://demo.masteringbackend.com/:splat"
-  status = 200
-  headers = { X-From = "Netlify" }
