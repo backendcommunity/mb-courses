@@ -11,14 +11,14 @@ export function middleware(request: NextRequest) {
   const isSecret = !isAuthPage;
 
   // 1. If NOT authenticated and trying to access protected route
-  if (!isAuthenticated && isSecret) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
+  // if (!isAuthenticated && isSecret) {
+  //   return NextResponse.redirect(new URL("/auth/login", request.url));
+  // }
 
   // 2. If authenticated and trying to access auth pages
-  if (isAuthenticated && isAuthPage) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+  // if (isAuthenticated && isAuthPage) {
+  //   return NextResponse.redirect(new URL("/", request.url));
+  // }
   // Otherwise, allow the request
   return NextResponse.next();
 }
