@@ -30,6 +30,7 @@ import {
   Gamepad2,
   Code2,
   Save,
+  Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -50,6 +51,7 @@ import ConfettiCelebration from "../confetti-celebration";
 import { codeSample, handleShare } from "@/lib/utils";
 import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
+import { ExercisePage } from "../exercise";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -75,6 +77,7 @@ export function CourseWatchPage({
     ? chapter?.videos.find((v: Video) => v.slug === videoId)
     : chapter?.videos[0];
   const [loading, setLoading] = useState(false);
+  const [completed, setCompleted] = useState(false);
   // const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   // const [duration] = useState(1800); // 30 minutes in seconds
@@ -201,6 +204,8 @@ export function CourseWatchPage({
 
       toast.success("You just earned some points!");
       setCelebration(true);
+
+      if (!isChapterCompleted) handleVideoClick(nextVideo);
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
@@ -318,6 +323,24 @@ export function CourseWatchPage({
     }
   };
 
+  const markCourseAsCompleted = async () => {
+    try {
+      const completed = await store.markCourseCompleted(
+        course?.userCourse?.id!
+      );
+
+      setCelebration(true);
+      setCompleted(true);
+      toast.success(
+        `You've earned ${completed?.totalPoints} MB from the course`
+      );
+      // onNavigate?.(routes.courseCertificate(slug));
+    } catch (error: any) {
+      toast.error("An error occurred updating your points. Try again");
+      setCompleted(false);
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -347,31 +370,41 @@ export function CourseWatchPage({
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Video Player */}
         <div className="lg:col-span-2 space-y-4 flex flex-col">
-          {/* Video Player */}
-          {currentVideo?.type === "VIDEO" && (
-            <Card className="overflow-hidden">
-              <div className="aspect-video bg-black relative">
-                <VimeoPlayer video={currentVideo} />
-              </div>
-            </Card>
-          )}
-          {currentVideo?.type === "QUIZ" && (
-            <Card className="overflow-hidden">
-              <CourseQuizPage
-                courseId={slug}
-                onNavigate={() => {}}
-                quiz={currentVideo?.quiz!}
-                showNav={false}
-                handleQuizSubmit={(passed) => {
-                  setQuizPassed(passed);
-                  if (!passed) {
-                  }
+          <Card className="overflow-hidden">
+            {/* Video Player */}
+            {currentVideo?.type === "VIDEO" && (
+              <Card className="overflow-hidden">
+                <div className="aspect-video bg-black relative">
+                  <VimeoPlayer video={currentVideo} />
+                </div>
+              </Card>
+            )}
+            {currentVideo?.type === "QUIZ" && (
+              <Card className="overflow-hidden">
+                <CourseQuizPage
+                  courseId={slug}
+                  onNavigate={() => {}}
+                  quiz={currentVideo?.quiz!}
+                  showNav={false}
+                  handleQuizSubmit={(passed) => {
+                    setQuizPassed(passed);
+                    if (!passed) {
+                    }
 
-                  handleMarkComplete();
-                }}
+                    handleMarkComplete();
+                  }}
+                />
+              </Card>
+            )}
+
+            {currentVideo?.type === "EXERCISE" && (
+              <ExercisePage
+                courseId={course.id}
+                onNavigate={(path) => onNavigate?.(path)}
+                exercise={currentVideo?.exercise!}
               />
-            </Card>
-          )}
+            )}
+          </Card>
           {/* Video Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -393,22 +426,25 @@ export function CourseWatchPage({
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              {currentVideo &&
-                currentVideo.type === "VIDEO" &&
-                !isVideoCompleted(currentVideo.id) && (
-                  <Button onClick={handleMarkComplete}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Mark Complete
-                  </Button>
-                )}
+              {currentVideo && (
+                <>
+                  {currentVideo.type === "VIDEO" &&
+                    !isVideoCompleted(currentVideo.id) && (
+                      <Button onClick={handleMarkComplete}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Mark Complete
+                      </Button>
+                    )}
 
-              {(currentVideo && currentVideo.type === "QUIZ" && quizPassed) ||
-                (!currentVideo?.quiz?.required && (
-                  <Button onClick={handleMarkComplete}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Mark Complete
-                  </Button>
-                ))}
+                  {(currentVideo.type === "QUIZ" && quizPassed) ||
+                    (currentVideo?.quiz && !currentVideo?.quiz?.required && (
+                      <Button onClick={handleMarkComplete}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Mark Quiz Complete
+                      </Button>
+                    ))}
+                </>
+              )}
 
               {nextVideo && (
                 <Button
@@ -424,6 +460,31 @@ export function CourseWatchPage({
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
+              )}
+
+              {/* TODO: Add check for Everything task/video is completed */}
+              {!nextVideo && !nextChapter && (
+                <div>
+                  {!completed ? (
+                    <Button
+                      variant={"destructive"}
+                      onClick={() => markCourseAsCompleted()}
+                    >
+                      Earn Your Rewards
+                      <Crown className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant={"outline"}
+                      onClick={() =>
+                        onNavigate?.(routes.courseCertificate(slug))
+                      }
+                    >
+                      View Your Certificate
+                      <SkipForward className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -444,40 +505,42 @@ export function CourseWatchPage({
             <TabsContent value="overview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>
-                    {currentVideo ? "Video" : "Chapter"} Overview
+                  <CardTitle className="capitalize">
+                    {currentVideo
+                      ? currentVideo?.type?.toLowerCase()
+                      : "Chapter"}{" "}
+                    Overview
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p
-                      className="text-muted-foreground"
-                      dangerouslySetInnerHTML={{
-                        __html: currentVideo?.summary ?? chapter.summary,
-                      }}
-                    ></p>
+                    <p className="text-muted-foreground">
+                      {currentVideo?.summary}
+                    </p>
                   </div>
                 </CardContent>
-
-                {currentVideo?.description ??
-                  (chapter?.description && (
-                    <CardContent>
-                      <div className="space-y-4  pt-4">
-                        <div className="flex w-full justify-center items-center">
-                          <span className="border-t flex-1"></span>
-                          <div className="px-2 text-xs">description</div>
-                          <span className="border-t flex-1"></span>
+                <CardContent>
+                  {currentVideo?.description ??
+                    (nextChapter?.description && (
+                      <CardContent>
+                        <div className="space-y-4  pt-4">
+                          <div className="flex w-full justify-center items-center">
+                            <span className="border-t flex-1"></span>
+                            <div className="px-2 text-xs">description</div>
+                            <span className="border-t flex-1"></span>
+                          </div>
+                          <p
+                            className="text-muted-foreground"
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                currentVideo?.description ??
+                                nextChapter?.description,
+                            }}
+                          ></p>
                         </div>
-                        <p
-                          className="text-muted-foreground"
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              currentVideo?.description ?? chapter?.description,
-                          }}
-                        ></p>
-                      </div>
-                    </CardContent>
-                  ))}
+                      </CardContent>
+                    ))}
+                </CardContent>
               </Card>
             </TabsContent>
 

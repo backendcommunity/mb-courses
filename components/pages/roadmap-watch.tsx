@@ -53,8 +53,6 @@ export function RoadmapWatchPage({
 
     const completedItems = await store.getRoadmapItems(slug, topicId);
     setCompletedItems(completedItems);
-
-    // console.log(completedItems);
   }
 
   useEffect(() => {

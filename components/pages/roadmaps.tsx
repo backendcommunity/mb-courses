@@ -37,7 +37,10 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
   useEffect(() => {
     setLoading(true);
     const loadRoadmaps = async () => {
-      const roadmaps = await store.getRoadmaps();
+      const roadmaps = await store.getRoadmaps({
+        size: 10,
+        skip: 0,
+      });
       setRoadmaps(roadmaps);
 
       const current = roadmaps.find((r: Roadmap) => r.enrolled);

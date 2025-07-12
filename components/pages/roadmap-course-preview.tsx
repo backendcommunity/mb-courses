@@ -253,9 +253,11 @@ export function CourseDetailPage({
         <div className="px-4 flex gap-3 sm:px-6 lg:px-8 py-4">
           <Button
             variant="outline"
-            onClick={() =>
-              onNavigate(routes.roadmapWatch(roadmapId, milestone?.id))
-            }
+            onClick={() => {
+              if (roadmap?.enrolled)
+                onNavigate(routes.roadmapWatch(roadmapId, milestone?.id));
+              else onNavigate(routes.roadmapDetail(roadmapId));
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Roadmap
@@ -312,7 +314,7 @@ export function CourseDetailPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {course?.tags.map((tag) => (
+            {course?.tags?.map((tag) => (
               <Badge key={tag} variant="outline">
                 {tag}
               </Badge>
@@ -400,7 +402,7 @@ export function CourseDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {course?.tags.map((tag) => (
+                  {course?.tags?.map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
@@ -532,10 +534,12 @@ export function CourseDetailPage({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Button className="w-full" onClick={handleEnrollNow}>
-                    <Play className="mr-2 h-4 w-4" />
-                    Start Learning
-                  </Button>
+                  {roadmap?.enrolled && (
+                    <Button className="w-full" onClick={handleEnrollNow}>
+                      <Play className="mr-2 h-4 w-4" />
+                      Start Learning
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="w-full"
@@ -677,14 +681,16 @@ export function CourseDetailPage({
                   Complete Course to Earn
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleEnrollNow}
-                >
-                  <Certificate className="mr-2 h-4 w-4" />
-                  Enroll to Earn Certificate
-                </Button>
+                roadmap?.enrolled && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleEnrollNow}
+                  >
+                    <Certificate className="mr-2 h-4 w-4" />
+                    Enroll to Earn Certificate
+                  </Button>
+                )
               )}
             </CardContent>
           </Card>

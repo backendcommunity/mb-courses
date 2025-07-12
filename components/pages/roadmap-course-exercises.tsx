@@ -49,7 +49,6 @@ export function RoadmapCourseExercises({
   async function loadExercises() {
     try {
       const exercises = await store.getCourseExercises(courseId);
-      console.log(exercises);
       setExercises(exercises);
     } catch (error) {}
   }

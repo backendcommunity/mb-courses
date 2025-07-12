@@ -35,18 +35,16 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-
-      setIsLoading(false);
       // Handle login logic here
-      console.log("Here", user);
-      await router.push("/");
-      console.log("Redirect triggered");
+      return router.push("/");
     } catch (error: any) {
-      console.log("Error", error);
       const message = error?.response?.data?.message ?? error?.message;
+
       if (message.includes("Confirm your email"))
-        router.push("/auth/email/verify?sent=true");
+        router.push("/auth/email/verify?sent=true&email=" + formData.email);
+
       toast.error(message);
+    } finally {
       setIsLoading(false);
     }
   };

@@ -7,7 +7,7 @@ export function useLevel() {
   const levels: Level[] = dataStore.levels;
 
   function findMBToNextLevel() {
-    const userLevel = user.level;
+    const userLevel = user?.level;
     const nextLevelIndex = levels.findIndex((l) => l.id === userLevel);
     const nextLevel = levels[nextLevelIndex + 1];
     return nextLevel?.point! - user.points;

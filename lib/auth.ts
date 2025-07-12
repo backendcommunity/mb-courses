@@ -17,6 +17,10 @@ export const register = async (user: NewUser) => {
 };
 
 export const logout = async () => {
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem("mb_token");
+    localStorage.removeItem("mb_user");
+  }
   await api.post("/auth/logout");
 };
 

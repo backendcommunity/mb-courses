@@ -68,8 +68,6 @@ export function RoadmapDetailPage({
   const [loading, setLoading] = useState(false);
   const [celebration, setCelebration] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [completed, setCompleted] = useState(false);
-  const [completedItems, setCompletedItems] = useState<any>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -127,7 +125,7 @@ export function RoadmapDetailPage({
       });
 
       setCelebration(true);
-      setCompleted(true);
+      onNavigate?.(routes.roadmapWatch(slug, milestoneId));
     } catch (error: any) {
       toast.error(error?.message ?? "Error occurred. Please try again");
     } finally {
@@ -149,10 +147,49 @@ export function RoadmapDetailPage({
       if (currentCompleted && !nextStarted) {
         return next.id;
       }
+
+      // If things break. Check here
+      return current.id;
     }
 
     return null;
   })();
+
+  function reviewOrComplete(milestone: any, isCompleted: boolean) {
+    return (
+      <Button
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          onNavigate?.(routes.roadmapWatch(slug, milestone?.id));
+        }}
+      >
+        {isCompleted ? "Review Milestone" : "Continue Milestone"}
+      </Button>
+    );
+  }
+
+  function firstStartableMilestone(milestone: any) {
+    return (
+      <Button
+        disabled={loading}
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          startMilestone(milestone.id);
+        }}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Start...</span>
+          </>
+        ) : (
+          <span>Start Milestone</span>
+        )}
+      </Button>
+    );
+  }
 
   const handleBackToCourse = () => {};
   const handleDownload = () => {};
@@ -396,7 +433,7 @@ export function RoadmapDetailPage({
             const isCompleted = milestone?.userTopic?.completed;
 
             const isCurrent =
-              milestone.id === roadmap?.userRoadmap?.currentUserTopic.topicId;
+              milestone.id === roadmap?.userRoadmap?.currentUserTopic?.topicId;
 
             const isUpcoming = !isCurrent && !isCompleted;
 
@@ -601,53 +638,13 @@ export function RoadmapDetailPage({
                       <span>Estimated duration: {milestone.duration}</span>
                     </div>
 
-                    {isCurrent || completed ? (
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onNavigate?.(
-                            routes.roadmapWatch(slug, milestone?.id)
-                          );
-                        }}
-                      >
-                        {isCompleted
-                          ? "Review Milestone"
-                          : "Continue Milestone"}
-                      </Button>
-                    ) : milestone.id === firstStartableMilestoneId ? (
-                      <Button
-                        disabled={loading}
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          startMilestone(milestone.id);
-                        }}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Start...</span>
-                          </>
-                        ) : (
-                          <span>Start Milestone</span>
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onNavigate?.(
-                            routes.roadmapWatch(slug, milestone?.id)
-                          );
-                        }}
-                      >
-                        {isCompleted
-                          ? "Review Milestone"
-                          : "Continue Milestone"}
-                      </Button>
-                    )}
+                    {roadmap?.enrolled
+                      ? isCurrent
+                        ? reviewOrComplete(milestone, isCompleted)
+                        : milestone.id === firstStartableMilestoneId
+                        ? firstStartableMilestone(milestone)
+                        : ""
+                      : ""}
                   </div>
                 </CardContent>
               </Card>
@@ -1116,31 +1113,17 @@ export function RoadmapDetailPage({
 
         <TabsContent value="certificate" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Certification</CardTitle>
-              <CardDescription>
-                See what others are saying about this roadmap
-              </CardDescription>
-            </CardHeader>
+            <CardHeader></CardHeader>
             <CardContent className="space-y-6">
               {roadmap?.progress != 100 ? (
                 <div className="flex-1 space-y-6">
-                  <div className="flex items-center gap-4 mb-6">
-                    <Button variant="outline" onClick={handleBackToCourse}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to Course
-                    </Button>
-                  </div>
                   <div className="text-center py-12">
                     <h2 className="text-2xl font-bold mb-4">
                       Certificate Not Available
                     </h2>
                     <p className="text-muted-foreground mb-6">
-                      Complete the course to earn your certificate.
+                      Complete the roadmap to earn your certificate.
                     </p>
-                    <Button onClick={handleBackToCourse}>
-                      Continue Learning
-                    </Button>
                   </div>
                 </div>
               ) : (

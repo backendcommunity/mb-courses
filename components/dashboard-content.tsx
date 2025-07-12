@@ -25,50 +25,75 @@ import {
   Flame,
 } from "lucide-react";
 import { routes } from "@/lib/routes";
-import { useUser } from "@/hooks/use-user";
+import { roadmaps, Topic, updateUser, User } from "@/lib/data";
+import { useEffect, useMemo, useState } from "react";
+import { useAppStore } from "@/lib/store";
+import { format } from "timeago.js";
 
-export function DashboardContent() {
+interface DashboardContentProps {
+  user: User;
+}
+
+export function DashboardContent({ user }: DashboardContentProps) {
   const router = useRouter();
-  const user = useUser();
+  const store = useAppStore();
+  const [activities, setActivities] = useState([]);
+  const [userRoadmaps, setUserRoadmaps] = useState([]);
+  useEffect(() => {
+    if (user) updateUser(user);
+  }, [user]);
+
+  async function load() {
+    const activities = await store.getActivities();
+    setActivities(activities);
+
+    const userRoadmaps = await store.getUserRoadmaps({
+      size: 1,
+      skip: 0,
+    });
+
+    // Use getRoadmaps and filter by enrolled
+    console.log(userRoadmaps);
+    setUserRoadmaps(userRoadmaps);
+  }
+
+  useMemo(() => {
+    load();
+  }, []);
 
   const handleNavigate = (path: string) => {
     router.push(path);
   };
 
-  // Mock data for dashboard
-  const stats = {
-    currentStreak: 7,
-  };
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: "course",
-      title: "Completed Node.js Fundamentals",
-      description: "Chapter 5: Express.js Routing",
-      time: "2 hours ago",
-      xp: 150,
-      icon: BookOpen,
-    },
-    {
-      id: 2,
-      type: "project",
-      title: "Built REST API Project",
-      description: "E-commerce Backend API",
-      time: "1 day ago",
-      xp: 300,
-      icon: Code2,
-    },
-    {
-      id: 3,
-      type: "challenge",
-      title: "Completed Daily Challenge",
-      description: "Algorithm: Binary Search",
-      time: "2 days ago",
-      xp: 100,
-      icon: Trophy,
-    },
-  ];
+  // const recentActivity = [
+  //   {
+  //     id: 1,
+  //     type: "course",
+  //     title: "Completed Node.js Fundamentals",
+  //     description: "Chapter 5: Express.js Routing",
+  //     time: "2 hours ago",
+  //     xp: 150,
+  //     icon: BookOpen,
+  //   },
+  //   {
+  //     id: 2,
+  //     type: "project",
+  //     title: "Built REST API Project",
+  //     description: "E-commerce Backend API",
+  //     time: "1 day ago",
+  //     xp: 300,
+  //     icon: Code2,
+  //   },
+  //   {
+  //     id: 3,
+  //     type: "challenge",
+  //     title: "Completed Daily Challenge",
+  //     description: "Algorithm: Binary Search",
+  //     time: "2 days ago",
+  //     xp: 100,
+  //     icon: Trophy,
+  //   },
+  // ];
 
   const quickActions = [
     {
@@ -117,7 +142,7 @@ export function DashboardContent() {
             className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10"
           >
             <Flame className="h-3 w-3 mr-1 text-orange-500" />
-            {stats.currentStreak} day streak
+            {user?.streak} day streak
           </Badge>
         </div>
       </div>
@@ -137,8 +162,8 @@ export function DashboardContent() {
             </div>
             <Progress
               value={
-                (user?.numberOfCoursesCompleted /
-                  user?.numberOfCoursesInProgress) *
+                (user?.numberOfCoursesCompleted! /
+                  user?.numberOfCoursesInProgress!) *
                 100
               }
               className="mt-2"
@@ -231,28 +256,35 @@ export function DashboardContent() {
               Your latest achievements and progress
             </CardDescription>
           </CardHeader>
+
+          {activities?.length < 1 && (
+            <CardContent className="space-y-4">
+              No recent activities.
+            </CardContent>
+          )}
+
           <CardContent className="space-y-4">
-            {recentActivity.map((activity) => (
+            {activities?.map((activity: any) => (
               <div
-                key={activity.id}
+                key={activity?.id}
                 className="flex items-center gap-4 p-3 rounded-lg border"
               >
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <activity.icon className="h-4 w-4 text-primary" />
+                  <Trophy className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium">{activity.title}</h4>
+                  <h4 className="font-medium">{activity?.title}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {activity.description}
+                    {activity?.description}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {activity.time}
+                      {format(activity?.createdAt)}
                     </span>
                   </div>
                 </div>
-                <Badge variant="secondary">+{activity.xp} MB</Badge>
+                <Badge variant="secondary">+{activity?.mb} MB</Badge>
               </div>
             ))}
           </CardContent>
@@ -261,46 +293,63 @@ export function DashboardContent() {
         {/* Learning Path Progress */}
         <Card>
           <CardHeader>
-            <CardTitle>Current Learning Path</CardTitle>
-            <CardDescription>Backend Engineering Mastery</CardDescription>
+            <CardTitle>Current Learning Roadmap</CardTitle>
+            <CardDescription>
+              Continue learning from where you left off.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Overall Progress</span>
-                <span>65%</span>
-              </div>
-              <Progress value={65} />
-            </div>
+            {userRoadmaps.map((userRoadmap: any) => {
+              return (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Overall Progress</span>
+                      <span>65%</span>
+                    </div>
+                    <Progress value={65} />
+                  </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Node.js Fundamentals</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Database Design</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-4 w-4 rounded-full border-2 border-primary bg-primary/20" />
-                <span className="text-sm font-medium">System Architecture</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-4 w-4 rounded-full border-2 border-muted" />
-                <span className="text-sm text-muted-foreground">
-                  Microservices
-                </span>
-              </div>
-            </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">
+                        {userRoadmap?.roadmap?.title}
+                      </span>
+                    </div>
 
-            <Button
-              className="w-full"
-              onClick={() => handleNavigate(routes.paths)}
-            >
-              Continue Learning Path
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+                    {userRoadmap?.roadmap?.topics?.map((t: Topic) => {
+                      <>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">{t?.title}</span>
+                        </div>
+                        {/* <div className="flex items-center gap-3">
+                          <div className="h-4 w-4 rounded-full border-2 border-primary bg-primary/20" />
+                          <span className="text-sm font-medium">
+                            System Architecture
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-4 w-4 rounded-full border-2 border-muted" />
+                          <span className="text-sm text-muted-foreground">
+                            Microservices
+                          </span>
+                        </div> */}
+                      </>;
+                    })}
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={() => handleNavigate(routes.paths)}
+                  >
+                    Continue Learning Path
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </>
+              );
+            })}
           </CardContent>
         </Card>
       </div>

@@ -25,6 +25,8 @@ import {
   Quiz,
   Milestone,
   Exercise,
+  Reward,
+  UserRoadmapFilters,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -53,16 +55,27 @@ interface AppState {
   getInterviews: () => Interview[];
   getBootcamps: () => Bootcamp[];
   getLearningPaths: () => LearningPath[];
-  getRoadmaps: () => Roadmap[] | any;
+  getRoadmaps: (filters?: { skip?: number; size?: number }) => Roadmap[] | any;
+  getUserRoadmaps: (data: UserRoadmapFilters) => any;
   getQuiz: (id: string) => Quiz | any;
   getRoadmapBySlug: (slug: string) => any;
   getRoadmapMilestones: (slug: string) => any;
   getMilestone: (slug: string, topicId: string) => Milestone | any;
   getRoadmapItems: (slug: string, topicId: string) => any;
-  getExercise: (id: string) => Quiz | any;
+  getExercise: (id: string) => Exercise | any;
+  getRewards: () => Reward | any;
+  getUserAchievement: () => any;
+  getBadges: () => any;
+  getActivities: () => any;
 
   // Actions
-  updateUser: (updates: Partial<User>) => void;
+  updateUser: (updates: Partial<User>) => any;
+  deleteAccount: () => void;
+  changePassword: (updates: {
+    oldPassword: string;
+    newPassword: string;
+  }) => void;
+  redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
@@ -87,6 +100,8 @@ interface AppState {
     itemId: string,
     data: any
   ) => any;
+
+  markCourseCompleted: (id: string) => any;
 
   markRoadmapVideoCompleted: (
     slug: string,
@@ -115,6 +130,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw error;
     }
   },
+  getActivities: async () => {
+    const { data } = await api.get(`/activities`);
+    return data?.data;
+  },
+  getRewards: async () => {
+    const { data } = await api.get(`/rewards`);
+    return data?.data;
+  },
   getRoadmapItems: async (slug: string, topicId: string) => {
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}/items`);
     return data?.data;
@@ -127,9 +150,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         updatePopularCourses(res.data);
         return res.data?.courses;
       }
-
       updateCourses(res.data);
-      return res.data?.courses;
+      return res.data;
     } catch (error) {
       throw error;
     }
@@ -138,7 +160,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetchUserCourses(queries!);
       updateUserCourses(res.data);
-      return res.data?.userCourses;
+      return res.data;
     } catch (error) {
       throw error;
     }
@@ -192,9 +214,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   getInterviews: () => dataStore.interviews,
   getBootcamps: () => dataStore.bootcamps,
   getLearningPaths: () => dataStore.learningPaths,
-  getRoadmaps: async () => {
-    const { data } = await api.get("/roadmaps");
+  getRoadmaps: async (filters?) => {
+    const { data } = await api.get(
+      `/roadmaps?page=${filters?.skip}&size=${filters?.size}`
+    );
     return data?.data?.roadmaps;
+  },
+  getUserRoadmaps: async ({ filters, size, skip }: UserRoadmapFilters) => {
+    const {
+      data: { data },
+    } = await api.get(
+      `/users/roadmaps?skip=${skip}&size=${size}&filters=${filters}`
+    );
+    return data?.data;
+  },
+  getUserAchievement: async () => {
+    const { data } = await api.get("/users/achievements");
+    return data?.data;
+  },
+
+  getBadges: async () => {
+    const { data } = await api.get("/rewards/badges");
+    return data?.data;
   },
 
   getRoadmapBySlug: async (slug: string) => {
@@ -216,6 +257,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post("/quizzes/" + id + "/start", {
       userQuizId,
     });
+    return data?.data;
+  },
+
+  redeemReward: async (id: string) => {
+    const { data } = await api.post("/rewards/" + id);
     return data?.data;
   },
 
@@ -244,6 +290,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  markCourseCompleted: async (userCourseId: string) => {
+    const { data } = await api.post(`/courses/${userCourseId}`);
+    return data?.data;
+  },
+
+  changePassword: async (updates) => {
+    const { data } = await api.post(`/auth/password/change`, updates);
+    return data?.data;
+  },
+
+  deleteAccount: async () => {
+    const { data } = await api.delete(`/users`);
+    return data?.data;
+  },
+
   saveNote: async (note: string, courseId: string, videoId: string) => {
     const { data } = await api.post(
       `/courses/${courseId}/videos/${videoId}/notes`,
@@ -264,9 +325,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post("/quizzes/" + id + "/submit", questions);
     return data?.data;
   },
-  updateUser: (updates) => {
-    updateUserInStore(updates);
+  updateUser: async (updates) => {
+    const { data } = await api.put(`/users`, {
+      ...updates,
+    });
+    updateUserInStore(data?.data);
     get().forceUpdate();
+    return data?.data;
   },
 
   updateCourse: (id, updates) => {

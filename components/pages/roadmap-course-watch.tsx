@@ -193,8 +193,6 @@ export function RoadmapCourseWatch({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  console.log(course?.chapters);
-
   return (
     <div className="min-h-screen">
       {/* Header */}

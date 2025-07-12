@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { useAppStore } from "@/lib/store";
 import { User } from "@/lib/data";
 import { useMobile } from "@/hooks/use-mobile";
+import { KapAIAssistant } from "./kap-ai-assistant";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,10 +17,9 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isMobile = useMobile();
   const pathname = usePathname();
-  const store = useAppStore();
+
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  const [user, setUser] = useState<User | null>(null);
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -37,16 +36,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
-
-  useEffect(() => {
-    async function loadUser() {
-      const user = await store.getUser();
-      setUser(user);
-    }
-    loadUser();
-  }, []);
-
-  if (!user) return <div>loading... user</div>;
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -84,6 +73,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           isMobile={isMobile}
         />
         <main className="flex-1 overflow-auto p-8">{children}</main>
+        <KapAIAssistant />
       </div>
     </div>
   );

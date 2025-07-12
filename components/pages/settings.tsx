@@ -33,6 +33,18 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { SoundSettings } from "../sound-settings";
+import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/use-user";
+import { Checkbox } from "../ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { toast } from "sonner";
+import { routes } from "@/lib/routes";
 
 interface SettingsPageProps {
   onNavigate: (path: string) => void;
@@ -40,28 +52,164 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onNavigate }: SettingsPageProps) {
   const { theme, setTheme } = useTheme();
+  const store = useAppStore();
+  const user = useUser();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [notMatch, setNotMatch] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordValidations, setPasswordValidations] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    specialChar: false,
+  });
   const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    sms: false,
-    courseUpdates: true,
-    achievements: true,
-    community: false,
-    marketing: false,
+    email: user?.settings?.email ?? true,
+    push: user?.settings?.push ?? true,
+    sms: user?.settings?.sms ?? false,
+    courseUpdates: user?.settings?.courseUpdates ?? true,
+    achievements: user?.settings?.achievements ?? true,
+    community: user?.settings?.community ?? false,
+    marketing: user?.settings?.marketing ?? false,
   });
   const [privacy, setPrivacy] = useState({
-    profileVisible: true,
-    progressVisible: true,
-    allowMessages: true,
+    profileVisible: user?.settings?.profileVisible ?? true,
+    progressVisible: user?.settings?.progressVisible ?? true,
+    allowMessages: user?.settings?.allowMessages ?? true,
   });
+
+  const [language, setLangauge] = useState({
+    language: user?.settings?.language ?? "en",
+    timezone: user?.settings?.timezone ?? "pst",
+    dateFormat: user?.settings?.dateFormat ?? "mdy",
+  });
+
+  const handleTwoFactorChange = (value: boolean) => {
+    setTwoFactorEnabled(value);
+    store.updateUser({
+      settings: {
+        ...user.settings,
+        twoFactorEnabled: value,
+      },
+    });
+  };
+
+  const handleLanguageChange = (key: string, value: string) => {
+    setLangauge((prev) => ({ ...prev, [key]: value }));
+
+    store.updateUser({
+      settings: {
+        ...user.settings,
+        [key]: value,
+      },
+    });
+  };
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }));
+
+    store.updateUser({
+      settings: {
+        ...user.settings,
+        [key]: value,
+      },
+    });
   };
 
   const handlePrivacyChange = (key: string, value: boolean) => {
     setPrivacy((prev) => ({ ...prev, [key]: value }));
+
+    store.updateUser({
+      settings: {
+        ...user.settings,
+        [key]: value,
+      },
+    });
+  };
+
+  const handleNewPasswordChange = (value: string) => {
+    setNewPassword(value);
+
+    // Also check for match if confirmPassword is already filled
+    if (confirmPassword !== "") {
+      setNotMatch(value !== confirmPassword);
+    }
+
+    setPasswordValidations({
+      length: value.length >= 8,
+      uppercase: /[A-Z]/.test(value),
+      lowercase: /[a-z]/.test(value),
+      number: /[0-9]/.test(value),
+      specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(value),
+    });
+  };
+
+  const isPasswordValid = Object.values(passwordValidations).every(Boolean);
+  const canSubmit =
+    isPasswordValid &&
+    !notMatch &&
+    oldPassword.length > 0 &&
+    newPassword.length > 0 &&
+    confirmPassword.length > 0;
+
+  const handleChangePassword = async () => {
+    try {
+      setLoading(true);
+      setMessage(null);
+
+      if (!canSubmit) return;
+
+      await store.changePassword({
+        newPassword,
+        oldPassword,
+      });
+
+      setMessage({ type: "success", text: "Password updated successfully!" });
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordValidations({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        specialChar: false,
+      });
+    } catch (error: any) {
+      const m = error?.response?.message ?? error?.message;
+      if (m.includes("422")) {
+        setMessage({ type: "error", text: "Password do not match" });
+        return;
+      }
+
+      setMessage({ type: "error", text: m });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      if (name !== user?.name) return;
+      await store.deleteAccount();
+      toast.success("Account deleted successfully");
+      onNavigate(routes.logout);
+    } catch (error) {
+      toast.error("Account not deleted. Try again");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,6 +238,8 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
                   <Input
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
                     id="current-password"
                     type="password"
                     placeholder="Enter current password"
@@ -99,25 +249,141 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                   <div className="space-y-2">
                     <Label htmlFor="new-password">New Password</Label>
                     <Input
+                      value={newPassword}
+                      onChange={(e) => handleNewPasswordChange(e.target.value)}
                       id="new-password"
                       type="password"
                       placeholder="Enter new password"
                     />
+
+                    {newPassword && (
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <div
+                          className={
+                            passwordValidations.length
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          • At least 8 characters
+                        </div>
+                        <div
+                          className={
+                            passwordValidations.uppercase
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          • Contains uppercase letter
+                        </div>
+                        <div
+                          className={
+                            passwordValidations.lowercase
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          • Contains lowercase letter
+                        </div>
+                        <div
+                          className={
+                            passwordValidations.number
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          • Contains number
+                        </div>
+                        <div
+                          className={
+                            passwordValidations.specialChar
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          • Contains special character
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm Password</Label>
                     <Input
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        const confirm = e.target.value;
+                        setConfirmPassword(confirm);
+                        setNotMatch(confirm !== newPassword);
+                      }}
                       id="confirm-password"
                       type="password"
                       placeholder="Confirm new password"
                     />
+                    {notMatch && (
+                      <span className="text-red-500">
+                        Password does not match
+                      </span>
+                    )}
                   </div>
                 </div>
-                <Button className="gap-2">
-                  <Key className="h-4 w-4" />
-                  Update Password
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={!canSubmit || loading}
+                    className="gap-2"
+                  >
+                    {loading ? (
+                      "Updating..."
+                    ) : (
+                      <>
+                        <Key className="h-4 w-4" />
+                        Update Password
+                      </>
+                    )}
+                  </Button>
+
+                  {message && (
+                    <p
+                      className={`text-sm ${
+                        message.type === "success"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {message.text}
+                    </p>
+                  )}
+                </div>
               </div>
+              <Separator />
+
+              <CardContent className="space-y-6">
+                <div>
+                  <h2 className="pb-3 text-xl">You registered using</h2>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={user?.signedUpThrough === "GOOGLE"}
+                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                    />
+                    <div className="flex-1">Google</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={user?.signedUpThrough === "GITHUB"}
+                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                    />
+                    <div className="flex-1">Github</div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={user?.signedUpThrough === "MASTERINGBACKEND"}
+                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                    />
+                    <div className="flex-1">Masteringbackend</div>
+                  </div>
+                </div>
+              </CardContent>
 
               <Separator />
 
@@ -143,7 +409,7 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 </div>
                 <Switch
                   checked={twoFactorEnabled}
-                  onCheckedChange={setTwoFactorEnabled}
+                  onCheckedChange={(value) => handleTwoFactorChange(value)}
                 />
               </div>
             </CardContent>
@@ -353,7 +619,12 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Language</Label>
-                <Select defaultValue="en">
+                <Select
+                  defaultValue={language?.language ?? "en"}
+                  onValueChange={(value) =>
+                    handleLanguageChange("language", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -367,7 +638,12 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
               </div>
               <div className="space-y-2">
                 <Label>Timezone</Label>
-                <Select defaultValue="pst">
+                <Select
+                  defaultValue={language?.timezone ?? "pst"}
+                  onValueChange={(value) =>
+                    handleLanguageChange("timezone", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -381,7 +657,12 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
               </div>
               <div className="space-y-2">
                 <Label>Date Format</Label>
-                <Select defaultValue="mdy">
+                <Select
+                  defaultValue={language?.dateFormat ?? "mdy"}
+                  onValueChange={(value) =>
+                    handleLanguageChange("dateFormat", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -405,7 +686,11 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 <Download className="h-4 w-4" />
                 Export Data
               </Button>
-              <Button variant="destructive" className="w-full gap-2">
+              <Button
+                onClick={() => setShowDelete(true)}
+                variant="destructive"
+                className="w-full gap-2"
+              >
                 <Trash2 className="h-4 w-4" />
                 Delete Account
               </Button>
@@ -413,6 +698,40 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
           </Card>
         </div>
       </div>
+
+      <Dialog open={showDelete} onOpenChange={() => setShowDelete(false)}>
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base md:text-lg">
+              Delete your account
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Type your name{" "}
+              <span className="italic text-gray-300 bg-gray-700 p-1">
+                {user?.name}
+              </span>{" "}
+              in the box below to delete your account.
+            </DialogDescription>
+          </DialogHeader>
+          <Input value={name} onChange={(e) => setName(e.target.value)}></Input>
+
+          <Button
+            onClick={handleDelete}
+            variant="destructive"
+            disabled={loading}
+            className="w-full gap-2"
+          >
+            {loading ? (
+              "Deleteing..."
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4" />
+                Delete Account
+              </>
+            )}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

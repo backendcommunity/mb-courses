@@ -110,7 +110,6 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   };
 
   const handleBackToCourses = () => {
-    console.log("Back to Courses - Navigating to:", routes.courses);
     onNavigate(routes.courses);
   };
 
@@ -157,7 +156,6 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       nextChapter?.slug!,
       nextVideo?.slug
     );
-    console.log("Continue Learning - Navigating to:", watchPath);
     onNavigate(watchPath);
   };
 
@@ -241,7 +239,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {course?.tags.map((tag) => (
+            {course?.tags?.map((tag) => (
               <Badge key={tag} variant="outline">
                 {tag}
               </Badge>

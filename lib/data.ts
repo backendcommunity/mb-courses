@@ -1,5 +1,11 @@
 import api from "./api";
 import { fetchUser } from "./auth";
+
+export interface UserRoadmapFilters {
+  skip?: number;
+  size?: number;
+  filters?: any;
+}
 export interface User {
   id: string;
   name: string;
@@ -24,7 +30,22 @@ export interface User {
   github?: string;
   website?: string;
   address?: string;
+  settings: any;
   phone?: string;
+  createdAt?: Date | string;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  description?: string;
+  mb: number;
+  category?: string;
+  icon?: string;
+  active?: boolean;
+  popular?: boolean;
+  enrolled?: boolean;
+  userReward?: any;
   createdAt?: Date | string;
 }
 
@@ -1732,7 +1753,6 @@ export const enrollInLearningPath = (pathId: string) => {
 
 export const enrollInRoadmap = async (slug: string) => {
   const { data } = await api.post("/roadmaps/" + slug);
-  console.log(data);
   return data?.data;
 };
 
@@ -1763,6 +1783,8 @@ export const completeMilestone = (roadmapId: string, milestoneId: string) => {
 };
 
 export const updateUser = (updates: Partial<User | null>) => {
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem("mb_user", JSON.stringify(updates));
   Object.assign(dataStore.user, updates);
 };
 

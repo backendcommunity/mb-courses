@@ -10,21 +10,15 @@ export function middleware(request: NextRequest) {
   const isAuthPage = pathname.startsWith("/auth/");
   const isSecret = !isAuthPage;
 
-  console.log(isAuthenticated, "Authenticated");
-
   // 1. If NOT authenticated and trying to access protected route
   if (!isAuthenticated && isSecret) {
-    console.log(isSecret, "Not Auth");
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   // 2. If authenticated and trying to access auth pages
   if (isAuthenticated && isAuthPage) {
-    console.log(isAuthPage, "Auth");
     return NextResponse.redirect(new URL("/", request.url));
   }
-
-  console.log(pathname, "MD");
   // Otherwise, allow the request
   return NextResponse.next();
 }

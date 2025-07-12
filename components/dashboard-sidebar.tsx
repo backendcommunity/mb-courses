@@ -23,7 +23,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
@@ -40,21 +39,25 @@ const navigationData = {
       title: "Courses",
       url: routes.courses,
       icon: BookOpen,
+      active: true,
     },
     {
       title: "Bootcamps",
       url: routes.bootcamps,
       icon: Zap,
+      active: false,
     },
     {
       title: "Learning Paths",
       url: routes.paths,
       icon: Target,
+      active: false,
     },
     {
       title: "Roadmaps",
       url: routes.roadmaps,
       icon: TrendingUp,
+      active: true,
     },
   ],
   build: [
@@ -62,16 +65,19 @@ const navigationData = {
       title: "MB Projects",
       url: routes.projects,
       icon: Code2,
+      active: false,
     },
     {
       title: "Project30",
       url: routes.project30,
       icon: Sparkles,
+      active: true,
     },
     {
       title: "MB Lands",
       url: routes.lands,
       icon: Trophy,
+      active: false,
     },
   ],
   grow: [
@@ -79,21 +85,25 @@ const navigationData = {
       title: "MB Interviews",
       url: routes.interviews,
       icon: Briefcase,
+      active: false,
     },
     {
       title: "Mock Interviews",
       url: routes.mockInterviews,
       icon: Users,
+      active: false,
     },
     {
       title: "Certifications",
       url: "/certifications",
       icon: Award,
+      active: false,
     },
     {
       title: "Community",
       url: routes.community,
       icon: Users,
+      active: false,
     },
   ],
 };
@@ -161,7 +171,7 @@ export function DashboardSidebar({
             )}
           </div>
           <Progress
-            value={(user.points / user?.xpToNextLevel) * 100}
+            value={(user?.points / user?.xpToNextLevel) * 100}
             className="h-2 mb-1"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -183,7 +193,7 @@ export function DashboardSidebar({
             <div className="flex items-center gap-2">
               <Gift className="h-4 w-4 text-primary" />
               <span className="text-primary">
-                {user.points.toLocaleString()} MB
+                {user?.points?.toLocaleString()} MB
               </span>
             </div>
             <span className="text-xs text-primary">Redeem</span>
@@ -212,6 +222,8 @@ export function DashboardSidebar({
                 <div className="flex items-center gap-2">
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
+
+                  {!item.active && <Badge variant={"secondary"}>WIP</Badge>}
                 </div>
               </button>
             ))}
@@ -237,6 +249,7 @@ export function DashboardSidebar({
                 <div className="flex items-center gap-2">
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
+                  {!item.active && <Badge variant="secondary">WIP</Badge>}
                 </div>
               </button>
             ))}
@@ -262,6 +275,7 @@ export function DashboardSidebar({
                 <div className="flex items-center gap-2">
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
+                  {!item.active && <Badge variant="secondary">WIP</Badge>}
                 </div>
               </button>
             ))}

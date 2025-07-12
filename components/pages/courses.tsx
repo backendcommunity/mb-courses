@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -32,8 +32,15 @@ import {
 import { routes } from "@/lib/routes";
 import { useCourse } from "@/hooks/use-course";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CourseFilterOptions } from "@/lib/data";
+import {
+  Course,
+  CourseFilterOptions,
+  Meta,
+  User,
+  UserCourse,
+} from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
+import { useAppStore } from "@/lib/store";
 
 interface CoursesPageProps {
   onNavigate: (path: string) => void;
@@ -41,20 +48,51 @@ interface CoursesPageProps {
 }
 
 export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
-  const { courses, meta, userCourses, userCourseMeta, popularCourses } =
-    useCourse();
+  // const { courses, meta, userCourses, userCourseMeta, popularCourses } =
+  //   useCourse();
   const user = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [level, setLevel] = useState("");
   const [category, setCategory] = useState("");
+  const [courses, setCourses] = useState([]);
+  const [meta, setMeta] = useState<Meta>();
+  const [userCourses, setUserCourses] = useState([]);
+  const [userCourseMeta, setUserCourseMeta] = useState<Meta>();
+  const [popularCourses, setPopularCourses] = useState([]);
+  const [popularCourseMeta, setPopularCourseMeta] = useState<Meta>();
   const [tab, setTab] = useState("all-courses");
+  const store = useAppStore();
 
-  useEffect(() => {
-    const debounce = setTimeout(() => {
-      onFilter({ terms: searchQuery, level, category, tab });
-    }, 0);
+  const handleFilter = async (filters: CourseFilterOptions) => {
+    if (filters.tab?.includes("my-courses")) {
+      const res = await store.getUserCourses({ filters });
+      setUserCourses(res?.userCourses);
+      setUserCourseMeta(res?.meta);
+      return;
+    }
 
-    return () => clearTimeout(debounce);
+    if (filters.tab?.includes("new")) filters.sortBy = "createdAt";
+
+    const res = await store.getCourses({ filters });
+
+    if (filters!["tab"]?.includes("popular")) {
+      setPopularCourses(res.data?.courses);
+      setPopularCourseMeta(res.data?.meta);
+
+      return;
+    }
+
+    setCourses(res.courses);
+    setMeta(res?.meta);
+  };
+
+  useMemo(() => {
+    handleFilter({
+      terms: searchQuery,
+      level,
+      category,
+      tab,
+    });
   }, [searchQuery, level, category, tab]);
 
   const handleViewDetails = (slug: string) => {
@@ -101,7 +139,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">
-                {meta.netTotal}
+                {meta?.netTotal}
               </div>
               <p className="text-xs text-muted-foreground">
                 +2 from last month
@@ -185,10 +223,10 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
           <div className="flex-1">
             <TabsList>
               <TabsTrigger value="all-courses">
-                All Courses ({meta.total})
+                All Courses ({meta?.total})
               </TabsTrigger>
               <TabsTrigger value="my-courses">
-                My Courses ({userCourseMeta.netTotal})
+                My Courses ({userCourseMeta?.netTotal})
               </TabsTrigger>
               <TabsTrigger value="popular">Popular</TabsTrigger>
               <TabsTrigger value="new">New Releases</TabsTrigger>
@@ -232,7 +270,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
         {/* Course Grid */}
         <TabsContent value="all-courses" className="space-y-4">
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => {
+            {courses.map((course: Course) => {
               return (
                 <Card key={course.id} className="overflow-hidden relative">
                   <div
@@ -240,11 +278,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     onClick={() => handleViewDetails(course.slug)}
                   >
                     <img
-                      src={
-                        course?.banner ??
-                        course?.thumbnail ??
-                        "/placeholder.svg"
-                      }
+                      src={course?.banner ?? "/placeholder.svg"}
                       alt={course.title}
                       className="h-full w-full object-cover"
                     />
@@ -362,7 +396,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
         <TabsContent value="my-courses" className="space-y-4">
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {userCourses.map((userCourse) => {
+            {userCourses.map((userCourse: UserCourse) => {
               return (
                 <Card key={userCourse.id} className="overflow-hidden relative">
                   <div
@@ -455,7 +489,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
         <TabsContent value="popular" className="space-y-4">
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {popularCourses.map((course) => {
+            {popularCourses?.map((course: any) => {
               return (
                 <Card key={course.id} className="overflow-hidden relative">
                   <div
@@ -570,7 +604,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     )}
 
                     <div className="flex flex-wrap gap-1">
-                      {course?.tags?.slice(0, 3).map((tag) => (
+                      {course?.tags?.slice(0, 3).map((tag: any) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}
                         </Badge>
@@ -585,7 +619,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
         <TabsContent value="new" className="space-y-4">
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {courses?.sort()?.map((course) => {
+            {courses?.sort()?.map((course: Course) => {
               return (
                 <Card key={course.id} className="overflow-hidden relative">
                   <div
@@ -593,11 +627,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     onClick={() => handleViewDetails(course.slug)}
                   >
                     <img
-                      src={
-                        course?.banner ??
-                        course?.thumbnail ??
-                        "/placeholder.svg"
-                      }
+                      src={course?.banner ?? "/placeholder.svg"}
                       alt={course.title}
                       className="h-full w-full object-cover"
                     />

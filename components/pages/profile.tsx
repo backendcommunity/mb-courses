@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,29 +29,52 @@ import {
 
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
+import { useAppStore } from "@/lib/store";
+import { updateUser } from "@/lib/data";
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
 }
 
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
+  const store = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
   const user = useUser();
+  const [badges, setBadges] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
   const { level, mbToNextLevel } = useLevel();
 
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
     phone: user?.phone,
-    location: user?.address,
+    address: user?.address,
     bio: user?.bio,
     website: user?.website,
     github: user?.github,
     linkedin: user?.linkedin,
+    country: user?.country,
   });
 
-  const handleSave = () => {
+  async function loadAchievements() {
+    const achievements = await store.getUserAchievement();
+    setAchievements(achievements.filter((ach: any) => ach?.completed));
+  }
+
+  async function loadBadges() {
+    const badges = await store.getBadges();
+    setBadges(badges);
+  }
+
+  useMemo(() => {
+    loadAchievements();
+    loadBadges();
+  }, []);
+
+  const handleSave = async () => {
     // In a real app, this would save to the backend
+    const user = await store.updateUser(formData);
+    if (user) updateUser(user!);
     setIsEditing(false);
   };
 
@@ -62,58 +85,14 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       name: user.name,
       email: user.email,
       phone: user?.phone,
-      location: user?.address,
+      address: user?.address,
       bio: user?.bio,
       website: user?.website,
       github: user?.github,
       linkedin: user?.linkedin,
+      country: user?.country,
     });
   };
-
-  const achievements = [
-    {
-      id: 1,
-      name: "First Course Completed",
-      description: "Complete your first course",
-      earned: true,
-      icon: "🎓",
-    },
-    {
-      id: 2,
-      name: "Speed Learner",
-      description: "Complete 3 courses in a week",
-      earned: true,
-      icon: "⚡",
-    },
-    {
-      id: 3,
-      name: "Project Master",
-      description: "Complete 10 projects",
-      earned: true,
-      icon: "🏗️",
-    },
-    {
-      id: 4,
-      name: "Community Helper",
-      description: "Help 50 community members",
-      earned: false,
-      icon: "🤝",
-    },
-    {
-      id: 5,
-      name: "Streak Master",
-      description: "Maintain a 30-day learning streak",
-      earned: false,
-      icon: "🔥",
-    },
-    {
-      id: 6,
-      name: "Interview Ace",
-      description: "Pass 5 mock interviews",
-      earned: false,
-      icon: "💼",
-    },
-  ];
 
   const stats = [
     {
@@ -241,22 +220,44 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="location">Location</Label>
+                      <Label htmlFor="address">Location</Label>
                       {isEditing ? (
                         <Input
-                          id="location"
-                          value={formData.location}
+                          id="address"
+                          value={formData.address}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              location: e.target.value,
+                              address: e.target.value,
                             })
                           }
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
-                          {formData.location}
+                          {formData?.address}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Country</Label>
+                      {isEditing ? (
+                        <Input
+                          id="country"
+                          value={formData.country}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              country: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {formData?.country}
                         </div>
                       )}
                     </div>
@@ -312,7 +313,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          {formData.website}
+                          {formData.website
+                            ? formData.website.substring(0, 20) + "..."
+                            : ""}
                         </a>
                       </div>
                     )}
@@ -338,7 +341,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          {formData.github}
+                          {formData.github
+                            ? formData.github?.substring(0, 20) + "..."
+                            : ""}
                         </a>
                       </div>
                     )}
@@ -364,7 +369,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          {formData.linkedin}
+                          {formData?.linkedin
+                            ? formData?.linkedin.substring(0, 20) + "..."
+                            : ""}
                         </a>
                       </div>
                     )}
@@ -397,7 +404,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="flex-1">
                   <div className="text-2xl font-bold">Level {user?.level}</div>
                   <div className="text-sm text-muted-foreground">
-                    {level.name}
+                    {level?.name}
                   </div>
                 </div>
               </div>
@@ -441,10 +448,12 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                   Member since
                 </div>
                 <div className="font-semibold">
-                  {new Intl.DateTimeFormat("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  }).format(new Date(user?.createdAt!))}
+                  {user?.createdAt
+                    ? new Intl.DateTimeFormat("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      }).format(new Date(user?.createdAt!))
+                    : ""}
                 </div>
               </div>
             </CardContent>
@@ -458,22 +467,27 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
           <CardTitle>Achievements</CardTitle>
         </CardHeader>
         <CardContent>
+          {achievements.length < 1 && (
+            <div className="text-gray-400">
+              No achievements yet. Engage more with the platform.
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {achievements.map((achievement) => (
+            {achievements?.map(({ achievement, ...uAchievement }: any) => (
               <div
-                key={achievement.id}
+                key={uAchievement.id}
                 className={`p-4 rounded-lg border transition-colors ${
-                  achievement.earned
+                  uAchievement.completed
                     ? "bg-primary/5 border-primary/20"
                     : "bg-muted/50 border-border opacity-60"
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">{achievement.icon}</div>
+                  <div className="text-2xl">{achievement?.icon ?? "🎓"}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{achievement.name}</h4>
-                      {achievement.earned && (
+                      {uAchievement.completed && (
                         <Badge
                           variant="secondary"
                           className="bg-primary/10 text-primary"
@@ -484,6 +498,45 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
                       {achievement.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Badges</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {badges?.map((badge: any) => (
+              <div
+                key={badge.id}
+                className={`p-4 rounded-lg border transition-colors ${
+                  badge.enrolled ? "bg-primary/5" : "border-primary/20"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">{badge?.icon ?? "🔥"}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{badge.name}</h4>
+
+                      {badge?.enrolled && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-primary/10 text-primary"
+                        >
+                          Earned
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {badge.description}
                     </p>
                   </div>
                 </div>
