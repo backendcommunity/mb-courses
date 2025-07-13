@@ -5,9 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("mb_token");
 
-  const isAuthenticated = !!token;
-
-  console.log("TOKEN", token, "AUTH", isAuthenticated);
+  const isAuthenticated = !!token?.value;
 
   const isAuthPage = pathname.startsWith("/auth/");
   const isSecret = !isAuthPage;
