@@ -17,11 +17,16 @@ export const register = async (user: NewUser) => {
 };
 
 export const logout = async () => {
-  if (typeof localStorage !== "undefined") {
-    localStorage.removeItem("mb_token");
-    localStorage.removeItem("mb_user");
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("mb_token");
+      localStorage.removeItem("mb_user");
+    }
+    const res = await api.post("/auth/logout");
+    console.log("Logging out:", res);
+  } catch (error: any) {
+    console.log("Trying to logout error:", error.message);
   }
-  await api.post("/auth/logout");
 };
 
 export const verifyEmail = async (data: { code: string; email: string }) => {
