@@ -219,7 +219,7 @@ export function LearningPathDetailPage({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">{course.level}</Badge>
+                            <Badge variant="outline">{course?.level}</Badge>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -340,10 +340,10 @@ export function LearningPathDetailPage({
               <div className="flex items-center justify-between">
                 <Badge
                   variant={
-                    path.level === "Advanced" ? "destructive" : "default"
+                    path?.level === "Advanced" ? "destructive" : "default"
                   }
                 >
-                  {path.level}
+                  {path?.level}
                 </Badge>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4 text-muted-foreground" />

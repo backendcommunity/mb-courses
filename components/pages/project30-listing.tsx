@@ -360,8 +360,8 @@ export function Project30ListingPage({
                       <PlayCircle className="h-12 w-12 text-white" />
                     </div>
                     <div className="absolute top-3 left-3">
-                      <Badge className={getLevelColor(course.level)}>
-                        {course.level}
+                      <Badge className={getLevelColor(course?.level)}>
+                        {course?.level}
                       </Badge>
                     </div>
                     <div className="absolute top-3 right-3">

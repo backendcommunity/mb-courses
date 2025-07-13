@@ -172,7 +172,7 @@ export function CoursePreviewPage({
               <Eye className="mr-1 h-3 w-3" />
               Preview
             </Badge>
-            <Badge variant="outline">{course.level}</Badge>
+            <Badge variant="outline">{course?.level}</Badge>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{course.title}</h1>
           <p className="text-muted-foreground">
@@ -524,7 +524,7 @@ export function CoursePreviewPage({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Level</span>
-                  <Badge variant="outline">{course.level}</Badge>
+                  <Badge variant="outline">{course?.level}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">

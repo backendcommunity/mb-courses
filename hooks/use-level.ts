@@ -4,7 +4,7 @@ import { useUser } from "./use-user";
 export function useLevel() {
   const user = useUser();
 
-  const levels: Level[] = dataStore.levels;
+  const levels: Level[] = dataStore?.levels;
 
   function findMBToNextLevel() {
     const userLevel = user?.level;
@@ -14,7 +14,7 @@ export function useLevel() {
   }
 
   //   const name = levels[user.level].name;
-  const level = levels[user.level];
+  const level = levels[user?.level ?? 1];
 
   const mbToNextLevel = findMBToNextLevel();
   return { levels, mbToNextLevel, level };

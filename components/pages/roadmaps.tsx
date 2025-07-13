@@ -127,7 +127,7 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
                   {roadmap?.timeframe ?? "4-6 months"}
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {roadmap.level}
+                  {roadmap?.level}
                 </p>
               </div>
             </div>

@@ -551,6 +551,7 @@ export const dataStore = {
     xp: 2450,
     points: 2450,
     bio: "",
+    level: 0,
     numberOfCoursesCompleted: 90,
     numberOfCoursesInProgress: 100,
     numberOfProjectsBuiltThisMonth: 0,

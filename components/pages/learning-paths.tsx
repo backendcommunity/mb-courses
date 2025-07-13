@@ -115,14 +115,14 @@ export function LearningPathsPage({ onNavigate }: LearningPathsPageProps) {
               <div className="flex items-center justify-between">
                 <Badge
                   variant={
-                    path.level === "Advanced"
+                    path?.level === "Advanced"
                       ? "destructive"
-                      : path.level === "Intermediate"
+                      : path?.level === "Intermediate"
                       ? "default"
                       : "secondary"
                   }
                 >
-                  {path.level}
+                  {path?.level}
                 </Badge>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4 text-muted-foreground" />

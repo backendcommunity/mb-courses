@@ -36,8 +36,7 @@ export default function LoginPage() {
         return;
       }
       // Handle login logic here
-      console.log("Login here");
-      await router.push("/courses");
+      await router.push("/");
     } catch (error: any) {
       const message = error?.response?.data?.message ?? error?.message;
 

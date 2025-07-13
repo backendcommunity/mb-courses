@@ -409,10 +409,10 @@ export function BootcampDetailPage({
               <div className="flex items-center justify-between">
                 <Badge
                   variant={
-                    bootcamp.level === "Advanced" ? "destructive" : "default"
+                    bootcamp?.level === "Advanced" ? "destructive" : "default"
                   }
                 >
-                  {bootcamp.level}
+                  {bootcamp?.level}
                 </Badge>
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

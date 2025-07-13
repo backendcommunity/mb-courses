@@ -288,15 +288,15 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     <div className="flex items-center justify-between mb-2">
                       <Badge
                         variant={
-                          course.level === "Advanced"
+                          course?.level === "Advanced"
                             ? "destructive"
-                            : course.level === "Intermediate"
+                            : course?.level === "Intermediate"
                             ? "default"
                             : "secondary"
                         }
                         className="text-xs"
                       >
-                        {course.level}
+                        {course?.level}
                       </Badge>
                       {/* <div className="flex items-center gap-1 flex flex-col">
                         <span>
@@ -511,15 +511,15 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     <div className="flex items-center justify-between mb-2">
                       <Badge
                         variant={
-                          course.level === "Advanced"
+                          course?.level === "Advanced"
                             ? "destructive"
-                            : course.level === "Intermediate"
+                            : course?.level === "Intermediate"
                             ? "default"
                             : "secondary"
                         }
                         className="text-xs"
                       >
-                        {course.level}
+                        {course?.level}
                       </Badge>
                       {/* <div className="flex items-center gap-1 flex flex-col">
                         <span>
@@ -637,15 +637,15 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     <div className="flex items-center justify-between mb-2">
                       <Badge
                         variant={
-                          course.level === "Advanced"
+                          course?.level === "Advanced"
                             ? "destructive"
-                            : course.level === "Intermediate"
+                            : course?.level === "Intermediate"
                             ? "default"
                             : "secondary"
                         }
                         className="text-xs"
                       >
-                        {course.level}
+                        {course?.level}
                       </Badge>
                     </div>
                     <CardTitle

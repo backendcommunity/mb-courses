@@ -407,7 +407,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addXP: (amount) => {
     const user = dataStore.user;
     const newXP = user.xp + amount;
-    let newLevel = user.level;
+    let newLevel = user?.level;
     let newXPToNextLevel = user.xpToNextLevel;
 
     // Simple level calculation - every 1000 MB is a new level
