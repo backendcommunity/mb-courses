@@ -92,21 +92,26 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handlePurchase = (
     courseId: string,
-    method: "subscription" | "individual" | "mb"
+    method: "subscription" | "individual" | "mb",
+    success: boolean
   ) => {
-    if (!course) return;
+    if (!course || !success) return;
 
     switch (method) {
       case "subscription":
         onNavigate(routes.subscriptionPlans);
         break;
       case "individual":
-        onNavigate(routes.checkout("course", courseId));
+        // onNavigate(routes.checkout("course", courseId));
         break;
       case "mb":
-        onNavigate(routes.xpRedeem("course", courseId));
+        Object.assign(course!, { enrolled: true });
+        // onNavigate(routes.xpRedeem("course", courseId));
         break;
     }
+
+    setCelebration(true);
+    toast.success("You have successfully enrolled");
   };
 
   const handleBackToCourses = () => {
@@ -114,22 +119,27 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   };
 
   const handleEnrollNow = async () => {
-    if (!user.isPremium && !user?.subscription) {
-      setShowPaymentDialog(!showPaymentDialog);
-      return;
-    }
+    try {
+      if (!user.isPremium || !user?.subscription) {
+        setShowPaymentDialog(!showPaymentDialog);
+        return;
+      }
 
-    const userCourse = await handleEnrollment(course?.id!);
-    if (!userCourse) {
-      toast.error("An error occurred. Please try again");
-      return;
-    }
-    updateCourse(course?.id!, { enrolled: true });
-    Object.assign(course!, { enrolled: true });
+      const userCourse = await handleEnrollment(course?.id!);
+      if (!userCourse) {
+        toast.error("An error occurred. Please try again");
+        return;
+      }
+      updateCourse(course?.id!, { enrolled: true });
+      Object.assign(course!, { enrolled: true });
 
-    // Trigger celebration for first-time enrollment
-    setCelebration(true);
-    toast.success("You have successfully enrolled");
+      // Trigger celebration for first-time enrollment
+      setCelebration(true);
+      toast.success("You have successfully enrolled");
+    } catch (error: any) {
+      const e = error?.response?.message ?? error?.message;
+      toast.error(e ?? "An error occurred");
+    }
   };
 
   const handleEnrollment = async (courseId: string) => {
@@ -422,9 +432,11 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 <PaymentDialog
                   onClose={() => setShowPaymentDialog(false)}
                   open={showPaymentDialog}
-                  data={course}
+                  data={{ ...course, type: "course" }}
                   onHandlePreview={() => {}}
-                  onHandlePurchase={() => {}}
+                  onHandlePurchase={(id: string, type: any, success: boolean) =>
+                    handlePurchase(id, type, success)
+                  }
                 />
               )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Crown, X, CreditCard, ChevronRight, Info } from "lucide-react";
 import {
   Card,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { routes } from "@/lib/routes";
 import { dataStore } from "@/lib/data";
+import { useAppStore } from "@/lib/store";
 
 interface SubscriptionPlansPageProps {
   onNavigate: (path: string) => void;
@@ -29,14 +30,43 @@ interface SubscriptionPlansPageProps {
 export function SubscriptionPlansPage({
   onNavigate,
 }: SubscriptionPlansPageProps) {
+  const store = useAppStore();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
     "annual"
   );
 
-  const plans = dataStore.plans;
+  const [plans, setPlans] = useState(dataStore.plans);
 
-  const handleSelectPlan = (planId: string) => {
-    onNavigate(routes.checkout("subscription", planId));
+  function mergePlans(plans: any[]) {
+    const mergedMap = new Map<string, any>();
+
+    for (const plan of plans) {
+      const key = plan.name.toLowerCase();
+
+      if (mergedMap.has(key)) {
+        const existing = mergedMap.get(key);
+        // Merge: newer values will override older ones if available
+        mergedMap.set(key, { ...existing, ...plan });
+      } else {
+        mergedMap.set(key, { ...plan });
+      }
+    }
+
+    return Array.from(mergedMap.values());
+  }
+
+  useMemo(() => {
+    async function load() {
+      const plans = await store.getPlans();
+      const merged = mergePlans([...plans, ...dataStore.plans]);
+      setPlans(merged);
+    }
+
+    load();
+  }, []);
+
+  const handleSelectPlan = (planId: string, cycle: string) => {
+    onNavigate(routes.checkout("subscription", planId, cycle));
   };
 
   return (
@@ -168,7 +198,7 @@ export function SubscriptionPlansPage({
                   plan?.popular ? "bg-[#13AECE] hover:bg-[#13AECE]/90" : ""
                 }`}
                 disabled={plan?.disabled}
-                onClick={() => handleSelectPlan(plan?.id)}
+                onClick={() => handleSelectPlan(plan?.id, billingCycle)}
               >
                 {plan?.name === "Free" ? (
                   plan?.cta
@@ -255,10 +285,10 @@ export function SubscriptionPlansPage({
       {/* Money Back Guarantee */}
       <div className="bg-muted/50 p-6 rounded-lg text-center mt-8">
         <h3 className="font-semibold text-lg mb-2">
-          30-Day Money Back Guarantee
+          7-Day Money Back Guarantee
         </h3>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          If you're not satisfied with your subscription within the first 30
+          If you're not satisfied with your subscription within the first 7
           days, we'll refund your payment. No questions asked.
         </p>
       </div>

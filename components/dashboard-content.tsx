@@ -29,19 +29,16 @@ import { Topic, updateUser, User } from "@/lib/data";
 import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
+import { useUser } from "@/hooks/use-user";
 
-interface DashboardContentProps {
-  user: User;
-}
+interface DashboardContentProps {}
 
-export function DashboardContent({ user }: DashboardContentProps) {
+export function DashboardContent({}: DashboardContentProps) {
   const router = useRouter();
+  const user = useUser();
   const store = useAppStore();
   const [activities, setActivities] = useState([]);
   const [userRoadmaps, setUserRoadmaps] = useState([]);
-  useEffect(() => {
-    if (user) updateUser(user);
-  }, [user]);
 
   async function load() {
     const activities = await store.getActivities();
@@ -263,9 +260,9 @@ export function DashboardContent({ user }: DashboardContentProps) {
           )}
 
           <CardContent className="space-y-4">
-            {activities?.map((activity: any) => (
+            {activities?.map((activity: any, i) => (
               <div
-                key={activity?.id}
+                key={activity?.id + ":" + i}
                 className="flex items-center gap-4 p-3 rounded-lg border"
               >
                 <div className="p-2 rounded-lg bg-primary/10">

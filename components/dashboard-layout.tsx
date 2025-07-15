@@ -1,14 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { NavigationBar } from "@/components/navigation-bar";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { User } from "@/lib/data";
 import { useMobile } from "@/hooks/use-mobile";
 import { KapAIAssistant } from "./kap-ai-assistant";
+import { useAppStore } from "@/lib/store";
+import { updateUser } from "@/lib/data";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,14 +17,29 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isMobile = useMobile();
+  const store = useAppStore();
   const pathname = usePathname();
 
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const [loading, setLoading] = useState(false);
 
   const handleNavigate = (path: string) => {
     router.push(path);
   };
+
+  useMemo(() => {
+    async function load() {
+      setLoading(true);
+      const user = await store.getUser();
+      updateUser(user);
+      setLoading(false);
+    }
+
+    load();
+  }, []);
+
+  if (loading) return <div>Loading user...</div>;
 
   // Close sidebar on mobile when navigating
   useEffect(() => {

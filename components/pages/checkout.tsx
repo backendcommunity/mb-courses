@@ -2,9 +2,9 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { CreditCard, Shield, ArrowLeft, Check } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { CreditCard, ArrowLeft } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -14,92 +14,162 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { routes } from "@/lib/routes";
+import { Badge } from "../ui/badge";
+import { useAppStore } from "@/lib/store";
+import countries from "@/lib/countries.json";
+import { Plan } from "@/lib/data";
+import { initializePaddle, Paddle } from "@paddle/paddle-js";
+import { useTheme } from "next-themes";
+import { useUser } from "@/hooks/use-user";
+import ConfettiCelebration from "../confetti-celebration";
+import { toast } from "sonner";
+import { AsyncpayCheckout } from "@asyncpay/checkout";
 
 interface CheckoutPageProps {
   onNavigate: (path: string) => void;
 }
 
 export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const store = useAppStore();
+  const user = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState("paddle");
+  const [plan, setPlan] = useState<Plan>();
+  const paddleRef = useRef<HTMLInputElement>(null);
+  const [celebration, setCelebration] = useState(false);
 
   // Extract checkout type and ID from the URL
-  const pathSegments = pathname?.split("/").filter(Boolean) || [];
-  const checkoutType =
-    pathSegments.length > 2 ? pathSegments[2] : "subscription";
-  const checkoutId = pathSegments.length > 3 ? pathSegments[3] : "pro";
+  const checkoutType = searchParams.get("type");
+  const checkoutId = searchParams.get("plan");
+  const cycle = searchParams.get("cycle");
 
-  // Mock checkout data based on type and ID
-  const checkoutData = {
-    subscription: {
-      pro: {
-        name: "Pro Subscription",
-        description: "Monthly subscription to MasteringBackend Pro",
-        price: 39.99,
-        billingCycle: "monthly",
+  const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
+  const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
+  const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
+
+  const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
+
+  useMemo(() => {
+    async function load(name: string) {
+      const plan = await store.getPlan(name);
+      setPlan(plan);
+    }
+    load(checkoutId!);
+  }, [checkoutId]);
+
+  const { theme } = useTheme();
+  const [paddle, setPaddle] = useState<Paddle>();
+
+  // Callback to open a checkout
+  const openCheckout = (priceId: string | any, data?: any) => {
+    console.log(priceId);
+    if (!paddleRef.current) return;
+
+    paddle?.Checkout?.open({
+      settings: {
+        displayMode: "inline",
       },
-      enterprise: {
-        name: "Enterprise Subscription",
-        description: "Monthly subscription to MasteringBackend Enterprise",
-        price: 99.99,
-        billingCycle: "monthly",
+      items: [{ priceId }],
+      customData: data,
+      customer: {
+        email: user?.email,
+        address: {
+          countryCode:
+            countries.find((c) => c.name.includes(user?.country))?.code ?? "",
+        },
       },
-    },
-    course: {
-      "advanced-nodejs": {
-        name: "Advanced Node.js Patterns",
-        description: "Lifetime access to Advanced Node.js Patterns course",
-        price: 149.99,
-        type: "one-time",
-      },
-    },
-    bootcamp: {
-      "backend-mastery": {
-        name: "Backend Mastery Bootcamp",
-        description: "8-week intensive backend development bootcamp",
-        price: 999.99,
-        type: "one-time",
-      },
-    },
+    });
   };
 
-  // Get the current checkout item
-  const currentItem =
-    checkoutData[checkoutType as keyof typeof checkoutData]?.[
-      checkoutId as any
-    ];
+  useEffect(() => {
+    if (!paddleRef.current) return;
+    openCheckout(priceId(paymentMethod));
+  }, [paddleRef.current, paymentMethod]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    initializePaddle({
+      token: PADDLE_TOKEN,
+      // seller: SELLER_ID,
+      checkout: {
+        settings: {
+          displayMode: "inline",
+          frameTarget: "paddle",
+          frameInitialHeight: 450,
+          variant: "one-page",
+          frameStyle:
+            "width: 100%; min-width: 312px; background-color: transparent; border: none;",
+          allowedPaymentMethods: [
+            "alipay",
+            "apple_pay",
+            "bancontact",
+            "card",
+            "google_pay",
+            "ideal",
+            "paypal",
+          ],
+          // theme: theme?.includes("dark") ? "dark" : "light",
+        },
+      },
+      eventCallback: function (data: any) {
+        switch (data.name) {
+          case "checkout.loaded":
+            setIsProcessing(true);
+            break;
+          case "checkout.closed":
+            setIsProcessing(false);
+            break;
+          case "checkout.completed":
+            const c_data = data?.custom_data;
+            // Track payment (GA or Google)
+            setIsProcessing(false);
+            setCelebration(true);
+            toast.success(
+              "You have successfully subscribe to " + checkoutId + " plan"
+            );
+            break;
+        }
+      },
+      environment: PADDLE_ENVIRONMENT,
+    }).then((paddleInstance: Paddle | undefined) => {
+      if (paddleInstance) {
+        setPaddle(paddleInstance);
+      }
+    });
+  }, []);
+
+  const handleCheckout = (e: React.FormEvent) => {
+    if (typeof window === "undefined") return;
     e.preventDefault();
     setIsProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      // Redirect to success page
-      onNavigate(routes.subscriptionSuccess);
-    }, 2000);
+    AsyncpayCheckout({
+      publicKey: process.env.NEXT_PUBLIC_ASYNCPAY_KEY,
+      customer: {
+        firstName: user.name.split(" ")[0],
+        lastName: user.name.split(" ")[1],
+        email: user.email,
+      },
+      subscriptionPlanUUID: priceId(paymentMethod),
+      onSuccess: () => {
+        // Run a function to process the payment
+        alert("Payment successful");
+      },
+      onClose: () => {
+        // Run a function whenever the user closes the popup regardless of the payment status
+      },
+    });
   };
 
   const handleBack = () => {
-    if (checkoutType === "subscription") {
-      onNavigate(routes.subscriptionPlans);
-    } else if (checkoutType === "course") {
-      onNavigate(routes.courseDetail(checkoutId));
-    } else if (checkoutType === "bootcamp") {
-      onNavigate(routes.bootcampDetail(checkoutId));
-    } else {
-      onNavigate(routes.dashboard);
-    }
+    onNavigate(routes.subscriptionPlans);
   };
 
-  if (!currentItem) {
+  if (!plan) {
     return (
       <div className="container max-w-4xl py-12">
         <Card>
@@ -117,6 +187,31 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     );
   }
 
+  const formatAmount = (amount: number) => {
+    if (typeof window === "undefined") return;
+    const currency = paymentMethod.includes("paddle") ? "USD" : "NGN";
+
+    return Intl.NumberFormat("en-US", {
+      currency,
+      style: "currency",
+    }).format(amount);
+  };
+
+  const currentPaymentMethod = (method: string) => {
+    const pc = plan.paymentChannels?.find((pc) =>
+      pc.channel.toString().toLowerCase().includes(method)
+    );
+    return {
+      ...plan,
+      pc,
+    };
+  };
+
+  const priceId = (method: string | any) =>
+    cycle?.includes("monthly")
+      ? currentPaymentMethod(method).pc?.monthlyPlanId
+      : currentPaymentMethod(method).pc?.yearlyPlanId;
+
   return (
     <div className="container ">
       <Button variant="ghost" size="sm" className="mb-8" onClick={handleBack}>
@@ -125,227 +220,207 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       </Button>
 
       <div className="grid gap-8 md:grid-cols-3">
-        {/* Order Summary */}
-        <Card className="md:col-span-1 h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle>Order Summary</CardTitle>
-            <CardDescription>Review your order details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <h3 className="font-medium">{currentItem.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {currentItem.description}
-              </p>
-            </div>
+        <div className="gap-4 flex flex-col">
+          {/* Order Summary */}
+          <Card className="md:col-span-1 h-fit">
+            <CardHeader>
+              <CardTitle>Payment platform</CardTitle>
+              <CardDescription>
+                Select your payment platform based on your country.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5 pt-4">
+              <RadioGroup
+                defaultValue="card"
+                value={paymentMethod}
+                onValueChange={setPaymentMethod}
+                className=" gap-4"
+              >
+                <div className="">
+                  <RadioGroupItem
+                    value="paddle"
+                    id="paddle"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="paddle"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                  >
+                    <CreditCard className="mb-2 h-6 w-6" />
+                    Paddle
+                  </Label>
+                </div>
+                <Separator />
+                <div className="relative">
+                  <Badge
+                    className="right-0 -top-2 absolute"
+                    variant={"destructive"}
+                  >
+                    Nigerians only
+                  </Badge>
+                  <RadioGroupItem
+                    value="paystack"
+                    id="paystack"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="paystack"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                  >
+                    <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold text-blue-600">
+                      A
+                    </div>
+                    AsyncPay
+                  </Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
 
-            <Separator />
-
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${currentItem.price.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground text-sm">
-                <span>Tax</span>
-                <span>$0.00</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="flex justify-between font-medium">
-              <span>Total</span>
-              <span>${currentItem.price.toFixed(2)}</span>
-            </div>
-
-            <div className="text-sm text-muted-foreground pt-2">
-              {currentItem.billingCycle ? (
-                <p>
-                  You will be charged ${currentItem.price.toFixed(2)} every{" "}
-                  {currentItem.billingCycle}.
+          <Card className="md:col-span-1 h-fit">
+            <CardHeader className="pb-4">
+              <CardTitle>Order Summary</CardTitle>
+              <CardDescription>Review your order details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <h3 className="font-medium">{plan?.name} Subscription</h3>
+                <p className="text-sm text-muted-foreground">
+                  {`${
+                    cycle === "monthly" ? "Monthly" : "Yearly"
+                  } subscription to MasteringBackend ${plan?.name}`}
                 </p>
-              ) : (
-                <p>One-time payment. No recurring charges.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Payment Form */}
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-4">
-            <CardTitle>Payment Details</CardTitle>
-            <CardDescription>Complete your purchase securely</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Payment Method Selection */}
-              <div className="space-y-3">
-                <Label>Payment Method</Label>
-                <RadioGroup
-                  defaultValue="card"
-                  value={paymentMethod}
-                  onValueChange={setPaymentMethod}
-                  className="grid grid-cols-3 gap-4"
-                >
-                  <div>
-                    <RadioGroupItem
-                      value="card"
-                      id="card"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="card"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      <CreditCard className="mb-2 h-6 w-6" />
-                      Credit Card
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem
-                      value="paypal"
-                      id="paypal"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="paypal"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold text-blue-600">
-                        P
-                      </div>
-                      PayPal
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem
-                      value="apple"
-                      id="apple"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="apple"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      <div className="mb-2 h-6 w-6 flex items-center justify-center font-bold">
-                        A
-                      </div>
-                      Apple Pay
-                    </Label>
-                  </div>
-                </RadioGroup>
               </div>
 
-              {paymentMethod === "card" && (
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>
+                    {cycle === "monthly"
+                      ? formatAmount(
+                          Number(
+                            currentPaymentMethod(paymentMethod).pc
+                              ?.originalMonthlyPrice
+                          )
+                        )
+                      : formatAmount(
+                          Number(
+                            currentPaymentMethod(paymentMethod).pc
+                              ?.originalYearlyPrice
+                          )
+                        )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-muted-foreground text-sm">
+                  <span>Tax</span>
+                  <span>
+                    {paymentMethod.includes("paddle") ? "$" : "NGN"}0.00
+                  </span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="flex justify-between font-medium">
+                <span>Total</span>
+                <span>
+                  {cycle === "monthly"
+                    ? formatAmount(
+                        Number(
+                          currentPaymentMethod(paymentMethod).pc
+                            ?.originalMonthlyPrice
+                        )
+                      )
+                    : formatAmount(
+                        Number(
+                          currentPaymentMethod(paymentMethod).pc
+                            ?.originalYearlyPrice
+                        )
+                      )}
+                </span>
+              </div>
+
+              <div className="text-sm text-muted-foreground pt-2">
+                {cycle ? (
+                  <p>
+                    You will be charged{" "}
+                    <span>
+                      {cycle === "monthly"
+                        ? formatAmount(
+                            Number(
+                              currentPaymentMethod(paymentMethod).pc
+                                ?.originalMonthlyPrice
+                            )
+                          )
+                        : formatAmount(
+                            Number(
+                              currentPaymentMethod(paymentMethod).pc
+                                ?.originalYearlyPrice
+                            )
+                          )}
+                    </span>{" "}
+                    every {cycle === "monthly" ? "month" : "year"}.
+                  </p>
+                ) : (
+                  <p>One-time payment. No recurring charges.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        {/* Payment Form */}
+        <Card className="md:col-span-2 ">
+          <CardHeader>
+            <CardTitle>Complete your subscription</CardTitle>
+            <CardDescription>
+              Fill out your card details and complete your subscription.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-4">
+            <form className="space-y-6">
+              {paymentMethod === "paddle" && (
                 <>
-                  {/* Card Details */}
-                  <div className="space-y-5">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Name on Card</Label>
-                      <Input id="name" placeholder="John Doe" required />
-                    </div>
+                  {openCheckout(priceId(paymentMethod), {})}
 
-                    <div className="grid gap-2">
-                      <Label htmlFor="card-number">Card Number</Label>
-                      <Input
-                        id="card-number"
-                        placeholder="1234 5678 9012 3456"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input id="expiry" placeholder="MM/YY" required />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="cvc">CVC</Label>
-                        <Input id="cvc" placeholder="123" required />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Billing Address */}
-                  <div className="space-y-5 pt-2">
-                    <h3 className="font-medium">Billing Address</h3>
-                    <div className="grid gap-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input id="address" placeholder="123 Main St" required />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input id="city" placeholder="New York" required />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="postal-code">Postal Code</Label>
-                        <Input id="postal-code" placeholder="10001" required />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="country">Country</Label>
-                      <Input
-                        id="country"
-                        placeholder="United States"
-                        required
-                      />
-                    </div>
-                  </div>
+                  <div
+                    ref={paddleRef}
+                    className="space-y-5 paddle w-full"
+                    id="paddle"
+                  ></div>
                 </>
               )}
 
-              {paymentMethod === "paypal" && (
+              {paymentMethod === "paystack" && (
                 <div className="text-center py-10">
                   <p className="text-muted-foreground mb-4">
-                    You will be redirected to PayPal to complete your payment.
+                    You will be redirected to AsyncPay to complete your payment.
                   </p>
                   <div className="w-16 h-16 bg-blue-600 rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl">
-                    P
-                  </div>
-                </div>
-              )}
-
-              {paymentMethod === "apple" && (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground mb-4">
-                    You will be redirected to Apple Pay to complete your
-                    payment.
-                  </p>
-                  <div className="w-16 h-16 bg-black rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl">
                     A
                   </div>
+
+                  <div className="py-6 w-full">
+                    <Button className="w-full" onClick={handleCheckout}>
+                      Pay{" "}
+                      {cycle === "monthly"
+                        ? formatAmount(
+                            Number(
+                              currentPaymentMethod(paymentMethod).pc
+                                ?.originalMonthlyPrice
+                            )
+                          )
+                        : formatAmount(
+                            Number(
+                              currentPaymentMethod(paymentMethod).pc
+                                ?.originalYearlyPrice
+                            )
+                          )}
+                    </Button>
+                  </div>
                 </div>
               )}
-
-              {/* Security Note */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-6">
-                <Shield className="h-4 w-4" />
-                <span>Your payment information is encrypted and secure.</span>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full mt-4"
-                disabled={isProcessing}
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Complete Purchase
-                    <Check className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
             </form>
           </CardContent>
         </Card>
@@ -355,16 +430,29 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       <div className="mt-10 text-center text-sm text-muted-foreground">
         <p>
           By completing this purchase, you agree to our{" "}
-          <Button variant="link" className="h-auto p-0">
+          <a
+            href="https://masteringbackend.com/terms-and-conditions"
+            className="h-auto p-0 text-primary"
+          >
             Terms of Service
-          </Button>{" "}
+          </a>{" "}
           and{" "}
-          <Button variant="link" className="h-auto p-0">
+          <a
+            href="https://masteringbackend.com/privacy-policy"
+            className="h-auto p-0 text-primary"
+          >
             Privacy Policy
-          </Button>
+          </a>
           .
         </p>
       </div>
+
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="achievement"
+        courseName={plan?.name! + " Subscription"}
+      />
     </div>
   );
 }

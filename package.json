@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@asyncpay/checkout": "^0.0.37",
     "@hookform/resolvers": "^3.9.1",
     "@monaco-editor/react": "latest",
+    "@paddle/paddle-js": "^1.4.2",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -80,5 +82,8 @@
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   }
 }

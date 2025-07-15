@@ -145,8 +145,8 @@ export const routes = {
   subscriptionPlans: "/subscription/plans",
   subscriptionManagement: "/subscription/management",
   billing: "/billing",
-  checkout: (type: string, planId: string) =>
-    `/checkout?type=${type}&plan=${planId}`,
+  checkout: (type: string, planId: string, cycle: string) =>
+    `/checkout?type=${type}&plan=${planId}&cycle=${cycle}`,
 
   // MB Store & Redemption
   xpStore: "/xp-store",

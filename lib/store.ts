@@ -27,6 +27,7 @@ import {
   Exercise,
   Reward,
   UserRoadmapFilters,
+  MBPayload,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -43,6 +44,7 @@ import api from "./api";
 interface AppState {
   // Data getters
   getUser: () => User | any;
+  getPlan: (name: string) => any;
   getCourses: (queries?: CoursesQuery) => Course[] | any;
   getCourse: (slug: string, params?: any) => Course | any;
   getUserCourse: (slug: string) => UserCourse | any;
@@ -51,8 +53,10 @@ interface AppState {
   getCourseQuizzes: (courseId: string) => Quiz[] | any;
   getCourseExercises: (courseId: string) => Quiz[] | any;
   getProjects: () => Project[];
+  getPlans: () => any;
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
+  getTransactions: (payload: { size?: number }) => any;
   getBootcamps: () => Bootcamp[];
   getLearningPaths: () => LearningPath[];
   getRoadmaps: (filters?: { skip?: number; size?: number }) => Roadmap[] | any;
@@ -83,6 +87,7 @@ interface AppState {
   enrollInCourse: (courseId: string) => void;
   enrollInBootcamp: (bootcampId: string) => void;
   enrollInPath: (pathId: string) => void;
+  handleMBPayment: (payload: MBPayload) => any;
   completeChallenge: (challengeId: string) => void;
   addXP: (amount: number) => void;
   handleCourseEnrollment: (courseId: string) => UserCourse | any;
@@ -130,6 +135,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw error;
     }
   },
+  getPlan: async (name: string) => {
+    const { data } = await api.get(`/plans/${name}`);
+    return data?.data;
+  },
   getActivities: async () => {
     const { data } = await api.get(`/activities`);
     return data?.data;
@@ -142,6 +151,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}/items`);
     return data?.data;
   },
+
+  getPlans: async () => {
+    const { data } = await api.get(`/plans`);
+    return data?.data;
+  },
+
   getCourses: async (queries?: CoursesQuery) => {
     try {
       const res = await fetchCourses(queries!);
@@ -183,6 +198,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+
+  getTransactions: async (payload) => {
+    let url = `/payments/transactions`;
+    if (payload.size) url = `/payments/transactions?size=${payload.size}`;
+    const { data } = await api.get(url);
+    return data?.data;
   },
 
   getVideoNotes: async (courseId: string, videoId: string) => {
@@ -291,7 +313,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   markCourseCompleted: async (userCourseId: string) => {
-    const { data } = await api.post(`/courses/${userCourseId}`);
+    const { data } = await api.post(`/courses/${userCourseId}/completed`);
     return data?.data;
   },
 
@@ -318,6 +340,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       `/roadmaps/${slug}/topics/${topicId}`,
       payload
     );
+    return data?.data;
+  },
+
+  handleMBPayment: async (payload: MBPayload) => {
+    const { data } = await api.post("/payments", payload);
     return data?.data;
   },
 

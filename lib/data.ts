@@ -224,6 +224,12 @@ export interface UserCourse {
   enrollmentType?: "SUBSCRIPTION" | "ONETIME" | "COINS";
 }
 
+export interface MBPayload {
+  type: string;
+  mb: Number;
+  id: string;
+}
+
 export interface UserVideo {
   id?: string;
   userId?: string;
@@ -755,6 +761,8 @@ export const dataStore = {
       features: [
         { name: "Access to free courses", included: true },
         { name: "Limited project access", included: true },
+        { name: "Limited land access", included: true },
+        { name: "Limited interview access", included: true },
         { name: "Community forum access", included: true },
         { name: "Basic learning paths", included: true },
         { name: "Premium courses", included: false },
@@ -772,14 +780,13 @@ export const dataStore = {
       id: "pro",
       name: "Pro",
       description: "Everything you need to accelerate your career",
-      monthlyPrice: 39.99,
-      annualPrice: 399.99, // ~2 months free
       features: [
         { name: "Access to free courses", included: true },
         { name: "Unlimited project access", included: true },
         { name: "Community forum access", included: true },
         { name: "All learning paths", included: true },
         { name: "Premium courses", included: true },
+        { name: "Unlimited land access", included: true },
         { name: "Interview preparation", included: true },
         { name: "Bootcamps", included: false },
         { name: "Certification exams", included: false },
@@ -794,13 +801,13 @@ export const dataStore = {
       id: "enterprise",
       name: "Enterprise",
       description: "Advanced features for teams and businesses",
-      monthlyPrice: 99.99,
-      annualPrice: 999.99, // ~2 months free
       features: [
         { name: "Access to free courses", included: true },
         { name: "Unlimited project access", included: true },
         { name: "Community forum access", included: true },
         { name: "All learning paths", included: true },
+        { name: "Additional 5 team members ($10 each)", included: true },
+        { name: "Unlimited land access", included: true },
         { name: "Premium courses", included: true },
         { name: "Bootcamps", included: true },
         { name: "Interview preparation", included: true },

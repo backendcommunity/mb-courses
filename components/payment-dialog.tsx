@@ -7,16 +7,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { useState } from "react";
 import { useUser } from "@/hooks/use-user";
+import { useEffect, useState } from "react";
+import { initializePaddle, Paddle } from "@paddle/paddle-js";
+import { useTheme } from "next-themes";
+import countries from "@/lib/countries.json";
+import { toast } from "sonner";
+import { useAppStore } from "@/lib/store";
+import Link from "next/link";
 
 interface PaymentDialogProps {
   data: any;
   onHandlePreview: (id?: string) => void;
-  onHandlePurchase: (id?: string, type?: string) => void;
+  onHandlePurchase: (id: string, type: string, success: boolean) => void;
   onClose: () => void;
   open: boolean;
 }
+
+const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
+const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
+const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
+
+const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
 export function PaymentDialog({
   data,
@@ -26,6 +38,66 @@ export function PaymentDialog({
   onClose,
 }: PaymentDialogProps) {
   const user = useUser();
+  const store = useAppStore();
+  const { theme } = useTheme();
+  const [paddle, setPaddle] = useState<Paddle>();
+
+  useEffect(() => {
+    initializePaddle({
+      token: PADDLE_TOKEN,
+      seller: SELLER_ID,
+      eventCallback: function (data: any) {
+        switch (data.name) {
+          case "checkout.loaded":
+            console.log("Checkout loaded", data);
+            onClose();
+            break;
+          case "checkout.closed":
+            console.log("Checkout closed");
+            break;
+          case "checkout.completed":
+            console.log("Checkout completed");
+            const c_data = data?.custom_data;
+            // Track payment (GA or Google)
+            onHandlePurchase(c_data.id, c_data.method, true);
+            break;
+        }
+      },
+      environment: PADDLE_ENVIRONMENT,
+    }).then((paddleInstance: Paddle | undefined) => {
+      if (paddleInstance) {
+        setPaddle(paddleInstance);
+      }
+    });
+  }, []);
+
+  // Callback to open a checkout
+  const openCheckout = (priceId: string, data: any) => {
+    paddle?.Checkout.open({
+      settings: {
+        allowedPaymentMethods: [
+          "alipay",
+          "apple_pay",
+          "bancontact",
+          "card",
+          "google_pay",
+          "ideal",
+          "paypal",
+        ],
+        theme: theme?.includes("dark") ? "dark" : "light",
+      },
+      items: [{ priceId }],
+      customData: data,
+      customer: {
+        email: user?.email,
+        address: {
+          countryCode:
+            countries.find((c) => c.name.includes(user?.country))?.code ?? "",
+          // postalCode: "10021",
+        },
+      },
+    });
+  };
 
   const canAccessCourse = (data: any) => {
     return (
@@ -39,6 +111,51 @@ export function PaymentDialog({
 
   const hasAccess = canAccessCourse(data);
   const xpCost = getXPCost(data?.amount);
+
+  const handleMBPayment = async () => {
+    try {
+      // get user MB balance
+      const mb = user?.points ?? 0;
+      if (mb < xpCost) {
+        toast.warning("Insufficient MB points to purchase");
+        return;
+      }
+
+      const payload = {
+        type: data.type,
+        id: data.id,
+        mb: xpCost,
+      };
+
+      const purchased = await store.handleMBPayment(payload);
+      return purchased;
+    } catch (error: any) {
+      const res = error?.response?.data ?? error;
+      toast.error(res?.message ?? "An error occurred");
+    }
+  };
+
+  const handlePayment = async (id: string, type: string) => {
+    let enrolled: any = null;
+
+    if (type?.includes("subscription")) {
+      openCheckout("pri_01k049swct0nvgdsw8zwh6ys64", {});
+    }
+
+    if (type?.includes("individual")) {
+      const priceId = data?.product?.paddle_price_id;
+      const customData = {
+        method: "individual",
+        id: data?.id,
+        type: "course",
+      };
+      if (priceId) openCheckout(priceId, customData);
+    }
+
+    if (type?.includes("mb")) {
+      enrolled = await handleMBPayment();
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -54,8 +171,8 @@ export function PaymentDialog({
           </DialogHeader>
           <div className="space-y-3 md:space-y-4">
             <Card
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onHandlePurchase(data.id, "subscription")}
+              className="cursor-pointer  border hover:border-primary"
+              onClick={() => handlePayment(data.id, "subscription")}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">
@@ -68,21 +185,30 @@ export function PaymentDialog({
                       Get unlimited access to all courses
                     </p>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-sm md:text-base">
-                      $39.99/mo
+                  <div>
+                    <div className="text-right">
+                      <div className="font-bold text-sm md:text-base">
+                        $39.99/mo
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Best value
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Best value
-                    </div>
+                    <Link
+                      href={"/subscription/plans"}
+                      className="text-xs text-primary z-10"
+                    >
+                      {" "}
+                      Choose another plan
+                    </Link>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onHandlePurchase(data.id, "individual")}
+              className="cursor-pointer hover:bg-muted/50 border hover:border-primary"
+              onClick={() => handlePayment(data.id, "individual")}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">
@@ -108,8 +234,8 @@ export function PaymentDialog({
             </Card>
 
             <Card
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onHandlePurchase(data.id, "mb")}
+              className="cursor-pointer hover:bg-muted/50 border hover:border-primary"
+              onClick={() => handlePayment(data.id, "mb")}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">

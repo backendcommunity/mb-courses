@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   CreditCard,
   Calendar,
@@ -37,6 +37,7 @@ import {
 import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { dataStore } from "@/lib/data";
+import { useAppStore } from "@/lib/store";
 
 interface SubscriptionManagementPageProps {
   onNavigate: (path: string) => void;
@@ -46,8 +47,26 @@ export function SubscriptionManagementPage({
   onNavigate,
 }: SubscriptionManagementPageProps) {
   const user = useUser();
+  const store = useAppStore();
   const [activeTab, setActiveTab] = useState("subscription");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [billingHistory, setBillingHistory] = useState<any[]>([]);
+  const [stats, setStats] = useState<{
+    amount: number;
+    total: number;
+    netTotal: number;
+  }>();
+
+  useMemo(() => {
+    async function load() {
+      const transactions = await store.getTransactions({ size: 6 });
+
+      setBillingHistory(transactions?.transactions);
+      setStats(transactions.meta);
+    }
+
+    load();
+  }, []);
 
   const plans = dataStore.plans;
 
@@ -67,50 +86,53 @@ export function SubscriptionManagementPage({
   );
 
   // Mock billing history
-  const billingHistory = [
-    {
-      id: "INV-2024-0612",
-      date: "June 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-    {
-      id: "INV-2024-0512",
-      date: "May 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-    {
-      id: "INV-2024-0412",
-      date: "April 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-    {
-      id: "INV-2024-0312",
-      date: "March 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-    {
-      id: "INV-2024-0212",
-      date: "February 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-    {
-      id: "INV-2024-0112",
-      date: "January 15, 2024",
-      amount: 39.99,
-      status: "Paid",
-      description: "MasteringBackend Pro - Monthly Subscription",
-    },
-  ];
+
+  // Gather transaction from Coin purchase items all over and summarise them.
+
+  // const billingHistory = [
+  //   {
+  //     id: "INV-2024-0612",
+  //     date: "June 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  //   {
+  //     id: "INV-2024-0512",
+  //     date: "May 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  //   {
+  //     id: "INV-2024-0412",
+  //     date: "April 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  //   {
+  //     id: "INV-2024-0312",
+  //     date: "March 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  //   {
+  //     id: "INV-2024-0212",
+  //     date: "February 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  //   {
+  //     id: "INV-2024-0112",
+  //     date: "January 15, 2024",
+  //     amount: 39.99,
+  //     status: "Paid",
+  //     description: "MasteringBackend Pro - Monthly Subscription",
+  //   },
+  // ];
 
   const handleCancelSubscription = () => {
     console.log("Cancelling subscription?...");
@@ -121,6 +143,15 @@ export function SubscriptionManagementPage({
   const handleDownloadInvoice = (invoiceId: string) => {
     console.log("Downloading invoice:", invoiceId);
     // In a real app, this would download the invoice PDF
+  };
+
+  const handleViewAllHistory = async () => {
+    console.log("View all invoices");
+
+    const transactions = await store.getTransactions({});
+
+    setBillingHistory(transactions?.transactions);
+    setStats(transactions.meta);
   };
 
   return (
@@ -375,8 +406,9 @@ export function SubscriptionManagementPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {billingHistory}
               <div className="space-y-4">
-                {billingHistory.map((invoice) => (
+                {billingHistory?.map((invoice) => (
                   <div
                     key={invoice.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -416,7 +448,11 @@ export function SubscriptionManagementPage({
               </div>
             </CardContent>
             <CardFooter className="pt-4">
-              <Button variant="outline" className="w-full">
+              <Button
+                onClick={handleViewAllHistory}
+                variant="outline"
+                className="w-full"
+              >
                 View All Invoices
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
@@ -435,9 +471,7 @@ export function SubscriptionManagementPage({
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-[#13AECE]">
-                    $
-                    {billingHistory.length *
-                      subscription?.plan?.monthlyPrice?.toFixed(2)}
+                    ${stats?.amount?.toFixed(2) ?? 0.0}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Total Paid
@@ -445,13 +479,13 @@ export function SubscriptionManagementPage({
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-[#F2C94C]">
-                    {billingHistory.length}
+                    {stats?.total}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">Invoices</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {billingHistory.filter((i) => i.status === "Paid").length}
+                    {billingHistory?.filter((i) => i.status === "Paid").length}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Successful Payments
