@@ -11,7 +11,6 @@ import {
   Zap,
   Target,
   TrendingUp,
-  Settings,
   Sparkles,
   Crown,
   Gift,
@@ -153,13 +152,13 @@ export function DashboardSidebar({
             <span className="text-sm font-medium">
               Level {user?.level} Engineer
             </span>
-            {user.isPremium && user?.subscription ? (
+            {user?.isPremium && user?.subscription ? (
               <Badge
                 variant="outline"
                 className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
               >
                 <Crown className="h-3 w-3 mr-1" />
-                {user.subscription?.plan?.name}
+                {user.subscription?.name}
               </Badge>
             ) : (
               <Badge

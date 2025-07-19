@@ -9,7 +9,8 @@ import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { useMobile } from "@/hooks/use-mobile";
 import { KapAIAssistant } from "./kap-ai-assistant";
 import { useAppStore } from "@/lib/store";
-import { updateUser } from "@/lib/data";
+import { updateUser, User } from "@/lib/data";
+import ProfitWellScript from "./ProfitWellScript";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isMobile = useMobile();
   const store = useAppStore();
   const pathname = usePathname();
-
+  const [user, setUser] = useState<User>();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [loading, setLoading] = useState(false);
@@ -33,13 +34,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setLoading(true);
       const user = await store.getUser();
       updateUser(user);
+      setUser(user);
       setLoading(false);
     }
 
     load();
   }, []);
-
-  if (loading) return <div>Loading user...</div>;
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
@@ -56,41 +56,45 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+  if (loading) return <div>Loading user...</div>;
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar - conditionally shown based on sidebarOpen state */}
-      <div
-        className={`${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-50 w-72 md:translate-x-0 z-40 transition-transform duration-300 ease-in-out`}
-      >
-        <DashboardSidebar
-          currentPath={pathname}
-          onNavigate={handleNavigate}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* Overlay for mobile sidebar */}
-      {isMobile && sidebarOpen && (
+    <>
+      <ProfitWellScript userEmail={user?.email!} />
+      <div className="flex min-h-screen bg-background">
+        {/* Sidebar - conditionally shown based on sidebarOpen state */}
         <div
-          className="fixed inset-0 bg-black/50 z-30"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+          className={`${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } fixed inset-y-0 left-0 z-50 w-72 md:translate-x-0 z-40 transition-transform duration-300 ease-in-out`}
+        >
+          <DashboardSidebar
+            currentPath={pathname}
+            onNavigate={handleNavigate}
+            isMobile={isMobile}
+          />
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-72">
-        <NavigationBar
-          onNavigate={handleNavigate}
-          onMenuToggle={toggleSidebar}
-          isMobile={isMobile}
-        />
-        <main className="flex-1 overflow-auto p-8">{children}</main>
-        <KapAIAssistant />
+        {/* Overlay for mobile sidebar */}
+        {isMobile && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col md:ml-72">
+          <NavigationBar
+            onNavigate={handleNavigate}
+            onMenuToggle={toggleSidebar}
+            isMobile={isMobile}
+          />
+          <main className="flex-1 overflow-auto p-8">{children}</main>
+          <KapAIAssistant />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

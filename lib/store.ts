@@ -79,6 +79,10 @@ interface AppState {
     oldPassword: string;
     newPassword: string;
   }) => void;
+  cancelSubscription: (id: string) => any;
+  resumeSubscription: (id: string) => any;
+  deletCard: (id: string) => any;
+  puaseSubscription: (id: string, data: { months: number }) => any;
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
@@ -279,6 +283,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post("/quizzes/" + id + "/start", {
       userQuizId,
     });
+    return data?.data;
+  },
+  resumeSubscription: async (id: string) => {
+    const { data } = await api.post(`/payments/subscriptions/${id}/resume`);
+    return data?.data;
+  },
+
+  cancelSubscription: async (id: string) => {
+    const { data } = await api.post(`/payments/subscriptions/${id}/cancel`);
+    return data?.data;
+  },
+  puaseSubscription: async (id: string, payload: { months: number }) => {
+    const url = `/payments/subscriptions/${id}/pause`;
+    const { data } = await api.post(url, payload);
+    return data?.data;
+  },
+
+  deletCard: async (id: string) => {
+    const url = `/payments/subscriptions/${id}/cards`;
+    const { data } = await api.delete(url);
     return data?.data;
   },
 

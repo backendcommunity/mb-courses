@@ -22,6 +22,7 @@ import {
 import { routes } from "@/lib/routes";
 import { dataStore } from "@/lib/data";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/use-user";
 
 interface SubscriptionPlansPageProps {
   onNavigate: (path: string) => void;
@@ -31,6 +32,7 @@ export function SubscriptionPlansPage({
   onNavigate,
 }: SubscriptionPlansPageProps) {
   const store = useAppStore();
+  const user = useUser();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
     "annual"
   );
@@ -43,12 +45,20 @@ export function SubscriptionPlansPage({
     for (const plan of plans) {
       const key = plan.name.toLowerCase();
 
+      const cta =
+        user?.subscription?.name === plan.name
+          ? "Current Plan"
+          : "Choose " + plan.name;
+
+      const disabled = user?.subscription?.name === plan.name ? true : false;
+
       if (mergedMap.has(key)) {
         const existing = mergedMap.get(key);
         // Merge: newer values will override older ones if available
-        mergedMap.set(key, { ...existing, ...plan });
+
+        mergedMap.set(key, { ...existing, ...plan, cta, disabled });
       } else {
-        mergedMap.set(key, { ...plan });
+        mergedMap.set(key, { ...plan, cta, disabled });
       }
     }
 

@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CreditCard, ArrowLeft } from "lucide-react";
+import { CreditCard, ArrowLeft, AlertTriangle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,13 +21,23 @@ import { routes } from "@/lib/routes";
 import { Badge } from "../ui/badge";
 import { useAppStore } from "@/lib/store";
 import countries from "@/lib/countries.json";
-import { Plan } from "@/lib/data";
+import { dataStore, Plan } from "@/lib/data";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/use-user";
 import ConfettiCelebration from "../confetti-celebration";
 import { toast } from "sonner";
 import { AsyncpayCheckout } from "@asyncpay/checkout";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 interface CheckoutPageProps {
   onNavigate: (path: string) => void;
@@ -40,6 +50,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paddle");
   const [plan, setPlan] = useState<Plan>();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const paddleRef = useRef<HTMLInputElement>(null);
   const [celebration, setCelebration] = useState(false);
 
@@ -48,11 +59,13 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const checkoutId = searchParams.get("plan");
   const cycle = searchParams.get("cycle");
 
-  const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
+  // const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
   const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
   const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
-
   const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
+
+  const subscription = user?.subscription;
+  const plans = dataStore.plans;
 
   useMemo(() => {
     async function load(name: string) {
@@ -62,11 +75,10 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     load(checkoutId!);
   }, [checkoutId]);
 
-  const { theme } = useTheme();
   const [paddle, setPaddle] = useState<Paddle>();
-
+  console.log(plan);
   // Callback to open a checkout
-  const openCheckout = (priceId: string | any, data?: any) => {
+  const openCheckout = (priceId: string | any) => {
     console.log(priceId);
     if (!paddleRef.current) return;
 
@@ -75,7 +87,6 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
         displayMode: "inline",
       },
       items: [{ priceId }],
-      customData: data,
       customer: {
         email: user?.email,
         address: {
@@ -165,9 +176,107 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     });
   };
 
+  const handleCancelSubscription = () => {
+    console.log("Cancelling subscription?...");
+    setCancelDialogOpen(false);
+    // In a real app, this would make an API call to cancel the subscription
+  };
+
+  const activePlan = plans.find((p) =>
+    p.name.includes(
+      subscription?.name! ?? subscription?.plan?.name! ?? subscription?.plan
+    )
+  );
+
+  const formatDate = (date: string) => {
+    if (!date || date.includes("Free forever")) return date;
+    return new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(date));
+  };
+
   const handleBack = () => {
     onNavigate(routes.subscriptionPlans);
   };
+
+  if (checkoutId?.includes("free")) {
+    return (
+      <div className="container max-w-4xl py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cancel Your Subscription?</CardTitle>
+            <CardDescription>
+              Are you sure you want to cancel your subscription? You'll lose
+              access to all premium features when your current billing period
+              ends on {formatDate(subscription?.expiry)}.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="gap-4">
+            <Button onClick={() => onNavigate(routes.dashboard)}>
+              Return to Dashboard
+            </Button>
+
+            <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive">Cancel Subscription</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Cancel Your Subscription?</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to cancel your {subscription?.name}{" "}
+                    subscription? You'll lose access to all premium features
+                    when your current billing period ends on{" "}
+                    {formatDate(subscription?.expiry)}.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Warning</AlertTitle>
+                    <AlertDescription>
+                      Cancelling will remove access to premium courses,
+                      bootcamps, and features when your current billing period
+                      ends.
+                    </AlertDescription>
+                  </Alert>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">You'll lose access to:</h4>
+                    <ul className="space-y-2 text-sm mt-3">
+                      {activePlan?.features
+                        ?.filter((f) => f?.included)
+                        ?.map((f) => (
+                          <li className="flex items-center gap-2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                            <span>{f?.name}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCancelDialogOpen(false)}
+                  >
+                    Keep Subscription
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleCancelSubscription}
+                  >
+                    Confirm Cancellation
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   if (!plan) {
     return (
@@ -382,7 +491,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             <form className="space-y-6">
               {paymentMethod === "paddle" && (
                 <>
-                  {openCheckout(priceId(paymentMethod), {})}
+                  {openCheckout(priceId(paymentMethod))}
 
                   <div
                     ref={paddleRef}

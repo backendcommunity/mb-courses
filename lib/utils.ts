@@ -80,3 +80,12 @@ export const handleShare = (title: string, url: string) => {
     );
   }
 };
+
+export const formatDate = (date: string) => {
+  if (!date || date.includes("Free forever")) return date;
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
+};

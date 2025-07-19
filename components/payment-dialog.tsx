@@ -45,7 +45,7 @@ export function PaymentDialog({
   useEffect(() => {
     initializePaddle({
       token: PADDLE_TOKEN,
-      seller: SELLER_ID,
+      // seller: SELLER_ID,
       eventCallback: function (data: any) {
         switch (data.name) {
           case "checkout.loaded":
@@ -99,17 +99,10 @@ export function PaymentDialog({
     });
   };
 
-  const canAccessCourse = (data: any) => {
-    return (
-      (user.isPremium && user?.subscription) || data?.enrolled || data?.isFree
-    );
-  };
-
   const getXPCost = (amount: number) => {
-    return Math.round(amount * 50); // 1 dollar = 50 MB
+    return Math.round(amount * 100); // 1 dollar = 100 MB
   };
 
-  const hasAccess = canAccessCourse(data);
   const xpCost = getXPCost(data?.amount);
 
   const handleMBPayment = async () => {

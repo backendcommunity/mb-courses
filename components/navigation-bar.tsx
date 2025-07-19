@@ -63,11 +63,11 @@ export function NavigationBar({
   const user = useUser();
 
   // Mock subscription data
-  const subscription = {
-    plan: "Pro",
-    status: "active",
-    xpBalance: 2450,
-  };
+  const subscription = user.isPremium
+    ? user.subscription
+    : {
+        name: "Free",
+      };
 
   const notifications = [
     {
@@ -193,7 +193,7 @@ export function NavigationBar({
   return (
     <>
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center px-4">
+        <div className="flex gap-2 h-16 items-center px-4">
           {/* Mobile Menu Button */}
           {isMobile && (
             <Button
@@ -215,9 +215,11 @@ export function NavigationBar({
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">MB</span>
             </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              MasteringBackend
-            </span>
+            {!isMobile && (
+              <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                MasteringBackend
+              </span>
+            )}
           </div>
 
           {/* Explore Dropdown */}
@@ -398,50 +400,25 @@ export function NavigationBar({
             </div>
           )}
 
-          {/* Mobile Search Toggle */}
-          {isMobile && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to-r hover:from-yellow-400/20 hover:to-orange-400/20 dark:text-yellow-400"
-              onClick={() => onNavigate(routes.subscriptionManagement)}
-            >
-              <Crown className="h-4 w-4 mr-1" />
-              {subscription.plan}
-            </Button>
-          )}
-
           {/* Right Section */}
           <div
             className={`${
-              isMobile ? "" : "ml-auto"
-            } flex items-center space-x-2`}
+              isMobile ? "" : "ml-auto gap-4"
+            } flex items-center space-x-1`}
           >
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            {!isMobile && <ThemeToggle />}
 
-            {/* Subscription Status */}
-            {user?.isPremium && user?.subscription && !isMobile ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to- hover:from-yellow-400/20 hover:to-yellow-400/20 dark:text-yellow-400"
-                onClick={() => onNavigate(routes.subscriptionManagement)}
-              >
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to- hover:from-yellow-400/20 hover:to-yellow-400/20 dark:text-yellow-400"
+              onClick={() => onNavigate(routes.subscriptionManagement)}
+            >
+              {!subscription?.name?.includes("Free") && (
                 <Crown className="h-4 w-4 mr-1" />
-                {user?.subscription?.plan?.name}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 hover:bg-gradient-to- hover:from-yellow-400/20 hover:to-yellow-400/20 dark:text-yellow-400"
-                onClick={() => onNavigate(routes.subscriptionManagement)}
-              >
-                <Star className="h-4 w-4 mr-1" />
-                Free
-              </Button>
-            )}
+              )}
+              {subscription?.name}
+            </Button>
 
             {/* MB Balance - Compact on mobile */}
             {!isMobile && (

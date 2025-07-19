@@ -94,7 +94,7 @@ export function Project30Page({
     nextDeadline: "23:45:12",
     instructor: "Sarah Johnson",
     price: 49.99,
-    enrolled: subscription.plan !== "Free",
+    enrolled: subscription?.plan !== "Free",
   };
 
   // Complete 30-day curriculum
@@ -604,7 +604,7 @@ export function Project30Page({
             >
               Day {project30Data.currentDay}
             </Badge>
-            {subscription.plan !== "Free" && (
+            {subscription?.plan !== "Free" && (
               <Badge
                 variant="outline"
                 className="bg-green-100 text-green-800 border-green-200 text-xs"
