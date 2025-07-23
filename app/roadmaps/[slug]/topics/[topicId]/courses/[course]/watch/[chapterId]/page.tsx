@@ -4,17 +4,17 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { RoadmapCourseWatchPage } from "@/components/pages/roadmap-course-watch";
 import { useParams, useRouter } from "next/navigation";
 
-interface RoadmapVideoPageRouteProps {
+type RoadmapVideoPageRouteProps = {
   roadmapId: string;
   videoId: string;
   courseId: string;
   chapterId: string;
-}
+};
 
 export default function RoadmapVideoWatchRoute({}) {
   const router = useRouter();
   const { roadmapId, videoId, courseId, chapterId } =
-    useParams as RoadmapVideoPageRouteProps;
+    useParams() as RoadmapVideoPageRouteProps;
   const handleNavigate = (path: string) => {
     router.push(path);
   };

@@ -125,6 +125,88 @@ export interface CoursesQuery {
   filters?: CourseFilterOptions;
 }
 
+export interface Project30Query {
+  page?: string;
+  size?: string;
+  filters?: Project30FilterOptions;
+}
+
+export interface Project30FilterOptions {
+  desc?: boolean;
+  duration?: number;
+  free?: boolean;
+  fromAmount?: number;
+  fromDate?: string;
+  paid?: boolean;
+  sortBy?: string;
+  terms?: string;
+  toAmount?: number;
+  toDate?: string;
+  topicIds?: string;
+  topics?: Array<string>;
+  category?: string;
+  level?: string;
+  tab?: string;
+}
+
+export interface Project30 {
+  id: string;
+  title: string;
+  description: string;
+  slug: string;
+  instructor: any;
+  duration: string;
+  totalContents: number;
+  totalDuration?: string;
+  level: string;
+  category: any;
+  students: number;
+  amount: number;
+  banner: string;
+  technologies?: Array<string>;
+  isEnrolled: boolean;
+  isPremium: boolean;
+  progress: number;
+  totalDays?: number;
+  lastAccessed?: string;
+  highlights?: Array<string>;
+  userProject30: UserProject30;
+  rank: number;
+  totalParticipants?: number;
+  totalParticipantsToday?: number;
+  totalProjectSubmitted?: number;
+  totalMB: number;
+  completionRate: number;
+  courses: any[];
+}
+
+export interface UserProject30 {
+  id: string;
+  userId: string;
+  offerId: string;
+  currentTopic: string;
+  isPreview: boolean;
+  isCompleted: boolean;
+  offer?: Project30;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: User;
+  userChapters: UserChapter[];
+  userCourses: UserCourse[];
+  currentDay: number;
+  streak: number;
+  rank: number;
+  endDate: Date | string;
+  nextDeadline: Date | string;
+  progress?: number;
+  totalLessonsCompleted?: number;
+  performers: any[];
+  currentWeek?: string;
+  nextWeek?: string;
+  nextLesson?: string;
+  userOfferItems: any[];
+}
+
 export interface CourseFilterOptions {
   desc?: boolean;
   duration?: number;
@@ -296,6 +378,8 @@ export interface Video {
   duration: string;
   isCompleted?: boolean;
   slug: string;
+  banner?: string;
+  chapter: any;
   videoUrl?: string;
   chapterId?: string;
   description: string;
@@ -306,8 +390,21 @@ export interface Video {
   exerciseId?: string;
   quiz?: Quiz;
   exercise?: Exercise;
-  resources?: any;
+  resources?: Resource[];
   video: Number;
+  mb: number;
+  instructor?: any;
+  technologies?: Array<string>;
+  difficulty?: string;
+}
+
+export interface Resource {
+  id: string;
+  content?: string;
+  summary?: string;
+  title: string;
+  link?: string;
+  type: string;
 }
 
 export interface Quiz {

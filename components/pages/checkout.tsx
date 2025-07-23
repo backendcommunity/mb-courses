@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreditCard, ArrowLeft, AlertTriangle } from "lucide-react";
@@ -23,11 +22,9 @@ import { useAppStore } from "@/lib/store";
 import countries from "@/lib/countries.json";
 import { dataStore, Plan } from "@/lib/data";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
-import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/use-user";
 import ConfettiCelebration from "../confetti-celebration";
 import { toast } from "sonner";
-import { AsyncpayCheckout } from "@asyncpay/checkout";
 import {
   Dialog,
   DialogContent,
@@ -76,10 +73,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   }, [checkoutId]);
 
   const [paddle, setPaddle] = useState<Paddle>();
-  console.log(plan);
   // Callback to open a checkout
   const openCheckout = (priceId: string | any) => {
-    console.log(priceId);
     if (!paddleRef.current) return;
 
     paddle?.Checkout?.open({
@@ -153,27 +148,30 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     });
   }, []);
 
-  const handleCheckout = (e: React.FormEvent) => {
-    if (typeof window === "undefined") return;
-    e.preventDefault();
-    setIsProcessing(true);
+  const handleCheckout = async (e: React.FormEvent) => {
+    if (typeof window !== "undefined") {
+      e.preventDefault();
+      setIsProcessing(true);
 
-    AsyncpayCheckout({
-      publicKey: process.env.NEXT_PUBLIC_ASYNCPAY_KEY,
-      customer: {
-        firstName: user.name.split(" ")[0],
-        lastName: user.name.split(" ")[1],
-        email: user.email,
-      },
-      subscriptionPlanUUID: priceId(paymentMethod),
-      onSuccess: () => {
-        // Run a function to process the payment
-        alert("Payment successful");
-      },
-      onClose: () => {
-        // Run a function whenever the user closes the popup regardless of the payment status
-      },
-    });
+      const { AsyncpayCheckout } = await import("@asyncpay/checkout");
+
+      AsyncpayCheckout({
+        publicKey: process.env.NEXT_PUBLIC_ASYNCPAY_KEY,
+        customer: {
+          firstName: user.name.split(" ")[0],
+          lastName: user.name.split(" ")[1],
+          email: user.email,
+        },
+        subscriptionPlanUUID: priceId(paymentMethod),
+        onSuccess: () => {
+          // Run a function to process the payment
+          alert("Payment successful");
+        },
+        onClose: () => {
+          // Run a function whenever the user closes the popup regardless of the payment status
+        },
+      });
+    }
   };
 
   const handleCancelSubscription = () => {

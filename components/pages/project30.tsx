@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,14 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import {
   PlayCircle,
   CalendarIcon,
@@ -34,7 +27,7 @@ import {
   Target,
   Clock,
   Users,
-  Video,
+  Video as VideoIcon,
   CheckCircle2,
   Play,
   Lock,
@@ -53,49 +46,77 @@ import {
   Settings,
   Smartphone,
   Cloud,
+  Share2,
+  Download,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { Chapter, Project30, Video } from "@/lib/data";
+import { toast } from "sonner";
+import { PaymentDialog } from "../payment-dialog";
+import { useUser } from "@/hooks/use-user";
+import ConfettiCelebration from "../confetti-celebration";
+import { routes } from "@/lib/routes";
+import { Certificate } from "../certificate";
+import { formatDate } from "@/lib/utils";
 
 interface Project30PageProps {
-  courseId?: string;
+  slug?: string;
   onNavigate: (path: string) => void;
 }
 
 export function Project30Page({
-  courseId = "backend-fundamentals",
+  slug = "backend-fundamentals",
   onNavigate,
 }: Project30PageProps) {
   const store = useAppStore();
-  const user = store.getUser();
+  const user = useUser();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [project30, setProject30] = useState<Project30>();
+  const [achievements, setAchievements] = useState<any[]>();
+  const [loading, setLoading] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [celebration, setCelebration] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  let dayCount = 1;
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const userProject30 = project30?.userProject30;
+  const currentDay = userProject30?.currentDay ?? 0;
+  const nextDay = userProject30?.isCompleted ? currentDay : currentDay + 1;
+
+  useMemo(() => {
+    const load = async () => {
+      setLoading(true);
+      const data = await store.getProject30(slug);
+      setProject30(data);
+      setLoading(false);
+    };
+
+    load();
+  }, [slug]);
+
+  useMemo(() => {
+    if (activeTab === "achievements") {
+      const load = async () => {
+        const data = await store.getUserAchievement("DAY_COMPLETED");
+        setAchievements(data);
+      };
+
+      load();
+    }
+  }, [activeTab]);
+
+  if (loading || !project30) return <div>loading...</div>;
 
   // Mock subscription data
-  const subscription = {
-    plan: "Pro", // Free, Pro, Enterprise
+  const subscription = user?.subscription ?? {
+    name: "Free",
     status: "active",
-    xpBalance: 2450,
   };
 
-  // Mock Project30 data
-  const project30Data = {
-    currentDay: 15,
-    totalDays: 30,
-    streak: 7,
-    completedLessons: 14,
-    totalXP: 1250,
-    rank: 42,
-    totalParticipants: 1250,
-    startDate: new Date("2024-05-20"),
-    endDate: new Date("2024-06-18"),
-    isActive: true,
-    nextDeadline: "23:45:12",
-    instructor: "Sarah Johnson",
-    price: 49.99,
-    enrolled: subscription?.plan !== "Free",
-  };
+  const handleDownload = () => {};
+  const handleShare = () => {};
 
   // Complete 30-day curriculum
   const curriculum = [
@@ -112,7 +133,7 @@ export function Project30Page({
           technologies: ["Node.js", "Express"],
           difficulty: "Beginner",
           xpReward: 50,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Globe className="h-4 w-4" />,
         },
         {
@@ -123,7 +144,7 @@ export function Project30Page({
           technologies: ["MongoDB", "Mongoose"],
           difficulty: "Beginner",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Database className="h-4 w-4" />,
         },
         {
@@ -134,7 +155,7 @@ export function Project30Page({
           technologies: ["Express", "bcrypt", "Joi"],
           difficulty: "Beginner",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Users className="h-4 w-4" />,
         },
         {
@@ -145,7 +166,7 @@ export function Project30Page({
           technologies: ["JWT", "bcrypt", "Middleware"],
           difficulty: "Intermediate",
           xpReward: 100,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Shield className="h-4 w-4" />,
         },
         {
@@ -156,7 +177,7 @@ export function Project30Page({
           technologies: ["Express", "MongoDB", "REST"],
           difficulty: "Intermediate",
           xpReward: 100,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <FileText className="h-4 w-4" />,
         },
         {
@@ -167,7 +188,7 @@ export function Project30Page({
           technologies: ["Joi", "express-validator"],
           difficulty: "Intermediate",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <CheckCircle2 className="h-4 w-4" />,
         },
         {
@@ -178,7 +199,7 @@ export function Project30Page({
           technologies: ["Express", "Error Middleware"],
           difficulty: "Intermediate",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Settings className="h-4 w-4" />,
         },
       ],
@@ -196,7 +217,7 @@ export function Project30Page({
           technologies: ["Multer", "Cloudinary", "Sharp"],
           difficulty: "Intermediate",
           xpReward: 100,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Cloud className="h-4 w-4" />,
         },
         {
@@ -207,7 +228,7 @@ export function Project30Page({
           technologies: ["Nodemailer", "Handlebars"],
           difficulty: "Intermediate",
           xpReward: 85,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Globe className="h-4 w-4" />,
         },
         {
@@ -218,7 +239,7 @@ export function Project30Page({
           technologies: ["JWT", "Nodemailer", "Crypto"],
           difficulty: "Intermediate",
           xpReward: 100,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Shield className="h-4 w-4" />,
         },
         {
@@ -229,7 +250,7 @@ export function Project30Page({
           technologies: ["express-rate-limit", "Redis"],
           difficulty: "Intermediate",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Zap className="h-4 w-4" />,
         },
         {
@@ -240,7 +261,7 @@ export function Project30Page({
           technologies: ["MongoDB", "Aggregation"],
           difficulty: "Intermediate",
           xpReward: 100,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <Database className="h-4 w-4" />,
         },
         {
@@ -251,7 +272,7 @@ export function Project30Page({
           technologies: ["Swagger", "OpenAPI"],
           difficulty: "Beginner",
           xpReward: 75,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <BookOpen className="h-4 w-4" />,
         },
         {
@@ -262,7 +283,7 @@ export function Project30Page({
           technologies: ["Jest", "Supertest"],
           difficulty: "Intermediate",
           xpReward: 125,
-          status: project30Data.enrolled ? "completed" : "locked",
+          status: project30?.isEnrolled ? "completed" : "locked",
           icon: <CheckCircle2 className="h-4 w-4" />,
         },
       ],
@@ -280,7 +301,7 @@ export function Project30Page({
           technologies: ["Socket.io", "Redis"],
           difficulty: "Advanced",
           xpReward: 150,
-          status: project30Data.enrolled ? "in-progress" : "locked",
+          status: project30?.isEnrolled ? "in-progress" : "locked",
           icon: <Globe className="h-4 w-4" />,
         },
         {
@@ -466,6 +487,16 @@ export function Project30Page({
     },
   ];
 
+  const courses = project30.courses.filter(
+    (course: any) => !["Optional", "Bonus"].includes(course.topic.trim())
+  );
+  const bonusCourses = project30.courses.filter((course: any) =>
+    ["Optional", "Bonus"].includes(course.topic.trim())
+  );
+  const chapters = courses.flatMap(({ course }: any) => {
+    return course.chapters.map((ch: Chapter) => ch);
+  });
+
   const dailyLessons = [
     {
       day: 15,
@@ -474,7 +505,7 @@ export function Project30Page({
         "Learn how to create a WebSocket-based chat API with rooms and user presence",
       duration: "32 minutes",
       technologies: ["Node.js", "Socket.io", "Redis"],
-      status: project30Data.enrolled ? "in-progress" : "locked",
+      status: project30?.isEnrolled ? "in-progress" : "locked",
       xpReward: 100,
       thumbnail: "/placeholder.svg?height=120&width=200",
     },
@@ -495,7 +526,7 @@ export function Project30Page({
         "Implement secure JWT-based authentication with refresh tokens",
       duration: "35 minutes",
       technologies: ["Node.js", "JWT", "bcrypt"],
-      status: project30Data.enrolled ? "completed" : "locked",
+      status: project30?.isEnrolled ? "completed" : "locked",
       xpReward: 75,
       thumbnail: "/placeholder.svg?height=120&width=200",
     },
@@ -508,40 +539,44 @@ export function Project30Page({
     { rank: 42, name: "You", lessons: 14, xp: 1250, streak: 7 },
   ];
 
-  const achievements = [
-    {
-      id: "1",
-      title: "Week Warrior",
-      description: "Complete 7 consecutive days",
-      icon: "🔥",
-      unlocked: true,
-      progress: 100,
-    },
-    {
-      id: "2",
-      title: "API Master",
-      description: "Complete 10 API lessons",
-      icon: "🚀",
-      unlocked: true,
-      progress: 100,
-    },
-    {
-      id: "3",
-      title: "Halfway Hero",
-      description: "Reach day 15",
-      icon: "⭐",
-      unlocked: true,
-      progress: 100,
-    },
-    {
-      id: "4",
-      title: "Final Sprint",
-      description: "Complete the last 5 days",
-      icon: "🏆",
-      unlocked: false,
-      progress: 0,
-    },
-  ];
+  const handleWatchPage = (video: string) => {
+    return onNavigate(`/project30/${slug}/day/${video}`);
+  };
+
+  // const achievements = [
+  //   {
+  //     id: "1",
+  //     title: "Week Warrior",
+  //     description: "Complete 7 consecutive days",
+  //     icon: "🔥",
+  //     unlocked: true,
+  //     progress: 100,
+  //   },
+  //   {
+  //     id: "2",
+  //     title: "API Master",
+  //     description: "Complete 10 API lessons",
+  //     icon: "🚀",
+  //     unlocked: true,
+  //     progress: 100,
+  //   },
+  //   {
+  //     id: "3",
+  //     title: "Halfway Hero",
+  //     description: "Reach day 15",
+  //     icon: "⭐",
+  //     unlocked: true,
+  //     progress: 100,
+  //   },
+  //   {
+  //     id: "4",
+  //     title: "Final Sprint",
+  //     description: "Complete the last 5 days",
+  //     icon: "🏆",
+  //     unlocked: false,
+  //     progress: 0,
+  //   },
+  // ];
 
   const handlePurchase = (method: "subscription" | "individual" | "xp") => {
     switch (method) {
@@ -549,17 +584,17 @@ export function Project30Page({
         onNavigate("/subscription-plans");
         break;
       case "individual":
-        onNavigate(`/checkout?type=project30&id=${courseId}`);
+        onNavigate(`/checkout?type=project30&id=${slug}`);
         break;
       case "xp":
-        onNavigate(`/xp-store?redeem=project30&id=${courseId}`);
+        onNavigate(`/xp-store?redeem=project30&id=${slug}`);
         break;
     }
     setShowPaymentDialog(false);
   };
 
   const getXPCost = (price: number) => {
-    return Math.round(price * 50);
+    return Math.round(price * 100);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -582,11 +617,40 @@ export function Project30Page({
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
       case "in-progress":
-        return <Play className="h-4 w-4 text-blue-600" />;
+        return <Play className="h-4 w-4 text-primary" />;
       default:
         return <Lock className="h-4 w-4 text-gray-400" />;
     }
   };
+
+  const handleStartChallenge = async (slug: string) => {
+    try {
+      setStarting(true);
+      const startProject30 = await store.startProject30(slug);
+      setProject30({
+        ...project30,
+        userProject30: startProject30,
+        isEnrolled: true,
+      });
+      setCelebration(true);
+    } catch (error) {
+      toast.error("Error occurred starting project30");
+    } finally {
+      setStarting(false);
+    }
+  };
+  const isCompleted = (id: string) =>
+    completedItems.find((c) => c.videoId === id && c.completed);
+
+  const firstLesson = chapters?.[0]?.videos?.[0];
+  const completedItems = userProject30?.userOfferItems ?? [];
+  const completedLessions = userProject30?.totalLessonsCompleted ?? 0;
+  const nextLessonId = userProject30?.nextLesson ?? firstLesson?.id;
+  const nextWeek = userProject30?.nextWeek ?? chapters[0].id;
+  const nextLessonWeek = chapters.find((ch) => ch.id === nextWeek);
+  const nextLesson =
+    nextLessonWeek?.videos?.find((v: Video) => v.id === nextLessonId) ??
+    firstLesson;
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 ">
@@ -596,186 +660,101 @@ export function Project30Page({
           <div className="flex items-center gap-2 mb-2">
             <PlayCircle className="h-5 w-5 md:h-6 md:w-6 text-[#F2C94C]" />
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Project30
+              {project30.title}
             </h1>
-            <Badge
-              variant="outline"
-              className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20 text-xs"
-            >
-              Day {project30Data.currentDay}
-            </Badge>
-            {subscription?.plan !== "Free" && (
+            {project30?.isEnrolled && (
+              <Badge
+                variant="outline"
+                className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20 text-xs"
+              >
+                Day {nextDay}
+              </Badge>
+            )}
+            {subscription?.name === "Free" && !user?.isPremium && (
               <Badge
                 variant="outline"
                 className="bg-green-100 text-green-800 border-green-200 text-xs"
               >
                 <Crown className="mr-1 h-3 w-3" />
-                Included
+                Included in Pro
               </Badge>
             )}
           </div>
           <p className="text-muted-foreground text-sm md:text-base">
-            Learn to build 30 projects in 30 days with step-by-step video
-            tutorials.
+            {project30.description}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
-            onClick={() => onNavigate(`/project30/${courseId}/leaderboard`)}
+            onClick={() => onNavigate(`/project30/${slug}/leaderboard`)}
             className="w-full sm:w-auto"
           >
             <Trophy className="mr-2 h-4 w-4" />
             Leaderboard
           </Button>
-          {project30Data.enrolled ? (
-            <Button
-              onClick={() =>
-                onNavigate(
-                  `/project30/${courseId}/day/${project30Data.currentDay}`
-                )
-              }
-              className="w-full sm:w-auto"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Today's Lesson
-            </Button>
+          {project30?.isEnrolled ? (
+            !userProject30?.isCompleted && (
+              <Button
+                onClick={() => handleWatchPage(nextLesson?.id)}
+                className="w-full sm:w-auto"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Today's Lesson
+              </Button>
+            )
           ) : (
-            <Dialog
-              open={showPaymentDialog}
-              onOpenChange={setShowPaymentDialog}
-            >
-              <DialogTrigger asChild>
-                <Button>
+            <div>
+              {user?.isPremium ? (
+                <Button onClick={() => handleStartChallenge(slug)}>
+                  {starting ? (
+                    <>Starting...</>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Start Challenge
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button onClick={() => setShowPaymentDialog(true)}>
                   <Lock className="mr-2 h-4 w-4" />
                   Get Access
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="text-base md:text-lg">
-                    Get Access to Project30
-                  </DialogTitle>
-                  <DialogDescription className="text-sm">
-                    Choose how you'd like to access this 30-day challenge
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3 md:space-y-4">
-                  <Card
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handlePurchase("subscription")}
-                  >
-                    <CardContent className="p-3 md:p-4">
-                      <div className="flex items-center gap-3">
-                        <Crown className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm md:text-base">
-                            Upgrade to Pro
-                          </h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            Get unlimited access to all Project30 challenges
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-sm md:text-base">
-                            $39.99/mo
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Best value
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handlePurchase("individual")}
-                  >
-                    <CardContent className="p-3 md:p-4">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-[#13AECE] flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm md:text-base">
-                            Buy This Challenge
-                          </h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            One-time purchase for lifetime access
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-sm md:text-base">
-                            ${project30Data.price}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            One-time
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handlePurchase("xp")}
-                  >
-                    <CardContent className="p-3 md:p-4">
-                      <div className="flex items-center gap-3">
-                        <Gift className="h-6 w-6 md:h-8 md:w-8 text-[#EB5757] flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm md:text-base">
-                            Redeem with MB
-                          </h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            Use your earned MB points
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-sm md:text-base">
-                            {getXPCost(project30Data.price).toLocaleString()} MB
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Balance: {subscription.xpBalance.toLocaleString()}{" "}
-                            MB
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </DialogContent>
-            </Dialog>
+              )}
+            </div>
           )}
         </div>
       </div>
 
       {/* Access Banner for Free Users */}
-      {!project30Data.enrolled && (
-        <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Lock className="h-8 w-8 text-[#F2C94C]" />
-                <div>
-                  <h3 className="font-semibold text-sm md:text-base">
-                    Unlock Project30 Challenge
-                  </h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Get access to 30 days of hands-on project building with
-                    expert guidance
-                  </p>
+      {!project30?.isEnrolled ||
+        (!user?.isPremium && (
+          <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Lock className="h-8 w-8 text-[#F2C94C]" />
+                  <div>
+                    <h3 className="font-semibold text-sm md:text-base">
+                      Unlock Project30 Challenge
+                    </h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Get access to 30 days of hands-on project building with
+                      expert guidance
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  onClick={() => setShowPaymentDialog(true)}
+                  className="w-full md:w-auto"
+                >
+                  Get Access
+                </Button>
               </div>
-              <Button
-                onClick={() => setShowPaymentDialog(true)}
-                className="w-full md:w-auto"
-              >
-                Get Access
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        ))}
 
       {/* Progress Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -788,13 +767,11 @@ export function Project30Page({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {project30Data.enrolled ? project30Data.currentDay : "—"}/30
+              {project30?.isEnrolled ? nextDay : "—"}/{project30?.totalDays}
             </div>
             <p className="text-xs text-muted-foreground">
-              {project30Data.enrolled
-                ? `${
-                    project30Data.totalDays - project30Data.currentDay
-                  } days remaining`
+              {project30?.isEnrolled
+                ? `${project30?.totalDays! - nextDay} days remaining`
                 : "Enroll to start"}
             </p>
           </CardContent>
@@ -809,7 +786,7 @@ export function Project30Page({
           </CardHeader>
           <CardContent>
             <div className="text-lg md:text-2xl font-bold">
-              {project30Data.instructor}
+              {project30?.instructor ?? "Masteringbackend"}
             </div>
             <p className="text-xs text-muted-foreground">
               Senior Backend Engineer
@@ -822,15 +799,15 @@ export function Project30Page({
             <CardTitle className="text-xs md:text-sm font-medium">
               Lessons Completed
             </CardTitle>
-            <Video className="h-3 w-3 md:h-4 md:w-4 text-[#EB5757]" />
+            <VideoIcon className="h-3 w-3 md:h-4 md:w-4 text-[#EB5757]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {project30Data.enrolled ? project30Data.completedLessons : "—"}
+              {project30?.isEnrolled ? completedLessions : "—"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {project30Data.enrolled
-                ? "93% completion rate"
+              {project30?.isEnrolled
+                ? `${project30?.completionRate}% completion rate`
                 : "Start learning"}
             </p>
           </CardContent>
@@ -845,11 +822,13 @@ export function Project30Page({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {project30Data.enrolled ? `#${project30Data.rank}` : "—"}
+              {project30?.isEnrolled
+                ? `#${project30?.userProject30?.rank}`
+                : "—"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {project30Data.enrolled
-                ? `of ${project30Data.totalParticipants} participants`
+              {project30?.isEnrolled
+                ? `of ${project30?.totalParticipants} participants`
                 : "Join to compete"}
             </p>
           </CardContent>
@@ -857,90 +836,142 @@ export function Project30Page({
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        defaultValue="overview"
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="bonus">Bonuses</TabsTrigger>
+          {/* <TabsTrigger value="calendar">Calendar</TabsTrigger> */}
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
           <TabsTrigger value="community">Community</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           {/* Current Lesson */}
-          {project30Data.enrolled ? (
-            <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-[#F2C94C]" />
-                  Today's Lesson - Day {project30Data.currentDay}
-                </CardTitle>
-                <CardDescription>
-                  Watch today's video to learn how to build a new project
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative rounded-md overflow-hidden w-full md:w-1/3">
-                      <img
-                        src={dailyLessons[0].thumbnail || "/placeholder.svg"}
-                        alt="Video thumbnail"
-                        className="w-full h-auto object-cover"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <PlayCircle className="h-12 w-12 text-white opacity-80" />
-                      </div>
-                    </div>
-                    <div className="w-full md:w-2/3">
-                      <h3 className="font-semibold text-base md:text-lg">
-                        {dailyLessons[0].title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                        {dailyLessons[0].description}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {dailyLessons[0].duration}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 md:h-4 md:w-4" />
-                          {dailyLessons[0].xpReward} MB
+          {project30?.isEnrolled ? (
+            userProject30?.isCompleted ? (
+              <Card className="bg-gradient-to-r from-green-600/10 to-green-600/5 border-green-600/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                    Course Completed
+                  </CardTitle>
+                  <CardDescription>
+                    You've earned a certificate. Click on the download or share
+                    button to save or share with your employer.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex flex-col justify-between items-baseline md:flex-row gap-4">
+                      <div className="relative rounded-md overflow-hidden w-full md:w-1/3">
+                        <img
+                          src={"/placeholder.svg"}
+                          alt="Video thumbnail"
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PlayCircle className="h-12 w-12 text-white opacity-80" />
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {dailyLessons[0].technologies.map((tech) => (
-                          <Badge
-                            key={tech}
-                            variant="outline"
-                            className="text-xs"
+                      <div className="w-full">
+                        <div className="flex justify-end gap-3">
+                          {/* <Button onClick={handleShare} variant="outline">
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share Certificate
+                          </Button> */}
+                          <Button
+                            onClick={() =>
+                              onNavigate(`/project30/${slug}/certificate`)
+                            }
+                            className="bg-green-600 hover:bg-green-700"
                           >
-                            {tech}
-                          </Badge>
-                        ))}
+                            <Download className="mr-2 h-4 w-4" />
+                            View Certificate
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-[#F2C94C]" />
+                    Today's Lesson - Day {nextDay}
+                  </CardTitle>
+                  <CardDescription>
+                    Watch today's video to learn how to build a new project
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="relative rounded-md overflow-hidden w-full md:w-1/3">
+                        <img
+                          src={nextLesson?.banner || "/placeholder.svg"}
+                          alt="Video thumbnail"
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PlayCircle className="h-12 w-12 text-white opacity-80" />
+                        </div>
+                      </div>
+                      <div className="w-full md:w-2/3">
+                        <h3 className="font-semibold text-base md:text-lg">
+                          {nextLesson?.title}
+                        </h3>
+                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                          {nextLesson?.summary}
+                        </p>
 
-                  <Button
-                    className="w-full"
-                    onClick={() =>
-                      onNavigate(
-                        `/project30/${courseId}/day/${project30Data.currentDay}`
-                      )
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    Watch Today's Lesson
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {nextLesson?.duration}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 md:h-4 md:w-4" />
+                            {nextLesson?.mb} MB
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {nextLesson?.technologies?.map((tech: string) => (
+                            <Badge
+                              key={tech}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        onNavigate(`/project30/${slug}/day/${nextLesson.id}`)
+                      }
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Watch Today's Lesson
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
           ) : (
-            <Card className="bg-gradient-to-r from-gray-100 to-gray-50 border-gray-200">
+            <Card className="bg-gradient-to-r from-[#F2C94C]/10 to-[#F2C94C]/5 border-[#F2C94C]/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lock className="h-5 w-5 text-gray-500" />
@@ -955,7 +986,7 @@ export function Project30Page({
                   <div className="flex flex-col md:flex-row gap-4 opacity-60">
                     <div className="relative rounded-md overflow-hidden w-full md:w-1/3">
                       <img
-                        src={dailyLessons[0].thumbnail || "/placeholder.svg"}
+                        src={firstLesson?.banner || "/placeholder.svg"}
                         alt="Video thumbnail"
                         className="w-full h-auto object-cover"
                       />
@@ -965,25 +996,25 @@ export function Project30Page({
                     </div>
                     <div className="w-full md:w-2/3">
                       <h3 className="font-semibold text-base md:text-lg">
-                        {dailyLessons[0].title}
+                        {firstLesson?.title}
                       </h3>
                       <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                        {dailyLessons[0].description}
+                        {firstLesson?.summary}
                       </p>
 
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {dailyLessons[0].duration}
+                          {firstLesson?.duration} mins
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 md:h-4 md:w-4" />
-                          {dailyLessons[0].xpReward} MB
+                          {firstLesson?.mb} MB
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {dailyLessons[0].technologies.map((tech) => (
+                        {firstLesson?.technologies?.map((tech: string) => (
                           <Badge
                             key={tech}
                             variant="outline"
@@ -996,13 +1027,29 @@ export function Project30Page({
                     </div>
                   </div>
 
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowPaymentDialog(true)}
-                  >
-                    <Crown className="mr-2 h-4 w-4" />
-                    Get Access to Start Learning
-                  </Button>
+                  {user?.isPremium ? (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleStartChallenge(slug)}
+                    >
+                      {starting ? (
+                        <>Starting...</>
+                      ) : (
+                        <>
+                          <Crown className="mr-2 h-4 w-4" />
+                          Start Challenge
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowPaymentDialog(true)}
+                    >
+                      <Crown className="mr-2 h-4 w-4" />
+                      Get Access to Start Learning
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1020,64 +1067,104 @@ export function Project30Page({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {dailyLessons.map((lesson) => (
+                {completedItems
+                  ?.slice(0, userProject30?.isCompleted ? 3 : 2)
+                  ?.map((lesson) => (
+                    <div
+                      key={lesson.day}
+                      className="flex items-center space-x-4 rounded-lg border p-3"
+                    >
+                      <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-muted flex-shrink-0">
+                        {lesson.completed ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        ) : !lesson.completed ? (
+                          <Play className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">
+                            Day {lesson.day}: {lesson?.video?.title}
+                          </p>
+                          <Badge
+                            variant={
+                              lesson.completed
+                                ? "default"
+                                : !lesson.completed
+                                ? "secondary"
+                                : "outline"
+                            }
+                            className="text-xs"
+                          >
+                            {lesson.completed
+                              ? "Completed"
+                              : !lesson.completed
+                              ? "In Progress"
+                              : project30?.isEnrolled
+                              ? "Locked"
+                              : "Premium"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {lesson?.video?.summary}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          project30?.isEnrolled
+                            ? handleWatchPage(lesson?.video?.id)
+                            : setShowPaymentDialog(true)
+                        }
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+
+                {!userProject30?.isCompleted && (
                   <div
-                    key={lesson.day}
+                    key={nextDay}
                     className="flex items-center space-x-4 rounded-lg border p-3"
                   >
                     <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-muted flex-shrink-0">
-                      {lesson.status === "completed" ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      ) : lesson.status === "in-progress" ? (
-                        <Play className="h-5 w-5 text-blue-600" />
-                      ) : (
-                        <Lock className="h-5 w-5 text-gray-400" />
-                      )}
+                      <Play className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">
-                          Day {lesson.day}: {lesson.title}
+                          Day {currentDay! + 1}: {nextLesson?.title}
                         </p>
-                        <Badge
-                          variant={
-                            lesson.status === "completed"
-                              ? "default"
-                              : lesson.status === "in-progress"
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="text-xs"
-                        >
-                          {lesson.status === "completed"
+                        <Badge variant={"secondary"} className="text-xs">
+                          {nextLesson.completed
                             ? "Completed"
-                            : lesson.status === "in-progress"
+                            : !nextLesson.completed
                             ? "In Progress"
-                            : project30Data.enrolled
+                            : project30?.isEnrolled
                             ? "Locked"
                             : "Premium"}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {lesson.description}
+                        {nextLesson?.summary}
                       </p>
                     </div>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      disabled={lesson.status === "locked"}
+                      variant="default"
                       onClick={() =>
-                        project30Data.enrolled
-                          ? onNavigate(
-                              `/project30/${courseId}/day/${project30Data.currentDay}`
-                            )
+                        project30?.isEnrolled
+                          ? onNavigate(`/project30/${slug}/day/${currentDay}`)
                           : setShowPaymentDialog(true)
                       }
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1091,25 +1178,20 @@ export function Project30Page({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {project30Data.enrolled ? (
+                {project30?.isEnrolled ? (
                   <>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span>Overall Progress</span>
                         <span>
                           {Math.round(
-                            (project30Data.currentDay /
-                              project30Data.totalDays) *
-                              100
+                            (currentDay / project30?.totalDays!) * 100
                           )}
                           %
                         </span>
                       </div>
                       <Progress
-                        value={
-                          (project30Data.currentDay / project30Data.totalDays) *
-                          100
-                        }
+                        value={(currentDay / project30?.totalDays!) * 100}
                         className="h-2"
                       />
                     </div>
@@ -1117,23 +1199,20 @@ export function Project30Page({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span>Completion Rate</span>
-                        <span>
-                          {Math.round(
-                            (project30Data.completedLessons /
-                              project30Data.currentDay) *
-                              100
-                          )}
-                          %
-                        </span>
+
+                        <span>{Math.round(project30.completionRate)}%</span>
                       </div>
-                      <Progress
-                        value={
-                          (project30Data.completedLessons /
-                            project30Data.currentDay) *
-                          100
-                        }
-                        className="h-2"
-                      />
+                      {currentDay < 1 ? (
+                        <Progress
+                          value={project30.completionRate}
+                          className="h-2"
+                        />
+                      ) : (
+                        <Progress
+                          value={project30.completionRate}
+                          className="h-2"
+                        />
+                      )}
                     </div>
                   </>
                 ) : (
@@ -1146,12 +1225,21 @@ export function Project30Page({
                       Get access to track your daily progress and compete with
                       others
                     </p>
-                    <Button
-                      onClick={() => setShowPaymentDialog(true)}
-                      className="w-full md:w-auto"
-                    >
-                      Get Access
-                    </Button>
+                    {user.isPremium ? (
+                      <Button
+                        onClick={() => handleStartChallenge(slug)}
+                        className="w-full md:w-auto"
+                      >
+                        {starting ? <>Starting...</> : <>Start Challenge</>}
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setShowPaymentDialog(true)}
+                        className="w-full md:w-auto"
+                      >
+                        Get Access
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -1164,14 +1252,14 @@ export function Project30Page({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {project30Data.enrolled ? (
+                {project30?.isEnrolled ? (
                   <>
                     <div className="flex items-center justify-between">
                       <span className="text-xs md:text-sm text-muted-foreground">
                         Total MB Earned
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {project30Data.totalXP.toLocaleString()}
+                        {project30?.totalMB} MB
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1179,9 +1267,9 @@ export function Project30Page({
                         Average MB/Day
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {Math.round(
-                          project30Data.totalXP / project30Data.completedLessons
-                        )}
+                        {completedLessions >= 1
+                          ? Math.round(project30?.totalMB! / completedLessions)
+                          : 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1189,7 +1277,7 @@ export function Project30Page({
                         Best Streak
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {project30Data.streak} days
+                        {project30?.userProject30?.streak} days
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1197,7 +1285,7 @@ export function Project30Page({
                         Days Remaining
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {project30Data.totalDays - project30Data.currentDay}
+                        {project30?.totalDays! - nextDay}
                       </span>
                     </div>
                   </>
@@ -1208,7 +1296,7 @@ export function Project30Page({
                         Course Price
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        ${project30Data.price}
+                        ${project30?.amount!}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1216,7 +1304,7 @@ export function Project30Page({
                         MB Cost
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {getXPCost(project30Data.price).toLocaleString()} MB
+                        {getXPCost(project30?.amount!)?.toLocaleString()} MB
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1224,7 +1312,7 @@ export function Project30Page({
                         Your MB Balance
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {subscription.xpBalance.toLocaleString()} MB
+                        {user?.points?.toLocaleString() ?? 0} MB
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1232,7 +1320,7 @@ export function Project30Page({
                         Total Participants
                       </span>
                       <span className="font-semibold text-sm md:text-base">
-                        {project30Data.totalParticipants.toLocaleString()}
+                        {project30?.totalParticipants?.toLocaleString() ?? 0}
                       </span>
                     </div>
                   </div>
@@ -1255,25 +1343,28 @@ export function Project30Page({
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-                {curriculum.map((week) => (
-                  <AccordionItem key={week.week} value={`week-${week.week}`}>
+                {chapters.map((chapter, i) => (
+                  <AccordionItem key={chapter.id} value={`week-${i + 1}`}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center justify-between w-full mr-4">
                         <div className="text-left">
                           <h3 className="font-semibold">
-                            Week {week.week}: {week.title}
+                            Week {i + 1}: {chapter?.title + ""}
                           </h3>
                           <p className="text-xs md:text-sm text-muted-foreground">
-                            {week.description}
+                            {chapter?.summary}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {week.days.length} days
+                            {chapter.videos?.length}+ days
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {chapter.videos?.length} videos
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
-                            {week.days.reduce(
-                              (total, day) => total + day.xpReward,
+                            {chapter?.videos?.reduce(
+                              (total: number, video: Video) => total + video.mb,
                               0
                             )}{" "}
                             MB
@@ -1281,76 +1372,91 @@ export function Project30Page({
                         </div>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent>
                       <div className="space-y-3 pt-4">
-                        {week.days.map((day) => (
-                          <div
-                            key={day.day}
-                            className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors ${
-                              project30Data.enrolled && day.status !== "locked"
-                                ? "hover:bg-muted/50 cursor-pointer"
-                                : "opacity-60"
-                            }`}
-                            onClick={() => {
-                              if (
-                                project30Data.enrolled &&
-                                day.status !== "locked"
-                              ) {
-                                onNavigate(
-                                  `/project30/${courseId}/day/${project30Data.currentDay}`
-                                );
-                              } else if (!project30Data.enrolled) {
-                                setShowPaymentDialog(true);
-                              }
-                            }}
-                          >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                              {getStatusIcon(day.status)}
-                            </div>
-                            <div className="flex-1 space-y-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-xs md:text-sm font-medium text-muted-foreground">
-                                  Day {day.day}
-                                </span>
-                                <Badge
-                                  className={`${getDifficultyColor(
-                                    day.difficulty
-                                  )} text-xs`}
-                                  variant="outline"
-                                >
-                                  {day.difficulty}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  {day.xpReward} MB
-                                </Badge>
+                        {chapter?.videos?.map((video: Video) => {
+                          const currentDay = dayCount++;
+                          return (
+                            <div
+                              key={video.id}
+                              className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors ${
+                                project30?.isEnrolled
+                                  ? isCompleted(video.id)
+                                    ? "hover:bg-muted/50 cursor-pointer"
+                                    : nextLessonId === video.id
+                                    ? "border-primary/40 hover:bg-muted/50 cursor-pointer"
+                                    : "opacity-60"
+                                  : "opacity-60"
+                              }`}
+                              onClick={() => {
+                                if (project30?.isEnrolled) {
+                                  handleWatchPage(video.id);
+                                } else if (!user.isPremium) {
+                                  setShowPaymentDialog(true);
+                                }
+                              }}
+                            >
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                                {getStatusIcon(
+                                  isCompleted(video.id)
+                                    ? "completed"
+                                    : nextLessonId === video.id
+                                    ? "in-progress"
+                                    : "locked"
+                                )}
                               </div>
-                              <h4 className="font-medium text-sm md:text-base">
-                                {day.title}
-                              </h4>
-                              <p className="text-xs md:text-sm text-muted-foreground">
-                                {day.description}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {day.duration}
+                              <div className="flex-1 space-y-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
+                                    Day {currentDay}
+                                  </span>
+                                  <Badge
+                                    className={`${getDifficultyColor(
+                                      video?.difficulty!
+                                    )} text-xs`}
+                                    variant="outline"
+                                  >
+                                    {video.difficulty}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {video.mb} MB
+                                  </Badge>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  {day.icon}
-                                  <span>{day.technologies.join(", ")}</span>
+                                <h4 className="font-medium text-sm md:text-base">
+                                  {video.title}
+                                </h4>
+                                <p className="text-xs md:text-sm text-muted-foreground">
+                                  {video.description}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {video?.duration ?? 0} mins
+                                  </div>
+                                  {video?.technologies?.length && (
+                                    <div className="flex items-center gap-1">
+                                      <Database className="h-4 w-4" />
+                                      <span>
+                                        {video?.technologies?.join(", ")}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
+                              {project30?.isEnrolled &&
+                              isCompleted(video.id) ? (
+                                <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                              ) : !project30?.isEnrolled ? (
+                                <Lock className="h-4 w-4 text-gray-400" />
+                              ) : nextLessonId === video.id ? (
+                                <Play className="h-4 w-4 flex-shrink-0 text-primary" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
                             </div>
-                            {project30Data.enrolled &&
-                            day.status !== "locked" ? (
-                              <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                            ) : !project30Data.enrolled ? (
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            ) : (
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -1360,7 +1466,208 @@ export function Project30Page({
           </Card>
         </TabsContent>
 
-        <TabsContent value="calendar" className="space-y-4">
+        <TabsContent value="bonus" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base md:text-lg">
+                Bonus Courses & Resources
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Find all the bonus courses, resources and more information here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {bonusCourses.map(({ course, video, resource }) => {
+                  return course ? (
+                    <div className="space-y-4  pb-4">
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-blue-600" />
+                          Course
+                          {/* TODO: show videos and resources */}
+                        </h4>
+                        <Card key={course.id} className="overflow-hidden">
+                          <div className="flex flex-col md:flex-row">
+                            <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                              <img
+                                src={course?.banner || "/placeholder.svg"}
+                                alt={course?.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 p-4">
+                              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                <div>
+                                  <h5 className="font-medium">
+                                    {course?.title}
+                                  </h5>
+                                  <p className="text-sm text-muted-foreground">
+                                    {course?.summary}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">{course.type}</Badge>
+                                  <Badge variant="outline">
+                                    {course?.totalDuration ?? 0} mins
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <PlayCircle className="h-4 w-4 text-blue-600" />
+                                  <span className="text-sm">
+                                    {course.chapters?.length} chapters
+                                  </span>
+                                </div>
+                                <a
+                                  target="_blank"
+                                  href={routes.courseDetail(course?.id)}
+                                >
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                  >
+                                    View Course
+                                  </Button>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  ) : video && (
+                      <div className="space-y-4  pb-4">
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            Video
+                            {/* TODO: show videos and resources */}
+                          </h4>
+                          <Card key={video.id} className="overflow-hidden">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                <img
+                                  src={video?.banner || "/placeholder.svg"}
+                                  alt={video?.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 p-4">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                  <div>
+                                    <h5 className="font-medium">
+                                      {video?.title}
+                                    </h5>
+                                    <p className="text-sm text-muted-foreground">
+                                      {video?.summary}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline">
+                                      {video.type}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {video?.duration ?? 0}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <PlayCircle className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm">
+                                      {course.chapters?.length} chapters
+                                    </span>
+                                  </div>
+                                  <a
+                                    target="_blank"
+                                    href={routes.project30Day(
+                                      course.slug,
+                                      video?.id
+                                    )}
+                                  >
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      Watch Video
+                                    </Button>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+                      </div>
+                    ) ? (
+                    resource && (
+                      <div className="space-y-4  pb-4">
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            Resource
+                          </h4>
+                          <Card key={resource.id} className="overflow-hidden">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                <img
+                                  src={resource.banner || "/placeholder.svg"}
+                                  alt={resource.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 p-4">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                  <div>
+                                    <h5 className="font-medium">
+                                      {resource.title}
+                                    </h5>
+                                    <p className="text-sm text-muted-foreground">
+                                      {resource.summary}
+                                    </p>
+                                  </div>
+                                  {/* <div className="flex items-center gap-2">
+                                    <Badge variant="outline">
+                                      {resource.difficulty}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {resource.estimatedTime}
+                                    </Badge>
+                                  </div> */}
+                                </div>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <a target="_blank" href={resource.link}>
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      View Project
+                                    </Button>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    ""
+                  );
+                })}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* <TabsContent value="calendar" className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -1371,9 +1678,12 @@ export function Project30Page({
                   Track your daily progress
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {project30Data.enrolled ? (
+              <CardContent className="w-full">
+                {project30?.isEnrolled ? (
                   <Calendar
+                    completedDates={[]}
+                    currentDate={[]}
+                    missedDates={[]}
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
@@ -1386,9 +1696,12 @@ export function Project30Page({
                       Calendar Locked
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mb-4">
-                      Get access to track your daily progress
+                      Start challenge to track your daily progress
                     </p>
+
                     <Button
+                      disabled={user.isPremium}
+                      variant={"outline"}
                       onClick={() => setShowPaymentDialog(true)}
                       className="w-full md:w-auto"
                     >
@@ -1428,7 +1741,7 @@ export function Project30Page({
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="achievements" className="space-y-4">
           <Card>
@@ -1441,15 +1754,15 @@ export function Project30Page({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {project30Data.enrolled ? (
+              {project30?.isEnrolled ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {achievements.map((achievement) => (
+                  {achievements?.map(({ achievement, ...ach }) => (
                     <div
-                      key={achievement.id}
+                      key={ach.id}
                       className={`flex items-center space-x-4 rounded-lg border p-3 md:p-4 ${
-                        achievement.unlocked
-                          ? "bg-green-50 border-green-200"
-                          : "bg-gray-50 border-gray-200"
+                        ach.completed
+                          ? "bg-green-500/10 border-green-200"
+                          : "bg-gray-200/10 border-gray-200"
                       }`}
                     >
                       <div className="text-xl md:text-2xl">
@@ -1457,21 +1770,18 @@ export function Project30Page({
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-sm md:text-base">
-                          {achievement.title}
+                          {achievement.name}
                         </h3>
                         <p className="text-xs md:text-sm text-muted-foreground">
                           {achievement.description}
                         </p>
-                        {!achievement.unlocked && (
+                        {!ach.completed && (
                           <div className="mt-2">
-                            <Progress
-                              value={achievement.progress}
-                              className="h-2"
-                            />
+                            <Progress value={ach.progress} className="h-2" />
                           </div>
                         )}
                       </div>
-                      {achievement.unlocked && (
+                      {ach.completed && (
                         <CheckCircle2 className="h-5 w-5 text-green-600" />
                       )}
                     </div>
@@ -1484,9 +1794,12 @@ export function Project30Page({
                     Achievements Locked
                   </h3>
                   <p className="text-xs md:text-sm text-muted-foreground mb-4">
-                    Get access to unlock achievements and track your progress
+                    Start challenge to unlock achievements and track your
+                    progress
                   </p>
                   <Button
+                    disabled={user.isPremium}
+                    variant={"outline"}
                     onClick={() => setShowPaymentDialog(true)}
                     className="w-full md:w-auto"
                   >
@@ -1511,34 +1824,34 @@ export function Project30Page({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {project30Data.enrolled ? (
+                {project30?.isEnrolled ? (
                   <div className="space-y-3">
-                    {leaderboard.map((entry) => (
+                    {project30?.userProject30?.performers?.map((entry, i) => (
                       <div
-                        key={entry.rank}
+                        key={i + 1}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          entry.name === "You"
+                          entry.isCurrentUser
                             ? "bg-[#F2C94C]/10 border border-[#F2C94C]/20"
                             : "bg-muted/50"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-semibold">
-                            #{entry.rank}
+                            #{i + 1}
                           </div>
                           <div>
                             <p className="font-medium text-sm md:text-base">
                               {entry.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {entry.lessons} lessons • {entry.streak} day
+                              {entry.itemCount} lessons • {entry.streak} day
                               streak
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-sm md:text-base">
-                            {entry.xp} MB
+                            {entry.totalMB} MB
                           </p>
                         </div>
                       </div>
@@ -1547,7 +1860,7 @@ export function Project30Page({
                       variant="outline"
                       className="w-full mt-4"
                       onClick={() =>
-                        onNavigate(`/project30/${courseId}/leaderboard`)
+                        onNavigate(`/project30/${slug}/leaderboard`)
                       }
                     >
                       View Full Leaderboard
@@ -1560,9 +1873,12 @@ export function Project30Page({
                       Leaderboard Locked
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mb-4">
-                      Get access to compete with other learners
+                      Start challenge to compete with other learners
                     </p>
+
                     <Button
+                      disabled={user.isPremium}
+                      variant={"outline"}
                       onClick={() => setShowPaymentDialog(true)}
                       className="w-full md:w-auto"
                     >
@@ -1589,7 +1905,7 @@ export function Project30Page({
                     Total Participants
                   </span>
                   <span className="font-semibold text-sm md:text-base">
-                    {project30Data.totalParticipants.toLocaleString()}
+                    {project30?.totalParticipants ?? 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1597,7 +1913,7 @@ export function Project30Page({
                     Active Today
                   </span>
                   <span className="font-semibold text-sm md:text-base">
-                    847
+                    {project30?.totalParticipantsToday ?? 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1605,7 +1921,7 @@ export function Project30Page({
                     Projects Built
                   </span>
                   <span className="font-semibold text-sm md:text-base">
-                    15,420
+                    {project30?.totalProjectSubmitted ?? 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1613,21 +1929,20 @@ export function Project30Page({
                     Completion Rate
                   </span>
                   <span className="font-semibold text-sm md:text-base">
-                    73%
+                    {project30?.completionRate ?? 0}%
                   </span>
                 </div>
-                {project30Data.enrolled ? (
+                {project30?.isEnrolled ? (
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() =>
-                      onNavigate(`/project30/${courseId}/community`)
-                    }
+                    onClick={() => onNavigate(`/project30/${slug}/community`)}
                   >
                     Join Community Discussion
                   </Button>
                 ) : (
                   <Button
+                    disabled={user.isPremium}
                     variant="outline"
                     className="w-full"
                     onClick={() => setShowPaymentDialog(true)}
@@ -1641,6 +1956,21 @@ export function Project30Page({
           </div>
         </TabsContent>
       </Tabs>
+
+      <PaymentDialog
+        onClose={() => setShowPaymentDialog(false)}
+        open={showPaymentDialog}
+        data={project30}
+        onHandlePreview={() => {}}
+        onHandlePurchase={() => {}}
+      />
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="enrollment"
+        courseName={project30?.title!}
+        duration={2000}
+      />
     </div>
   );
 }

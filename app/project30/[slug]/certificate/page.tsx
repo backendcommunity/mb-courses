@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { CourseCertificatePage } from "@/components/pages/course-certificate";
+import { Project30CertificatePage } from "@/components/pages/Project30CertificatePage";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
@@ -19,7 +19,7 @@ export default function CourseCertificatePageRoute() {
 
   return (
     <DashboardLayout>
-      <CourseCertificatePage slug={slug} onNavigate={handleNavigate} />
+      <Project30CertificatePage slug={slug} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }

@@ -758,9 +758,7 @@ export function RoadmapDetailPage({
                               <div className="flex flex-col md:flex-row">
                                 <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
                                   <img
-                                    src={
-                                      project.thumbnail || "/placeholder.svg"
-                                    }
+                                    src={project.banner || "/placeholder.svg"}
                                     alt={project.title}
                                     className="w-full h-full object-cover"
                                   />

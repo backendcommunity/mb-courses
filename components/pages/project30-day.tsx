@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -35,70 +35,68 @@ import {
   SkipForward,
   Pause,
 } from "lucide-react";
+import { codeSample } from "@/lib/utils";
+import { useAppStore } from "@/lib/store";
+import { Chapter, Project30, Resource, Video } from "@/lib/data";
+import { toast } from "sonner";
+import ConfettiCelebration from "../confetti-celebration";
+import { routes } from "@/lib/routes";
+import { VimeoPlayer } from "../ui/vimeo-player";
 
 interface Project30DayPageProps {
   dayNumber: string;
+  slug: string;
   onNavigate: (path: string) => void;
 }
 
 export function Project30DayPage({
   dayNumber,
+  slug,
   onNavigate,
 }: Project30DayPageProps) {
+  const store = useAppStore();
   const [activeTab, setActiveTab] = useState("video");
+  const [video, setVideo] = useState<Video>();
+  const [loading, setLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(1920); // 32 minutes in seconds
   const [volume, setVolume] = useState(80);
-  const [code, setCode] = useState(`// Day ${dayNumber} - Real-time Chat API
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const redis = require('redis');
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
-// Redis client for storing user sessions
-const redisClient = redis.createClient();
-
-// Middleware
-app.use(express.json());
-app.use(express.static('public'));
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
-  // Join room
-  socket.on('join-room', (roomId, username) => {
-    socket.join(roomId);
-    socket.to(roomId).emit('user-joined', username);
-  });
-  
-  // Handle messages
-  socket.on('send-message', (roomId, message, username) => {
-    io.to(roomId).emit('receive-message', {
-      message,
-      username,
-      timestamp: new Date().toISOString()
-    });
-  });
-  
-  // Handle disconnect
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});`);
-
+  const [code, setCode] = useState(codeSample);
   const [projectUrl, setProjectUrl] = useState("");
   const [submissionNotes, setSubmissionNotes] = useState("");
+  const [project30, setProject30] = useState<Project30>();
+  const [completedItems, setCompletedItems] = useState([]);
+  const [celebration, setCelebration] = useState(false);
+
+  const userProject30 = project30?.userProject30;
+
+  useMemo(() => {
+    const load = async () => {
+      setLoading(true);
+      const data = await store.getProject30(slug);
+      setProject30(data);
+      setCompletedItems(data.userOfferItems);
+      setLoading(false);
+    };
+
+    load();
+  }, [slug]);
+
+  useMemo(() => {
+    const load = async () => {
+      setLoading(true);
+      const video = await store.getVideo(dayNumber);
+      setVideo(video);
+      setLoading(false);
+    };
+
+    load();
+  }, []);
+
+  const completedVideo: any = completedItems?.find(
+    (c: any) => c.videoId === dayNumber && c.completed
+  );
 
   // Format time for display (MM:SS)
   const formatTime = (seconds: number) => {
@@ -124,75 +122,81 @@ server.listen(PORT, () => {
     // In a real implementation, this would control the video playback
   };
 
-  const projectData = {
-    day: Number.parseInt(dayNumber),
-    title: "Real-time Chat API",
-    description:
-      "Learn how to build a WebSocket-based chat API with rooms and user presence tracking",
-    instructor: "Sarah Johnson",
-    duration: "32 minutes",
-    difficulty: "Medium",
-    estimatedTime: "3-4 hours",
-    xpReward: 100,
-    technologies: ["Node.js", "Socket.io", "Redis", "Express"],
-    videoUrl: "/placeholder.svg?height=400&width=800",
-    videoThumbnail: "/placeholder.svg?height=400&width=800",
-    status: "in-progress",
-    requirements: [
-      "Set up Express server with Socket.io",
-      "Implement room-based chat functionality",
-      "Add user presence indicators",
-      "Store chat history in Redis",
-      "Handle user join/leave events",
-      "Add message timestamps",
-      "Implement basic error handling",
-    ],
-    resources: [
-      {
-        title: "Socket.io Documentation",
-        url: "https://socket.io/docs/",
-        type: "documentation",
-      },
-      {
-        title: "Redis Quick Start",
-        url: "https://redis.io/docs/getting-started/",
-        type: "documentation",
-      },
-      {
-        title: "WebSocket Tutorial",
-        url: "/tutorials/websockets",
-        type: "video",
-      },
-    ],
-    hints: [
-      "Start with a basic Express server and add Socket.io step by step",
-      "Use Redis to store active users and chat history",
-      "Test your implementation with multiple browser tabs",
-      "Consider rate limiting for message sending",
-    ],
-    testCases: [
-      "Users can join different chat rooms",
-      "Messages are delivered to all users in the same room",
-      "User presence is tracked and displayed",
-      "Chat history is persisted and retrievable",
-    ],
+  const submitProject = async () => {
+    try {
+      const allVideosWithChapters =
+        project30?.courses
+          .filter(
+            (course: any) =>
+              !["Optional", "Bonus"].includes(course.topic.trim())
+          )
+          .flatMap(({ course }: any) =>
+            course.chapters.flatMap((chapter: any, chapterIndex: number) =>
+              chapter.videos.map((video: any) => ({
+                ...video,
+                chapter, // keep reference to chapter
+                chapterIndex, // keep index for currentWeek
+              }))
+            )
+          ) ?? [];
+
+      const currentDay = userProject30?.currentDay ?? 0;
+      const totaldays = allVideosWithChapters.length;
+
+      let currentIndex =
+        totaldays === currentDay + 1 ? currentDay : currentDay + 1;
+      const nextVideo = allVideosWithChapters[currentIndex];
+
+      if (!nextVideo) return;
+
+      const dayCompleted = await store.markDayComplete(slug, dayNumber, {
+        courseId: nextVideo?.chapter?.courseId,
+        day: currentDay + 1,
+        notes: submissionNotes ? submissionNotes : undefined,
+        url: projectUrl,
+        currentDay: currentDay + 1,
+        currentWeek: nextVideo.chapterIndex,
+        nextLesson: nextVideo?.id,
+        nextWeek: nextVideo?.chapterId,
+        isProject30Completed:
+          allVideosWithChapters[totaldays - 1].id === dayNumber,
+      });
+
+      setCelebration(true);
+      onNavigate(routes.project30Detail(`/${slug}`));
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occurred. Please try again");
+    }
   };
 
-  const submitProject = () => {
-    // Handle project submission
-    console.log("Submitting project:", { projectUrl, submissionNotes });
-    onNavigate("/project30");
-  };
+  // TODO:: Create a special Form to add this for admin
+
+  const projectRequirements = video?.resources?.filter((r: any) =>
+    r.title.includes("Project Requirements")
+  );
+
+  const testRequirements = video?.resources?.filter((r: any) =>
+    r.title.includes("Test Cases")
+  );
+
+  const resourcesRequirements = video?.resources?.filter((r: any) =>
+    r.title.includes("Resources")
+  );
+
+  const hintsRequirements = video?.resources?.filter((r: any) =>
+    r.title.includes("Hints")
+  );
 
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between ">
+        <div className="flex items-center flex-1 gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("/project30")}
+            onClick={() => onNavigate("/project30/" + slug)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -202,31 +206,34 @@ server.listen(PORT, () => {
                 variant="outline"
                 className="bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/20"
               >
-                Day {projectData.day}
+                Day{" "}
+                {completedVideo
+                  ? completedVideo?.day
+                  : userProject30?.currentDay! + 1}
               </Badge>
               <Badge
                 variant={
-                  projectData.difficulty === "Hard"
+                  video?.difficulty === "Hard"
                     ? "destructive"
-                    : projectData.difficulty === "Medium"
+                    : video?.difficulty === "Medium"
                     ? "default"
                     : "secondary"
                 }
               >
-                {projectData.difficulty}
+                {video?.difficulty}
               </Badge>
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {projectData.title}
+              {video?.title}
             </h1>
-            <p className="text-muted-foreground">{projectData.description}</p>
+            <p className="text-muted-foreground w-1/2">{video?.summary}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
             <Clock className="h-4 w-4" />
-            <span className="font-mono text-sm">{projectData.duration}</span>
+            <span className="font-mono text-sm">{video?.duration} minutes</span>
           </div>
         </div>
       </div>
@@ -239,7 +246,9 @@ server.listen(PORT, () => {
               <PlayCircle className="h-4 w-4 text-[#F2C94C]" />
               <span className="text-sm font-medium">Instructor</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{projectData.instructor}</p>
+            <p className="text-2xl font-bold mt-1">
+              {video?.instructor?.name ?? "Masteringbackend"}
+            </p>
           </CardContent>
         </Card>
 
@@ -249,7 +258,7 @@ server.listen(PORT, () => {
               <Star className="h-4 w-4 text-[#F2C94C]" />
               <span className="text-sm font-medium">MB Reward</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{projectData.xpReward}</p>
+            <p className="text-2xl font-bold mt-1">{video?.mb}</p>
           </CardContent>
         </Card>
 
@@ -259,9 +268,7 @@ server.listen(PORT, () => {
               <Target className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Project Time</span>
             </div>
-            <p className="text-2xl font-bold mt-1">
-              {projectData.estimatedTime}
-            </p>
+            <p className="text-2xl font-bold mt-1">{video?.duration}</p>
           </CardContent>
         </Card>
 
@@ -272,7 +279,7 @@ server.listen(PORT, () => {
               <span className="text-sm font-medium">Technologies</span>
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
-              {projectData.technologies.map((tech) => (
+              {video?.technologies?.map((tech) => (
                 <Badge key={tech} variant="outline" className="text-xs">
                   {tech}
                 </Badge>
@@ -312,7 +319,7 @@ server.listen(PORT, () => {
                   {/* Video Player */}
                   <div className="relative rounded-md overflow-hidden bg-black aspect-video">
                     <img
-                      src={projectData.videoThumbnail || "/placeholder.svg"}
+                      src={video?.banner || "/placeholder.svg"}
                       alt="Video thumbnail"
                       className={`w-full h-full object-cover ${
                         isPlaying ? "hidden" : "block"
@@ -331,18 +338,16 @@ server.listen(PORT, () => {
                       </div>
                     )}
                     {isPlaying && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <img
-                          src={projectData.videoUrl || "/placeholder.svg"}
-                          alt="Video player"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <Card className="overflow-hidden">
+                        <div className="aspect-video bg-black relative">
+                          <VimeoPlayer video={video!} />
+                        </div>
+                      </Card>
                     )}
 
                     {/* Video Controls */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 flex flex-col gap-2">
-                      {/* Progress bar */}
+                    {/* <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 flex flex-col gap-2">
+
                       <div className="w-full bg-gray-600 h-1 rounded-full overflow-hidden">
                         <div
                           className="bg-[#F2C94C] h-full"
@@ -352,7 +357,7 @@ server.listen(PORT, () => {
                         ></div>
                       </div>
 
-                      {/* Controls */}
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Button
@@ -405,136 +410,45 @@ server.listen(PORT, () => {
                           </Button>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Video Chapters */}
                   <div className="border rounded-md p-4">
-                    <h3 className="font-medium mb-3">Video Chapters</h3>
+                    <h3 className="font-medium mb-3">Video Chapter</h3>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-2 rounded-md bg-[#F2C94C]/10 border border-[#F2C94C]/20">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F2C94C] text-white text-xs">
-                          1
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">Introduction</p>
-                          <p className="text-xs text-muted-foreground">
-                            00:00 - 02:45
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                          2
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Setting Up the Express Server
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            02:46 - 08:30
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                          3
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Integrating Socket.io
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            08:31 - 15:20
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                          4
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Implementing Chat Rooms
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            15:21 - 22:15
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                          5
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Redis Integration
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            22:16 - 28:45
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                          6
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Testing and Conclusion
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            28:46 - 32:00
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {video?.chapter?.videos.map((v: Video, i: number) => {
+                        return (
+                          <div
+                            className={`flex items-center gap-3 p-2 rounded-md ${
+                              v.id === dayNumber
+                                ? "bg-[#F2C94C]/10 border border-[#F2C94C]/20"
+                                : "hover:bg-muted/50"
+                            }`}
+                          >
+                            <div
+                              className={`flex h-6 w-6 items-center justify-center rounded-full text-white text-xs ${
+                                v.id === dayNumber ? "bg-[#F2C94C]" : "bg-muted"
+                              }`}
+                            >
+                              {i + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{v.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                00:00 - {v.duration}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
@@ -645,115 +559,136 @@ server.listen(PORT, () => {
             </TabsList>
 
             <TabsContent value="requirements">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5" />
-                    Project Requirements
-                  </CardTitle>
-                  <CardDescription>
-                    Complete these tasks after watching the video
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {projectData.requirements.map((requirement, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full border text-xs">
-                          {index + 1}
-                        </div>
-                        <span className="text-sm">{requirement}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {projectRequirements?.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      Project Requirements
+                    </CardTitle>
+                    <CardDescription>
+                      Complete these tasks after watching the video
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {projectRequirements?.map(
+                        (requirement: any, index: number) => (
+                          <div key={index} className="flex items-start gap-3">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full border text-xs">
+                              {index + 1}
+                            </div>
+                            <span className="text-sm">
+                              {requirement?.title}
+                            </span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="resources">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ExternalLink className="h-5 w-5" />
-                    Resources
-                  </CardTitle>
-                  <CardDescription>
-                    Additional materials to help you complete the project
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {projectData.resources.map((resource, index) => (
-                      <a
-                        key={index}
-                        href={resource.url}
-                        className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors"
-                      >
-                        <FileText className="h-4 w-4" />
-                        <span className="text-sm">{resource.title}</span>
-                        <ExternalLink className="h-3 w-3 ml-auto" />
-                      </a>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {resourcesRequirements?.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ExternalLink className="h-5 w-5" />
+                      Resources
+                    </CardTitle>
+                    <CardDescription>
+                      Additional materials to help you complete the project
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {resourcesRequirements?.map(
+                        (resource: Resource, index: number) => (
+                          <a
+                            key={index}
+                            href={resource.link}
+                            className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm">{resource.title}</span>
+                            <ExternalLink className="h-3 w-3 ml-auto" />
+                          </a>
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="hints">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5" />
-                    Hints
-                  </CardTitle>
-                  <CardDescription>
-                    Tips to help you if you get stuck
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {projectData.hints.map((hint, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 p-3 rounded-lg bg-muted/50"
-                      >
-                        <Lightbulb className="h-4 w-4 text-[#F2C94C] mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{hint}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {hintsRequirements?.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lightbulb className="h-5 w-5" />
+                      Hints
+                    </CardTitle>
+                    <CardDescription>
+                      Tips to help you if you get stuck
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {hintsRequirements?.map((hint: Resource, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-2 p-3 rounded-lg bg-muted/50"
+                        >
+                          <Lightbulb className="h-4 w-4 text-[#F2C94C] mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{hint.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
 
           {/* Test Cases */}
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Test Cases
-              </CardTitle>
-              <CardDescription>
-                Make sure your project meets these requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {projectData.testCases.map((test, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-2 p-2 border rounded-md"
-                  >
-                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                    <span className="text-sm">{test}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {testRequirements?.length && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Test Cases
+                </CardTitle>
+                <CardDescription>
+                  Make sure your project meets these requirements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {testRequirements?.map((test: Resource, index: number) => (
+                    <li
+                      key={index}
+                      className="flex items-start gap-2 p-2 border rounded-md"
+                    >
+                      <CheckCircle2 className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                      <span className="text-sm">{test.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="completion"
+        courseName={video?.title!}
+      />
     </div>
   );
 }

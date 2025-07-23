@@ -28,6 +28,8 @@ import {
   Reward,
   UserRoadmapFilters,
   MBPayload,
+  Project30Query,
+  Project30,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -46,6 +48,9 @@ interface AppState {
   getUser: () => User | any;
   getPlan: (name: string) => any;
   getCourses: (queries?: CoursesQuery) => Course[] | any;
+  getProject30s: (queries?: Project30Query) => Project30[] | any;
+  getProject30: (slug: string) => Project30 | any;
+  loadMyProject30s: (queries?: Project30Query) => Project30[] | any;
   getCourse: (slug: string, params?: any) => Course | any;
   getUserCourse: (slug: string) => UserCourse | any;
   getUserCourses: (queries?: CoursesQuery) => UserCourse[] | any;
@@ -68,18 +73,23 @@ interface AppState {
   getRoadmapItems: (slug: string, topicId: string) => any;
   getExercise: (id: string) => Exercise | any;
   getRewards: () => Reward | any;
-  getUserAchievement: () => any;
+  getUserAchievement: (type?: string) => any;
   getBadges: () => any;
   getActivities: () => any;
+  getVideo: (slug: string) => any;
+  getProject30Leaderboard: (slug: string, filter?: any) => any;
+  getProject30Achievements: (slug: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
+  startProject30: (slug: string) => Project30 | any;
   deleteAccount: () => void;
   changePassword: (updates: {
     oldPassword: string;
     newPassword: string;
   }) => void;
   cancelSubscription: (id: string) => any;
+  markDayComplete: (slug: string, videoId: string, payload: any) => any;
   resumeSubscription: (id: string) => any;
   deletCard: (id: string) => any;
   puaseSubscription: (id: string, data: { months: number }) => any;
@@ -136,8 +146,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       updateUserInStore(res.data);
       return res.data;
     } catch (error) {
-      throw error;
+      // throw error;
     }
+  },
+  getProject30Leaderboard: async (slug: string, filters?: any) => {
+    const { data } = await api.get(
+      `/project30s/${slug}/leaderboard?filters=${JSON.stringify(filters)}`
+    );
+    return data?.data;
+  },
+
+  getProject30Achievements: async (slug: string) => {
+    const { data } = await api.get(`/project30s/${slug}/achievements`);
+    return data?.data;
+  },
+
+  getProject30: async (slug: string) => {
+    const { data } = await api.get(`/project30s/${slug}`);
+    return data?.data;
   },
   getPlan: async (name: string) => {
     const { data } = await api.get(`/plans/${name}`);
@@ -159,6 +185,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   getPlans: async () => {
     const { data } = await api.get(`/plans`);
     return data?.data;
+  },
+
+  loadMyProject30s: async (queries?: Project30Query) => {
+    const { data } = await api.get(`/users/project30s`, {
+      params: queries,
+    });
+    return data.data;
   },
 
   getCourses: async (queries?: CoursesQuery) => {
@@ -202,6 +235,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+
+  getProject30s: async (queries?: Project30Query) => {
+    const { data } = await api.get(`/project30s`, {
+      params: queries,
+    });
+    return data.data;
   },
 
   getTransactions: async (payload) => {
@@ -254,8 +294,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     );
     return data?.data;
   },
-  getUserAchievement: async () => {
-    const { data } = await api.get("/users/achievements");
+  getUserAchievement: async (type?: string) => {
+    let url = `/users/achievements`;
+    if (type) url = `/users/achievements?type=${type}`;
+    const { data } = await api.get(url);
+    return data?.data;
+  },
+
+  getVideo: async (slug: string) => {
+    const { data } = await api.get(`/courses/videos/${slug}`);
     return data?.data;
   },
 
@@ -279,6 +326,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   forceUpdate: () => set((state) => ({ version: state.version + 1 })),
 
   // Actions
+  startProject30: async (slug: string) => {
+    const { data } = await api.post("/project30s/" + slug);
+    return data?.data;
+  },
   startQuiz: async (id: string, { userQuizId }: { userQuizId: string }) => {
     const { data } = await api.post("/quizzes/" + id + "/start", {
       userQuizId,
@@ -311,6 +362,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  markDayComplete: async (slug: string, videoId: string, payload: any) => {
+    const { data } = await api.post(
+      `/project30s/${slug}/days/${videoId}`,
+      payload
+    );
+    return data?.data;
+  },
   markRoadmapItemCompleted: async (
     slug: string,
     topicId: string,

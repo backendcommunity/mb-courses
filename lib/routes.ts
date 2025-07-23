@@ -104,7 +104,7 @@ export const routes = {
 
   // Project30
   project30: "/project30",
-  project30Detail: (courseId: string) => `/project30/${courseId}`,
+  project30Detail: (slug: string) => `/project30/${slug}`,
   project30Day: (courseId: string, dayNumber: string) =>
     `/project30/${courseId}/day/${dayNumber}`,
   project30Community: (courseId: string) => `/project30/${courseId}/community`,

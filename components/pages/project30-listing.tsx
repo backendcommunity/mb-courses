@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -35,7 +35,12 @@ import {
   ChevronRight,
   Calendar,
   Trophy,
+  Crown,
 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { Meta, Project30, UserProject30 } from "@/lib/data";
+import { formatDate } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface Project30ListingPageProps {
   onNavigate: (path: string) => void;
@@ -44,175 +49,57 @@ interface Project30ListingPageProps {
 export function Project30ListingPage({
   onNavigate,
 }: Project30ListingPageProps) {
+  const store = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [offers, setOffers] = useState<Project30[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<UserProject30[]>();
+  const [meta, setMeta] = useState<Meta>();
+  const [activeTab, setActiveTab] = useState("all-courses");
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // Mock Project30 courses data
-  const project30Courses = [
-    {
-      id: "backend-fundamentals",
-      title: "Backend Development Fundamentals",
-      description:
-        "Master the essentials of backend development with Node.js, Express, and databases",
-      instructor: "Sarah Johnson",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "16 hours",
-      level: "Beginner",
-      category: "Backend",
-      rating: 4.8,
-      students: 12450,
-      price: 99,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["Node.js", "Express", "MongoDB", "PostgreSQL"],
-      isEnrolled: true,
-      progress: 50,
-      lastAccessed: "2 days ago",
-      highlights: [
-        "Build 30 real-world projects",
-        "Learn from industry experts",
-        "Get hands-on coding experience",
-        "Certificate upon completion",
-      ],
-    },
-    {
-      id: "fullstack-javascript",
-      title: "Full-Stack JavaScript Mastery",
-      description:
-        "Complete full-stack development course covering frontend, backend, and deployment",
-      instructor: "Mike Chen",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "20 hours",
-      level: "Intermediate",
-      category: "Full-Stack",
-      rating: 4.9,
-      students: 8920,
-      price: 149,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["React", "Node.js", "Express", "MongoDB", "AWS"],
-      isEnrolled: false,
-      progress: 0,
-      lastAccessed: null,
-      highlights: [
-        "MERN stack development",
-        "Cloud deployment strategies",
-        "Real-time applications",
-        "Production-ready projects",
-      ],
-    },
-    {
-      id: "api-development",
-      title: "API Development & Microservices",
-      description:
-        "Learn to build scalable APIs and microservices architecture",
-      instructor: "Alex Rodriguez",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "18 hours",
-      level: "Advanced",
-      category: "Backend",
-      rating: 4.7,
-      students: 5670,
-      price: 199,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["Node.js", "Docker", "Kubernetes", "Redis", "GraphQL"],
-      isEnrolled: false,
-      progress: 0,
-      lastAccessed: null,
-      highlights: [
-        "Microservices architecture",
-        "API security best practices",
-        "Performance optimization",
-        "Container orchestration",
-      ],
-    },
-    {
-      id: "mobile-backend",
-      title: "Mobile Backend Development",
-      description:
-        "Build robust backends for mobile applications with real-time features",
-      instructor: "Emma Wilson",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "15 hours",
-      level: "Intermediate",
-      category: "Mobile",
-      rating: 4.6,
-      students: 3240,
-      price: 129,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["Node.js", "Socket.io", "Firebase", "Push Notifications"],
-      isEnrolled: false,
-      progress: 0,
-      lastAccessed: null,
-      highlights: [
-        "Real-time mobile features",
-        "Push notification systems",
-        "Offline data sync",
-        "Mobile-first API design",
-      ],
-    },
-    {
-      id: "devops-fundamentals",
-      title: "DevOps & Cloud Infrastructure",
-      description:
-        "Learn deployment, monitoring, and scaling of backend applications",
-      instructor: "David Kim",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "22 hours",
-      level: "Advanced",
-      category: "DevOps",
-      rating: 4.8,
-      students: 4580,
-      price: 179,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["AWS", "Docker", "Terraform", "Jenkins", "Monitoring"],
-      isEnrolled: false,
-      progress: 0,
-      lastAccessed: null,
-      highlights: [
-        "Infrastructure as Code",
-        "CI/CD pipelines",
-        "Monitoring & logging",
-        "Auto-scaling strategies",
-      ],
-    },
-    {
-      id: "ai-backend",
-      title: "AI-Powered Backend Development",
-      description:
-        "Integrate AI and machine learning into your backend applications",
-      instructor: "Dr. Lisa Park",
-      instructorAvatar: "/placeholder.svg?height=40&width=40",
-      duration: "30 days",
-      totalVideos: 30,
-      totalDuration: "25 hours",
-      level: "Advanced",
-      category: "AI/ML",
-      rating: 4.9,
-      students: 2150,
-      price: 249,
-      thumbnail: "/placeholder.svg?height=200&width=350",
-      technologies: ["Python", "TensorFlow", "OpenAI API", "Vector Databases"],
-      isEnrolled: false,
-      progress: 0,
-      lastAccessed: null,
-      highlights: [
-        "AI API integration",
-        "Machine learning models",
-        "Vector search systems",
-        "Intelligent automation",
-      ],
-    },
-  ];
+  async function load() {
+    setLoading(true);
+    const data = await store.getProject30s();
+    setOffers(data?.offers);
+    setMeta(data?.meta);
+    setLoading(false);
+  }
+
+  useMemo(() => {
+    load();
+  }, []);
+
+  useMemo(() => {
+    async function load() {
+      const data = await store.getProject30s({
+        filters: {
+          category: selectedCategory,
+          terms: debouncedSearch,
+          level: selectedLevel,
+        },
+      });
+
+      setOffers(data?.offers);
+      setMeta(data?.meta);
+    }
+
+    load();
+  }, [debouncedSearch, selectedCategory, selectedLevel]);
+
+  useMemo(() => {
+    if (activeTab.includes("my-courses")) {
+      const load = async () => {
+        const data = await store.loadMyProject30s();
+        setEnrolledCourses(data?.data);
+      };
+      load();
+    }
+  }, [activeTab]);
+
+  if (loading) return <div>Loading...</div>;
 
   const categories = [
     { value: "all", label: "All Categories", icon: BookOpen },
@@ -231,11 +118,11 @@ export function Project30ListingPage({
   ];
 
   // Filter courses based on search and filters
-  const filteredCourses = project30Courses.filter((course) => {
+  const filteredCourses = offers.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+      course?.instructor?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || course.category === selectedCategory;
     const matchesLevel =
@@ -244,9 +131,7 @@ export function Project30ListingPage({
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
-  const enrolledCourses = project30Courses.filter(
-    (course) => course.isEnrolled
-  );
+  // const enrolledCourses = offers.filter((course) => course.isEnrolled);
 
   const getCategoryIcon = (category: string) => {
     const categoryData = categories.find((cat) => cat.value === category);
@@ -279,12 +164,12 @@ export function Project30ListingPage({
             backend development
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button variant="outline">
             <Filter className="mr-2 h-4 w-4" />
             Filters
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Search and Filters */}
@@ -328,13 +213,18 @@ export function Project30ListingPage({
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="all-courses" className="space-y-4">
+      <Tabs
+        defaultValue="all-courses"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="all-courses">
-            All Courses ({filteredCourses.length})
+            All Courses ({filteredCourses?.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="my-courses">
-            My Courses ({enrolledCourses.length})
+            My Courses ({enrolledCourses?.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="popular">Popular</TabsTrigger>
           <TabsTrigger value="new">New Releases</TabsTrigger>
@@ -342,9 +232,8 @@ export function Project30ListingPage({
 
         <TabsContent value="all-courses" className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCourses.map((course) => {
-              const CategoryIcon = getCategoryIcon(course.category);
-
+            {filteredCourses?.map((course) => {
+              const CategoryIcon = getCategoryIcon(course.category?.name);
               return (
                 <Card
                   key={course.id}
@@ -352,7 +241,7 @@ export function Project30ListingPage({
                 >
                   <div className="relative">
                     <img
-                      src={course.thumbnail || "/placeholder.svg"}
+                      src={course.banner || "/placeholder.svg"}
                       alt={course.title}
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
@@ -367,9 +256,15 @@ export function Project30ListingPage({
                     <div className="absolute top-3 right-3">
                       <Badge
                         variant="secondary"
-                        className="bg-black/70 text-white border-none"
+                        className={` text-white border-none ${
+                          course?.userProject30?.isCompleted
+                            ? "bg-green-500"
+                            : "bg-black/70"
+                        }`}
                       >
-                        ${course.price}
+                        {course?.userProject30?.isCompleted
+                          ? "Completed"
+                          : `$${course.amount}`}
                       </Badge>
                     </div>
                   </div>
@@ -379,14 +274,19 @@ export function Project30ListingPage({
                       <div className="flex items-center gap-2 mb-2">
                         <CategoryIcon className="h-4 w-4 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {course.category}
+                          {course?.category?.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">
-                          {course.rating}
-                        </span>
+                        {course.isPremium && (
+                          <Badge
+                            variant="outline"
+                            className="bg-green-100 text-green-800 border-green-200 text-xs"
+                          >
+                            <Crown className="mr-1 h-3 w-3" />
+                            Included in Pro
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <CardTitle className="text-lg leading-tight">
@@ -405,34 +305,34 @@ export function Project30ListingPage({
                       </div>
                       <div className="flex items-center gap-1">
                         <PlayCircle className="h-4 w-4" />
-                        {course.totalVideos} videos
+                        {course.totalContents} videos
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {course.students.toLocaleString()}
+                        {course?.students?.toLocaleString()}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <img
-                        src={course.instructorAvatar || "/placeholder.svg"}
-                        alt={course.instructor}
+                        src={"/placeholder.svg"}
+                        alt={course.instructor?.banner}
                         className="w-6 h-6 rounded-full"
                       />
                       <span className="text-sm text-muted-foreground">
-                        {course.instructor}
+                        {course?.instructor?.name ?? "Masteringbackend"}
                       </span>
                     </div>
 
                     <div className="flex flex-wrap gap-1">
-                      {course.technologies.slice(0, 3).map((tech) => (
+                      {course?.technologies!?.slice(0, 3).map((tech) => (
                         <Badge key={tech} variant="outline" className="text-xs">
                           {tech}
                         </Badge>
                       ))}
-                      {course.technologies.length > 3 && (
+                      {course?.technologies!?.length > 3 && (
                         <Badge variant="outline" className="text-xs">
-                          +{course.technologies.length - 3} more
+                          +{course?.technologies!?.length - 3} more
                         </Badge>
                       )}
                     </div>
@@ -445,22 +345,30 @@ export function Project30ListingPage({
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className="bg-[#F2C94C] h-2 rounded-full"
+                            className={` h-2 rounded-full ${
+                              course?.userProject30?.isCompleted
+                                ? "bg-green-500/70"
+                                : "bg-[#F2C94C]"
+                            }`}
                             style={{ width: `${course.progress}%` }}
                           ></div>
                         </div>
                         <Button
                           className="w-full"
-                          onClick={() => onNavigate(`/project30/${course.id}`)}
+                          onClick={() =>
+                            onNavigate(`/project30/${course.slug}`)
+                          }
                         >
-                          Continue Learning
+                          {course?.userProject30?.isCompleted
+                            ? "Review Learning"
+                            : "Continue Learning"}
                           <ChevronRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
                       <Button
                         className="w-full"
-                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                        onClick={() => onNavigate(`/project30/${course.slug}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -474,25 +382,27 @@ export function Project30ListingPage({
         </TabsContent>
 
         <TabsContent value="my-courses" className="space-y-4">
-          {enrolledCourses.length > 0 ? (
+          {enrolledCourses?.length! > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {enrolledCourses.map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category);
+              {enrolledCourses?.map((course) => {
+                const CategoryIcon = getCategoryIcon(
+                  course?.offer?.category?.name
+                );
 
                 return (
                   <Card
-                    key={course.id}
+                    key={course?.offer?.id}
                     className="group hover:shadow-lg transition-all duration-200"
                   >
                     <div className="relative">
                       <img
-                        src={course.thumbnail || "/placeholder.svg"}
-                        alt={course.title}
+                        src={course?.offer?.banner || "/placeholder.svg"}
+                        alt={course?.offer?.title}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
                       <div className="absolute top-3 left-3">
                         <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Enrolled
+                          {course?.isCompleted ? "Completed" : "Enrolled"}
                         </Badge>
                       </div>
                     </div>
@@ -501,14 +411,14 @@ export function Project30ListingPage({
                       <div className="flex items-center gap-2 mb-2">
                         <CategoryIcon className="h-4 w-4 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {course.category}
+                          {course?.offer?.category?.name}
                         </span>
                       </div>
                       <CardTitle className="text-lg leading-tight">
-                        {course.title}
+                        {course?.offer?.title}
                       </CardTitle>
                       <CardDescription>
-                        Last accessed: {course.lastAccessed}
+                        Last accessed: {formatDate(course?.updatedAt + "")}
                       </CardDescription>
                     </CardHeader>
 
@@ -520,17 +430,25 @@ export function Project30ListingPage({
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className="bg-[#F2C94C] h-2 rounded-full"
+                            className={` h-2 rounded-full ${
+                              course?.isCompleted
+                                ? "bg-green-500"
+                                : "bg-[#F2C94C]"
+                            }`}
                             style={{ width: `${course.progress}%` }}
                           ></div>
                         </div>
                       </div>
 
                       <Button
-                        className="w-full"
-                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                        className={`w-full`}
+                        onClick={() =>
+                          onNavigate(`/project30/${course?.offer?.slug}`)
+                        }
                       >
-                        Continue Learning
+                        {course?.isCompleted
+                          ? "Review Learning"
+                          : "Continue Learning"}
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
@@ -558,11 +476,11 @@ export function Project30ListingPage({
 
         <TabsContent value="popular" className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {project30Courses
+            {offers
               .sort((a, b) => b.students - a.students)
               .slice(0, 6)
               .map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category);
+                const CategoryIcon = getCategoryIcon(course.category?.name);
 
                 return (
                   <Card
@@ -571,7 +489,7 @@ export function Project30ListingPage({
                   >
                     <div className="relative">
                       <img
-                        src={course.thumbnail || "/placeholder.svg"}
+                        src={course.banner || "/placeholder.svg"}
                         alt={course.title}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
@@ -588,15 +506,15 @@ export function Project30ListingPage({
                         <div className="flex items-center gap-2 mb-2">
                           <CategoryIcon className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
-                            {course.category}
+                            {course.category?.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-sm font-medium">
                             {course.rating}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                       <CardTitle className="text-lg leading-tight">
                         {course.title}
@@ -610,7 +528,7 @@ export function Project30ListingPage({
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          {course.students.toLocaleString()} students
+                          {course?.students?.toLocaleString()} students
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
@@ -620,7 +538,7 @@ export function Project30ListingPage({
 
                       <Button
                         className="w-full"
-                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                        onClick={() => onNavigate(`/project30/${course.slug}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -634,11 +552,11 @@ export function Project30ListingPage({
 
         <TabsContent value="new" className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {project30Courses
+            {offers
               .slice(-3)
               .reverse()
               .map((course) => {
-                const CategoryIcon = getCategoryIcon(course.category);
+                const CategoryIcon = getCategoryIcon(course.category?.name);
 
                 return (
                   <Card
@@ -647,7 +565,7 @@ export function Project30ListingPage({
                   >
                     <div className="relative">
                       <img
-                        src={course.thumbnail || "/placeholder.svg"}
+                        src={course.banner || "/placeholder.svg"}
                         alt={course.title}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
@@ -663,15 +581,15 @@ export function Project30ListingPage({
                         <div className="flex items-center gap-2 mb-2">
                           <CategoryIcon className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
-                            {course.category}
+                            {course.category?.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-sm font-medium">
                             {course.rating}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                       <CardTitle className="text-lg leading-tight">
                         {course.title}
@@ -695,7 +613,7 @@ export function Project30ListingPage({
 
                       <Button
                         className="w-full"
-                        onClick={() => onNavigate(`/project30/${course.id}`)}
+                        onClick={() => onNavigate(`/project30/${course.slug}`)}
                       >
                         View Course
                         <ChevronRight className="ml-2 h-4 w-4" />

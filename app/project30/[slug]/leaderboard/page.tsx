@@ -2,19 +2,15 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Project30LeaderboardPage } from "@/components/pages/project30-leaderboard";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-interface Project30LeaderboardPageRouteProps {
-  params: {
-    courseId: string;
-    dayNumber: string;
-  };
-}
+type Project30LeaderboardPageRouteProps = {
+  slug: string;
+};
 
-export default function Project30LeaderboardPageRoute({
-  params,
-}: Project30LeaderboardPageRouteProps) {
+export default function Project30LeaderboardPageRoute() {
   const router = useRouter();
+  const { slug } = useParams() as Project30LeaderboardPageRouteProps;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -22,7 +18,7 @@ export default function Project30LeaderboardPageRoute({
 
   return (
     <DashboardLayout>
-      <Project30LeaderboardPage onNavigate={handleNavigate} />
+      <Project30LeaderboardPage slug={slug} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }
