@@ -63,8 +63,8 @@ export function NavigationBar({
   const user = useUser();
 
   // Mock subscription data
-  const subscription = user.isPremium
-    ? user.subscription
+  const subscription = user?.isPremium
+    ? user?.subscription
     : {
         name: "Free",
       };

@@ -61,11 +61,15 @@ export function Project30ListingPage({
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   async function load() {
-    setLoading(true);
-    const data = await store.getProject30s();
-    setOffers(data?.offers);
-    setMeta(data?.meta);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const data = await store.getProject30s();
+      setOffers(data?.offers);
+      setMeta(data?.meta);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
   }
 
   useMemo(() => {
