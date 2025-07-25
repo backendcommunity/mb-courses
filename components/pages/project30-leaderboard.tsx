@@ -180,6 +180,7 @@ export function Project30LeaderboardPage({
             </Card>
 
             {/* 1st Place */}
+
             <Card className="border-2 border-amber-400 -mt-4">
               <CardHeader className="text-center pb-2">
                 <div className="mx-auto mb-2">
@@ -187,26 +188,28 @@ export function Project30LeaderboardPage({
                 </div>
                 <CardTitle className="text-xl">1st Place</CardTitle>
               </CardHeader>
-              <CardContent className="text-center pt-0">
-                <Avatar className="h-20 w-20 mx-auto mb-2">
-                  <AvatarImage
-                    src={topUsers?.[0]?.avatar || "/placeholder.svg"}
-                    alt={topUsers?.[0]?.name}
-                  />
-                  <AvatarFallback>
-                    {topUsers?.[0]?.name.substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <h3 className="font-medium text-lg">{topUsers?.[0]?.name}</h3>
-                <div className="mt-2 text-sm text-muted-foreground">
-                  <div>Projects: {topUsers?.[0]?.projects}</div>
-                  <div>Streak: {topUsers?.[0]?.streak} days</div>
-                  <div>MB: {topUsers?.[0]?.mb}</div>
-                </div>
-                <Badge className="mt-2 bg-amber-400 text-amber-950">
-                  Champion
-                </Badge>
-              </CardContent>
+              {topUsers?.[0] && (
+                <CardContent className="text-center pt-0">
+                  <Avatar className="h-20 w-20 mx-auto mb-2">
+                    <AvatarImage
+                      src={topUsers?.[0]?.avatar || "/placeholder.svg"}
+                      alt={topUsers?.[0]?.name}
+                    />
+                    <AvatarFallback>
+                      {topUsers?.[0]?.name.substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-medium text-lg">{topUsers?.[0]?.name}</h3>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    <div>Projects: {topUsers?.[0]?.projects}</div>
+                    <div>Streak: {topUsers?.[0]?.streak} days</div>
+                    <div>MB: {topUsers?.[0]?.mb}</div>
+                  </div>
+                  <Badge className="mt-2 bg-amber-400 text-amber-950">
+                    Champion
+                  </Badge>
+                </CardContent>
+              )}
             </Card>
 
             {/* 3rd Place */}
@@ -261,86 +264,98 @@ export function Project30LeaderboardPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Leaderboard Table */}
-                <div className="rounded-md border">
-                  <div className="grid grid-cols-12 gap-2 p-4 font-medium border-b bg-muted">
-                    <div className="col-span-1">Rank</div>
-                    <div className="col-span-5">User</div>
-                    <div className="col-span-2 text-center">Projects</div>
-                    <div className="col-span-2 text-center">Streak</div>
-                    <div className="col-span-2 text-center">MB</div>
-                  </div>
-
-                  {/* Leaderboard Entries */}
-                  {leaderboards?.map((user) => (
-                    <div
-                      key={user.id}
-                      className="grid grid-cols-12 gap-2 p-4 border-b"
-                    >
-                      <div className="col-span-1 font-medium">#{user.rank}</div>
-                      <div className="col-span-5 flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={user.avatar || "/placeholder.svg"}
-                            alt={user.name}
-                          />
-                          <AvatarFallback>
-                            {user.name.substring(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{user.name}</span>
-                      </div>
-                      <div className="col-span-2 text-center">
-                        {user.projects}
-                      </div>
-                      <div className="col-span-2 text-center">
-                        {user.streak} days
-                      </div>
-                      <div className="col-span-2 text-center">{user.mb}</div>
+              {leaderboards.length <= 0 && (
+                <div className="text-center p-8">
+                  <p className="text-muted-foreground">
+                    Weekly leaderboard resets every day at midnight
+                  </p>
+                  <p className="mt-2">Check back for the overall rankings!</p>
+                </div>
+              )}
+              {leaderboards.length >= 1 && (
+                <div className="space-y-4">
+                  {/* Leaderboard Table */}
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-12 gap-2 p-4 font-medium border-b bg-muted">
+                      <div className="col-span-1">Rank</div>
+                      <div className="col-span-5">User</div>
+                      <div className="col-span-2 text-center">Projects</div>
+                      <div className="col-span-2 text-center">Streak</div>
+                      <div className="col-span-2 text-center">MB</div>
                     </div>
-                  ))}
 
-                  {!isTop10(currentUser?.id!) && (
-                    <>
-                      {/* Ellipsis to indicate gap */}
-                      <div className="grid grid-cols-12 gap-2 p-4 border-b text-center">
-                        <div className="col-span-12">...</div>
-                      </div>
-
-                      {/* Current User */}
-                      <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50">
+                    {/* Leaderboard Entries */}
+                    {leaderboards?.map((user) => (
+                      <div
+                        key={user.id}
+                        className="grid grid-cols-12 gap-2 p-4 border-b"
+                      >
                         <div className="col-span-1 font-medium">
-                          #{currentUser?.rank}
+                          #{user.rank}
                         </div>
                         <div className="col-span-5 flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarImage
-                              src={currentUser?.avatar || "/placeholder.svg"}
-                              alt={currentUser?.name}
+                              src={user.avatar || "/placeholder.svg"}
+                              alt={user.name}
                             />
                             <AvatarFallback>
-                              {currentUser?.name.substring(0, 2)}
+                              {user.name.substring(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">
-                            {currentUser?.name}
-                          </span>
+                          <span>{user.name}</span>
                         </div>
                         <div className="col-span-2 text-center">
-                          {currentUser?.projects}
+                          {user.projects}
                         </div>
                         <div className="col-span-2 text-center">
-                          {currentUser?.streak} days
+                          {user.streak} days
                         </div>
-                        <div className="col-span-2 text-center">
-                          {currentUser?.mb}
-                        </div>
+                        <div className="col-span-2 text-center">{user.mb}</div>
                       </div>
-                    </>
-                  )}
+                    ))}
+
+                    {!isTop10(currentUser?.id!) && (
+                      <>
+                        {/* Ellipsis to indicate gap */}
+                        <div className="grid grid-cols-12 gap-2 p-4 border-b text-center">
+                          <div className="col-span-12">...</div>
+                        </div>
+
+                        {/* Current User */}
+                        <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50">
+                          <div className="col-span-1 font-medium">
+                            #{currentUser?.rank}
+                          </div>
+                          <div className="col-span-5 flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={currentUser?.avatar || "/placeholder.svg"}
+                                alt={currentUser?.name}
+                              />
+                              <AvatarFallback>
+                                {currentUser?.name.substring(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">
+                              {currentUser?.name}
+                            </span>
+                          </div>
+                          <div className="col-span-2 text-center">
+                            {currentUser?.projects}
+                          </div>
+                          <div className="col-span-2 text-center">
+                            {currentUser?.streak} days
+                          </div>
+                          <div className="col-span-2 text-center">
+                            {currentUser?.mb}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

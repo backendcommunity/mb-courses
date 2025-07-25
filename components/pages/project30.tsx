@@ -1565,7 +1565,7 @@ export function Project30Page({
                                     dangerouslySetInnerHTML={{
                                       __html: course?.summary,
                                     }}
-                                    className="text-sm text-muted-foreground"
+                                    className="text-sm text-muted-foreground [&>*>span]:!text-white [&>p]:text-white"
                                   ></article>
                                 </div>
                                 <div className="flex items-center gap-2">

@@ -530,9 +530,9 @@ export function CourseDetailPage({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span>Your Progress</span>
-                    <span>{courseProgress ?? 0}%</span>
+                    <span>{course.progress ?? 0}%</span>
                   </div>
-                  <Progress value={courseProgress ?? 0} className="h-2" />
+                  <Progress value={course.progress ?? 0} className="h-2" />
                   <Button className="w-full" onClick={handleContinueLearning}>
                     <Play className="mr-2 h-4 w-4" />
                     Continue Learning

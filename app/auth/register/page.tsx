@@ -74,6 +74,12 @@ export default function RegisterPage() {
     return "Strong";
   };
 
+  const ref =
+    searchParams?.get("ref") ??
+    searchParams?.get("source") ??
+    searchParams?.get("utm_source");
+  const redirect = searchParams?.get("redirect");
+
   const handleSubmit = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
@@ -87,8 +93,6 @@ export default function RegisterPage() {
       }
 
       setIsLoading(true);
-
-      const query: any = searchParams?.get("query");
 
       // Simulate API call
       const isRegistered = await auth.register({
@@ -168,9 +172,8 @@ export default function RegisterPage() {
         <div className="glass-card backdrop-blur-xl bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-2xl p-8 shadow-2xl">
           {/* Social Registration Buttons */}
           <div className="space-y-3 mb-6">
-            <button
-              onClick={() => handleSocialRegister("github")}
-              disabled={isLoading}
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL}/auth/github?ref=${ref}&redirect=${redirect}`}
               className="w-full flex items-center justify-center space-x-3 bg-[#24292e] hover:bg-[#1a1e22] text-white py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
@@ -179,12 +182,11 @@ export default function RegisterPage() {
                 <Github className="w-5 h-5" />
               )}
               <span>Continue with GitHub</span>
-            </button>
+            </a>
 
-            <button
-              onClick={() => handleSocialRegister("google")}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 dark:bg-[#1E293B] dark:hover:bg-[#334155] text-[#0E1F33] dark:text-[#F1F5F9] py-3 px-4 rounded-lg border border-[#97C3CC]/20 dark:border-[#475569]/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google?ref=${ref}&redirect=${redirect}`}
+              className="w-full flex items-center justify-center space-x-3 bg-[#24292e] hover:bg-[#1a1e22] text-white py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -209,7 +211,7 @@ export default function RegisterPage() {
                 </svg>
               )}
               <span>Continue with Google</span>
-            </button>
+            </a>
           </div>
 
           {/* Divider */}

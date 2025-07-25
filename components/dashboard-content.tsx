@@ -295,9 +295,9 @@ export function DashboardContent({}: DashboardContentProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {userRoadmaps.map((userRoadmap: any) => {
+            {userRoadmaps.map((userRoadmap: any, i:number) => {
               return (
-                <>
+                <div className="space-y-4" key={i}>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Overall Progress</span>
@@ -343,7 +343,7 @@ export function DashboardContent({}: DashboardContentProps) {
                     Continue Learning Path
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </>
+                </div>
               );
             })}
           </CardContent>
