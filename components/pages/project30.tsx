@@ -647,7 +647,7 @@ export function Project30Page({
   const completedItems = userProject30?.userOfferItems ?? [];
   const completedLessions = userProject30?.totalLessonsCompleted ?? 0;
   const nextLessonId = userProject30?.nextLesson ?? firstLesson?.id;
-  const nextWeek = userProject30?.nextWeek ?? chapters[0].id;
+  const nextWeek = userProject30?.nextWeek ?? chapters?.[0]?.id;
   const nextLessonWeek = chapters.find((ch) => ch.id === nextWeek);
   const nextLesson =
     nextLessonWeek?.videos?.find((v: Video) => v.id === nextLessonId) ??
@@ -1188,9 +1188,9 @@ export function Project30Page({
                           Day {currentDay! + 1}: {nextLesson?.title}
                         </p>
                         <Badge variant={"secondary"} className="text-xs">
-                          {nextLesson.completed
+                          {nextLesson?.completed
                             ? "Completed"
-                            : !nextLesson.completed
+                            : !nextLesson?.completed
                             ? "In Progress"
                             : project30?.isEnrolled
                             ? "Locked"

@@ -142,7 +142,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                 {meta?.netTotal}
               </div>
               <p className="text-xs text-muted-foreground">
-                +2 from last month
+                +{user?.lastMonthCourses ?? 0} from last month
               </p>
             </CardContent>
           </Card>
@@ -155,10 +155,10 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">
-                {user.numberOfCoursesCompleted}
+                {user?.numberOfCoursesCompleted}
               </div>
               <p className="text-xs text-muted-foreground">
-                67% completion rate
+                +{user?.lastMonthCompletedCourses ?? 0} from last month
               </p>
             </CardContent>
           </Card>
@@ -171,7 +171,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">
-                {user.numberOfCoursesInProgress}
+                {user?.numberOfCoursesInProgress}
               </div>
               <p className="text-xs text-muted-foreground">Active courses</p>
             </CardContent>
@@ -184,7 +184,9 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
               <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg md:text-2xl font-bold">2.5w</div>
+              <div className="text-lg md:text-2xl font-bold">
+                {user?.averageCourseTime}w
+              </div>
               <p className="text-xs text-muted-foreground">Per course</p>
             </CardContent>
           </Card>
@@ -225,9 +227,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
               <TabsTrigger value="all-courses">
                 All Courses ({meta?.total})
               </TabsTrigger>
-              <TabsTrigger value="my-courses">
-                My Courses ({userCourseMeta?.netTotal})
-              </TabsTrigger>
+              <TabsTrigger value="my-courses">My Courses</TabsTrigger>
               <TabsTrigger value="popular">Popular</TabsTrigger>
               <TabsTrigger value="new">New Releases</TabsTrigger>
             </TabsList>
@@ -449,7 +449,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 md:h-4 md:w-4" />
-                        {userCourse?.course?.students?.toLocaleString()}
+                        {userCourse?.course?.students}
                       </div>
                     </div>
 

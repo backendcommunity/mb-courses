@@ -732,65 +732,67 @@ export function RoadmapDetailPage({
                           Courses
                         </h4>
                         <div className="space-y-2">
-                          {milestone?.courses?.map((course: any) => (
-                            <Card key={course.id} className="overflow-hidden">
-                              <div className="flex flex-col md:flex-row">
-                                <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
-                                  <img
-                                    src={course?.banner || "/placeholder.svg"}
-                                    alt={course?.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div className="flex-1 p-4">
-                                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                    <div>
-                                      <h5 className="font-medium">
-                                        {course?.title}
-                                      </h5>
-                                      <article
-                                        className="text-sm text-muted-foreground"
-                                        dangerouslySetInnerHTML={{
-                                          __html: course?.summary,
+                          {milestone?.courses?.map((course: any) => {
+                            return (
+                              <Card key={course.id} className="overflow-hidden">
+                                <div className="flex flex-col md:flex-row">
+                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                    <img
+                                      src={course?.banner || "/placeholder.svg"}
+                                      alt={course?.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 p-4">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                      <div>
+                                        <h5 className="font-medium">
+                                          {course?.title}
+                                        </h5>
+                                        <article
+                                          className="text-sm text-muted-foreground [&>p]:!text-white [&>*>span]:!text-white"
+                                          dangerouslySetInnerHTML={{
+                                            __html: course?.summary,
+                                          }}
+                                        ></article>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline">
+                                          {course.type}
+                                        </Badge>
+                                        <Badge variant="outline">
+                                          {course?.totalDuration ?? 0}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <PlayCircle className="h-4 w-4 text-blue-600" />
+                                        <span className="text-sm">
+                                          {course.chapters?.length} chapters
+                                        </span>
+                                      </div>
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onNavigate?.(
+                                            routes.roadmapCoursePreview(
+                                              roadmap?.slug!,
+                                              milestone.id,
+                                              course?.slug
+                                            )
+                                          );
                                         }}
-                                      ></article>
+                                      >
+                                        View Course
+                                      </Button>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant="outline">
-                                        {course.type}
-                                      </Badge>
-                                      <Badge variant="outline">
-                                        {course?.totalDuration ?? 0}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  <div className="mt-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <PlayCircle className="h-4 w-4 text-blue-600" />
-                                      <span className="text-sm">
-                                        {course.chapters?.length} chapters
-                                      </span>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onNavigate?.(
-                                          routes.roadmapCoursePreview(
-                                            roadmap?.slug!,
-                                            milestone.id,
-                                            course?.slug
-                                          )
-                                        );
-                                      }}
-                                    >
-                                      View Course
-                                    </Button>
                                   </div>
                                 </div>
-                              </div>
-                            </Card>
-                          ))}
+                              </Card>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
