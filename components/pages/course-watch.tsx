@@ -78,10 +78,7 @@ export function CourseWatchPage({
     : chapter?.videos[0];
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
-  // const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  // const [duration] = useState(1800); // 30 minutes in seconds
-  // const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
   const [code, setCode] = useState(codeSample);
@@ -514,9 +511,12 @@ export function CourseWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">
-                      {currentVideo?.summary}
-                    </p>
+                    <article
+                      className="text-muted-foreground"
+                      dangerouslySetInnerHTML={{
+                        __html: currentVideo?.summary,
+                      }}
+                    ></article>
                   </div>
                 </CardContent>
                 <CardContent>
@@ -743,9 +743,9 @@ export function CourseWatchPage({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{calculateProgess()}%</span>
+                  <span>{Math.floor(course?.progress ?? 0)}%</span>
                 </div>
-                <Progress value={calculateProgess()} className="h-2" />
+                <Progress value={course?.progress ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
                 {

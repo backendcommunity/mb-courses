@@ -337,7 +337,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs md:text-sm">
                           <span>Progress</span>
-                          <span>{course?.progress ?? 0}%</span>
+                          <span>{Math.floor(course?.progress ?? 0)}%</span>
                         </div>
                         <Progress
                           value={course?.progress ?? 0}

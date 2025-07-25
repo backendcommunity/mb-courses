@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { RoadmapCourseWatchPage } from "@/components/pages/roadmap-course-watch";
+import { RoadmapCourseWatchPage } from "@/components/pages/x_roadmap-course-watch";
 import { useParams, useRouter } from "next/navigation";
 
 type RoadmapVideoPageRouteProps = {

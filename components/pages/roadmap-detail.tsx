@@ -34,6 +34,8 @@ import {
   BarChart3,
   Loader2,
   ArrowLeft,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   Chapter,
@@ -68,6 +70,7 @@ export function RoadmapDetailPage({
   const [loading, setLoading] = useState(false);
   const [celebration, setCelebration] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -92,10 +95,8 @@ export function RoadmapDetailPage({
       });
     });
   };
-
-  if (loading && !roadmap) {
-    return <div className="p-6">Roadmap not found</div>;
-  }
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (!roadmap) return <div className="p-6">Roadmap not found</div>;
 
   const handleEnroll = async () => {
     if (!user.isPremium && !user?.subscription) {
@@ -203,7 +204,13 @@ export function RoadmapDetailPage({
           <h1 className="text-3xl font-bold tracking-tight">
             {roadmap?.title}
           </h1>
-          <p className="text-muted-foreground">{roadmap?.summary}</p>
+
+          <article
+            dangerouslySetInnerHTML={{
+              __html: roadmap?.summary!,
+            }}
+            className="text-muted-foreground"
+          ></article>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           {!roadmap?.enrolled ? (
@@ -270,7 +277,7 @@ export function RoadmapDetailPage({
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
+          {/* <TabsTrigger value="skills">Skills</TabsTrigger> */}
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
           <TabsTrigger value="certificate">Certificate</TabsTrigger>
         </TabsList>
@@ -282,9 +289,46 @@ export function RoadmapDetailPage({
               <CardTitle>About This Roadmap</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="prose max-w-none">
-                <p>{roadmap?.description}</p>
-              </div>
+              <Card>
+                <CardContent>
+                  <div
+                    className={`space-y-4 ${
+                      isDescriptionExpanded ? "" : "line-clamp-3"
+                    }`}
+                  >
+                    {roadmap?.description
+                      ?.split("\n\n")
+                      .map((paragraph: string, index: number) => (
+                        <article
+                          dangerouslySetInnerHTML={{ __html: paragraph }}
+                          key={index}
+                          className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                        >
+                          {/* {paragraph} */}
+                        </article>
+                      ))}
+                  </div>
+                  {!isDescriptionExpanded && (
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto mt-2"
+                      onClick={() => setIsDescriptionExpanded(true)}
+                    >
+                      Read more
+                    </Button>
+                  )}
+
+                  {isDescriptionExpanded && (
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto mt-2"
+                      onClick={() => setIsDescriptionExpanded(false)}
+                    >
+                      Show less
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -472,9 +516,12 @@ export function RoadmapDetailPage({
                         <CardTitle className="text-xl">
                           {milestone.title}
                         </CardTitle>
-                        <CardDescription>
-                          {milestone.description}
-                        </CardDescription>
+                        <CardDescription
+                          className="text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: milestone?.description,
+                          }}
+                        ></CardDescription>
                       </div>
                     </div>
                     <div className="gap-2 flex">
@@ -701,9 +748,12 @@ export function RoadmapDetailPage({
                                       <h5 className="font-medium">
                                         {course?.title}
                                       </h5>
-                                      <p className="text-sm text-muted-foreground">
-                                        {course?.summary}
-                                      </p>
+                                      <article
+                                        className="text-sm text-muted-foreground"
+                                        dangerouslySetInnerHTML={{
+                                          __html: course?.summary,
+                                        }}
+                                      ></article>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <Badge variant="outline">

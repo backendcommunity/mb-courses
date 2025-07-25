@@ -296,7 +296,13 @@ export function CourseDetailPage({
           <h1 className="text-3xl font-bold tracking-tight">{course?.title}</h1>
 
           {/* Short Description */}
-          <p className="text-lg text-muted-foreground">{course?.summary}</p>
+
+          <article
+            className="text-lg text-muted-foreground"
+            dangerouslySetInnerHTML={{
+              __html: course?.summary!,
+            }}
+          ></article>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">

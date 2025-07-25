@@ -77,10 +77,11 @@ export function Project30Page({
   const [starting, setStarting] = useState(false);
   const [celebration, setCelebration] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  let dayCount = 1;
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
+  let dayCount = 1;
   const userProject30 = project30?.userProject30;
   const currentDay = userProject30?.currentDay ?? 0;
   const nextDay = userProject30?.isCompleted ? currentDay : currentDay + 1;
@@ -680,9 +681,46 @@ export function Project30Page({
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground text-sm md:text-base">
-            {project30.description}
-          </p>
+          {/* <Card> */}
+          <div>
+            <div
+              className={`space-y-4 ${
+                isDescriptionExpanded ? "" : "line-clamp-3"
+              }`}
+            >
+              {project30?.description
+                ?.split("\n\n")
+                .map((paragraph: string, index: number) => (
+                  <article
+                    dangerouslySetInnerHTML={{ __html: paragraph }}
+                    key={index}
+                    className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                  >
+                    {/* {paragraph} */}
+                  </article>
+                ))}
+            </div>
+            {!isDescriptionExpanded && (
+              <Button
+                variant="link"
+                className="p-0 h-auto mt-2"
+                onClick={() => setIsDescriptionExpanded(true)}
+              >
+                Read more
+              </Button>
+            )}
+
+            {isDescriptionExpanded && (
+              <Button
+                variant="link"
+                className="p-0 h-auto mt-2"
+                onClick={() => setIsDescriptionExpanded(false)}
+              >
+                Show less
+              </Button>
+            )}
+          </div>
+          {/* </Card> */}
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
@@ -928,9 +966,13 @@ export function Project30Page({
                         <h3 className="font-semibold text-base md:text-lg">
                           {nextLesson?.title}
                         </h3>
-                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                          {nextLesson?.summary}
-                        </p>
+
+                        <article
+                          dangerouslySetInnerHTML={{
+                            __html: nextLesson?.summary,
+                          }}
+                          className="text-xs md:text-sm text-muted-foreground mt-1"
+                        ></article>
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
                           <div className="flex items-center gap-1">
@@ -998,9 +1040,13 @@ export function Project30Page({
                       <h3 className="font-semibold text-base md:text-lg">
                         {firstLesson?.title}
                       </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                        {firstLesson?.summary}
-                      </p>
+
+                      <article
+                        dangerouslySetInnerHTML={{
+                          __html: firstLesson?.summary,
+                        }}
+                        className="text-xs md:text-sm text-muted-foreground mt-1"
+                      ></article>
 
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
                         <div className="flex items-center gap-1">
@@ -1107,9 +1153,12 @@ export function Project30Page({
                               : "Premium"}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {lesson?.video?.summary}
-                        </p>
+                        <article
+                          dangerouslySetInnerHTML={{
+                            __html: lesson?.video?.summary,
+                          }}
+                          className="text-xs text-muted-foreground"
+                        ></article>
                       </div>
                       <Button
                         size="sm"
@@ -1148,9 +1197,12 @@ export function Project30Page({
                             : "Premium"}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {nextLesson?.summary}
-                      </p>
+                      <article
+                        dangerouslySetInnerHTML={{
+                          __html: nextLesson?.summary,
+                        }}
+                        className="text-xs text-muted-foreground"
+                      ></article>
                     </div>
                     <Button
                       size="sm"
@@ -1351,9 +1403,13 @@ export function Project30Page({
                           <h3 className="font-semibold">
                             Week {i + 1}: {chapter?.title + ""}
                           </h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            {chapter?.summary}
-                          </p>
+
+                          <article
+                            dangerouslySetInnerHTML={{
+                              __html: chapter?.summary,
+                            }}
+                            className="text-xs text-muted-foreground"
+                          ></article>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
@@ -1426,9 +1482,12 @@ export function Project30Page({
                                 <h4 className="font-medium text-sm md:text-base">
                                   {video.title}
                                 </h4>
-                                <p className="text-xs md:text-sm text-muted-foreground">
-                                  {video.description}
-                                </p>
+                                <article
+                                  dangerouslySetInnerHTML={{
+                                    __html: video?.description,
+                                  }}
+                                  className="text-xs text-muted-foreground"
+                                ></article>
                                 <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-muted-foreground">
                                   <div className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
@@ -1502,9 +1561,12 @@ export function Project30Page({
                                   <h5 className="font-medium">
                                     {course?.title}
                                   </h5>
-                                  <p className="text-sm text-muted-foreground">
-                                    {course?.summary}
-                                  </p>
+                                  <article
+                                    dangerouslySetInnerHTML={{
+                                      __html: course?.summary,
+                                    }}
+                                    className="text-sm text-muted-foreground"
+                                  ></article>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline">{course.type}</Badge>
@@ -1562,9 +1624,13 @@ export function Project30Page({
                                     <h5 className="font-medium">
                                       {video?.title}
                                     </h5>
-                                    <p className="text-sm text-muted-foreground">
-                                      {video?.summary}
-                                    </p>
+
+                                    <article
+                                      dangerouslySetInnerHTML={{
+                                        __html: video?.summary,
+                                      }}
+                                      className="text-xs text-muted-foreground"
+                                    ></article>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Badge variant="outline">
@@ -1627,9 +1693,13 @@ export function Project30Page({
                                     <h5 className="font-medium">
                                       {resource.title}
                                     </h5>
-                                    <p className="text-sm text-muted-foreground">
-                                      {resource.summary}
-                                    </p>
+
+                                    <article
+                                      dangerouslySetInnerHTML={{
+                                        __html: resource?.summary,
+                                      }}
+                                      className="text-xs text-muted-foreground"
+                                    ></article>
                                   </div>
                                   {/* <div className="flex items-center gap-2">
                                     <Badge variant="outline">

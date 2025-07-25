@@ -231,7 +231,13 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
           <h1 className="text-3xl font-bold tracking-tight">{course?.title}</h1>
 
           {/* Short Description */}
-          <p className="text-lg text-muted-foreground">{course?.summary}</p>
+
+          <article
+            className="text-lg text-muted-foreground"
+            dangerouslySetInnerHTML={{
+              __html: course?.summary!,
+            }}
+          ></article>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -380,7 +386,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span>Your Progress</span>
-                    <span>{course?.progress ?? 0}%</span>
+                    <span>{Math.floor(course?.progress ?? 0)}%</span>
                   </div>
                   <Progress value={course?.progress ?? 0} className="h-2" />
                   <Button className="w-full" onClick={handleContinueLearning}>
@@ -498,7 +504,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Progress to Certificate</span>
-                      <span>{course?.progress}%</span>
+                      <span>{Math.floor(course?.progress)}%</span>
                     </div>
                     <Progress value={course?.progress} className="h-2" />
                   </div>

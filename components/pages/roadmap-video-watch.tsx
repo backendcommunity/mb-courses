@@ -81,12 +81,9 @@ export function RoadmapVideoWatchPage({
   const user = useUser();
   const path = usePathname();
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   const [roadmap, setRoadmap] = useState<Roadmap>();
   const [userCourse, setUserCourse] = useState<UserCourse>();
   const [course, setCourse] = useState<Course>();
-  const [duration] = useState(2400); // 40 minutes in seconds
   const [code, setCode] = useState(codeSample);
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
@@ -492,7 +489,7 @@ export function RoadmapVideoWatchPage({
                 Share
               </Button>
               {video.type === "VIDEO" && (
-                <Button variant="outline" size="sm">
+                <Button disabled={true} variant="outline" size="sm">
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
@@ -576,7 +573,12 @@ export function RoadmapVideoWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">{video?.summary}</p>
+                    <article
+                      className="text-muted-foreground"
+                      dangerouslySetInnerHTML={{
+                        __html: video?.summary!,
+                      }}
+                    ></article>
                   </div>
                 </CardContent>
                 <CardContent>
@@ -590,7 +592,7 @@ export function RoadmapVideoWatchPage({
                             <span className="border-t flex-1"></span>
                           </div>
                           <p
-                            className="text-muted-foreground"
+                            className="text-muted-foreground [&>*>span]:!text-white"
                             dangerouslySetInnerHTML={{
                               __html:
                                 video?.description ?? nextChapter?.description,

@@ -61,7 +61,9 @@ export function RoadmapWatchPage({
     setLoading(false);
   }, [slug]);
 
-  if (loading && !roadmap) {
+  if (loading) return <div>loading...</div>;
+
+  if (!roadmap) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -169,7 +171,12 @@ export function RoadmapWatchPage({
         <div className="space-y-4">
           <div className="p-3 bg-blue-50 dark:bg-gray-800 rounded-lg">
             <h4 className="font-medium text-sm">{next?.title}</h4>
-            <p className="text-xs text-muted-foreground">{next?.summary}</p>
+            <article
+              className="text-xs text-muted-foreground"
+              dangerouslySetInnerHTML={{
+                __html: next?.summary!,
+              }}
+            ></article>
             <div className="flex items-center gap-2 mt-2">
               <Code2 className="h-3 w-3 text-green-600" />
               <span className="text-xs capitalize">
@@ -219,9 +226,12 @@ export function RoadmapWatchPage({
             <Target className="h-5 w-5" />
             Current Milestone: {milestone?.title}
           </CardTitle>
-          <CardDescription className="text-blue-100">
-            {milestone?.description}
-          </CardDescription>
+          <CardDescription
+            dangerouslySetInnerHTML={{
+              __html: milestone?.description!,
+            }}
+            className="text-blue-100"
+          ></CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

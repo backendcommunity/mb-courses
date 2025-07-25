@@ -10,18 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  CheckCircle2,
-  Circle,
-  Target,
-  TrendingUp,
-  Clock,
-  Award,
-} from "lucide-react";
+import { CheckCircle2, Circle, Target, Clock, Award } from "lucide-react";
 import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
-import { getRoadmaps, Roadmap } from "@/lib/data";
+import { Roadmap } from "@/lib/data";
 
 interface RoadmapsPageProps {
   onNavigate?: (route: string) => void;
@@ -29,7 +22,6 @@ interface RoadmapsPageProps {
 
 export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
   const store = useAppStore();
-  const road = getRoadmaps();
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [currentRoadmap, setCurrentRoadmap] = useState<Roadmap>();
   const [loading, setLoading] = useState(false);
@@ -120,7 +112,12 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>{roadmap.title}</CardTitle>
-                <CardDescription>{roadmap.summary}</CardDescription>
+                <CardDescription
+                  className="pt-1"
+                  dangerouslySetInnerHTML={{
+                    __html: roadmap?.summary,
+                  }}
+                ></CardDescription>
               </div>
               <div className="text-right">
                 <Badge variant="outline">

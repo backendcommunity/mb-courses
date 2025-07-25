@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { codeSample } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
-import { Chapter, Project30, Resource, Video } from "@/lib/data";
+import { Project30, Resource, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { routes } from "@/lib/routes";
@@ -59,9 +59,6 @@ export function Project30DayPage({
   const [video, setVideo] = useState<Video>();
   const [loading, setLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(1920); // 32 minutes in seconds
-  const [volume, setVolume] = useState(80);
   const [code, setCode] = useState(codeSample);
   const [projectUrl, setProjectUrl] = useState("");
   const [submissionNotes, setSubmissionNotes] = useState("");
@@ -93,6 +90,8 @@ export function Project30DayPage({
 
     load();
   }, []);
+
+  if (loading) return <div>Loading...</div>;
 
   const completedVideo: any = completedItems?.find(
     (c: any) => c.videoId === dayNumber && c.completed
@@ -226,7 +225,13 @@ export function Project30DayPage({
             <h1 className="text-3xl font-bold tracking-tight">
               {video?.title}
             </h1>
-            <p className="text-muted-foreground w-1/2">{video?.summary}</p>
+
+            <article
+              className="text-muted-foreground w-1/2"
+              dangerouslySetInnerHTML={{
+                __html: video?.summary!,
+              }}
+            ></article>
           </div>
         </div>
 
