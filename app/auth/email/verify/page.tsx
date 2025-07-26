@@ -70,6 +70,7 @@ export default function VerifyEmailPage() {
       setVerificationStatus("error");
     }
   };
+
   const handleResendEmail = async () => {
     try {
       setIsLoading(true);
@@ -99,10 +100,10 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Verifying Your Email
             </h1>
-            <p className="text-white/70">
+            <p className="text-gray-600 dark:text-white/70">
               Please wait while we verify your email address...
             </p>
           </div>
@@ -115,19 +116,23 @@ export default function VerifyEmailPage() {
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
 
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Check Your Email
             </h1>
-            <p className="text-white/70 mb-6">
+            <p className="text-gray-600 dark:text-white/70 mb-6">
               We've sent a code to{" "}
-              <span className="text-white font-medium break-all">{email}</span>
+              <span className="text-gray-900 dark:text-white font-medium break-all">
+                {email}
+              </span>
             </p>
 
-            <div className="bg-white/5 rounded-lg p-4 mb-6 text-left">
-              <h3 className="text-white font-medium mb-2">What's next?</h3>
-              <ul className="text-white/70 text-sm space-y-1">
+            <div className="bg-gray-100 dark:bg-white/5 rounded-lg p-4 mb-6 text-left">
+              <h3 className="text-gray-800 dark:text-white font-medium mb-2">
+                What's next?
+              </h3>
+              <ul className="text-gray-600 dark:text-white/70 text-sm space-y-1">
                 <li>• Check your email inbox</li>
-                <li>• Copy the code and past it below</li>
+                <li>• Copy the code and paste it below</li>
                 <li>• Click on verify code</li>
                 <li>• Sign in with your password</li>
               </ul>
@@ -143,7 +148,7 @@ export default function VerifyEmailPage() {
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     required
-                    className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                     placeholder="Enter your token"
                   />
                 </div>
@@ -164,7 +169,7 @@ export default function VerifyEmailPage() {
                 <button
                   onClick={handleResendEmail}
                   disabled={isLoading}
-                  className="w-full  bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -181,7 +186,7 @@ export default function VerifyEmailPage() {
               </div>
             </div>
 
-            <p className="text-white/50 text-sm mt-6">
+            <p className="text-gray-500 dark:text-white/50 text-sm mt-6">
               Didn't receive the email? Check your spam folder or contact
               support.
             </p>
@@ -194,10 +199,10 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Email Verified Successfully!
             </h1>
-            <p className="text-white/70 mb-8">
+            <p className="text-gray-600 dark:text-white/70 mb-8">
               Your email has been verified. You can now access all features of
               your account.
             </p>
@@ -216,10 +221,10 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Mail className="w-8 h-8 text-yellow-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Verification Link Expired
             </h1>
-            <p className="text-white/70 mb-8">
+            <p className="text-gray-600 dark:text-white/70 mb-8">
               This verification link has expired. Please request a new
               verification email.
             </p>
@@ -240,7 +245,7 @@ export default function VerifyEmailPage() {
               </button>
               <Link
                 href="/auth/login"
-                className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300"
+                className="block w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-all duration-300"
               >
                 Back to Login
               </Link>
@@ -255,10 +260,10 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <XCircle className="w-8 h-8 text-red-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Verification Failed
             </h1>
-            <p className="text-white/70 mb-8">
+            <p className="text-gray-600 dark:text-white/70 mb-8">
               We couldn't verify your email address. The token may be invalid or
               expired.
             </p>
@@ -279,7 +284,7 @@ export default function VerifyEmailPage() {
               </button>
               <Link
                 href="/auth/register"
-                className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300"
+                className="block w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-all duration-300"
               >
                 Create New Account
               </Link>
@@ -290,7 +295,7 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E8F4F8] via-white to-[#97C3CC]/20 dark:from-[#0A0F1C] dark:via-[#1E293B] dark:to-[#0F172A] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#DFF2F8] via-white to-[#C3DEE5]/30 dark:from-[#0A0F1C] dark:via-[#1E293B] dark:to-[#0F172A] flex items-center justify-center p-4">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-[#13AECE]/10 dark:bg-[#0EA5E9]/10 rounded-full blur-3xl"></div>
@@ -301,7 +306,7 @@ export default function VerifyEmailPage() {
       <div className="absolute top-6 left-6 z-10">
         <Link
           href="/auth/login"
-          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300"
+          className="flex items-center gap-2 text-gray-600 dark:text-white/70 hover:text-gray-800 dark:hover:text-white transition-colors duration-300"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back to Login</span>
@@ -310,24 +315,20 @@ export default function VerifyEmailPage() {
 
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md">
-          {/* Glass Card */}
           <div className="text-center flex mb-8">
             <div className="mx-auto mb-4">
               <BrandLogo />
             </div>
           </div>
-          <div className="backdrop-blur-xl bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-2xl p-8 shadow-2xl">
-            {/* Logo */}
-
+          <div className="backdrop-blur-xl bg-white/80 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-2xl p-8 shadow-2xl">
             {renderContent()}
 
-            {/* Footer */}
-            <div className="text-center mt-8 pt-6 border-t border-white/10">
-              <p className="text-white/50 text-sm">
+            <div className="text-center mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
+              <p className="text-gray-500 dark:text-white/50 text-sm">
                 Need help?{" "}
                 <Link
-                  href="/support"
-                  className="text-purple-400 hover:text-purple-300 underline"
+                  href="/contact"
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 underline"
                 >
                   Contact Support
                 </Link>
