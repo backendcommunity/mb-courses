@@ -61,36 +61,6 @@ export function DashboardContent({}: DashboardContentProps) {
     router.push(path);
   };
 
-  // const recentActivity = [
-  //   {
-  //     id: 1,
-  //     type: "course",
-  //     title: "Completed Node.js Fundamentals",
-  //     description: "Chapter 5: Express.js Routing",
-  //     time: "2 hours ago",
-  //     xp: 150,
-  //     icon: BookOpen,
-  //   },
-  //   {
-  //     id: 2,
-  //     type: "project",
-  //     title: "Built REST API Project",
-  //     description: "E-commerce Backend API",
-  //     time: "1 day ago",
-  //     xp: 300,
-  //     icon: Code2,
-  //   },
-  //   {
-  //     id: 3,
-  //     type: "challenge",
-  //     title: "Completed Daily Challenge",
-  //     description: "Algorithm: Binary Search",
-  //     time: "2 days ago",
-  //     xp: 100,
-  //     icon: Trophy,
-  //   },
-  // ];
-
   const quickActions = [
     {
       title: "Continue Learning",
@@ -295,7 +265,7 @@ export function DashboardContent({}: DashboardContentProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {userRoadmaps.map((userRoadmap: any, i:number) => {
+            {userRoadmaps.map((userRoadmap: any, i: number) => {
               return (
                 <div className="space-y-4" key={i}>
                   <div className="space-y-2">

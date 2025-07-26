@@ -751,7 +751,7 @@ export function RoadmapDetailPage({
                                           {course?.title}
                                         </h5>
                                         <article
-                                          className="text-sm text-muted-foreground [&>p]:!text-white [&>*>span]:!text-white"
+                                          className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
                                           dangerouslySetInnerHTML={{
                                             __html: course?.summary,
                                           }}

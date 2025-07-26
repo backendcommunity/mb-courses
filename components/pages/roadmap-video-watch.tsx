@@ -592,7 +592,7 @@ export function RoadmapVideoWatchPage({
                             <span className="border-t flex-1"></span>
                           </div>
                           <p
-                            className="text-muted-foreground [&>*>span]:!text-white"
+                            className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
                             dangerouslySetInnerHTML={{
                               __html:
                                 video?.description ?? nextChapter?.description,

@@ -322,7 +322,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     </CardTitle>
                     <CardDescription
                       dangerouslySetInnerHTML={{ __html: course?.description }}
-                      className="line-clamp-2 text-xs md:text-sm [&>p]:!text-white [&>*>span]:!text-white"
+                      className="line-clamp-2 text-xs md:text-sm [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
                     ></CardDescription>
                   </CardHeader>
 
