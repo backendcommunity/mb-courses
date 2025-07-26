@@ -30,16 +30,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push(path);
   };
 
-  useMemo(() => {
-    async function load() {
-      setLoading(true);
-      const user = await store.getUser();
-      if (!user) return;
-      updateUser(user);
-      setUser(user);
-      setLoading(false);
-    }
+  async function load() {
+    setLoading(true);
+    const user = await store.getUser();
+    if (!user) return;
 
+    setUser(user);
+    updateUser(user);
+    setLoading(false);
+  }
+
+  useEffect(() => {
     load();
   }, []);
 
@@ -58,7 +59,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  if (loading) return <Loader />;
+  if (loading || !user) return <Loader />;
 
   return (
     <>
