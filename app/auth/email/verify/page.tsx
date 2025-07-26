@@ -148,7 +148,7 @@ export default function VerifyEmailPage() {
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     required
-                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
                     placeholder="Enter your token"
                   />
                 </div>
@@ -159,7 +159,7 @@ export default function VerifyEmailPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full bg-[#0E1F33] dark:bg-[#0EA5E9] text-white py-3 px-4 rounded-lg hover:bg-[#0E1F33]/90 dark:hover:bg-[#0284C7] transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="w-full bg-[#0E1F33] dark:bg-[#0EA5E9] text-white py-3 px-4 rounded-lg hover:bg-[#1E293B] dark:hover:bg-[#0284C7] transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Verify Code
               </button>
@@ -328,7 +328,7 @@ export default function VerifyEmailPage() {
                 Need help?{" "}
                 <Link
                   href="/contact"
-                  className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 underline"
+                  className="text-primary dark:text-primary hover:text-primary/10 dark:hover:text-primary/50 underline"
                 >
                   Contact Support
                 </Link>
