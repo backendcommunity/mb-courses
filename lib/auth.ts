@@ -18,12 +18,11 @@ export const register = async (user: NewUser) => {
 
 export const logout = async () => {
   try {
+    await api.post("/auth/logout");
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem("mb_token");
       localStorage.removeItem("mb_user");
     }
-    const res = await api.post("/auth/logout");
-    console.log("Logging out:", res);
   } catch (error: any) {
     console.log("Trying to logout error:", error.message);
   }

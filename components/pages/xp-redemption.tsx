@@ -122,10 +122,10 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
         <TabsContent value="rewards" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rewards
-              .sort(
+              ?.sort(
                 (a: Reward | any, b: Reward | any) => b?.enrolled - a?.enrolled
               )
-              .map((reward: Reward) => (
+              ?.map((reward: Reward) => (
                 <Card
                   key={reward.id}
                   className={`relative ${!reward?.active ? "opacity-50" : ""}`}
@@ -188,7 +188,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
 
         <TabsContent value="achievements" className="space-y-4">
           <div className="grid gap-4">
-            {achievements.map(({ achievement, ...ach }) => (
+            {achievements?.map(({ achievement, ...ach }) => (
               <Card key={achievement.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -248,7 +248,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentRedemptions.map((redemption) => (
+                {recentRedemptions?.map((redemption) => (
                   <div
                     key={redemption.id}
                     className="flex items-center justify-between p-4 border rounded-lg"

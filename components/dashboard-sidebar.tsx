@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
+import { logout } from "@/lib/auth";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -306,7 +307,10 @@ export function DashboardSidebar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onNavigate(routes.logout)}
+            onClick={async () => {
+              await logout();
+              onNavigate(routes.logout);
+            }}
           >
             <LogOut className="h-4 w-4" />
           </Button>
