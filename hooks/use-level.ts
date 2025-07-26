@@ -10,7 +10,7 @@ export function useLevel() {
     const userLevel = user?.level;
     const nextLevelIndex = levels.findIndex((l) => l.id === userLevel);
     const nextLevel = levels[nextLevelIndex + 1];
-    return nextLevel?.point! - user.points;
+    return nextLevel?.point! - (user?.points ?? 0);
   }
 
   //   const name = levels[user.level].name;
