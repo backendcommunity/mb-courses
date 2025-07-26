@@ -11,10 +11,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const params = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null
+  );
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [query, setQuery] = useState<{ref?:string, redirect?:string}>({});
+  const [query, setQuery] = useState<{ ref?: string; redirect?: string }>({});
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
@@ -24,14 +26,19 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (!params) return;
-    const ref = params?.get("ref") ?? params?.get("utm_source") ?? "";
-    const redirect = params?.get("redirect") ?? "";
+    if (typeof window !== "undefined") {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const ref =
+      searchParams?.get("ref") ?? searchParams?.get("utm_source") ?? "";
+    const redirect = searchParams?.get("redirect") ?? "";
 
     setQuery({ ref, redirect });
-  }, [params]);
-
-
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     try {

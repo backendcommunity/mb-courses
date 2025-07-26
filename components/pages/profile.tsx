@@ -58,7 +58,8 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
 
   async function loadAchievements() {
     const achievements = await store.getUserAchievement();
-    setAchievements(achievements.filter((ach: any) => ach?.completed));
+    if (!achievements?.length) return;
+    setAchievements(achievements?.filter((ach: any) => ach?.completed));
   }
 
   async function loadBadges() {

@@ -316,7 +316,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     </CardTitle>
                     <CardDescription
                       dangerouslySetInnerHTML={{ __html: course?.description }}
-                      className="line-clamp-2 text-xs md:text-sm"
+                      className="line-clamp-2 text-xs md:text-sm [&>p]:!text-white [&>*>span]:!text-white"
                     ></CardDescription>
                   </CardHeader>
 
@@ -329,7 +329,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 md:h-4 md:w-4" />
-                        {course?.students?.toLocaleString()}
+                        {course?.students}
                       </div>
                     </div>
 

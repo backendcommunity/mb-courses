@@ -41,6 +41,7 @@ import { useAppStore } from "@/lib/store";
 import { Meta, Project30, UserProject30 } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
+import { SkeletonCard } from "../ui/skeletoncard";
 
 interface Project30ListingPageProps {
   onNavigate: (path: string) => void;
@@ -103,7 +104,14 @@ export function Project30ListingPage({
     }
   }, [activeTab]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    );
 
   const categories = [
     { value: "all", label: "All Categories", icon: BookOpen },
@@ -296,9 +304,10 @@ export function Project30ListingPage({
                     <CardTitle className="text-lg leading-tight">
                       {course.title}
                     </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {course.description}
-                    </CardDescription>
+                    <CardDescription
+                      dangerouslySetInnerHTML={{ __html: course.description }}
+                      className="line-clamp-2"
+                    ></CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">

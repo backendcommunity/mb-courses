@@ -11,6 +11,7 @@ import { KapAIAssistant } from "./kap-ai-assistant";
 import { useAppStore } from "@/lib/store";
 import { updateUser, User } from "@/lib/data";
 import ProfitWellScript from "./ProfitWellScript";
+import { SkeletonCard } from "./ui/skeletoncard";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     async function load() {
       setLoading(true);
       const user = await store.getUser();
+      if (!user) return;
       updateUser(user);
       setUser(user);
       setLoading(false);
@@ -56,7 +58,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  if (loading) return <div>Loading user...</div>;
+  if (loading)
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    );
 
   return (
     <>
