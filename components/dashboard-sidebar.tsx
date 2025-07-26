@@ -135,6 +135,7 @@ export function DashboardSidebar({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <span className="text-sm font-bold">MB</span>
           </div>
+          {/* <BrandLogo /> */}
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Masteringbackend
@@ -152,13 +153,13 @@ export function DashboardSidebar({
             <span className="text-sm font-medium">
               Level {user?.level} Engineer
             </span>
-            {user?.isPremium && user?.subscription ? (
+            {user?.isPremium ? (
               <Badge
                 variant="outline"
                 className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
               >
                 <Crown className="h-3 w-3 mr-1" />
-                {user.subscription?.name}
+                {user?.subscription?.name}
               </Badge>
             ) : (
               <Badge

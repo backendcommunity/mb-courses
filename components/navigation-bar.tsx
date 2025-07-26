@@ -43,7 +43,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { routes } from "@/lib/routes";
 import { useAuth } from "@/store/auth";
 import { useUser } from "@/hooks/use-user";
-
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
   onMenuToggle?: () => void;
