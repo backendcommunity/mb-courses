@@ -112,7 +112,11 @@ export default function RegisterPage() {
       setIsLoading(false);
       // Handle registration logic here
 
-      if (isRegistered) router.push("/auth/email/verify");
+      if (isRegistered)
+        router.push(
+          "/auth/email/verify?sent=true&email=" +
+            encodeURIComponent(formData.email)
+        );
     } catch (error: any) {
       const message = error?.response?.data?.message ?? error?.message;
       if (message.includes("verify email"))
