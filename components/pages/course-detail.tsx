@@ -42,6 +42,7 @@ import { Chapter, Course, UserChapter, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui/loader";
 
 interface CourseDetailPageProps {
   slug: string;
@@ -186,7 +187,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   const isCompleted = course?.progress! >= 100;
   const canEarnCertificate = course?.enrolled && isCompleted;
 
-  if (loading) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   return (
     <div className="flex-1 space-y-6">

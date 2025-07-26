@@ -52,6 +52,7 @@ import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { Certificate } from "../certificate";
+import { Loader } from "../ui/loader";
 
 interface RoadmapDetailPageProps {
   slug: string;
@@ -95,7 +96,7 @@ export function RoadmapDetailPage({
       });
     });
   };
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
   if (!roadmap) return <div className="p-6">Roadmap not found</div>;
 
   const handleEnroll = async () => {

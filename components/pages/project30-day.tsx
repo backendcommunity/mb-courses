@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { routes } from "@/lib/routes";
 import { VimeoPlayer } from "../ui/vimeo-player";
+import { Loader } from "../ui/loader";
 
 interface Project30DayPageProps {
   dayNumber: string;
@@ -91,7 +92,7 @@ export function Project30DayPage({
     load();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   const completedVideo: any = completedItems?.find(
     (c: any) => c.videoId === dayNumber && c.completed

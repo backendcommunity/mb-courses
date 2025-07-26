@@ -5,10 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { Certificate } from "@/components/certificate";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { useCourse } from "@/hooks/use-course";
 import { useEffect, useState } from "react";
 import { Course } from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui/loader";
 
 interface CourseCertificatePageProps {
   slug: string;
@@ -34,7 +34,8 @@ export function CourseCertificatePage({
     findCourse(slug);
   }, [slug]);
 
-  if (loading || !course) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
+  if (!course) return <div>No course found</div>;
 
   const handleBackToCourse = () => {
     const coursePath = routes.courseDetail(slug);
@@ -53,8 +54,8 @@ export function CourseCertificatePage({
     // In a real app, this would open sharing options
     if (navigator.share) {
       navigator.share({
-        title: `I completed ${course.title} on MasteringBackend!`,
-        text: `Check out my certificate for completing ${course.title}`,
+        title: `I completed ${course?.title} on MasteringBackend!`,
+        text: `Check out my certificate for completing ${course?.title}`,
         url: window.location.href,
       });
     } else {
@@ -97,11 +98,12 @@ export function CourseCertificatePage({
 
       {/* Certificate */}
       <Certificate
-        courseName={course.title}
+        courseName={course?.title!}
         studentName={user.name}
+        type="course"
         instructorName={course?.instructor ?? "Solomon Eseme"}
         completionDate={"December 8, 2024"}
-        course={course}
+        course={course!}
         onDownload={handleDownload}
         onShare={handleShare}
       />

@@ -41,6 +41,7 @@ import {
 } from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
+import { Loader } from "../ui/loader";
 
 interface CoursesPageProps {
   onNavigate: (path: string) => void;
@@ -59,11 +60,13 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   const [userCourses, setUserCourses] = useState([]);
   const [userCourseMeta, setUserCourseMeta] = useState<Meta>();
   const [popularCourses, setPopularCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [popularCourseMeta, setPopularCourseMeta] = useState<Meta>();
   const [tab, setTab] = useState("all-courses");
   const store = useAppStore();
 
   const handleFilter = async (filters: CourseFilterOptions) => {
+    setLoading(true);
     if (filters.tab?.includes("my-courses")) {
       const res = await store.getUserCourses({ filters });
       setUserCourses(res?.userCourses);
@@ -84,6 +87,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
     setCourses(res.courses);
     setMeta(res?.meta);
+    setLoading(false);
   };
 
   useMemo(() => {
@@ -94,6 +98,8 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
       tab,
     });
   }, [searchQuery, level, category, tab]);
+
+  if (loading) return <Loader isLoader={false} />;
 
   const handleViewDetails = (slug: string) => {
     const detailPath = routes.courseDetail(slug);

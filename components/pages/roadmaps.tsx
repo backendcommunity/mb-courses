@@ -15,6 +15,7 @@ import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { Roadmap } from "@/lib/data";
+import { Loader } from "../ui/loader";
 
 interface RoadmapsPageProps {
   onNavigate?: (route: string) => void;
@@ -27,8 +28,8 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     const loadRoadmaps = async () => {
+      setLoading(true);
       const roadmaps = await store.getRoadmaps({
         size: 10,
         skip: 0,
@@ -37,12 +38,11 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
 
       const current = roadmaps.find((r: Roadmap) => r.enrolled);
       setCurrentRoadmap(current);
+      setLoading(false);
     };
     loadRoadmaps();
-    setLoading(false);
   }, []);
-
-  if (loading && !roadmaps.length) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   return (
     <div className="flex-1 space-y-6">

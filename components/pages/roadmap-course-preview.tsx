@@ -46,6 +46,7 @@ import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui/loader";
 
 interface RoadmapCoursePreviewProps {
   roadmapId: string;
@@ -217,7 +218,7 @@ export function CourseDetailPage({
     }
   };
 
-  if (loading) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   const calculateCourseProgress = () => {
     const totalVideos = course?.chapters?.reduce(

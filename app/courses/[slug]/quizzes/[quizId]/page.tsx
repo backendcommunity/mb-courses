@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { CourseQuizPage } from "@/components/pages/course-quiz";
+import { Loader } from "@/components/ui/loader";
 import { Quiz } from "@/lib/data";
 import { useAppStore } from "@/lib/store";
 import { useParams, useRouter } from "next/navigation";
@@ -40,7 +41,7 @@ export default function CourseQuizPageRoute() {
     router.push(path);
   };
 
-  if (loading || !quiz) return <div>loading...</div>;
+  if (loading || !quiz) return <Loader isLoader={false} />;
 
   return (
     <DashboardLayout>

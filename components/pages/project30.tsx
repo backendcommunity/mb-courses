@@ -58,6 +58,7 @@ import ConfettiCelebration from "../confetti-celebration";
 import { routes } from "@/lib/routes";
 import { Certificate } from "../certificate";
 import { formatDate } from "@/lib/utils";
+import { Loader } from "../ui/loader";
 
 interface Project30PageProps {
   slug?: string;
@@ -108,7 +109,9 @@ export function Project30Page({
     }
   }, [activeTab]);
 
-  if (loading || !project30) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
+
+  if (!project30) return <div>Project30 not found</div>;
 
   // Mock subscription data
   const subscription = user?.subscription ?? {

@@ -41,7 +41,7 @@ import { useAppStore } from "@/lib/store";
 import { Meta, Project30, UserProject30 } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
-import { SkeletonCard } from "../ui/skeletoncard";
+import { Loader } from "../ui/loader";
 
 interface Project30ListingPageProps {
   onNavigate: (path: string) => void;
@@ -104,14 +104,7 @@ export function Project30ListingPage({
     }
   }, [activeTab]);
 
-  if (loading)
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </div>
-    );
+  if (loading) return <Loader isLoader={false} />;
 
   const categories = [
     { value: "all", label: "All Categories", icon: BookOpen },

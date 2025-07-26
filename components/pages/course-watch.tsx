@@ -52,6 +52,7 @@ import { codeSample, handleShare } from "@/lib/utils";
 import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
+import { Loader } from "../ui/loader";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -107,7 +108,7 @@ export function CourseWatchPage({
     loadNotes(course?.id!, videoId!);
   }, [course, videoId]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   if (!course || !chapter) {
     return (

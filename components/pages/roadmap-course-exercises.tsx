@@ -23,6 +23,7 @@ import { Roadmap, Milestone, Course, Quiz, Exercise } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { Loader } from "../ui/loader";
 
 interface RoadmapCourseExercisesProps {
   roadmapId: string;
@@ -132,7 +133,7 @@ export function RoadmapCourseExercises({
     } catch (error) {}
   }, [roadmapId, courseId]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   if (!roadmap || !milestone || !course) {
     return <div>Course not found</div>;

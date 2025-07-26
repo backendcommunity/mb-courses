@@ -17,6 +17,7 @@ import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import { Course, Quiz } from "@/lib/data";
 import { PaymentDialog } from "../payment-dialog";
+import { Loader } from "../ui/loader";
 
 interface CourseQuizzesPageProps {
   slug: string;
@@ -48,7 +49,7 @@ export function CourseQuizzesPage({
     loadUserCourse();
   }, []);
 
-  if (!quizzes) return <div>loading...</div>;
+  if (!quizzes) return <Loader isLoader={false} />;
 
   const filteredQuizzes = quizzes.filter(({ userQuiz, enrolled }: any) => {
     if (filter === "completed") return enrolled && userQuiz?.completed;

@@ -25,6 +25,7 @@ import { routes } from "@/lib/routes";
 import { useEffect, useState } from "react";
 import { Course, Milestone, Roadmap } from "@/lib/data";
 import { toast } from "sonner";
+import { Loader } from "../ui/loader";
 
 interface RoadmapWatchPageProps {
   slug: string;
@@ -61,7 +62,7 @@ export function RoadmapWatchPage({
     setLoading(false);
   }, [slug]);
 
-  if (loading) return <div>loading...</div>;
+  if (loading) return <Loader isLoader={false} />;
 
   if (!roadmap) {
     return (
