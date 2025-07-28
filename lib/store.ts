@@ -144,9 +144,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       if (typeof localStorage !== "undefined") {
         const user = localStorage.getItem("mb_user");
-        if (!user?.includes("undefined")) return JSON.parse(user!);
+        if (typeof user !== "string") return JSON.parse(user!);
       }
-
       const res = await fetchUser();
       updateUserInStore(res.data);
       return res.data;
