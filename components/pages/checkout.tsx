@@ -56,7 +56,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const checkoutId = searchParams.get("plan");
   const cycle = searchParams.get("cycle");
 
-  // const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
+  const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
   const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
   const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
   const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
@@ -100,7 +100,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   useEffect(() => {
     initializePaddle({
       token: PADDLE_TOKEN,
-      // seller: SELLER_ID,
+      seller: SELLER_ID,
       checkout: {
         settings: {
           displayMode: "inline",
