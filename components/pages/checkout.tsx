@@ -100,8 +100,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   useEffect(() => {
     console.log(SELLER_ID);
     initializePaddle({
-      // token: PADDLE_TOKEN,
-      seller: SELLER_ID,
+      token: PADDLE_TOKEN,
+      // seller: SELLER_ID,
       checkout: {
         settings: {
           displayMode: "inline",
