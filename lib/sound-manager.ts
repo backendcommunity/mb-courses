@@ -8,7 +8,7 @@ class SoundManager {
   constructor() {
     // Check if audio is supported and user hasn't disabled it
     if (typeof window !== "undefined" && "Audio" in window) {
-      this.preloadSounds();
+      // this.preloadSounds();
       this.checkUserPreferences();
     }
   }
