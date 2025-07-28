@@ -98,6 +98,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   }, [paddleRef.current, paymentMethod]);
 
   useEffect(() => {
+    console.log(SELLER_ID);
     initializePaddle({
       // token: PADDLE_TOKEN,
       seller: SELLER_ID,
