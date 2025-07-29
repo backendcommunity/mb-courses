@@ -142,6 +142,7 @@ export function PaymentDialog({
         id: data?.id,
         type: "course",
       };
+      console.log(priceId);
       if (priceId) openCheckout(priceId, customData);
     }
 

@@ -30,15 +30,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { routes } from "@/lib/routes";
-import { useCourse } from "@/hooks/use-course";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Course,
-  CourseFilterOptions,
-  Meta,
-  User,
-  UserCourse,
-} from "@/lib/data";
+import { Course, CourseFilterOptions, Meta, UserCourse } from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
@@ -67,37 +60,47 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
   const handleFilter = async (filters: CourseFilterOptions) => {
     setLoading(true);
-    if (filters.tab?.includes("my-courses")) {
-      const res = await store.getUserCourses({ filters });
-      setUserCourses(res?.userCourses);
-      setUserCourseMeta(res?.meta);
-      return;
-    }
 
     if (filters.tab?.includes("new")) filters.sortBy = "createdAt";
-
     const res = await store.getCourses({ filters });
-
     if (filters!["tab"]?.includes("popular")) {
       setPopularCourses(res.data?.courses);
       setPopularCourseMeta(res.data?.meta);
 
       return;
     }
-
-    setCourses(res.courses);
-    setMeta(res?.meta);
     setLoading(false);
   };
+
+  useMemo(() => {
+    async function load() {
+      const res = await store.getCourses();
+      setCourses(res.courses);
+      setMeta(res?.meta);
+    }
+
+    load();
+  }, []);
 
   useMemo(() => {
     handleFilter({
       terms: searchQuery,
       level,
       category,
-      tab,
     });
-  }, [searchQuery, level, category, tab]);
+  }, [searchQuery, level, category]);
+
+  useMemo(() => {
+    if (tab?.includes("my-courses")) {
+      const load = async () => {
+        const res = await store.getUserCourses();
+        setUserCourses(res?.userCourses);
+        setUserCourseMeta(res?.meta);
+      };
+
+      load();
+    }
+  }, [tab]);
 
   if (loading) return <Loader isLoader={false} />;
 
