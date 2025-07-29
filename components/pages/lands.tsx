@@ -34,6 +34,7 @@ import {
 import { getLands } from "@/lib/lands-data";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routes } from "@/lib/routes";
+import { WIP } from "../WIP";
 
 interface LandsPageProps {
   onNavigate: (path: string) => void;
@@ -84,14 +85,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
 
   return (
     <div className="flex-1 space-y-6 relative">
-      <div className="absolute inset-0 bg-black/1 backdrop-blur-sm z-10 flex items-center justify-center p-6">
-        <div className="bg-white text-black p-6 rounded-lg shadow-xl text-center max-w-sm mx-auto">
-          <h2 className="text-xl font-semibold mb-2">🚧 Work in Progress</h2>
-          <p className="text-sm text-gray-700">
-            This page is currently under construction. Please check back later.
-          </p>
-        </div>
-      </div>
+      <WIP />
 
       {/* Header */}
       <div className="flex items-center justify-between">
