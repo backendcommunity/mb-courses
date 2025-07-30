@@ -131,18 +131,19 @@ export function PaymentDialog({
   const handlePayment = async (id: string, type: string) => {
     let enrolled: any = null;
 
+    console.log(data, "asas");
+
     if (type?.includes("subscription")) {
       openCheckout("pri_01k049swct0nvgdsw8zwh6ys64", {});
     }
 
     if (type?.includes("individual")) {
-      const priceId = data?.product?.paddle_price_id;
+      const priceId = data?.paddle_price_id?.trim();
       const customData = {
         method: "individual",
         id: data?.id,
         type: "course",
       };
-      console.log(priceId);
       if (priceId) openCheckout(priceId, customData);
     }
 
