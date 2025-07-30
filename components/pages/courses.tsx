@@ -81,6 +81,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   }, []);
 
   useMemo(() => {
+    if (!searchQuery && !level && !category) return;
     handleFilter({
       terms: searchQuery,
       level,

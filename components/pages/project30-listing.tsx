@@ -79,6 +79,13 @@ export function Project30ListingPage({
 
   useMemo(() => {
     async function load() {
+      if (
+        selectedCategory.includes("all") &&
+        !debouncedSearch &&
+        selectedLevel.includes("all")
+      )
+        return;
+
       const data = await store.getProject30s({
         filters: {
           category: selectedCategory,
