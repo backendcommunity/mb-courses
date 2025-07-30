@@ -42,8 +42,6 @@ interface CoursesPageProps {
 }
 
 export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
-  // const { courses, meta, userCourses, userCourseMeta, popularCourses } =
-  //   useCourse();
   const user = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [level, setLevel] = useState("");

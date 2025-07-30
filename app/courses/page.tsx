@@ -2,10 +2,9 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { CoursesPage } from "@/components/pages/courses";
-import { Course, CourseFilterOptions } from "@/lib/data";
+import { CourseFilterOptions } from "@/lib/data";
 import { useAppStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function CoursesPageRoute() {
   const router = useRouter();
@@ -14,11 +13,6 @@ export default function CoursesPageRoute() {
   const handleNavigate = (path: string) => {
     router.push(path);
   };
-
-  useEffect(() => {
-    store.getCourses();
-    store.getUserCourses();
-  }, []);
 
   const handleFilter = async (filters: CourseFilterOptions) => {
     if (filters.tab?.includes("my-courses")) {
