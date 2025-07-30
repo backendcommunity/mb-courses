@@ -131,10 +131,18 @@ export function PaymentDialog({
   const handlePayment = async (id: string, type: string) => {
     let enrolled: any = null;
 
-    console.log(data, "asas");
-
     if (type?.includes("subscription")) {
-      openCheckout("pri_01k049swct0nvgdsw8zwh6ys64", {});
+      const plan = await store.getPlan("Pro");
+      const paymentChannel = plan.paymentChannels.find(
+        (pp: any) => pp.channel === "PADDLE"
+      );
+
+      const priceId =
+        NODE_ENV === "dev"
+          ? "pri_01k049swct0nvgdsw8zwh6ys64"
+          : paymentChannel?.monthlyPlanId;
+
+      openCheckout(priceId, {});
     }
 
     if (type?.includes("individual")) {
@@ -144,7 +152,11 @@ export function PaymentDialog({
         id: data?.id,
         type: "course",
       };
-      if (priceId) openCheckout(priceId, customData);
+
+      const id =
+        NODE_ENV === "dev" ? "pri_01k051ksx2kx847wq6y48kpfj5" : priceId;
+
+      if (id) openCheckout(id, customData);
     }
 
     if (type?.includes("mb")) {
