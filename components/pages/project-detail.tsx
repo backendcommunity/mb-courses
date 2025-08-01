@@ -233,7 +233,7 @@ export function ProjectDetailPage({
   const nextLessonWeek = project?.projectTasks?.find(
     (ch: any) => ch.id === nextWeek
   );
-
+  console.log(project?.progress);
   const completed = project?.progress! >= 100;
   const canEarnCertificate = project?.enrolled && completed;
 
@@ -323,21 +323,27 @@ export function ProjectDetailPage({
           <Card>
             <CardHeader></CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
+                <div className="space-y-2 col-span-2 w-full">
                   <CardTitle>Prerequisites</CardTitle>
-                  {project?.prerequisites?.map((p) => (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {project?.prerequisites?.map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-sm text-muted-foreground"
+                    >
                       <CheckCircle2 className="h-4 w-4" />
                       <span>{p}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   <CardTitle>Skills</CardTitle>
-                  {project?.skills?.map((s) => (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {project?.skills?.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-sm text-muted-foreground"
+                    >
                       <CheckCircle2 className="h-4 w-4" />
                       <span>{s}</span>
                     </div>
@@ -646,7 +652,11 @@ export function ProjectDetailPage({
                             {projectTask.tasks?.length > 1 ? "s" : ""}
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
-                            0 MB
+                            {projectTask.tasks.reduce(
+                              (a: number, c: any) => c.mb + a,
+                              0
+                            )}{" "}
+                            MB
                           </Badge>
                         </div>
                       </div>

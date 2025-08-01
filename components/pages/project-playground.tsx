@@ -38,20 +38,13 @@ import {
   Minimize2,
   RotateCcw,
   Download,
-  Moon,
-  Sun,
   Search,
   Settings,
   BookOpen,
-  Target,
   Wrench,
-  ExternalLink,
-  Lock,
-  Database,
-  Plus,
   Check,
 } from "lucide-react";
-import { mockProjects, Project } from "@/lib/data";
+import { getUser, Project, updateUser } from "@/lib/data";
 import Editor from "@monaco-editor/react";
 import {
   Accordion,
@@ -61,6 +54,15 @@ import {
 } from "../ui/accordion";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { toast } from "sonner";
+import ConfettiCelebration from "../confetti-celebration";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -102,8 +104,12 @@ export function ProjectPlaygroundPage({
   const [isPreviewMaximized, setIsPreviewMaximized] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  const [marking, setMarking] = useState(false);
   const editorRef = useRef<any>(null);
-  let count = 1;
+  const [markAsCompleted, setMarkAsCompleted] = useState(false);
+  const [activeTask, setActiveTask] = useState<any>();
+  const [celebration, setCelebration] = useState(false);
+
   const getLanguageFromFileName = (fileName: string): string => {
     const extension = fileName.split(".").pop()?.toLowerCase();
     switch (extension) {
@@ -681,8 +687,55 @@ MIT`,
     ));
   };
 
-  const isCompleted = (id: string) =>
-    []?.find((c: any) => c?.videoId === id && c?.completed);
+  const handleMarkAsCompleted = async (id: string) => {
+    try {
+      setMarking(true);
+      const completed = await store.markProjectTaskAsCompleted(slug, id);
+
+      setProject((prev) => {
+        if (!prev) return prev;
+
+        const updatedProjectTasks = prev.projectTasks.map(
+          (projectTask: any) => {
+            const updatedTasks = projectTask.tasks.map((task: any) => {
+              if (task?.id === completed.taskId) {
+                return {
+                  ...task,
+                  userTask: {
+                    ...task.userTask,
+                    isCompleted: completed.isCompleted,
+                  },
+                };
+              }
+              return task;
+            });
+
+            return {
+              ...projectTask,
+              tasks: updatedTasks,
+            };
+          }
+        );
+
+        return {
+          ...prev,
+          projectTasks: updatedProjectTasks,
+        };
+      });
+
+      setCelebration(true);
+      toast.success("Task completed successfully");
+      setMarkAsCompleted(false);
+
+      // House keeping
+      const { data } = await getUser();
+      updateUser(data);
+    } catch (error) {
+      toast.error("An error occurred. Please try again");
+    } finally {
+      setMarking(false);
+    }
+  };
 
   return (
     <div className="flex-1 h-screen flex flex-col">
@@ -926,15 +979,19 @@ MIT`,
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {task?.userTask?.isCompleted ? (
+                                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+                                  ) : (
                                     <Button
+                                      onClick={() => {
+                                        setActiveTask(task);
+                                        setMarkAsCompleted(true);
+                                      }}
                                       title="Mark as completed"
                                       variant="default"
                                       className="text-xs h-3 w-3"
                                     >
                                       <Check className="h-3 w-3" />
                                     </Button>
-                                  ) : (
-                                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
                                   )}
                                 </div>
                               </div>
@@ -1160,6 +1217,49 @@ MIT`,
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      <Dialog
+        open={markAsCompleted}
+        onOpenChange={() => setMarkAsCompleted(false)}
+      >
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base md:text-lg">
+              Mark as completed
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Are you sure you want to mark this task{" "}
+              <span className="italic text-gray-300 bg-gray-700 p-1">
+                {activeTask?.title}
+              </span>{" "}
+              as completed? Only mark task you've actually completed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Button
+            onClick={() => handleMarkAsCompleted(activeTask?.id)}
+            variant="default"
+            disabled={marking}
+            className="w-full gap-2"
+          >
+            {marking ? (
+              "Marking..."
+            ) : (
+              <>
+                <Check className="h-4 w-4" />
+                Mark As Completed
+              </>
+            )}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <ConfettiCelebration
+        onComplete={() => setCelebration(false)}
+        isVisible={celebration}
+        celebrationType="completion"
+        courseName={activeTask?.title!}
+      />
     </div>
   );
 }
