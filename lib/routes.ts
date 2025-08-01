@@ -113,7 +113,8 @@ export const routes = {
 
   // Projects
   projects: "/projects",
-  projectDetail: (projectId: string) => `/projects/${projectId}`,
+  projectDetail: (slug: string) => `/projects/${slug}`,
+  projectPlayground: (slug: string) => `/projects/${slug}/playground`,
 
   // MB Lands
   lands: "/lands",

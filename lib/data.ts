@@ -126,8 +126,8 @@ export interface CoursesQuery {
 }
 
 export interface Project30Query {
-  page?: string;
-  size?: string;
+  page?: string | number;
+  size?: string | number;
   filters?: Project30FilterOptions;
 }
 
@@ -479,13 +479,27 @@ export interface Project {
   id: string;
   title: string;
   description: string;
+  summary: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  estimatedTime: string;
+  level: string;
+  userProject: any;
+  enrolled: boolean;
+  timeframe: string;
+  slug: string;
+  isPremium: boolean;
+  prerequisites: Array<string>;
+  skills: Array<string>;
+  instructor: any;
+  PRDLink: string;
+  frontendURL: string;
+  duration: string;
+  students: number;
   technologies: string[];
   status: "Not Started" | "In Progress" | "Completed" | "Submitted";
   progress: number;
   dueDate?: string;
-  thumbnail: string;
+  projectTasks: any;
+  banner: string;
   requirements: string[];
   resources: Resource[];
 }

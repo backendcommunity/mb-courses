@@ -25,9 +25,16 @@ import {
   Search,
   Play,
   CheckCircle2,
+  Users,
+  Trophy,
+  DownloadCloud,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { WIP } from "../WIP";
+import { useMemo, useState } from "react";
+import { Meta, Project } from "@/lib/data";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Loader } from "../ui/loader";
 
 interface ProjectsPageProps {
   onNavigate: (path: string) => void;
@@ -35,11 +42,63 @@ interface ProjectsPageProps {
 
 export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
   const store = useAppStore();
-  const projects = store.getProjects();
+  const [projects, setProjects] = useState<Project[]>();
+  const [meta, setMeta] = useState<Meta>();
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
+  const [loading, setLoading] = useState(false);
+
+  useMemo(() => {
+    async function load() {
+      setLoading(true);
+      if (
+        selectedStatus.includes("all") &&
+        selectedLevel.includes("all") &&
+        !debouncedSearch.trim()
+      )
+        return;
+
+      const projects = await store.getProjects({
+        page: 20,
+        size: 0,
+        filters: {
+          terms: debouncedSearch,
+          level: selectedLevel,
+          category: selectedStatus,
+        },
+      });
+
+      setProjects(projects.projects);
+      setMeta(projects.meta);
+      setLoading(false);
+    }
+
+    load();
+  }, [debouncedSearch, selectedLevel, selectedStatus]);
+
+  useMemo(() => {
+    async function load() {
+      setLoading(true);
+      const projects = await store.getProjects({
+        page: 20,
+        size: 0,
+        filters: {},
+      });
+      setProjects(projects.projects);
+      setMeta(projects.meta);
+      setLoading(false);
+    }
+
+    load();
+  }, []);
+
+  if (loading) return <Loader isLoader={false} />;
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 relative">
-      <WIP />
+      {/* <WIP /> */}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -52,10 +111,17 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             skills
           </p>
         </div>
-        <Button className="w-full md:w-auto">
-          <Code2 className="mr-2 h-4 w-4" />
-          Start New Project
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button className="w-full md:w-auto" variant={"outline"}>
+            <Trophy className="mr-2 h-4 w-4" />
+            Leaderboard
+          </Button>
+
+          <Button className="w-full md:w-auto">
+            <DownloadCloud className="mr-2 h-4 w-4" />
+            Submissions
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -68,9 +134,7 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
             <Code2 className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg md:text-2xl font-bold">
-              {projects.length}
-            </div>
+            <div className="text-lg md:text-2xl font-bold">{meta?.total}</div>
             <p className="text-xs text-muted-foreground">+2 from last month</p>
           </CardContent>
         </Card>
@@ -83,7 +147,7 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-lg md:text-2xl font-bold">
-              {projects.filter((p) => p.status === "Completed").length}
+              {projects?.filter((p) => p?.userProject?.completed)?.length}
             </div>
             <p className="text-xs text-muted-foreground">67% completion rate</p>
           </CardContent>
@@ -97,7 +161,11 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-lg md:text-2xl font-bold">
-              {projects.filter((p) => p.status === "In Progress").length}
+              {
+                projects?.filter(
+                  (p) => p?.userProject && !p?.userProject?.completed
+                )?.length
+              }
             </div>
             <p className="text-xs text-muted-foreground">Active projects</p>
           </CardContent>
@@ -120,21 +188,26 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search projects..." className="pl-8" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search projects..."
+            className="pl-8"
+          />
         </div>
         <div className="flex gap-2 sm:gap-3">
-          <Select>
+          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
             <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
-              <SelectValue placeholder="Difficulty" />
+              <SelectValue placeholder="Level" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Levels</SelectItem>
-              <SelectItem value="easy">Easy</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="hard">Hard</SelectItem>
+              <SelectItem value="beginners">Beginners</SelectItem>
+              <SelectItem value="intermediate">Intermediate</SelectItem>
+              <SelectItem value="advance">Advance</SelectItem>
             </SelectContent>
           </Select>
-          <Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -150,11 +223,11 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
       {/* Projects Grid */}
       <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <Card key={project.id} className="overflow-hidden">
+        {projects?.map((project) => (
+          <Card key={project.slug} className="overflow-hidden">
             <div className="aspect-video bg-muted">
               <img
-                src={project.thumbnail || "/placeholder.svg"}
+                src={project?.banner || "/placeholder.svg"}
                 alt={project.title}
                 className="h-full w-full object-cover"
               />
@@ -163,51 +236,55 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               <div className="flex items-center justify-between mb-2">
                 <Badge
                   variant={
-                    project.difficulty === "Hard"
+                    project?.level === "advance"
                       ? "destructive"
-                      : project.difficulty === "Medium"
+                      : project?.level === "intermediate"
                       ? "default"
                       : "secondary"
                   }
-                  className="text-xs"
+                  className="text-xs capitalize"
                 >
-                  {project.difficulty}
+                  {project?.level}
                 </Badge>
                 <Badge
                   variant="outline"
                   className={`text-xs ${
-                    project.status === "Completed"
+                    project?.userProject && project?.userProject?.completed
                       ? "border-green-600 text-green-600"
-                      : project.status === "In Progress"
+                      : !project?.userProject?.completed
                       ? "border-blue-600 text-blue-600"
                       : "border-gray-600 text-gray-600"
                   }`}
                 >
-                  {project.status}
+                  {!project?.userProject
+                    ? "Not Started"
+                    : project?.userProject?.completed
+                    ? "Completed"
+                    : "In Progress"}
                 </Badge>
               </div>
               <CardTitle className="line-clamp-2 text-sm md:text-base">
                 {project.title}
               </CardTitle>
-              <CardDescription className="line-clamp-2 text-xs md:text-sm">
-                {project.description}
-              </CardDescription>
+              <CardDescription
+                dangerouslySetInnerHTML={{ __html: project.summary }}
+                className="line-clamp-2 text-xs md:text-sm [&>p>*>span]:text-muted-foreground"
+              ></CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 md:space-y-4 p-4 pt-0">
               <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                  {project.estimatedTime}
+                  {project.timeframe}
                 </div>
-                {project.dueDate && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-                    Due {new Date(project.dueDate).toLocaleDateString()}
-                  </div>
-                )}
+
+                <div className="flex items-center gap-1">
+                  <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+                  {project.students}
+                </div>
               </div>
 
-              {project.status !== "Not Started" && (
+              {project.enrolled && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs md:text-sm">
                     <span>Progress</span>
@@ -218,25 +295,23 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
               )}
 
               <div className="flex flex-wrap gap-1">
-                {project.technologies.slice(0, 3).map((tech) => (
+                {project?.technologies?.slice(0, 3).map((tech) => (
                   <Badge key={tech} variant="outline" className="text-xs">
                     {tech}
                   </Badge>
                 ))}
-                {project.technologies.length > 3 && (
+                {project?.technologies?.length > 3 && (
                   <Badge variant="outline" className="text-xs">
-                    +{project.technologies.length - 3}
+                    +{project?.technologies?.length - 3}
                   </Badge>
                 )}
               </div>
 
               <Button
                 className="w-full text-xs md:text-sm"
-                onClick={() => onNavigate(`/projects/${project.id}`)}
+                onClick={() => onNavigate(`/projects/${project.slug}`)}
               >
-                {project.status === "Not Started"
-                  ? "Start Project"
-                  : "Continue Project"}
+                {project.enrolled ? "Continue Project" : "Start Project"}
               </Button>
             </CardContent>
           </Card>

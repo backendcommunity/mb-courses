@@ -57,7 +57,8 @@ interface AppState {
   getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
   getCourseQuizzes: (courseId: string) => Quiz[] | any;
   getCourseExercises: (courseId: string) => Quiz[] | any;
-  getProjects: () => Project[];
+  getProjects: (queries?: Project30Query) => Project[] | any;
+  getProject: (slug: string) => Project | any;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
@@ -282,7 +283,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}`);
     return data?.data;
   },
-  getProjects: () => dataStore.projects,
+  getProjects: async (queries?: Project30Query) => {
+    const { page, size, filters } = queries!;
+    const { data } = await api.get(`/projects/`, {
+      params: {
+        skip: size,
+        size: page,
+        filters,
+      },
+    });
+    return data?.data;
+  },
+  getProject: async (slug: string) => {
+    const { data } = await api.get(`/projects/${slug}`);
+    return data?.data;
+  },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
   getBootcamps: () => dataStore.bootcamps,
