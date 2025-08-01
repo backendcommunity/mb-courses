@@ -72,9 +72,11 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
 
   useMemo(() => {
     async function load() {
+      setLoading(true);
       const res = await store.getCourses();
       setCourses(res.courses);
       setMeta(res?.meta);
+      setLoading(false);
     }
 
     load();

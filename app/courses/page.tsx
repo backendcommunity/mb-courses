@@ -20,9 +20,10 @@ export default function CoursesPageRoute() {
       return;
     }
 
-    if (filters.tab?.includes("new")) filters.sortBy = "createdAt";
-
-    await store.getCourses({ filters });
+    if (filters.tab?.includes("new")) {
+      filters.sortBy = "createdAt";
+      await store.getCourses({ filters });
+    }
   };
 
   return (
