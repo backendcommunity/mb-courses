@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   Bell,
@@ -14,11 +14,9 @@ import {
   Users,
   Crown,
   Gift,
-  CreditCard,
   TrendingUp,
   Sparkles,
   Menu,
-  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +41,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { routes } from "@/lib/routes";
 import { useAuth } from "@/store/auth";
 import { useUser } from "@/hooks/use-user";
+import { useAppStore } from "@/lib/store";
+import { format } from "timeago.js";
+import { updateUser } from "@/lib/data";
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
   onMenuToggle?: () => void;
@@ -55,10 +56,13 @@ export function NavigationBar({
   isMobile = false,
 }: NavigationBarProps) {
   const auth = useAuth();
+  const store = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+  const [notifications, setNotifications] = useState<Array<any>>([]);
   const user = useUser();
 
   // Mock subscription data
@@ -68,40 +72,60 @@ export function NavigationBar({
         name: "Free",
       };
 
-  const notifications = [
-    {
-      id: "1",
-      title: "Course Completed!",
-      message: "You've completed Advanced Node.js Patterns",
-      time: "2 hours ago",
-      type: "success",
-      read: false,
-    },
-    {
-      id: "2",
-      title: "Subscription Renewed",
-      message: "Your Pro subscription has been renewed for another month",
-      time: "3 hours ago",
-      type: "billing",
-      read: false,
-    },
-    {
-      id: "3",
-      title: "New Assignment",
-      message: "Database Design exercise is now available",
-      time: "4 hours ago",
-      type: "info",
-      read: false,
-    },
-    {
-      id: "4",
-      title: "MB Earned!",
-      message: "You earned 150 MB for completing the API challenge",
-      time: "1 day ago",
-      type: "achievement",
-      read: true,
-    },
-  ];
+  async function load() {
+    try {
+      setIsActivitiesLoading(true);
+      const activities = await store.getActivities({
+        size: 20,
+        skip: 0,
+      });
+      setNotifications(activities);
+      setIsActivitiesLoading(false);
+      console.log(activities);
+    } catch (error) {
+    } finally {
+    }
+  }
+
+  useMemo(() => {
+    console.log(isNotificationsOpen);
+    if (isNotificationsOpen) load();
+  }, [isNotificationsOpen]);
+
+  // const notifications = [
+  //   {
+  //     id: "1",
+  //     title: "Course Completed!",
+  //     message: "You've completed Advanced Node.js Patterns",
+  //     time: "2 hours ago",
+  //     type: "success",
+  //     read: false,
+  //   },
+  //   {
+  //     id: "2",
+  //     title: "Subscription Renewed",
+  //     message: "Your Pro subscription has been renewed for another month",
+  //     time: "3 hours ago",
+  //     type: "billing",
+  //     read: false,
+  //   },
+  //   {
+  //     id: "3",
+  //     title: "New Assignment",
+  //     message: "Database Design exercise is now available",
+  //     time: "4 hours ago",
+  //     type: "info",
+  //     read: false,
+  //   },
+  //   {
+  //     id: "4",
+  //     title: "MB Earned!",
+  //     message: "You earned 150 MB for completing the API challenge",
+  //     time: "1 day ago",
+  //     type: "achievement",
+  //     read: true,
+  //   },
+  // ];
 
   const skillGuides = [
     {
@@ -166,8 +190,6 @@ export function NavigationBar({
     },
   ];
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -187,6 +209,19 @@ export function NavigationBar({
   const handleLogout = async () => {
     await auth.logout();
     onNavigate("/auth/login");
+  };
+
+  const handleDeleteNotifications = async () => {
+    const ids = notifications.map((n) => n.id);
+    const data = await store.deleteActivities(ids);
+    if (!data?.isDeleted) return;
+
+    updateUser({
+      ...user,
+      totalNotifications: user.totalNotifications - ids.length,
+    });
+    setNotifications([]);
+    setIsNotificationsOpen(false);
   };
 
   return (
@@ -442,12 +477,14 @@ export function NavigationBar({
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
+                  {user?.totalNotifications > 0 && (
                     <Badge
                       variant="destructive"
-                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]"
                     >
-                      {unreadCount}
+                      {user?.totalNotifications > 9
+                        ? `${9}+`
+                        : user?.totalNotifications}
                     </Badge>
                   )}
                 </Button>
@@ -456,7 +493,7 @@ export function NavigationBar({
                 <div className="p-4 border-b">
                   <h3 className="font-semibold">Notifications</h3>
                   <p className="text-sm text-muted-foreground">
-                    You have {unreadCount} unread notifications
+                    You have {user?.totalNotifications} unread notifications
                   </p>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
@@ -471,11 +508,12 @@ export function NavigationBar({
                       <div className="flex items-start space-x-3">
                         <div
                           className={`w-2 h-2 rounded-full mt-2 ${
-                            notification.type === "success"
+                            notification.type?.includes("COMPLETED")
                               ? "bg-green-500"
-                              : notification.type === "info"
+                              : notification.type?.includes("START") ||
+                                notification.type?.includes("STARTED")
                               ? "bg-primary"
-                              : notification.type === "achievement"
+                              : notification.type?.includes("WATCHED")
                               ? "bg-yellow-500"
                               : "bg-purple-500"
                           }`}
@@ -485,10 +523,10 @@ export function NavigationBar({
                             {notification.title}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {notification.message}
+                            {notification.description}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {notification.time}
+                            {format(notification.createdAt)}
                           </p>
                         </div>
                         {!notification.read && (
@@ -499,8 +537,13 @@ export function NavigationBar({
                   ))}
                 </div>
                 <div className="p-4 border-t">
-                  <Button variant="ghost" size="sm" className="w-full">
-                    View All Notifications
+                  <Button
+                    onClick={handleDeleteNotifications}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Clear All Notifications
                   </Button>
                 </div>
               </PopoverContent>
@@ -540,7 +583,9 @@ export function NavigationBar({
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onNavigate(routes.courses)}>
+                <DropdownMenuItem
+                  onClick={() => onNavigate("/courses?tab=my-courses")}
+                >
                   <BookOpen className="mr-2 h-4 w-4" />
                   <span>My Courses</span>
                 </DropdownMenuItem>
@@ -556,9 +601,14 @@ export function NavigationBar({
                   <Sparkles className="mr-2 h-4 w-4" />
                   <span>Project30</span>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Community</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Leaderboard</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

@@ -75,7 +75,7 @@ interface AppState {
   getRewards: () => Reward | any;
   getUserAchievement: (type?: string) => any;
   getBadges: () => any;
-  getActivities: () => any;
+  getActivities: (queries: { size?: number; skip?: number }) => any;
   getVideo: (slug: string) => any;
   getProject30Leaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
@@ -92,6 +92,7 @@ interface AppState {
   markDayComplete: (slug: string, videoId: string, payload: any) => any;
   resumeSubscription: (id: string) => any;
   deletCard: (id: string) => any;
+  deleteActivities: (ids: Array<string>) => any;
   puaseSubscription: (id: string, data: { months: number }) => any;
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
@@ -176,8 +177,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(`/plans/${name}`);
     return data?.data;
   },
-  getActivities: async () => {
-    const { data } = await api.get(`/activities`);
+  getActivities: async (params: { size?: number; skip?: number }) => {
+    const { data } = await api.get(`/activities`, {
+      params,
+    });
     return data?.data;
   },
   getRewards: async () => {
@@ -361,6 +364,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   deletCard: async (id: string) => {
     const url = `/payments/subscriptions/${id}/cards`;
     const { data } = await api.delete(url);
+    return data?.data;
+  },
+
+  deleteActivities: async (ids: Array<string>) => {
+    const { data } = await api.delete("/activities", {
+      params: { ids },
+    });
     return data?.data;
   },
 

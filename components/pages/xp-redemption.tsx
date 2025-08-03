@@ -188,6 +188,16 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
 
         <TabsContent value="achievements" className="space-y-4">
           <div className="grid gap-4">
+            <div className="text-center p-8">
+              <p className="text-muted-foreground">
+                You do not have any achievement at this moment. The quickest
+                roadmap to an achievement is to complete a course.
+              </p>
+              <Button onClick={() => onNavigate("/courses")} className="mt-2">
+                Start one now
+              </Button>
+            </div>
+
             {achievements?.map(({ achievement, ...ach }) => (
               <Card key={achievement.id}>
                 <CardContent className="p-6">

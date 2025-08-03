@@ -5,6 +5,7 @@ import { Skeleton } from "./skeleton";
 
 export const Loader = ({
   isLoader = true,
+  isFull = true,
   size = "w-28 h-28",
   color = "border-primary",
   thickness = "border-4",
@@ -12,13 +13,18 @@ export const Loader = ({
   isLoader?: boolean;
   size?: string;
   color?: string;
+  isFull?: boolean;
   thickness?: string;
 }) => {
   return (
     <div>
       {isLoader && (
-        <div className="flex justify-center items-center h-screen">
-          <div className={`relative ${size}`}>
+        <div
+          className={`flex justify-center items-center ${
+            isFull ? "h-screen" : ""
+          }`}
+        >
+          <div className={`relative ${isFull ? "w-28 h-28" : "w-12 h-12"}`}>
             {/* Spinning Ring */}
             <div
               className={`${thickness} ${color} absolute inset-0  border-t-transparent rounded-full animate-spin`}

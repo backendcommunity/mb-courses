@@ -25,11 +25,12 @@ import {
   Flame,
 } from "lucide-react";
 import { routes } from "@/lib/routes";
-import { Topic, updateUser, User } from "@/lib/data";
-import { useEffect, useMemo, useState } from "react";
+import { Topic } from "@/lib/data";
+import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "./ui/loader";
 
 interface DashboardContentProps {}
 
@@ -37,20 +38,28 @@ export function DashboardContent({}: DashboardContentProps) {
   const router = useRouter();
   const user = useUser();
   const store = useAppStore();
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+  const [isRoadmapLoading, setIsRoadmapLoading] = useState(false);
   const [activities, setActivities] = useState([]);
   const [userRoadmaps, setUserRoadmaps] = useState([]);
 
   async function load() {
-    const activities = await store.getActivities();
-    setActivities(activities);
+    try {
+      setIsActivitiesLoading(true);
+      const activities = await store.getActivities({});
+      setActivities(activities);
+      setIsActivitiesLoading(false);
 
-    const userRoadmaps = await store.getUserRoadmaps({
-      size: 1,
-      skip: 0,
-    });
-
-    // Use getRoadmaps and filter by enrolled
-    setUserRoadmaps(userRoadmaps);
+      setIsRoadmapLoading(true);
+      const userRoadmaps = await store.getUserRoadmaps({
+        size: 1,
+        skip: 0,
+      });
+      setUserRoadmaps(userRoadmaps);
+      setIsRoadmapLoading(false);
+    } catch (error) {
+    } finally {
+    }
   }
 
   useMemo(() => {
@@ -215,6 +224,7 @@ export function DashboardContent({}: DashboardContentProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
+
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -230,29 +240,35 @@ export function DashboardContent({}: DashboardContentProps) {
           )}
 
           <CardContent className="space-y-4">
-            {activities?.map((activity: any, i) => (
-              <div
-                key={activity?.id + ":" + i}
-                className="flex items-center gap-4 p-3 rounded-lg border"
-              >
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Trophy className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium">{activity?.title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {activity?.description}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {format(activity?.createdAt)}
-                    </span>
+            {isActivitiesLoading ? (
+              <Loader isLoader={false} />
+            ) : (
+              <>
+                {activities?.map((activity: any, i) => (
+                  <div
+                    key={activity?.id + ":" + i}
+                    className="flex items-center gap-4 p-3 rounded-lg border"
+                  >
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Trophy className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{activity?.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {activity?.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {format(activity?.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">+{activity?.mb} MB</Badge>
                   </div>
-                </div>
-                <Badge variant="secondary">+{activity?.mb} MB</Badge>
-              </div>
-            ))}
+                ))}
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -265,32 +281,50 @@ export function DashboardContent({}: DashboardContentProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {userRoadmaps.map((userRoadmap: any, i: number) => {
-              return (
-                <div className="space-y-4" key={i}>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Overall Progress</span>
-                      <span>65%</span>
-                    </div>
-                    <Progress value={65} />
+            {isRoadmapLoading ? (
+              <Loader isLoader={false} />
+            ) : (
+              <>
+                {userRoadmaps.length < 1 ? (
+                  <div className="text-center p-8">
+                    <p className="text-muted-foreground">
+                      You're not on any roadmap as a backend engineer. wow!
+                    </p>
+                    <Button
+                      onClick={() => handleNavigate("/roadmaps")}
+                      className="mt-2"
+                    >
+                      Start one now
+                    </Button>
                   </div>
+                ) : (
+                  <>
+                    {userRoadmaps.map((userRoadmap: any, i: number) => {
+                      return (
+                        <div className="space-y-4" key={i}>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Overall Progress</span>
+                              <span>65%</span>
+                            </div>
+                            <Progress value={65} />
+                          </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">
-                        {userRoadmap?.roadmap?.title}
-                      </span>
-                    </div>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <span className="text-sm">
+                                {userRoadmap?.roadmap?.title}
+                              </span>
+                            </div>
 
-                    {userRoadmap?.roadmap?.topics?.map((t: Topic) => {
-                      <>
-                        <div className="flex items-center gap-3">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">{t?.title}</span>
-                        </div>
-                        {/* <div className="flex items-center gap-3">
+                            {userRoadmap?.roadmap?.topics?.map((t: Topic) => {
+                              <>
+                                <div className="flex items-center gap-3">
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                  <span className="text-sm">{t?.title}</span>
+                                </div>
+                                {/* <div className="flex items-center gap-3">
                           <div className="h-4 w-4 rounded-full border-2 border-primary bg-primary/20" />
                           <span className="text-sm font-medium">
                             System Architecture
@@ -302,20 +336,24 @@ export function DashboardContent({}: DashboardContentProps) {
                             Microservices
                           </span>
                         </div> */}
-                      </>;
-                    })}
-                  </div>
+                              </>;
+                            })}
+                          </div>
 
-                  <Button
-                    className="w-full"
-                    onClick={() => handleNavigate(routes.paths)}
-                  >
-                    Continue Learning Path
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })}
+                          <Button
+                            className="w-full"
+                            onClick={() => handleNavigate(routes.paths)}
+                          >
+                            Continue Learning Path
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

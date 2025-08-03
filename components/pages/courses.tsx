@@ -43,6 +43,9 @@ interface CoursesPageProps {
 
 export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   const user = useUser();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [level, setLevel] = useState("");
   const [category, setCategory] = useState("");
@@ -53,7 +56,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   const [popularCourses, setPopularCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [popularCourseMeta, setPopularCourseMeta] = useState<Meta>();
-  const [tab, setTab] = useState("all-courses");
+  const [tab, setTab] = useState(searchParams?.get("tab") || "all-courses");
   const store = useAppStore();
 
   const handleFilter = async (filters: CourseFilterOptions) => {
@@ -69,6 +72,18 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const tabParam = searchParams.get("tab");
+    setTab(tabParam || "all-courses");
+  }, [searchParams]);
 
   useMemo(() => {
     async function load() {
@@ -121,11 +136,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   };
 
   return (
-    <Tabs
-      defaultValue="all-courses"
-      className="space-y-4"
-      onValueChange={(value) => setTab(value)}
-    >
+    <Tabs className="space-y-4" value={tab} onValueChange={setTab}>
       <div className="flex-1 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
