@@ -46,11 +46,11 @@ export function DashboardContent({}: DashboardContentProps) {
   async function load() {
     try {
       setIsActivitiesLoading(true);
+      setIsRoadmapLoading(true);
       const activities = await store.getActivities({});
       setActivities(activities);
       setIsActivitiesLoading(false);
 
-      setIsRoadmapLoading(true);
       const userRoadmaps = await store.getUserRoadmaps({
         size: 1,
         skip: 0,
