@@ -319,15 +319,6 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                       >
                         {course?.level}
                       </Badge>
-                      {/* <div className="flex items-center gap-1 flex flex-col">
-                        <span>
-                          <DollarSign className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs md:text-sm">
-                            <span>{course.amount}</span>
-                          </span>
-                        </span>
-                        <i className="text-xs">lifetime</i>
-                      </div> */}
                     </div>
                     <CardTitle
                       className="line-clamp-2 cursor-pointer hover:text-primary transition-colors text-sm md:text-base"
@@ -337,7 +328,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                     </CardTitle>
                     <CardDescription
                       dangerouslySetInnerHTML={{ __html: course?.description }}
-                      className="line-clamp-2 text-xs md:text-sm [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
+                      className="line-clamp-2 text-xs md:text-sm [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                     ></CardDescription>
                   </CardHeader>
 

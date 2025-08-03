@@ -77,7 +77,7 @@ const ConfettiCelebration: React.FC<ConfettiCelebrationProps> = ({
     // Play different sounds based on celebration type
     switch (celebrationType) {
       case "enrollment":
-        soundManager.play("celebration", 0.7);
+        soundManager.play("enrollment", 0.5);
         break;
       case "completion":
         soundManager.play("success", 0.8);
@@ -86,6 +86,8 @@ const ConfettiCelebration: React.FC<ConfettiCelebrationProps> = ({
         soundManager.play("achievement", 0.6);
         break;
     }
+
+    console.log(celebrationType);
 
     const intervalId = setInterval(party, 200);
     interval.push(intervalId);

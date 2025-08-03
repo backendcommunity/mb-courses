@@ -29,6 +29,7 @@ import { PaymentDialog } from "../payment-dialog";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui/loader";
 interface CoursePreviewPageProps {
   slug: string;
   onNavigate?: (route: string) => void;
@@ -60,7 +61,9 @@ export function CoursePreviewPage({
     findCourse(slug);
   }, [slug]);
 
-  if (!course || loading) {
+  if (loading) return <Loader isLoader={false} />;
+
+  if (!course) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -82,6 +85,8 @@ export function CoursePreviewPage({
 
   const calculateHours = (chapter: Chapter) => {
     let totalSeconds = 0;
+
+    if (!chapter?.videos) return;
 
     for (const video of chapter?.videos) {
       if (typeof video.duration === "number") {
@@ -147,14 +152,21 @@ export function CoursePreviewPage({
   const previewChapters = course?.chapters?.filter((ch) => !ch.isPremium); // First 3 chapters as preview
   const currentPreview = previewChapters[selectedPreview];
 
-  const topics = [
-    ...[...(course?.topics ?? [])],
-    "Advanced Node.js design patterns",
-    "Performance optimization techniques",
-    "Scalable architecture principles",
-    "Real-world project implementation",
-    "Best practices and common pitfalls",
-  ] as Array<Topic | string>;
+  // if (!previewChapters.length) {
+  //   return (
+  //     <div className="flex-1 p-6">
+  //       <div className="text-center">
+  //         <h1 className="text-2xl font-bold">
+  //           No free videos for this course. Enrol now to have full access.
+  //         </h1>
+  //         <Button onClick={() => onNavigate?.("/courses")} className="mt-4">
+  //           <ArrowLeft className="mr-2 h-4 w-4" />
+  //           Enrol now
+  //         </Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex-1 space-y-6">
@@ -193,90 +205,110 @@ export function CoursePreviewPage({
             <div className="aspect-video bg-black relative">
               {/* Video placeholder with preview content */}
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
-                <div className="text-center text-white">
-                  <div className="mb-4">
-                    <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
-                      {isPlaying ? (
-                        <Pause className="h-8 w-8" />
-                      ) : (
-                        <Play className="h-8 w-8" />
-                      )}
+                {previewChapters?.length ? (
+                  <div className="text-center text-white">
+                    <div className="mb-4">
+                      <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
+                        {isPlaying ? (
+                          <Pause className="h-8 w-8" />
+                        ) : (
+                          <Play className="h-8 w-8" />
+                        )}
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">
+                        {currentPreview?.title}
+                      </h3>
+                      <p className="text-blue-200">
+                        Preview: {calculateHours(currentPreview)}
+                      </p>
                     </div>
-                    <h3 className="text-xl font-bold mb-2">
-                      {currentPreview?.title}
-                    </h3>
-                    <p className="text-blue-200">
-                      Preview: {calculateHours(currentPreview)}
-                    </p>
-                  </div>
 
-                  {/* Preview watermark */}
-                  <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
-                    FREE PREVIEW
+                    {/* Preview watermark */}
+                    <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
+                      FREE PREVIEW
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex-1 p-6">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold">
+                        No free preview for this course. Enrol now to have full
+                        access.
+                      </h1>
+                      <Button
+                        onClick={() => onNavigate?.("/courses")}
+                        className="mt-4"
+                      >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Enrol now
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Video Controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="space-y-2">
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2 text-white text-sm">
-                    <span>{formatTime(currentTime)}</span>
-                    <div className="flex-1">
-                      <Progress
-                        value={(currentTime / duration) * 100}
-                        className="h-1"
-                      />
+              {previewChapters?.length && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <div className="space-y-2">
+                    {/* Progress Bar */}
+                    <div className="flex items-center gap-2 text-white text-sm">
+                      <span>{formatTime(currentTime)}</span>
+                      <div className="flex-1">
+                        <Progress
+                          value={(currentTime / duration) * 100}
+                          className="h-1"
+                        />
+                      </div>
+                      <span>{formatTime(duration)}</span>
                     </div>
-                    <span>{formatTime(duration)}</span>
-                  </div>
 
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm text-white/70">
-                        Preview Mode
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Maximize className="h-4 w-4" />
-                      </Button>
+                    {/* Control Buttons */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:bg-white/20"
+                          onClick={() => setIsPlaying(!isPlaying)}
+                        >
+                          {isPlaying ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:bg-white/20"
+                        >
+                          <Volume2 className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-white/70">
+                          Preview Mode
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:bg-white/20"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:bg-white/20"
+                        >
+                          <Maximize className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </Card>
 
@@ -350,7 +382,7 @@ export function CoursePreviewPage({
                             <Clock className="h-3 w-3" />
                             <span>
                               {calculateHours(chapter)} hour
-                              {calculateHours(chapter) > 1 ? "s" : ""}
+                              {calculateHours(chapter)! > 1 ? "s" : ""}
                             </span>
                             <Badge variant="outline" className="text-xs">
                               {chapter.type}
@@ -417,7 +449,7 @@ export function CoursePreviewPage({
                               <Clock className="h-3 w-3" />
                               <span>
                                 {calculateHours(chapter)} hour
-                                {calculateHours(chapter) > 1 ? "s" : ""}
+                                {calculateHours(chapter)! > 1 ? "s" : ""}
                               </span>
                               <Badge variant="outline" className="text-xs">
                                 {chapter.type}
@@ -607,7 +639,7 @@ export function CoursePreviewPage({
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {course.tags.map((tag) => (
+                {course?.tags?.map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>

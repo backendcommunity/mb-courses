@@ -85,7 +85,6 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
   const [privacy, setPrivacy] = useState({
     profileVisible: user?.settings?.profileVisible ?? true,
     progressVisible: user?.settings?.progressVisible ?? true,
-    allowMessages: user?.settings?.allowMessages ?? true,
   });
 
   const [language, setLangauge] = useState({
@@ -94,47 +93,54 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
     dateFormat: user?.settings?.dateFormat ?? "mdy",
   });
 
-  const handleTwoFactorChange = (value: boolean) => {
+  const handleTwoFactorChange = async (value: boolean) => {
     setTwoFactorEnabled(value);
-    store.updateUser({
+    await store.updateUser({
       settings: {
         ...user.settings,
         twoFactorEnabled: value,
       },
     });
+
+    toast.success("Settings saved successfully");
   };
 
-  const handleLanguageChange = (key: string, value: string) => {
+  const handleLanguageChange = async (key: string, value: string) => {
     setLangauge((prev) => ({ ...prev, [key]: value }));
 
-    store.updateUser({
+    await store.updateUser({
       settings: {
         ...user.settings,
         [key]: value,
       },
     });
+
+    toast.success("Settings saved successfully");
   };
 
-  const handleNotificationChange = (key: string, value: boolean) => {
+  const handleNotificationChange = async (key: string, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }));
 
-    store.updateUser({
+    await store.updateUser({
       settings: {
         ...user.settings,
         [key]: value,
       },
     });
+    toast.success("Settings saved successfully");
   };
 
-  const handlePrivacyChange = (key: string, value: boolean) => {
+  const handlePrivacyChange = async (key: string, value: boolean) => {
     setPrivacy((prev) => ({ ...prev, [key]: value }));
 
-    store.updateUser({
+    await store.updateUser({
       settings: {
         ...user.settings,
         [key]: value,
       },
     });
+
+    toast.success("Settings saved successfully");
   };
 
   const handleNewPasswordChange = (value: string) => {
@@ -185,6 +191,7 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
         number: false,
         specialChar: false,
       });
+      toast.success("Password changed successfully");
     } catch (error: any) {
       const m = error?.response?.message ?? error?.message;
       if (m.includes("422")) {
@@ -558,20 +565,6 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                   checked={privacy.progressVisible}
                   onCheckedChange={(value) =>
                     handlePrivacyChange("progressVisible", value)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="font-medium">Direct Messages</span>
-                  <p className="text-sm text-muted-foreground">
-                    Allow other users to send you direct messages
-                  </p>
-                </div>
-                <Switch
-                  checked={privacy.allowMessages}
-                  onCheckedChange={(value) =>
-                    handlePrivacyChange("allowMessages", value)
                   }
                 />
               </div>

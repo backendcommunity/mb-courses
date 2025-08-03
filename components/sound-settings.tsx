@@ -81,7 +81,7 @@ export function SoundSettings() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => testSound("celebration")}
+                  onClick={() => testSound("enrollment")}
                   className="flex items-center gap-2"
                 >
                   <Play className="h-3 w-3" />

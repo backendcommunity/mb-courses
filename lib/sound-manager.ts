@@ -8,7 +8,7 @@ class SoundManager {
   constructor() {
     // Check if audio is supported and user hasn't disabled it
     if (typeof window !== "undefined" && "Audio" in window) {
-      // this.preloadSounds();
+      this.preloadSounds();
       this.checkUserPreferences();
     }
   }
@@ -22,16 +22,16 @@ class SoundManager {
 
   private preloadSounds() {
     const soundFiles = [
-      {
-        name: "celebration",
-        src: "/sounds/celebration.mp3",
-        fallback: "/sounds/celebration.wav",
-      },
-      { name: "success", src: "/sounds/success.mp3" },
+      // {
+      //   name: "celebration",
+      //   src: "/sounds/celebration.mp3",
+      // },
+      // { name: "success", src: "/sounds/success.mp3" },
+      { name: "enrollment", src: "/sounds/enrollment.mp3" },
       { name: "achievement", src: "/sounds/achievement.mp3" },
     ];
 
-    soundFiles.forEach(({ name, src, fallback }) => {
+    soundFiles.forEach(({ name, src }) => {
       try {
         const audio = new Audio();
         audio.preload = "auto";
@@ -39,11 +39,10 @@ class SoundManager {
 
         // Try primary format first
         audio.src = src;
-        audio.addEventListener("error", () => {
+        audio.addEventListener("error", (e) => {
           // Fallback to alternative format if available
-          if (fallback) {
-            audio.src = fallback;
-          }
+
+          console.log(e);
         });
 
         this.sounds.set(name, audio);
