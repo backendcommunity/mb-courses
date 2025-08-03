@@ -79,7 +79,9 @@ interface AppState {
   getActivities: () => any;
   getVideo: (slug: string) => any;
   getProject30Leaderboard: (slug: string, filter?: any) => any;
+  getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
+  getProjectAchievements: (slug: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -164,8 +166,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  getProjectLeaderboard: async (slug: string, filters?: any) => {
+    const { data } = await api.get(`/projects/${slug}/leaderboard`, {
+      params: {
+        filters,
+      },
+    });
+    return data?.data;
+  },
+
   getProject30Achievements: async (slug: string) => {
     const { data } = await api.get(`/project30s/${slug}/achievements`);
+    return data?.data;
+  },
+
+  getProjectAchievements: async (slug: string) => {
+    const { data } = await api.get(`/projects/${slug}/achievements`);
     return data?.data;
   },
 

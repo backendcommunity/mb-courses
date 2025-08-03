@@ -43,6 +43,7 @@ import {
   BookOpen,
   Wrench,
   Check,
+  ArrowLeft,
 } from "lucide-react";
 import { getUser, Project, updateUser } from "@/lib/data";
 import Editor from "@monaco-editor/react";
@@ -742,6 +743,13 @@ MIT`,
       {/* Header */}
       <div className="flex items-center justify-between px-4 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => onNavigate("/projects/" + slug)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {/* Back to Projects */}
+          </Button>
           <div className="space-y-1">
             <div className="flex items-center gap-2 capitalize">
               <Badge
