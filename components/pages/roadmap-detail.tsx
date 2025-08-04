@@ -111,7 +111,8 @@ export function RoadmapDetailPage({
       roadmap?.topics?.find((m) => !m?.userTopic?.completed) ||
       roadmap?.topics?.[0];
 
-    if (milestone.enrolled) reviewOrComplete(milestone, false);
+    if (milestone.enrolled)
+      return onNavigate?.(routes.roadmapWatch(slug, milestone?.id));
     await startMilestone(milestone.id);
   };
 
@@ -207,7 +208,7 @@ export function RoadmapDetailPage({
             dangerouslySetInnerHTML={{
               __html: roadmap?.summary!,
             }}
-            className="text-muted-foreground"
+            className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
           ></article>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -515,7 +516,7 @@ export function RoadmapDetailPage({
                           {milestone.title}
                         </CardTitle>
                         <CardDescription
-                          className="text-muted-foreground"
+                          className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                           dangerouslySetInnerHTML={{
                             __html: milestone?.description,
                           }}

@@ -228,7 +228,7 @@ export function RoadmapWatchPage({
             dangerouslySetInnerHTML={{
               __html: milestone?.description!,
             }}
-            className="text-blue-100"
+            className="text-blue-100 [&>*>span]:!text-blue-100 [&>p]:text-blue-100 dark:[&>*>span]:!text-blue-100 dark:[&>p]:text-blue-100"
           ></CardDescription>
         </CardHeader>
         <CardContent>
