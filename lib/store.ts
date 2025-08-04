@@ -42,6 +42,7 @@ import {
   loadVideoNotes,
 } from "./courses";
 import api from "./api";
+import { localDB } from "./localDB";
 
 interface AppState {
   // Data getters
@@ -282,7 +283,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
   getMilestone: async (slug: string, topicId: string) => {
+    if (localDB.has("mb_milestone")) return localDB.get("mb_milestone", {});
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}`);
+    localDB.set("mb_milestone", data?.data);
     return data?.data;
   },
   getProjects: () => dataStore.projects,

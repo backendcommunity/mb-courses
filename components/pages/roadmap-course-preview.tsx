@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -45,7 +45,6 @@ import { PaymentDialog } from "../payment-dialog";
 import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
-import { useUser } from "@/hooks/use-user";
 import { Loader } from "../ui/loader";
 
 interface RoadmapCoursePreviewProps {
@@ -93,32 +92,26 @@ export function CourseDetailPage({
   ).length;
 
   async function findRoadmap(slug: string) {
-    const roadmap = await store.getRoadmapBySlug(slug);
-    setRoadmap(roadmap);
-
     const milestone = await store.getMilestone(slug, topicId);
     setMilestone(milestone);
+    setCompletedItems(milestone.completedItems);
+    setRoadmap(milestone.roadmap);
   }
 
-  useEffect(() => {
+  async function findCourse(slug: string) {
     setLoading(true);
-    async function findCourse(slug: string) {
-      const course = await store.getCourse(slug, { isRoadmap: true });
-      setCourse(course);
-
-      const completedItems = await store.getRoadmapItems(roadmapId, topicId);
-      setCompletedItems(completedItems);
-
-      setLoading(false);
-    }
-    findCourse(slug);
-  }, [slug]);
-
-  useEffect(() => {
-    setLoading(true);
-    findRoadmap(roadmapId);
+    const course = await store.getCourse(slug, { isRoadmap: true });
+    setCourse(course);
     setLoading(false);
-  }, [roadmapId]);
+  }
+
+  useMemo(() => {
+    findCourse(slug);
+    findRoadmap(roadmapId);
+  }, [slug, roadmapId]);
+
+  if (loading) return <Loader isLoader={false} />;
+  const completedIds = completedItems?.map((ci: any) => ci.itemId);
 
   const isChapterCompleted = (chapterId: string) => {
     return course?.userCourse?.userChapters?.find(
@@ -178,9 +171,9 @@ export function CourseDetailPage({
 
     const videoIds = videos?.map((v) => v.id);
 
-    const completedIds = completedItems.map((ci: any) => ci.itemId);
+    // const completedIds = completedItems?.map((ci: any) => ci.itemId);
     const remainingVideoIds = videoIds?.filter(
-      (vi) => !completedIds.includes(vi)
+      (vi) => !completedIds?.includes(vi)
     );
 
     const video =
@@ -218,8 +211,6 @@ export function CourseDetailPage({
     }
   };
 
-  if (loading) return <Loader isLoader={false} />;
-
   const calculateCourseProgress = () => {
     const totalVideos = course?.chapters?.reduce(
       (acc, chapter) => acc + chapter.videos.length,
@@ -234,10 +225,8 @@ export function CourseDetailPage({
         .map((v) => v.id)
     );
 
-    const completedIds = completedItems.map((ci: any) => ci.itemId);
-
     const totalCompleted = videoIds?.filter((vi) =>
-      completedIds.includes(vi)
+      completedIds?.includes(vi)
     )?.length;
 
     return (Number(totalCompleted ?? 0) / Number(totalVideos! ?? 0)) * 100;
