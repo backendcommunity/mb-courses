@@ -59,6 +59,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Loader } from "../ui/loader";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -93,6 +94,7 @@ export function RoadmapVideoWatchPage({
   const [milestone, setMilestone] = useState<Milestone | any>();
   const [completedItems, setCompletedItems] = useState<any>([]);
   const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const chapter: Chapter | any = course?.chapters.find(
     (ch: Chapter) => ch.slug === chapterId
@@ -104,24 +106,22 @@ export function RoadmapVideoWatchPage({
 
   useEffect(() => {
     async function loadData() {
-      const roadmap = await store.getRoadmapBySlug(slug);
-      setRoadmap(roadmap);
-
+      setLoading(true);
       const milestone = await store.getMilestone(slug, topicId);
       setMilestone(milestone);
+      setRoadmap(milestone.roadmap);
+      setCompletedItems(milestone.completedItems);
 
       const course = await store.getCourse(courseId);
       setCourse(course);
       setUserCourse(course?.userCourse);
-
-      const completedItems = await store.getRoadmapItems(slug, topicId);
-      setCompletedItems(completedItems);
 
       const completed =
         completedItems.find((c: any) => c.itemId === course.id)?.completed ??
         false;
 
       setCompleted(completed);
+      setLoading(false);
     }
 
     loadData();
@@ -132,6 +132,7 @@ export function RoadmapVideoWatchPage({
       setShowRequiredQuiz(true);
     } else setShowRequiredQuiz(false);
   }, [video, quizPassed]);
+  if (loading) return <Loader isLoader={false} />;
 
   if (!roadmap || !course) {
     return (

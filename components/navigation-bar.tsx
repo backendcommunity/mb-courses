@@ -88,7 +88,6 @@ export function NavigationBar({
   }
 
   useMemo(() => {
-    console.log(isNotificationsOpen);
     if (isNotificationsOpen) load();
   }, [isNotificationsOpen]);
 

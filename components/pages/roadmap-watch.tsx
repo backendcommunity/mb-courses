@@ -45,18 +45,6 @@ export function RoadmapWatchPage({
   const [completed, setCompleted] = useState(false);
   const [completedItems, setCompletedItems] = useState<any>([]);
 
-  // async function loadData() {
-  //   setLoading(true);
-  //   const roadmap = await store.getRoadmapBySlug(slug);
-  //   setRoadmap(roadmap);
-
-  //   setLoading(false);
-  // }
-
-  // useEffect(() => {
-  //   loadData();
-  // }, [slug]);
-
   useMemo(() => {
     const l = async () => {
       setLoading(true);
