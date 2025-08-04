@@ -46,6 +46,7 @@ export function RoadmapWatchPage({
   const [completedItems, setCompletedItems] = useState<any>([]);
 
   async function loadData() {
+    setLoading(true);
     const roadmap = await store.getRoadmapBySlug(slug);
     setRoadmap(roadmap);
 
@@ -54,12 +55,11 @@ export function RoadmapWatchPage({
 
     const completedItems = await store.getRoadmapItems(slug, topicId);
     setCompletedItems(completedItems);
+    setLoading(false);
   }
 
   useEffect(() => {
-    setLoading(true);
     loadData();
-    setLoading(false);
   }, [slug]);
 
   if (loading) return <Loader isLoader={false} />;
