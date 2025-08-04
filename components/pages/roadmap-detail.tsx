@@ -106,14 +106,12 @@ export function RoadmapDetailPage({
     setActiveTab(activeTab);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const milestone =
       roadmap?.topics?.find((m) => !m?.userTopic?.completed) ||
       roadmap?.topics?.[0];
 
-    console.log(milestone);
-
-    onNavigate?.(routes.roadmapWatch(slug, milestone?.id));
+    await startMilestone(milestone.id);
   };
 
   const startMilestone = async (milestoneId: string) => {
