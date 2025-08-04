@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Course, Milestone, Roadmap } from "@/lib/data";
 import { toast } from "sonner";
 import { Loader } from "../ui/loader";
@@ -50,17 +50,21 @@ export function RoadmapWatchPage({
     const roadmap = await store.getRoadmapBySlug(slug);
     setRoadmap(roadmap);
 
-    const milestone = await store.getMilestone(slug, topicId);
-    setMilestone(milestone);
-
-    const completedItems = await store.getRoadmapItems(slug, topicId);
-    setCompletedItems(completedItems);
     setLoading(false);
   }
 
   useEffect(() => {
     loadData();
   }, [slug]);
+
+  useMemo(() => {
+    const l = async () => {
+      const milestone = await store.getMilestone(slug, topicId);
+      setMilestone(milestone);
+      setCompletedItems(milestone?.completedItems);
+    };
+    l();
+  }, []);
 
   if (loading) return <Loader isLoader={false} />;
 
