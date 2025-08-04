@@ -455,7 +455,7 @@ export function CourseQuizPage({
             Previous
           </Button>
 
-          {currentQuestion === quiz?.questions.length - 1 ? (
+          {currentQuestion === quiz?.questions?.length - 1 ? (
             <Button
               onClick={handleSubmitQuiz}
               disabled={Object.keys(answers).length !== quiz?.questions.length}

@@ -136,7 +136,7 @@ export function RoadmapDetailPage({
   };
 
   const firstStartableMilestoneId = (() => {
-    for (let i = 0; i < milestones.length - 1; i++) {
+    for (let i = 0; i < milestones?.length - 1; i++) {
       const current = milestones[i];
       const next = milestones[i + 1];
 

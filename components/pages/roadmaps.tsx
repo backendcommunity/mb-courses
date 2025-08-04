@@ -273,8 +273,8 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
 
                   {/* Show the last topic */}
                   {(() => {
-                    const topic = roadmap.topics[roadmap.topics.length - 1];
-                    const index = roadmap.topics.length - 1;
+                    const topic = roadmap.topics[roadmap?.topics?.length - 1];
+                    const index = roadmap?.topics?.length - 1;
                     const isCompleted = topic?.completed;
                     const isCurrent =
                       topic?.id === roadmap?.userRoadmap?.currentTopic?.id;

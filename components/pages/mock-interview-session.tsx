@@ -103,7 +103,7 @@ export function MockInterviewSessionPage({
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < questions?.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setUserAnswer("");
     } else {
@@ -265,7 +265,7 @@ export function MockInterviewSessionPage({
                       {isRecording ? "Stop Recording" : "Start Recording"}
                     </Button>
                     <Button onClick={handleNextQuestion}>
-                      {currentQuestionIndex < questions.length - 1
+                      {currentQuestionIndex < questions?.length - 1
                         ? "Next Question"
                         : "Finish Interview"}
                     </Button>
