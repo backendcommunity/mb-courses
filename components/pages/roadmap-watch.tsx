@@ -221,8 +221,10 @@ export function RoadmapWatchPage({
           </h1>
           <p className="text-muted-foreground">
             Milestone{" "}
-            {roadmap?.topics!?.findIndex((t: any) => t.id === topicId) + 1} of{" "}
-            {roadmap?.topics?.length} • {roadmap?.progress}% Complete
+            {roadmap?.topics!?.findIndex(
+              (t: any) => t.roadmapTopicId === topicId
+            ) + 1}{" "}
+            of {roadmap?.topics?.length} • {roadmap?.progress}% Complete
           </p>
         </div>
       </div>
@@ -424,9 +426,12 @@ export function RoadmapWatchPage({
                   </span>
                 </div>
                 <Progress
-                  value={Number(milestone?.userTopic?.totalTaskCompleted ?? 0)}
+                  value={
+                    (Number(milestone?.userTopic?.totalTaskCompleted ?? 0) /
+                      Number(milestone?.userTopic?.totalTasks ?? 0)) *
+                    100
+                  }
                   className="h-2"
-                  max={Number(milestone?.userTopic?.totalTasks)}
                 />
               </div>
               <div className="space-y-2">
