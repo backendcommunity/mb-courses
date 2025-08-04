@@ -45,23 +45,26 @@ export function RoadmapWatchPage({
   const [completed, setCompleted] = useState(false);
   const [completedItems, setCompletedItems] = useState<any>([]);
 
-  async function loadData() {
-    setLoading(true);
-    const roadmap = await store.getRoadmapBySlug(slug);
-    setRoadmap(roadmap);
+  // async function loadData() {
+  //   setLoading(true);
+  //   const roadmap = await store.getRoadmapBySlug(slug);
+  //   setRoadmap(roadmap);
 
-    setLoading(false);
-  }
+  //   setLoading(false);
+  // }
 
-  useEffect(() => {
-    loadData();
-  }, [slug]);
+  // useEffect(() => {
+  //   loadData();
+  // }, [slug]);
 
   useMemo(() => {
     const l = async () => {
+      setLoading(true);
       const milestone = await store.getMilestone(slug, topicId);
+      setRoadmap(milestone.roadmap);
       setMilestone(milestone);
       setCompletedItems(milestone?.completedItems);
+      setLoading(false);
     };
     l();
   }, []);
@@ -208,7 +211,7 @@ export function RoadmapWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`${routes.roadmaps}/${roadmap?.slug}`)}
+          onClick={() => onNavigate?.(`${routes.roadmaps}/${slug}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

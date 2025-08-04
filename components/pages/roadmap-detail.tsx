@@ -111,6 +111,7 @@ export function RoadmapDetailPage({
       roadmap?.topics?.find((m) => !m?.userTopic?.completed) ||
       roadmap?.topics?.[0];
 
+    if (milestone.enrolled) reviewOrComplete(milestone, false);
     await startMilestone(milestone.id);
   };
 
@@ -121,8 +122,8 @@ export function RoadmapDetailPage({
         completed: false,
       });
 
-      setCelebration(true);
       onNavigate?.(routes.roadmapWatch(slug, milestoneId));
+      setCelebration(true);
     } catch (error: any) {
       toast.error(error?.message ?? "Error occurred. Please try again");
     } finally {
