@@ -74,7 +74,6 @@ export function RoadmapDetailPage({
     async function loadData() {
       setLoading(true);
       const roadmap = await store.getRoadmapBySlug(slug);
-      console.log(roadmap);
       setRoadmap(roadmap);
       setMilestones(roadmap?.topics || []);
 
@@ -132,6 +131,7 @@ export function RoadmapDetailPage({
   };
 
   const firstStartableMilestoneId = (() => {
+    if (milestones?.length === 1) return milestones[0].id;
     for (let i = 0; i < milestones?.length - 1; i++) {
       const current = milestones[i];
       const next = milestones[i + 1];
