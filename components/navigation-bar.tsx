@@ -44,6 +44,7 @@ import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
 import { updateUser } from "@/lib/data";
+import { Loader } from "./ui/loader";
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
   onMenuToggle?: () => void;
@@ -80,10 +81,9 @@ export function NavigationBar({
         skip: 0,
       });
       setNotifications(activities);
-      setIsActivitiesLoading(false);
-      console.log(activities);
     } catch (error) {
     } finally {
+      setIsActivitiesLoading(false);
     }
   }
 
@@ -495,46 +495,51 @@ export function NavigationBar({
                     You have {user?.totalNotifications} unread notifications
                   </p>
                 </div>
-                <div className="max-h-[60vh] overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 border-b cursor-pointer hover:bg-muted/50 ${
-                        !notification.read ? "bg-primary/5" : ""
-                      }`}
-                      onClick={() => handleNotificationClick(notification.id)}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div
-                          className={`w-2 h-2 rounded-full mt-2 ${
-                            notification.type?.includes("COMPLETED")
-                              ? "bg-green-500"
-                              : notification.type?.includes("START") ||
-                                notification.type?.includes("STARTED")
-                              ? "bg-primary"
-                              : notification.type?.includes("WATCHED")
-                              ? "bg-yellow-500"
-                              : "bg-purple-500"
-                          }`}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">
-                            {notification.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(notification.createdAt)}
-                          </p>
+
+                {isActivitiesLoading ? (
+                  <Loader isLoader={false} />
+                ) : (
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-4 border-b cursor-pointer hover:bg-muted/50 ${
+                          !notification.read ? "bg-primary/5" : ""
+                        }`}
+                        onClick={() => handleNotificationClick(notification.id)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div
+                            className={`w-2 h-2 rounded-full mt-2 ${
+                              notification.type?.includes("COMPLETED")
+                                ? "bg-green-500"
+                                : notification.type?.includes("START") ||
+                                  notification.type?.includes("STARTED")
+                                ? "bg-primary"
+                                : notification.type?.includes("WATCHED")
+                                ? "bg-yellow-500"
+                                : "bg-purple-500"
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">
+                              {notification.title}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {notification.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(notification.createdAt)}
+                            </p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-primary rounded-full" />
+                          )}
                         </div>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-primary rounded-full" />
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
                 <div className="p-4 border-t">
                   <Button
                     onClick={handleDeleteNotifications}
