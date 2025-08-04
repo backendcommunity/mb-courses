@@ -111,6 +111,8 @@ export function RoadmapDetailPage({
       roadmap?.topics?.find((m) => !m?.userTopic?.completed) ||
       roadmap?.topics?.[0];
 
+    console.log(milestone);
+
     onNavigate?.(routes.roadmapWatch(slug, milestone?.id));
   };
 
