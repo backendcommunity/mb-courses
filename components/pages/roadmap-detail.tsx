@@ -33,9 +33,6 @@ import {
   CheckCheck,
   BarChart3,
   Loader2,
-  ArrowLeft,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
 import {
   Chapter,
@@ -78,7 +75,7 @@ export function RoadmapDetailPage({
       setLoading(true);
       const roadmap = await store.getRoadmapBySlug(slug);
       const milestones = await store.getRoadmapMilestones(slug);
-
+      console.log(roadmap);
       setRoadmap(roadmap);
       setMilestones(milestones);
 
