@@ -169,17 +169,25 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
 
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between">
-                        <h3
-                          className={`font-medium ${
-                            isCompleted
-                              ? "text-green-700"
-                              : isCurrent || inProgress
-                              ? "text-blue-700"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {topic.title}
-                        </h3>
+                        <div>
+                          <h3
+                            className={`font-medium ${
+                              isCompleted
+                                ? "text-green-700"
+                                : isCurrent || inProgress
+                                ? "text-blue-700"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {topic.title}
+                          </h3>
+                          <article
+                            className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                            dangerouslySetInnerHTML={{
+                              __html: topic?.summary,
+                            }}
+                          ></article>
+                        </div>
                         <Badge
                           variant={
                             isCompleted

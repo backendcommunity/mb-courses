@@ -581,7 +581,7 @@ export function RoadmapDetailPage({
                         {milestone?.courses?.map((course: any) => (
                           <div
                             key={course.id}
-                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-500 p-1 rounded"
+                            className="text-sm flex items-center justify-between cursor-pointer hover:bg-gray-500 p-1 rounded [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               onNavigate?.(
@@ -747,7 +747,7 @@ export function RoadmapDetailPage({
                                           {course?.title}
                                         </h5>
                                         <article
-                                          className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
+                                          className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                                           dangerouslySetInnerHTML={{
                                             __html: course?.summary,
                                           }}
