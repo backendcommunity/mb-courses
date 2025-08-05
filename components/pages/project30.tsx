@@ -977,7 +977,7 @@ export function Project30Page({
                           dangerouslySetInnerHTML={{
                             __html: nextLesson?.summary,
                           }}
-                          className="text-xs md:text-sm text-muted-foreground mt-1"
+                          className="text-xs md:text-sm text-muted-foreground mt-1 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                         ></article>
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
@@ -1163,7 +1163,7 @@ export function Project30Page({
                           dangerouslySetInnerHTML={{
                             __html: lesson?.video?.summary,
                           }}
-                          className="text-xs text-muted-foreground"
+                          className="text-xs text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:!text-muted-foreground"
                         ></article>
                       </div>
                       <Button
@@ -1207,7 +1207,7 @@ export function Project30Page({
                         dangerouslySetInnerHTML={{
                           __html: nextLesson?.summary,
                         }}
-                        className="text-xs text-muted-foreground"
+                        className="text-xs text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       ></article>
                     </div>
                     <Button
@@ -1571,7 +1571,7 @@ export function Project30Page({
                                     dangerouslySetInnerHTML={{
                                       __html: course?.summary,
                                     }}
-                                    className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
+                                    className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                                   ></article>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1590,7 +1590,7 @@ export function Project30Page({
                                 </div>
                                 <a
                                   target="_blank"
-                                  href={routes.courseDetail(course?.id)}
+                                  href={routes.courseDetail(course?.slug)}
                                 >
                                   <Button
                                     size="sm"
