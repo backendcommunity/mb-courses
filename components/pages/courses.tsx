@@ -55,6 +55,8 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   const [userCourseMeta, setUserCourseMeta] = useState<Meta>();
   const [popularCourses, setPopularCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+  const [popularLoading, setPopularLoading] = useState(false);
   const [popularCourseMeta, setPopularCourseMeta] = useState<Meta>();
   const [tab, setTab] = useState(searchParams?.get("tab") || "all-courses");
   const store = useAppStore();
@@ -65,9 +67,10 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
     if (filters.tab?.includes("new")) filters.sortBy = "createdAt";
     const res = await store.getCourses({ filters });
     if (filters!["tab"]?.includes("popular")) {
+      setPopularLoading(true);
       setPopularCourses(res.data?.courses);
       setPopularCourseMeta(res.data?.meta);
-
+      setPopularLoading(true);
       return;
     }
     setLoading(false);
@@ -109,9 +112,11 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
   useMemo(() => {
     if (tab?.includes("my-courses")) {
       const load = async () => {
+        setUserLoading(true);
         const res = await store.getUserCourses();
         setUserCourses(res?.userCourses);
         setUserCourseMeta(res?.meta);
+        setUserLoading(false);
       };
 
       load();
@@ -407,133 +412,152 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
         </TabsContent>
 
         <TabsContent value="my-courses" className="space-y-4">
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {userCourses.map((userCourse: UserCourse) => {
-              return (
-                <Card key={userCourse.id} className="overflow-hidden relative">
-                  <div
-                    className="aspect-video bg-muted cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => handleViewDetails(userCourse?.course?.slug!)}
-                  >
-                    <img
-                      src={userCourse?.course?.banner ?? "/placeholder.svg"}
-                      alt={userCourse?.course?.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <CardHeader className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge
-                        variant={
-                          userCourse?.course?.level === "Advanced"
-                            ? "destructive"
-                            : userCourse?.course?.level === "Intermediate"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {userCourse?.course?.level}
-                      </Badge>
-                    </div>
-                    <CardTitle
-                      className="line-clamp-2 cursor-pointer hover:text-primary transition-colors text-sm md:text-base"
-                      onClick={() =>
-                        handleViewDetails(userCourse?.course?.slug!)
-                      }
+          {userLoading ? (
+            <Loader isLoader={false} />
+          ) : (
+            <>
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {userCourses.map((userCourse: UserCourse) => {
+                  return (
+                    <Card
+                      key={userCourse.id}
+                      className="overflow-hidden relative"
                     >
-                      {userCourse?.course?.title}
-                    </CardTitle>
-                    <CardDescription
-                      dangerouslySetInnerHTML={{
-                        __html: userCourse?.course?.description!,
-                      }}
-                      className="line-clamp-2 text-xs md:text-sm"
-                    ></CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3 md:space-y-4 p-4 pt-0">
-                    <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                        {userCourse?.course?.totalDuration}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3 md:h-4 md:w-4" />
-                        {userCourse?.course?.students}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs md:text-sm">
-                        <span>Progress</span>
-                        <span>{userCourse?.progress ?? 0}%</span>
-                      </div>
-                      <Progress
-                        value={userCourse?.progress ?? 0}
-                        className="h-2"
-                      />
-                      <Button
-                        className="w-full text-xs md:text-sm"
+                      <div
+                        className="aspect-video bg-muted cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() =>
-                          handleContinueLearning(userCourse?.course?.slug!)
+                          handleViewDetails(userCourse?.course?.slug!)
                         }
                       >
-                        <Play className="mr-2 h-3 w-3 md:h-4 md:w-4" />
-                        Continue Learning
-                      </Button>
-                    </div>
+                        <img
+                          src={userCourse?.course?.banner ?? "/placeholder.svg"}
+                          alt={userCourse?.course?.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
 
-                    <div className="flex flex-wrap gap-1">
-                      {userCourse?.course?.tags?.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge
+                            variant={
+                              userCourse?.course?.level === "Advanced"
+                                ? "destructive"
+                                : userCourse?.course?.level === "Intermediate"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {userCourse?.course?.level}
+                          </Badge>
+                        </div>
+                        <CardTitle
+                          className="line-clamp-2 cursor-pointer hover:text-primary transition-colors text-sm md:text-base"
+                          onClick={() =>
+                            handleViewDetails(userCourse?.course?.slug!)
+                          }
+                        >
+                          {userCourse?.course?.title}
+                        </CardTitle>
+                        <CardDescription
+                          dangerouslySetInnerHTML={{
+                            __html: userCourse?.course?.description!,
+                          }}
+                          className="line-clamp-2 text-xs md:text-sm"
+                        ></CardDescription>
+                      </CardHeader>
+
+                      <CardContent className="space-y-3 md:space-y-4 p-4 pt-0">
+                        <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                            {userCourse?.course?.totalDuration}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3 md:h-4 md:w-4" />
+                            {userCourse?.course?.students}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs md:text-sm">
+                            <span>Progress</span>
+                            <span>{userCourse?.progress ?? 0}%</span>
+                          </div>
+                          <Progress
+                            value={userCourse?.progress ?? 0}
+                            className="h-2"
+                          />
+                          <Button
+                            className="w-full text-xs md:text-sm"
+                            onClick={() =>
+                              handleContinueLearning(userCourse?.course?.slug!)
+                            }
+                          >
+                            <Play className="mr-2 h-3 w-3 md:h-4 md:w-4" />
+                            Continue Learning
+                          </Button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1">
+                          {userCourse?.course?.tags?.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="popular" className="space-y-4">
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {popularCourses?.map((course: any) => {
-              return (
-                <Card key={course.id} className="overflow-hidden relative">
-                  <div
-                    className="aspect-video bg-muted cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => handleViewDetails(course.slug)}
-                  >
-                    <img
-                      src={
-                        course?.banner ??
-                        course?.thumbnail ??
-                        "/placeholder.svg"
-                      }
-                      alt={course.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <CardHeader className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge
-                        variant={
-                          course?.level === "Advanced"
-                            ? "destructive"
-                            : course?.level === "Intermediate"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="text-xs"
+          {popularLoading ? (
+            <Loader isLoader={false} />
+          ) : (
+            <>
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {popularCourses?.map((course: any) => {
+                  return (
+                    <Card key={course.id} className="overflow-hidden relative">
+                      <div
+                        className="aspect-video bg-muted cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleViewDetails(course.slug)}
                       >
-                        {course?.level}
-                      </Badge>
-                      {/* <div className="flex items-center gap-1 flex flex-col">
+                        <img
+                          src={
+                            course?.banner ??
+                            course?.thumbnail ??
+                            "/placeholder.svg"
+                          }
+                          alt={course.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge
+                            variant={
+                              course?.level === "Advanced"
+                                ? "destructive"
+                                : course?.level === "Intermediate"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {course?.level}
+                          </Badge>
+                          {/* <div className="flex items-center gap-1 flex flex-col">
                         <span>
                           <DollarSign className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-xs md:text-sm">
@@ -542,91 +566,101 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                         </span>
                         <i className="text-xs">lifetime</i>
                       </div> */}
-                    </div>
-                    <CardTitle
-                      className="line-clamp-2 cursor-pointer hover:text-primary transition-colors text-sm md:text-base"
-                      onClick={() => handleViewDetails(course.slug)}
-                    >
-                      {course.title}
-                    </CardTitle>
-                    <CardDescription
-                      dangerouslySetInnerHTML={{ __html: course?.description }}
-                      className="line-clamp-2 text-xs md:text-sm"
-                    ></CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3 md:space-y-4 p-4 pt-0">
-                    <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                        {course?.totalDuration}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3 md:h-4 md:w-4" />
-                        {course?.students?.toLocaleString()}
-                      </div>
-                    </div>
-
-                    {course.enrolled ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs md:text-sm">
-                          <span>Progress</span>
-                          <span>{course?.progress ?? 0}%</span>
                         </div>
-                        <Progress
-                          value={course?.progress ?? 0}
-                          className="h-2"
-                        />
-                        <Button
-                          className="w-full text-xs md:text-sm"
-                          onClick={() => handleContinueLearning(course.slug)}
-                        >
-                          <Play className="mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          Continue Learning
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          {course.isPremium && (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-100 text-green-800 border-green-200 text-xs"
-                            >
-                              <Crown className="mr-1 h-3 w-3" />
-                              Included in Pro
-                            </Badge>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePreview(course.slug)}
-                            className="text-xs"
-                          >
-                            Preview
-                          </Button>
-                        </div>
-                        <Button
-                          className="w-full text-xs md:text-sm"
+                        <CardTitle
+                          className="line-clamp-2 cursor-pointer hover:text-primary transition-colors text-sm md:text-base"
                           onClick={() => handleViewDetails(course.slug)}
                         >
-                          Start Learning
-                        </Button>
-                      </div>
-                    )}
+                          {course.title}
+                        </CardTitle>
+                        <CardDescription
+                          dangerouslySetInnerHTML={{
+                            __html: course?.description,
+                          }}
+                          className="line-clamp-2 text-xs md:text-sm"
+                        ></CardDescription>
+                      </CardHeader>
 
-                    <div className="flex flex-wrap gap-1">
-                      {course?.tags?.slice(0, 3).map((tag: any) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                      <CardContent className="space-y-3 md:space-y-4 p-4 pt-0">
+                        <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                            {course?.totalDuration}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3 md:h-4 md:w-4" />
+                            {course?.students?.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {course.enrolled ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs md:text-sm">
+                              <span>Progress</span>
+                              <span>{course?.progress ?? 0}%</span>
+                            </div>
+                            <Progress
+                              value={course?.progress ?? 0}
+                              className="h-2"
+                            />
+                            <Button
+                              className="w-full text-xs md:text-sm"
+                              onClick={() =>
+                                handleContinueLearning(course.slug)
+                              }
+                            >
+                              <Play className="mr-2 h-3 w-3 md:h-4 md:w-4" />
+                              Continue Learning
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              {course.isPremium && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-100 text-green-800 border-green-200 text-xs"
+                                >
+                                  <Crown className="mr-1 h-3 w-3" />
+                                  Included in Pro
+                                </Badge>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreview(course.slug)}
+                                className="text-xs"
+                              >
+                                Preview
+                              </Button>
+                            </div>
+                            <Button
+                              className="w-full text-xs md:text-sm"
+                              onClick={() => handleViewDetails(course.slug)}
+                            >
+                              Start Learning
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-1">
+                          {course?.tags?.slice(0, 3).map((tag: any) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="new" className="space-y-4">
