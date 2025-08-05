@@ -47,18 +47,20 @@ export function DashboardContent({}: DashboardContentProps) {
     try {
       setIsActivitiesLoading(true);
       setIsRoadmapLoading(true);
-      const activities = await store.getActivities({});
-      setActivities(activities);
-      setIsActivitiesLoading(false);
+      const [activities, userRoadmaps] = await Promise.all([
+        store.getActivities({}),
+        store.getUserRoadmaps({
+          size: 1,
+          skip: 0,
+        }),
+      ]);
 
-      const userRoadmaps = await store.getUserRoadmaps({
-        size: 1,
-        skip: 0,
-      });
+      setActivities(activities);
       setUserRoadmaps(userRoadmaps);
-      setIsRoadmapLoading(false);
     } catch (error) {
     } finally {
+      setIsRoadmapLoading(false);
+      setIsActivitiesLoading(false);
     }
   }
 
