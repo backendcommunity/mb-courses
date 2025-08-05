@@ -199,8 +199,8 @@ export function RoadmapVideoWatchPage({
   };
 
   const isChapterCompleted = (chapterId: string) => {
-    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
-      ?.isCompleted;
+    return completedItems?.find((ch: any) => ch.itemId === chapterId)
+      ?.completed;
   };
 
   const isVideoCompleted = (videoId: string) => {
@@ -351,6 +351,9 @@ export function RoadmapVideoWatchPage({
           itemId: video.id,
           type: "VIDEO",
           isChapterCompleted,
+          chapter: {
+            itemId: chapter.id,
+          },
           courseId: course.slug,
         })
         .then(() => {
@@ -503,7 +506,7 @@ export function RoadmapVideoWatchPage({
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              {video.type === "VIDEO" && (
+              {video?.type === "VIDEO" && (
                 <Button disabled={true} variant="outline" size="sm">
                   <Download className="mr-2 h-4 w-4" />
                   Download
@@ -513,8 +516,8 @@ export function RoadmapVideoWatchPage({
 
             <div className="flex items-center gap-2">
               {video &&
-                video.type === "VIDEO" &&
-                !isVideoCompleted(video.id) && (
+                video?.type === "VIDEO" &&
+                !isVideoCompleted(video?.id) && (
                   <Button disabled={isMarking} onClick={handleMarkComplete}>
                     {isMarking ? (
                       <>
@@ -580,7 +583,7 @@ export function RoadmapVideoWatchPage({
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              {video.type === "VIDEO" && (
+              {video?.type === "VIDEO" && (
                 <>
                   <TabsTrigger value="code">Code Editor</TabsTrigger>
                   <TabsTrigger value="transcript">Transcript</TabsTrigger>
@@ -632,7 +635,7 @@ export function RoadmapVideoWatchPage({
               </Card>
             </TabsContent>
 
-            {video.type === "VIDEO" && (
+            {video?.type === "VIDEO" && (
               <>
                 <TabsContent value="transcript" className="space-y-4">
                   <Card>

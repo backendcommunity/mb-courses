@@ -132,6 +132,7 @@ interface AppState {
       itemId: string;
       isChapterCompleted?: boolean;
       courseId: string;
+      chapter?: any;
     }
   ) => any;
 
@@ -410,7 +411,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   markRoadmapVideoCompleted: async (
     slug: string,
     topicId: string,
-    payload: { type: string; itemId: string; isChapterCompleted?: boolean }
+    payload: {
+      type: string;
+      itemId: string;
+      isChapterCompleted?: boolean;
+      chapter?: any;
+    }
   ) => {
     const { data } = await api.post(
       `/roadmaps/${slug}/topics/${topicId}/video`,
