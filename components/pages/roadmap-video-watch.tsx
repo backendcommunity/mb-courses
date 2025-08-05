@@ -29,6 +29,7 @@ import {
   Code,
   Brain,
   Crown,
+  Loader2,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
@@ -95,6 +96,7 @@ export function RoadmapVideoWatchPage({
   const [completedItems, setCompletedItems] = useState<any>([]);
   const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
 
   const chapter: Chapter | any = course?.chapters.find(
     (ch: Chapter) => ch.slug === chapterId
@@ -285,6 +287,7 @@ export function RoadmapVideoWatchPage({
     if (!video || !course || !chapter || !userCourse) return;
 
     try {
+      setIsMarking(true);
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
         userCourse
@@ -349,8 +352,9 @@ export function RoadmapVideoWatchPage({
       setCelebration(true);
       handleVideoClick(nextVideo);
     } catch (error: any) {
-      console.log(error.message);
       toast.error("An error occurred. Please try again");
+    } finally {
+      setIsMarking(false);
     }
   };
 
@@ -501,14 +505,23 @@ export function RoadmapVideoWatchPage({
               {video &&
                 video.type === "VIDEO" &&
                 !isVideoCompleted(video.id) && (
-                  <Button onClick={handleMarkComplete}>
+                  <Button disabled={isMarking} onClick={handleMarkComplete}>
+                    {isMarking ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Marking...</span>
+                      </>
+                    ) : (
+                      <span> Mark Complete</span>
+                    )}
+
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Mark Complete
                   </Button>
                 )}
 
               {nextVideo && (
                 <Button
+                  disabled={isMarking}
                   onClick={() => handleVideoClick(nextVideo)}
                   className="capitalize"
                 >
@@ -517,7 +530,10 @@ export function RoadmapVideoWatchPage({
                 </Button>
               )}
               {!nextVideo && nextChapter && (
-                <Button onClick={() => handleChapterClick(true)}>
+                <Button
+                  disabled={isMarking}
+                  onClick={() => handleChapterClick(true)}
+                >
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -575,7 +591,7 @@ export function RoadmapVideoWatchPage({
                 <CardContent>
                   <div className="space-y-4">
                     <article
-                      className="text-muted-foreground"
+                      className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
                         __html: video?.summary!,
                       }}
@@ -592,13 +608,13 @@ export function RoadmapVideoWatchPage({
                             <div className="px-2 text-xs">description</div>
                             <span className="border-t flex-1"></span>
                           </div>
-                          <p
-                            className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-black dark:[&>p]:text-white"
+                          <article
+                            className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                             dangerouslySetInnerHTML={{
                               __html:
                                 video?.description ?? nextChapter?.description,
                             }}
-                          ></p>
+                          ></article>
                         </div>
                       </CardContent>
                     ))}
