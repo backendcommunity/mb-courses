@@ -275,24 +275,24 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       </div>
     );
   }
-
-  if (!plan) {
-    return (
-      <div className="container max-w-4xl py-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Checkout Error</CardTitle>
-            <CardDescription>The requested item was not found.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => onNavigate(routes.dashboard)}>
-              Return to Dashboard
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+  if (loading) return <Loader isLoader={false} />;
+  // if (!plan) {
+  //   return (
+  //     <div className="container max-w-4xl py-12">
+  //       <Card>
+  //         <CardHeader>
+  //           <CardTitle>Checkout Error</CardTitle>
+  //           <CardDescription>The requested item was not found.</CardDescription>
+  //         </CardHeader>
+  //         <CardFooter>
+  //           <Button onClick={() => onNavigate(routes.dashboard)}>
+  //             Return to Dashboard
+  //           </Button>
+  //         </CardFooter>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
   const formatAmount = (amount: number) => {
     if (typeof window === "undefined") return;
@@ -305,7 +305,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   };
 
   const currentPaymentMethod = (method: string) => {
-    const pc = plan.paymentChannels?.find((pc) =>
+    const pc = plan?.paymentChannels?.find((pc) =>
       pc.channel.toString().toLowerCase().includes(method)
     );
     return {
@@ -313,7 +313,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       pc,
     };
   };
-  if (loading) return <Loader isLoader={false} />;
+
   return (
     <div className="container ">
       <Button variant="ghost" size="sm" className="mb-8" onClick={handleBack}>
