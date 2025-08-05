@@ -95,6 +95,7 @@ export function RoadmapVideoWatchPage({
   const [completed, setCompleted] = useState(false);
   const [milestone, setMilestone] = useState<Milestone | any>();
   const [completedItems, setCompletedItems] = useState<any>([]);
+  const [userChapters, setUserChapters] = useState<any>([]);
   const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
@@ -122,6 +123,7 @@ export function RoadmapVideoWatchPage({
       const course = await store.getCourse(courseId, { isRoadmap: true });
       setCourse(course);
       setUserCourse(course?.userCourse);
+      setUserChapters(course?.userCourse?.userChapters);
 
       const completed =
         completedItems.find((c: any) => c.itemId === course.id)?.completed ??
@@ -197,9 +199,8 @@ export function RoadmapVideoWatchPage({
   };
 
   const isChapterCompleted = (chapterId: string) => {
-    return userCourse?.userChapters?.find(
-      (ch: UserChapter) => ch.chapterId === chapterId
-    )?.isCompleted;
+    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
+      ?.isCompleted;
   };
 
   const isVideoCompleted = (videoId: string) => {
@@ -289,9 +290,9 @@ export function RoadmapVideoWatchPage({
       setIsMarking(true);
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
-        userCourse
-          ?.userVideos!?.filter((v) => v.isCompleted)
-          .map((v) => v.videoId)
+        completedItems!
+          ?.filter((v: any) => v.completed)
+          .map((v: any) => v.itemId)
       );
       completedVideoIds.add(video.id); // include this one just marked
       // Check if all chapter videos are now complete
@@ -301,47 +302,43 @@ export function RoadmapVideoWatchPage({
 
       const hasOtherContent =
         chapter.quizzes || chapter.exercises || chapter.playgrounds;
-      const isChapterCompleted = allVideosComplete && !hasOtherContent;
+      const isChapterCompleted =
+        allVideosComplete && hasOtherContent.length < 1;
 
-      // Update local course state
-      const updatedChapters = course.chapters.map((ch) =>
-        ch.id === chapter.id
-          ? {
-              ...ch,
-              videos: ch.videos.map((v) =>
-                v.id === video.id ? { ...v, isCompleted: true } : v
-              ),
-              isCompleted: isChapterCompleted,
-            }
-          : ch
-      );
-
-      setCourse({ ...course, chapters: updatedChapters });
-      localDB.update(`course_${course.slug}`, {
-        ...course,
-        chapters: updatedChapters,
+      // Update Milestone locally
+      const completedItem = [
+        ...completedItems,
+        {
+          completed: true,
+          itemId: video.id,
+          itemType: "VIDEO",
+        },
+      ];
+      setCompletedItems(completedItem);
+      localDB.update(`milestone_${milestone.id}`, {
+        ...milestone,
+        userTopic: {
+          ...milestone.userTopic,
+          completedItems: completedItem,
+        },
       });
 
-      // Optionally update userCourse for UI
-      const newUserCourse = {
-        ...userCourse,
-        userVideos: [
-          ...userCourse?.userVideos!?.filter((v) => v.videoId !== video.id),
-          { videoId: video.id, isCompleted: true },
-        ],
-        userChapters: isChapterCompleted
-          ? [
-              ...userCourse?.userChapters!.filter(
-                (ch) => ch.chapterId !== chapter.id
-              ),
-              { chapterId: chapter.id, isCompleted: true },
-            ]
-          : userCourse.userChapters,
-      };
-      setUserCourse(newUserCourse);
+      // Update UserChapter locally
+      const userChapter = [
+        ...userChapters,
+        {
+          chapterId: chapter.id,
+          isCompleted: isChapterCompleted,
+        },
+      ];
+
+      setUserChapters(userChapter);
       localDB.update(`course_${course.slug}`, {
         ...course,
-        userCourse: newUserCourse,
+        userCourse: {
+          ...course.userCourse,
+          userChapters: userChapter,
+        },
       });
 
       if (video?.type === "QUIZ")
@@ -356,12 +353,8 @@ export function RoadmapVideoWatchPage({
         courseId: course.slug,
       });
 
-      localDB.remove(`milestone_${topicId}`);
-      loadMilestone();
-
       toast.success("You just earned some points!");
       setCelebration(true);
-      handleVideoClick(nextVideo);
     } catch (error: any) {
       console.log(error);
       toast.error("An error occurred. Please try again");
