@@ -345,11 +345,11 @@ export function RoadmapVideoWatchPage({
       });
 
       if (video?.type === "QUIZ")
-        return await markQuizAsCompleted(isChapterCompleted);
+        return markQuizAsCompleted(isChapterCompleted);
 
       // Backend update with proper `isChapterCompleted`
 
-      await store.markRoadmapVideoCompleted(slug, topicId, {
+      store.markRoadmapVideoCompleted(slug, topicId, {
         itemId: video.id,
         type: "VIDEO",
         isChapterCompleted,
@@ -357,7 +357,7 @@ export function RoadmapVideoWatchPage({
       });
 
       localDB.remove(`milestone_${topicId}`);
-      await loadMilestone();
+      loadMilestone();
 
       toast.success("You just earned some points!");
       setCelebration(true);
