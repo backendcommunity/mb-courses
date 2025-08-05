@@ -463,7 +463,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
                           dangerouslySetInnerHTML={{
                             __html: userCourse?.course?.description!,
                           }}
-                          className="line-clamp-2 text-xs md:text-sm"
+                          className="line-clamp-2 text-xs md:text-sm [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                         ></CardDescription>
                       </CardHeader>
 
@@ -783,8 +783,3 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
     </Tabs>
   );
 }
-
-/**
- *
- *
- */
