@@ -153,6 +153,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     .then((paddleInstance: Paddle | undefined) => {
       if (paddleInstance) {
         setPaddle(paddleInstance);
+        openCheckout(getPriceId(paymentMethod));
       }
     })
     .catch((e) => console.log(e));
