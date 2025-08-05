@@ -25,6 +25,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
+import { Loader } from "../ui/loader";
 
 interface XpRedemptionPageProps {
   onNavigate: (path: string) => void;
@@ -36,6 +37,8 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
   const [name, setName] = useState<string>("");
   const [redeemReward, setRedeemReward] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const [loadingAch, setLoadingAch] = useState(false);
   const [reward, setReward] = useState<Reward>();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
@@ -45,15 +48,19 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
   const [userXP] = useState(user?.points ?? 0);
 
   async function loadRewards() {
+    setLoadingRewards(true);
     const rewards = await store.getRewards();
     setRewards(rewards);
     setRecentRedemptions(rewards?.filter((reward: Reward) => reward?.enrolled));
+    setLoadingRewards(false);
   }
 
   async function loadAchievements() {
+    setLoadingAch(true);
     const achievements = await store.getUserAchievement();
 
     setAchievements(achievements);
+    setLoadingAch(false);
   }
 
   useMemo(() => {
@@ -120,131 +127,152 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
         </TabsList>
 
         <TabsContent value="rewards" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rewards
-              ?.sort(
-                (a: Reward | any, b: Reward | any) => b?.enrolled - a?.enrolled
-              )
-              ?.map((reward: Reward) => (
-                <Card
-                  key={reward.id}
-                  className={`relative ${!reward?.active ? "opacity-50" : ""}`}
-                >
-                  {reward?.enrolled && (
-                    <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500">
-                      Active
-                    </Badge>
-                  )}
-                  <CardHeader>
-                    <div className="flex items-center space-x-2">
-                      <i
-                        dangerouslySetInnerHTML={{ __html: reward?.icon! }}
-                      ></i>
-                      <CardTitle className="text-lg">{reward.title}</CardTitle>
-                    </div>
-                    <CardDescription>{reward.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">{reward.category}</Badge>
-                        <div className="flex items-center space-x-1">
-                          <Zap className="h-4 w-4 text-yellow-500" />
-                          <span className="font-bold">{reward.mb}</span>
-                        </div>
+          {loadingRewards ? (
+            <Loader isLoader={false} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {rewards
+                ?.sort(
+                  (a: Reward | any, b: Reward | any) =>
+                    b?.enrolled - a?.enrolled
+                )
+                ?.map((reward: Reward) => (
+                  <Card
+                    key={reward.id}
+                    className={`relative ${
+                      !reward?.active ? "opacity-50" : ""
+                    }`}
+                  >
+                    {reward?.enrolled && (
+                      <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500">
+                        Active
+                      </Badge>
+                    )}
+                    <CardHeader>
+                      <div className="flex items-center space-x-2">
+                        <i
+                          dangerouslySetInnerHTML={{ __html: reward?.icon! }}
+                        ></i>
+                        <CardTitle className="text-lg">
+                          {reward.title}
+                        </CardTitle>
                       </div>
-                      <Button
-                        className="w-full"
-                        disabled={
-                          reward.enrolled ||
-                          !reward.active ||
-                          userXP < reward.mb
-                        }
-                        onClick={() => {
-                          setRedeemReward(true);
-                          setReward(reward);
-                        }}
-                      >
-                        {!reward.active ? (
-                          <>
-                            <Clock className="mr-2 h-4 w-4" />
-                            Coming Soon
-                          </>
-                        ) : userXP < reward.mb ? (
-                          `Need ${reward.mb - userXP} more MB`
-                        ) : (
-                          <>
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Redeem
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
+                      <CardDescription>{reward.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline">{reward.category}</Badge>
+                          <div className="flex items-center space-x-1">
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                            <span className="font-bold">{reward.mb}</span>
+                          </div>
+                        </div>
+                        <Button
+                          className="w-full"
+                          disabled={
+                            reward.enrolled ||
+                            !reward.active ||
+                            userXP < reward.mb
+                          }
+                          onClick={() => {
+                            setRedeemReward(true);
+                            setReward(reward);
+                          }}
+                        >
+                          {!reward.active ? (
+                            <>
+                              <Clock className="mr-2 h-4 w-4" />
+                              Coming Soon
+                            </>
+                          ) : userXP < reward.mb ? (
+                            `Need ${reward.mb - userXP} more MB`
+                          ) : (
+                            <>
+                              <ShoppingCart className="mr-2 h-4 w-4" />
+                              Redeem
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="achievements" className="space-y-4">
           <div className="grid gap-4">
-            <div className="text-center p-8">
-              <p className="text-muted-foreground">
-                You do not have any achievement at this moment. The quickest
-                roadmap to an achievement is to complete a course.
-              </p>
-              <Button onClick={() => onNavigate("/courses")} className="mt-2">
-                Start one now
-              </Button>
-            </div>
+            {!achievements.length && (
+              <div className="text-center p-8">
+                <p className="text-muted-foreground">
+                  You do not have any achievement at this moment. The quickest
+                  roadmap to an achievement is to complete a course.
+                </p>
+                <Button onClick={() => onNavigate("/courses")} className="mt-2">
+                  Start one now
+                </Button>
+              </div>
+            )}
 
-            {achievements?.map(({ achievement, ...ach }) => (
-              <Card key={achievement.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-semibold">
-                          {achievement.name}
-                        </h3>
-                        {achievement.unlocked && (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        )}
-                      </div>
-                      <p className="text-muted-foreground mb-3">
-                        {achievement.description}
-                      </p>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Progress</span>
-                          <span>
-                            {ach.progress}/{achievement?.condition?.required}
-                          </span>
+            {loadingAch ? (
+              <Loader isLoader={false} />
+            ) : (
+              <>
+                {achievements?.map(({ achievement, ...ach }) => (
+                  <Card key={achievement.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold">
+                              {achievement.name}
+                            </h3>
+                            {achievement.unlocked && (
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                            )}
+                          </div>
+                          <p className="text-muted-foreground mb-3">
+                            {achievement.description}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Progress</span>
+                              <span>
+                                {ach.progress}/
+                                {achievement?.condition?.required}
+                              </span>
+                            </div>
+                            <Progress
+                              value={
+                                (ach.progress /
+                                  achievement?.condition?.required) *
+                                100
+                              }
+                              className="h-2"
+                            />
+                          </div>
                         </div>
-                        <Progress
-                          value={
-                            (ach.progress / achievement?.condition?.required) *
-                            100
-                          }
-                          className="h-2"
-                        />
+                        <div className="text-right ml-4">
+                          <div className="flex items-center space-x-1 mb-2">
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                            <span className="font-bold">
+                              {ach?.xpReward ?? 0}
+                            </span>
+                          </div>
+                          {achievement.completed ? (
+                            <Badge variant="default">Completed</Badge>
+                          ) : (
+                            <Badge variant="outline">In Progress</Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="flex items-center space-x-1 mb-2">
-                        <Zap className="h-4 w-4 text-yellow-500" />
-                        <span className="font-bold">{ach?.xpReward ?? 0}</span>
-                      </div>
-                      {achievement.completed ? (
-                        <Badge variant="default">Completed</Badge>
-                      ) : (
-                        <Badge variant="outline">In Progress</Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
           </div>
         </TabsContent>
 

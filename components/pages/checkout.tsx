@@ -35,6 +35,8 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { formatDate } from "@/lib/utils";
+import { Loader } from "../ui/loader";
 
 interface CheckoutPageProps {
   onNavigate: (path: string) => void;
@@ -44,19 +46,21 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const searchParams = useSearchParams();
   const store = useAppStore();
   const user = useUser();
+  const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paddle");
   const [plan, setPlan] = useState<Plan>();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const paddleRef = useRef<HTMLInputElement>(null);
   const [celebration, setCelebration] = useState(false);
+  const [paddle, setPaddle] = useState<Paddle>();
 
   // Extract checkout type and ID from the URL
-  const checkoutType = searchParams.get("type");
+  // const checkoutType = searchParams.get("type");
   const checkoutId = searchParams.get("plan");
   const cycle = searchParams.get("cycle");
 
-  const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
+  // const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
   const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
   const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
   const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
@@ -64,15 +68,21 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const subscription = user?.subscription;
   const plans = dataStore.plans;
 
+  const getPriceId = (method: string | any) =>
+    cycle?.includes("monthly")
+      ? currentPaymentMethod(method).pc?.monthlyPlanId
+      : currentPaymentMethod(method).pc?.yearlyPlanId;
+
   useMemo(() => {
     async function load(name: string) {
+      setLoading(true);
       const plan = await store.getPlan(name);
       setPlan(plan);
+      setLoading(false);
     }
     load(checkoutId!);
   }, [checkoutId]);
 
-  const [paddle, setPaddle] = useState<Paddle>();
   // Callback to open a checkout
   const openCheckout = (priceId: string | any) => {
     if (!paddleRef.current) return;
@@ -94,60 +104,58 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
   useEffect(() => {
     if (!paddleRef.current) return;
-    openCheckout(priceId(paymentMethod));
+    openCheckout(getPriceId(paymentMethod));
   }, [paddleRef.current, paymentMethod]);
 
-  useEffect(() => {
-    console.log(SELLER_ID);
-    initializePaddle({
-      token: PADDLE_TOKEN,
-      // seller: SELLER_ID,
-      checkout: {
-        settings: {
-          displayMode: "inline",
-          frameTarget: "paddle",
-          frameInitialHeight: 450,
-          variant: "one-page",
-          frameStyle:
-            "width: 100%; min-width: 312px; background-color: transparent; border: none;",
-          allowedPaymentMethods: [
-            "alipay",
-            "apple_pay",
-            "bancontact",
-            "card",
-            "google_pay",
-            "ideal",
-            "paypal",
-          ],
-          // theme: theme?.includes("dark") ? "dark" : "light",
-        },
+  initializePaddle({
+    token: PADDLE_TOKEN,
+    checkout: {
+      settings: {
+        displayMode: "inline",
+        frameTarget: "paddle",
+        frameInitialHeight: 450,
+        variant: "one-page",
+        frameStyle:
+          "width: 100%; min-width: 312px; background-color: transparent; border: none;",
+        allowedPaymentMethods: [
+          "alipay",
+          "apple_pay",
+          "bancontact",
+          "card",
+          "google_pay",
+          "ideal",
+          "paypal",
+        ],
+        // theme: theme?.includes("dark") ? "dark" : "light",
       },
-      eventCallback: function (data: any) {
-        switch (data.name) {
-          case "checkout.loaded":
-            setIsProcessing(true);
-            break;
-          case "checkout.closed":
-            setIsProcessing(false);
-            break;
-          case "checkout.completed":
-            const c_data = data?.custom_data;
-            // Track payment (GA or Google)
-            setIsProcessing(false);
-            setCelebration(true);
-            toast.success(
-              "You have successfully subscribe to " + checkoutId + " plan"
-            );
-            break;
-        }
-      },
-      environment: PADDLE_ENVIRONMENT,
-    }).then((paddleInstance: Paddle | undefined) => {
+    },
+    eventCallback: function (data: any) {
+      switch (data.name) {
+        case "checkout.loaded":
+          setIsProcessing(true);
+          break;
+        case "checkout.closed":
+          setIsProcessing(false);
+          break;
+        case "checkout.completed":
+          const c_data = data?.custom_data;
+          // Track payment (GA or Google)
+          setIsProcessing(false);
+          setCelebration(true);
+          toast.success(
+            "You have successfully subscribe to " + checkoutId + " plan"
+          );
+          break;
+      }
+    },
+    environment: PADDLE_ENVIRONMENT,
+  })
+    .then((paddleInstance: Paddle | undefined) => {
       if (paddleInstance) {
         setPaddle(paddleInstance);
       }
-    });
-  }, []);
+    })
+    .catch((e) => console.log(e));
 
   const handleCheckout = async (e: React.FormEvent) => {
     if (typeof window !== "undefined") {
@@ -163,7 +171,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
           lastName: user.name.split(" ")[1],
           email: user.email,
         },
-        subscriptionPlanUUID: priceId(paymentMethod),
+        subscriptionPlanUUID: getPriceId(paymentMethod),
         onSuccess: () => {
           // Run a function to process the payment
           alert("Payment successful");
@@ -186,15 +194,6 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       subscription?.name! ?? subscription?.plan?.name! ?? subscription?.plan
     )
   );
-
-  const formatDate = (date: string) => {
-    if (!date || date.includes("Free forever")) return date;
-    return new Intl.DateTimeFormat("en-US", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(date));
-  };
 
   const handleBack = () => {
     onNavigate(routes.subscriptionPlans);
@@ -314,12 +313,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       pc,
     };
   };
-
-  const priceId = (method: string | any) =>
-    cycle?.includes("monthly")
-      ? currentPaymentMethod(method).pc?.monthlyPlanId
-      : currentPaymentMethod(method).pc?.yearlyPlanId;
-
+  if (loading) return <Loader isLoader={false} />;
   return (
     <div className="container ">
       <Button variant="ghost" size="sm" className="mb-8" onClick={handleBack}>
@@ -490,7 +484,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             <form className="space-y-6">
               {paymentMethod === "paddle" && (
                 <>
-                  {openCheckout(priceId(paymentMethod))}
+                  {openCheckout(getPriceId(paymentMethod))}
 
                   <div
                     ref={paddleRef}

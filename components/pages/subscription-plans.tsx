@@ -23,6 +23,7 @@ import { routes } from "@/lib/routes";
 import { dataStore } from "@/lib/data";
 import { useAppStore } from "@/lib/store";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui/loader";
 
 interface SubscriptionPlansPageProps {
   onNavigate: (path: string) => void;
@@ -32,6 +33,7 @@ export function SubscriptionPlansPage({
   onNavigate,
 }: SubscriptionPlansPageProps) {
   const store = useAppStore();
+  const [loading, setLoading] = useState(false);
   const user = useUser();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
     "annual"
@@ -67,13 +69,17 @@ export function SubscriptionPlansPage({
 
   useMemo(() => {
     async function load() {
+      setLoading(true);
       const plans = await store.getPlans();
       const merged = mergePlans([...plans, ...dataStore.plans]);
       setPlans(merged);
+      setLoading(false);
     }
 
     load();
   }, []);
+
+  if (loading) return <Loader isLoader={false} />;
 
   const handleSelectPlan = (planId: string, cycle: string) => {
     onNavigate(routes.checkout("subscription", planId, cycle));
