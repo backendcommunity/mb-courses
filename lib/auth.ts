@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import api from "./api";
 import { NewUser } from "./data";
+import { localDB } from "./localDB";
 
 export const login = async (email: string, password: string) => {
   const response = await api.post("/auth/login", { email, password });
@@ -19,10 +20,9 @@ export const register = async (user: NewUser) => {
 export const logout = async () => {
   try {
     await api.post("/auth/logout");
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem("mb_token");
-      localStorage.removeItem("mb_user");
-    }
+
+    localDB.remove("token");
+    localDB.remove("user");
   } catch (error: any) {
     console.log("Trying to logout error:", error.message);
   }

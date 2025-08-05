@@ -11,6 +11,7 @@ import {
   fetchUser,
 } from "@/lib/auth";
 import { NewUser, updateUser, User } from "@/lib/data";
+import { localDB } from "@/lib/localDB";
 
 // interface User {
 //   id: string;
@@ -59,7 +60,7 @@ export const useAuth = create<AuthState>((set) => ({
 
   login: async (email, password) => {
     const { data } = await login(email, password);
-    localStorage.setItem("mb_token", data.token);
+    localDB.set("token", data.token);
     updateUser(data.user);
     return data.user;
   },
@@ -96,7 +97,7 @@ export const useAuth = create<AuthState>((set) => ({
 
   logout: async () => {
     await logout();
-    localStorage.removeItem("mb_token");
+    localDB.remove("token");
     set({ user: null, token: null });
     updateUser(null);
   },

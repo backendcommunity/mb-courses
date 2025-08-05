@@ -61,6 +61,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Loader } from "../ui/loader";
+import { localDB } from "@/lib/localDB";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -106,15 +107,19 @@ export function RoadmapVideoWatchPage({
     ? chapter?.videos.find((v: Video) => v.slug === videoId)
     : chapter?.videos[0];
 
+  async function loadMilestone() {
+    const milestone = await store.getMilestone(slug, topicId);
+    setMilestone(milestone);
+    setRoadmap(milestone.roadmap);
+    setCompletedItems(milestone?.userTopic?.completedItems ?? []);
+  }
+
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const milestone = await store.getMilestone(slug, topicId);
-      setMilestone(milestone);
-      setRoadmap(milestone.roadmap);
-      setCompletedItems(milestone.completedItems);
+      await loadMilestone();
 
-      const course = await store.getCourse(courseId);
+      const course = await store.getCourse(courseId, { isRoadmap: true });
       setCourse(course);
       setUserCourse(course?.userCourse);
 
@@ -189,12 +194,6 @@ export function RoadmapVideoWatchPage({
     } catch (error) {
       toast.error("Error occurred adding note");
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const isChapterCompleted = (chapterId: string) => {
@@ -291,7 +290,7 @@ export function RoadmapVideoWatchPage({
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
         userCourse
-          ?.userVideos!.filter((v) => v.isCompleted)
+          ?.userVideos!?.filter((v) => v.isCompleted)
           .map((v) => v.videoId)
       );
       completedVideoIds.add(video.id); // include this one just marked
@@ -318,12 +317,16 @@ export function RoadmapVideoWatchPage({
       );
 
       setCourse({ ...course, chapters: updatedChapters });
+      localDB.update(`course_${course.slug}`, {
+        ...course,
+        chapters: updatedChapters,
+      });
 
       // Optionally update userCourse for UI
-      setUserCourse({
+      const newUserCourse = {
         ...userCourse,
         userVideos: [
-          ...userCourse?.userVideos!.filter((v) => v.videoId !== video.id),
+          ...userCourse?.userVideos!?.filter((v) => v.videoId !== video.id),
           { videoId: video.id, isCompleted: true },
         ],
         userChapters: isChapterCompleted
@@ -334,6 +337,11 @@ export function RoadmapVideoWatchPage({
               { chapterId: chapter.id, isCompleted: true },
             ]
           : userCourse.userChapters,
+      };
+      setUserCourse(newUserCourse);
+      localDB.update(`course_${course.slug}`, {
+        ...course,
+        userCourse: newUserCourse,
       });
 
       if (video?.type === "QUIZ")
@@ -348,10 +356,14 @@ export function RoadmapVideoWatchPage({
         courseId: course.slug,
       });
 
+      localDB.remove(`milestone_${topicId}`);
+      await loadMilestone();
+
       toast.success("You just earned some points!");
       setCelebration(true);
       handleVideoClick(nextVideo);
     } catch (error: any) {
+      console.log(error);
       toast.error("An error occurred. Please try again");
     } finally {
       setIsMarking(false);

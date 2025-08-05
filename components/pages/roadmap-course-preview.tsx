@@ -46,6 +46,7 @@ import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { Loader } from "../ui/loader";
+import { localDB } from "@/lib/localDB";
 
 interface RoadmapCoursePreviewProps {
   roadmapId: string;
@@ -94,7 +95,7 @@ export function CourseDetailPage({
   async function findRoadmap(slug: string) {
     const milestone = await store.getMilestone(slug, topicId);
     setMilestone(milestone);
-    setCompletedItems(milestone.completedItems);
+    setCompletedItems(milestone?.userTopic?.completedItems ?? []);
     setRoadmap(milestone.roadmap);
   }
 
@@ -129,6 +130,7 @@ export function CourseDetailPage({
     );
 
     updateCourse(slug, {
+      ...course,
       chapters: updatedChapters,
       progress: newProgress,
     });
@@ -137,10 +139,10 @@ export function CourseDetailPage({
   const handleEnrollNow = async () => {
     try {
       if (!course) return;
-      await handleEnrollment(course?.id!);
 
-      updateCourse(course?.id!, { enrolled: true });
-      Object.assign(course!, { enrolled: true });
+      const { data } = await handleEnrollment(course.id);
+      updateCourse(slug, { ...course, enrolled: true, userCourse: data });
+      Object.assign(course!, { enrolled: true, userCourse: data });
 
       // Trigger celebration for first-time enrollment
       setCelebration(true);

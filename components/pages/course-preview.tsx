@@ -130,12 +130,12 @@ export function CoursePreviewPage({
       return;
     }
 
-    const userCourse = await handleEnrollment(course?.id!);
-    if (!userCourse) {
+    const { data } = await handleEnrollment(course?.id!);
+    if (!data) {
       toast.error("An error occurred. Please try again");
       return;
     }
-    updateCourse(course?.id!, { enrolled: true });
+    updateCourse(slug, { ...course, enrolled: true, userCourse: data });
     Object.assign(course!, { enrolled: true });
 
     // Trigger celebration for first-time enrollment

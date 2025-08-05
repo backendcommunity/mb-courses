@@ -144,13 +144,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Data getters - always return current data from JSON store
   getUser: async () => {
     try {
-      if (typeof localStorage !== "undefined") {
-        const user = localStorage.getItem("mb_user");
-        if (user && user !== "null") {
-          const pUser = JSON.parse(user);
-          if (pUser) return pUser;
-        }
+      const user = localDB.get("user", "");
+      if (user && user !== "null") {
+        const pUser = JSON.parse(user);
+        if (pUser) return pUser;
       }
+
       const res = await fetchUser();
       updateUserInStore(res.data);
       return res.data;
@@ -241,11 +240,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getCourse: async (slug: string, params?: any) => {
     try {
-      if (localDB.has(`mb_course_${slug}`))
-        return localDB.get("mb_course_" + slug, {});
+      if (localDB.has(`course_${slug}`))
+        return localDB.get(`course_${slug}`, {});
 
       const res = await fetchCourse(slug, params);
-      localDB.set("mb_course_" + slug, res?.data);
+      localDB.set(`course_${slug}`, res?.data);
       return res.data;
     } catch (error) {
       throw error;
@@ -287,10 +286,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
   getMilestone: async (slug: string, topicId: string) => {
-    if (localDB.has(`mb_milestone_${topicId}`))
-      return localDB.get(`mb_milestone_${topicId}`, {});
+    if (localDB.has(`milestone_${topicId}`))
+      return localDB.get(`milestone_${topicId}`, {});
+
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}`);
-    localDB.set(`mb_milestone_${topicId}`, data?.data);
+    localDB.set(`milestone_${topicId}`, data?.data);
     return data?.data;
   },
   getProjects: () => dataStore.projects,
