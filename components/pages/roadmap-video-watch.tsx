@@ -346,12 +346,17 @@ export function RoadmapVideoWatchPage({
 
       // Backend update with proper `isChapterCompleted`
 
-      store.markRoadmapVideoCompleted(slug, topicId, {
-        itemId: video.id,
-        type: "VIDEO",
-        isChapterCompleted,
-        courseId: course.slug,
-      });
+      store
+        .markRoadmapVideoCompleted(slug, topicId, {
+          itemId: video.id,
+          type: "VIDEO",
+          isChapterCompleted,
+          courseId: course.slug,
+        })
+        .then(() => {
+          localDB.remove(`milestone_${milestone.id}`);
+          loadMilestone();
+        });
 
       toast.success("You just earned some points!");
       setCelebration(true);
