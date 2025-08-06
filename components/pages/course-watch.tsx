@@ -70,6 +70,8 @@ export function CourseWatchPage({
   const store = useAppStore();
   const [course, setCourse] = useState<Course>();
   const [userCourse, setUserCourse] = useState<UserCourse>();
+  const [userVideos, setUserVideos] = useState<any[]>();
+  const [userChapters, setUserChapters] = useState<any[]>();
   const chapter: Chapter | any = course?.chapters.find(
     (ch: Chapter) => ch.slug === chapterId
   );
@@ -93,6 +95,8 @@ export function CourseWatchPage({
       const userCourse = await store.getUserCourse(slug);
       setCourse(userCourse.course);
       setUserCourse(userCourse);
+      setUserChapters(userCourse?.userChapters);
+      setUserVideos(userCourse?.userVideos);
 
       setLoading(false);
     }
@@ -127,12 +131,6 @@ export function CourseWatchPage({
     );
   }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
 
@@ -161,67 +159,46 @@ export function CourseWatchPage({
         chapter.quiz || chapter.exercise || chapter.playground;
       const isChapterCompleted = allVideosComplete && !hasOtherContent;
 
-      // Update local course state
-      const updatedChapters = course.chapters.map((ch) =>
-        ch.id === chapter.id
-          ? {
-              ...ch,
-              videos: ch.videos.map((v) =>
-                v.id === currentVideo.id ? { ...v, isCompleted: true } : v
-              ),
-              isCompleted: isChapterCompleted,
-            }
-          : ch
-      );
+      const completedVideos = [
+        ...(userVideos ?? []),
+        {
+          ...currentVideo,
+          isCompleted: true,
+          videoId: currentVideo.id,
+        },
+      ];
+      setUserVideos(completedVideos);
 
-      setCourse({ ...course, chapters: updatedChapters });
-
-      // Optionally update userCourse for UI
-      setUserCourse({
-        ...userCourse,
-        userVideos: [
-          ...userCourse?.userVideos!.filter(
-            (v) => v.videoId !== currentVideo.id
-          ),
-          { videoId: currentVideo.id, isCompleted: true },
-        ],
-        userChapters: isChapterCompleted
-          ? [
-              ...userCourse?.userChapters!.filter(
-                (ch) => ch.chapterId !== chapter.id
-              ),
-              { chapterId: chapter.id, isCompleted: true },
-            ]
-          : userCourse.userChapters,
-      });
+      // Update UserChapter locally
+      const userChapter = [
+        ...(userChapters ?? []),
+        {
+          ...chapter,
+          chapterId: chapter.id,
+          isCompleted: isChapterCompleted,
+        },
+      ];
+      setUserChapters(userChapter);
 
       // Backend update with proper `isChapterCompleted`
-      await markVideoComplete(course.id, chapter.id, currentVideo.id, {
+      markVideoComplete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
       });
 
       toast.success("You just earned some points!");
       setCelebration(true);
-
-      if (!isChapterCompleted) handleVideoClick(nextVideo);
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
   };
 
   const isChapterCompleted = (chapterId: string) => {
-    return userCourse?.userChapters?.find(
-      (ch: UserChapter) => ch.chapterId === chapterId
-    )?.isCompleted;
-  };
-
-  const isVideoCompleted = (videoId: string) => {
-    return userCourse?.userVideos?.find((ch: any) => ch.videoId === videoId)
+    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
       ?.isCompleted;
   };
 
-  const calculateProgess = (): number => {
-    return (userCourse?.userVideos?.length! / course?.totalContent || 0) * 100;
+  const isVideoCompleted = (videoId: string) => {
+    return userVideos?.find((ch: any) => ch.videoId === videoId)?.isCompleted;
   };
 
   const next = () => {
@@ -513,7 +490,7 @@ export function CourseWatchPage({
                 <CardContent>
                   <div className="space-y-4">
                     <article
-                      className="text-muted-foreground"
+                      className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
                         __html: currentVideo?.summary,
                       }}
@@ -531,7 +508,7 @@ export function CourseWatchPage({
                             <span className="border-t flex-1"></span>
                           </div>
                           <p
-                            className="text-muted-foreground"
+                            className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                             dangerouslySetInnerHTML={{
                               __html:
                                 currentVideo?.description ??
