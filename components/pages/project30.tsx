@@ -829,8 +829,8 @@ export function Project30Page({
             <BookOpen className="h-3 w-3 md:h-4 md:w-4 text-[#13AECE]" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg md:text-2xl font-bold">
-              {project30?.instructor ?? "Masteringbackend"}
+            <div className="text-lg md:text-2xl w-full font-bold">
+              {project30?.instructor ?? "Mastering backend"}
             </div>
             <p className="text-xs text-muted-foreground">
               Senior Backend Engineer
