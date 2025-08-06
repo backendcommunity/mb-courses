@@ -256,7 +256,8 @@ export function NavigationBar({
           </div>
 
           {/* Explore Dropdown */}
-          <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+          {/* isExploreOpen */}
+          <Popover open={false} onOpenChange={setIsExploreOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
