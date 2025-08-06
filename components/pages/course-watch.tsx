@@ -53,6 +53,7 @@ import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
+import { localDB } from "@/lib/localDB";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -105,8 +106,9 @@ export function CourseWatchPage({
 
   useEffect(() => {
     async function loadNotes(courseId: string, videoId: string) {
-      const notes = await store.getVideoNotes(courseId, videoId);
-      setNotes(notes);
+      store.getVideoNotes(courseId, videoId).then((notes: any) => {
+        setNotes(notes);
+      });
     }
 
     loadNotes(course?.id!, videoId!);
@@ -183,6 +185,9 @@ export function CourseWatchPage({
       // Backend update with proper `isChapterCompleted`
       markVideoComplete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
+      }).then(() => {
+        localDB.remove(`course_${course.slug}`);
+        store.getCourse(course.slug);
       });
 
       toast.success("You just earned some points!");
@@ -726,11 +731,7 @@ export function CourseWatchPage({
                 <Progress value={course?.progress ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {
-                  userCourse?.userVideos?.filter(
-                    (ch: UserVideo) => ch?.isCompleted
-                  ).length
-                }{" "}
+                {userVideos?.filter((ch: UserVideo) => ch?.isCompleted).length}{" "}
                 of {course.totalContent} videos completed
               </div>
             </CardContent>

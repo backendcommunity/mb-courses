@@ -158,11 +158,23 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handleContinueLearning = () => {
     // Navigate to first incomplete chapter or continue from current
+
+    const userChapters = course?.userCourse?.userChapters;
+    const userVideos = course?.userCourse?.userVideos;
+
+    const watchedVideoIds = new Set(
+      userVideos?.filter((v) => v.isCompleted)?.map((v) => v.videoId)
+    );
+    const watchedChapterIds = new Set(
+      userChapters?.filter((c) => c.isCompleted)?.map((v) => v.chapterId)
+    );
+
     const nextChapter =
-      course?.chapters.find((c) => !c.isCompleted) || course?.chapters[0];
+      course?.chapters.find((c) => !watchedChapterIds.has(c.id)) ||
+      course?.chapters[0];
 
     const nextVideo =
-      nextChapter?.videos?.find((v: Video) => !v.isCompleted) ||
+      nextChapter?.videos?.find((v: Video) => !watchedVideoIds.has(v.id)) ||
       nextChapter?.videos[0];
 
     const watchPath = routes.courseWatch(
@@ -170,6 +182,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       nextChapter?.slug!,
       nextVideo?.slug
     );
+
     onNavigate(watchPath);
   };
 
@@ -390,7 +403,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span>Your Progress</span>
-                    <span>{Math.floor(course?.progress ?? 0)}%</span>
+                    <span>{course?.progress}%</span>
                   </div>
                   <Progress value={course?.progress ?? 0} className="h-2" />
                   <Button className="w-full" onClick={handleContinueLearning}>
