@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -64,6 +64,13 @@ import {
 } from "../ui/dialog";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
+import socket from "@/lib/socketIo";
+import {
+  getLanguageFromFileName,
+  sortFiles,
+  terminalSample,
+} from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -74,6 +81,8 @@ interface FileNode {
   name: string;
   type: "file" | "folder";
   icon: string;
+  folder: string;
+  path: string;
   children?: FileNode[];
   content?: string;
   isOpen?: boolean;
@@ -85,434 +94,64 @@ export function ProjectPlaygroundPage({
   onNavigate,
 }: ProjectPlaygroundPageProps) {
   const store = useAppStore();
+  const { theme } = useTheme();
   const [project, setProject] = useState<Project>();
-  const [activeFile, setActiveFile] = useState("app.js");
-  const [openFiles, setOpenFiles] = useState(["app.js"]);
-  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">(
-    "vs-dark"
-  );
+  const [activeFile, setActiveFile] = useState("");
+  const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [fontSize, setFontSize] = useState(14);
-  const [terminalOutput, setTerminalOutput] = useState([
-    "Welcome to MB Projects Terminal",
-    "$ npm install",
-    "✓ Dependencies installed successfully",
-    "$ npm start",
-    "Server running on http://localhost:3000",
-    "",
-  ]);
+  const [terminalOutput, setTerminalOutput] = useState(terminalSample);
   const [terminalInput, setTerminalInput] = useState("");
   const [previewUrl, setPreviewUrl] = useState("http://localhost:3000");
   const [isPreviewMaximized, setIsPreviewMaximized] = useState(false);
-  const terminalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [marking, setMarking] = useState(false);
-  const editorRef = useRef<any>(null);
   const [markAsCompleted, setMarkAsCompleted] = useState(false);
   const [activeTask, setActiveTask] = useState<any>();
   const [celebration, setCelebration] = useState(false);
-
-  const getLanguageFromFileName = (fileName: string): string => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "js":
-      case "jsx":
-        return "javascript";
-      case "ts":
-      case "tsx":
-        return "typescript";
-      case "json":
-        return "json";
-      case "html":
-        return "html";
-      case "css":
-        return "css";
-      case "scss":
-      case "sass":
-        return "scss";
-      case "md":
-        return "markdown";
-      case "py":
-        return "python";
-      case "java":
-        return "java";
-      case "cpp":
-      case "c":
-        return "cpp";
-      case "php":
-        return "php";
-      case "rb":
-        return "ruby";
-      case "go":
-        return "go";
-      case "rs":
-        return "rust";
-      case "sql":
-        return "sql";
-      case "xml":
-        return "xml";
-      case "yaml":
-      case "yml":
-        return "yaml";
-      default:
-        return "plaintext";
-    }
-  };
-  const [fileTree, setFileTree] = useState<FileNode[]>([
-    {
-      name: "src",
-      type: "folder",
-      icon: "📁",
-      isOpen: true,
-      children: [
-        {
-          name: "app.js",
-          type: "file",
-          icon: "📄",
-          language: "javascript",
-          content: `// E-commerce API - Main Application
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});
-
-module.exports = app;`,
-        },
-        {
-          name: "routes",
-          type: "folder",
-          icon: "📁",
-          isOpen: false,
-          children: [
-            {
-              name: "auth.js",
-              type: "file",
-              icon: "📄",
-              language: "javascript",
-              content: `// Authentication routes
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-
-const router = express.Router();
-
-// Register
-router.post('/register', async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
-    
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-    
-    // Create user
-    const user = new User({
-      email,
-      password: hashedPassword,
-      name
-    });
-    
-    await user.save();
-    
-    // Generate token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-    
-    res.status(201).json({
-      message: 'User created successfully',
-      token,
-      user: { id: user._id, email: user.email, name: user.name }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-module.exports = router;`,
-            },
-            {
-              name: "products.js",
-              type: "file",
-              icon: "📄",
-              language: "javascript",
-              content: `// Product routes
-const express = require('express');
-const Product = require('../models/Product');
-const auth = require('../middleware/auth');
-
-const router = express.Router();
-
-// Get all products
-router.get('/', async (req, res) => {
-  try {
-    const { page = 1, limit = 10, category, search } = req.query;
-    
-    let query = {};
-    if (category) query.category = category;
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    const products = await Product.find(query)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
-    
-    const total = await Product.countDocuments(query);
-    
-    res.json({
-      products,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-module.exports = router;`,
-            },
-            {
-              name: "orders.js",
-              type: "file",
-              icon: "📄",
-              language: "javascript",
-              content:
-                "// Order routes\nconst express = require('express');\nconst router = express.Router();\n\n// TODO: Implement order routes\n\nmodule.exports = router;",
-            },
-          ],
-        },
-        {
-          name: "models",
-          type: "folder",
-          icon: "📁",
-          isOpen: false,
-          children: [
-            {
-              name: "User.js",
-              type: "file",
-              icon: "📄",
-              language: "javascript",
-              content: `// User model
-const mongoose = require('mongoose');
-
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  }
-}, {
-  timestamps: true
-});
-
-module.exports = mongoose.model('User', userSchema);`,
-            },
-            {
-              name: "Product.js",
-              type: "file",
-              icon: "📄",
-              language: "javascript",
-              content: `// Product model
-const mongoose = require('mongoose');
-
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  }
-}, {
-  timestamps: true
-});
-
-module.exports = mongoose.model('Product', productSchema);`,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: "package.json",
-      type: "file",
-      icon: "📦",
-      language: "json",
-      content: `{
-  "name": "ecommerce-api",
-  "version": "1.0.0",
-  "description": "E-commerce API built with Node.js and Express",
-  "main": "src/app.js",
-  "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "test": "jest"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
-    "cors": "^2.8.5",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1",
-    "jest": "^29.6.4"
-  }
-}`,
-    },
-    {
-      name: ".env",
-      type: "file",
-      icon: "⚙️",
-      language: "plaintext",
-      content: `MONGODB_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=your-super-secret-jwt-key-here
-PORT=3000
-NODE_ENV=development`,
-    },
-    {
-      name: "README.md",
-      type: "file",
-      icon: "📖",
-      language: "markdown",
-      content: `# E-commerce API
-
-A RESTful API for e-commerce applications built with Node.js, Express, and MongoDB.
-
-## Features
-
-- User authentication (register/login)
-- Product management
-- Order processing
-- Input validation
-- Rate limiting
-- Security middleware
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v14 or higher)
-- MongoDB
-- npm or yarn
-
-### Installation
-
-1. Clone the repository
-\`\`\`bash
-git clone <repository-url>
-cd ecommerce-api
-\`\`\`
-
-2. Install dependencies
-\`\`\`bash
-npm install
-\`\`\`
-
-3. Set up environment variables
-\`\`\`bash
-cp .env.example .env
-# Edit .env with your configuration
-\`\`\`
-
-4. Start the server
-\`\`\`bash
-# Development
-npm run dev
-
-# Production
-npm start
-\`\`\`
-
-## API Endpoints
-
-### Authentication
-- \`POST /api/auth/register\` - Register a new user
-- \`POST /api/auth/login\` - Login user
-
-### Products
-- \`GET /api/products\` - Get all products
-- \`GET /api/products/:id\` - Get single product
-- \`POST /api/products\` - Create product (protected)
-
-## Testing
-
-\`\`\`bash
-npm test
-\`\`\`
-
-## License
-
-MIT`,
-    },
-  ]);
-  const [code, setCode] = useState(fileTree[0].children?.[0]?.content || "");
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [fileTree, setFileTree] = useState<FileNode[]>([]);
+  const [code, setCode] = useState(fileTree?.[0]?.children?.[0]?.content || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
+  const editorRef = useRef<any>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+
+  const findFile = (nodes: FileNode[], filePath: string): FileNode | null => {
+    for (const node of nodes) {
+      if (node.path === filePath && node.type === "file") {
+        return node;
+      }
+      if (node.children) {
+        const found = findFile(node.children, filePath);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    socket.emit("folder:read", {
+      userId: "user123",
+      projectName: "my-project",
+      path: "/",
+    });
+
+    socket.on("folder:response", (data) => {
+      setLoadingFiles(true);
+      const sorted = sortFiles(data.files);
+      const active = sorted.find((f: FileNode) => f.type === "file");
+      setActiveFile(active.path);
+      setOpenFiles([active.path]);
+      setFileTree(sorted);
+      setLoadingFiles(false);
+    });
+  }, []);
+
+  if (loadingFiles) return <Loader isLoader={false} />;
 
   useEffect(() => {
     const file = findFile(fileTree, activeFile);
     if (file) {
-      setCurrentLanguage(file.language || getLanguageFromFileName(activeFile));
+      setCurrentLanguage(file.language || getLanguageFromFileName(file.name));
     }
   }, [activeFile, fileTree]);
 
@@ -554,43 +193,38 @@ MIT`,
     setFileTree(updateTree(fileTree, path));
   };
 
-  const findFile = (nodes: FileNode[], fileName: string): FileNode | null => {
-    for (const node of nodes) {
-      if (node.name === fileName && node.type === "file") {
-        return node;
-      }
-      if (node.children) {
-        const found = findFile(node.children, fileName);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+  const openFile = (file: FileNode) => {
+    const fileName = file.name;
+    const filePath = file.path;
 
-  const openFile = (fileName: string) => {
-    const file = findFile(fileTree, fileName);
-    if (file && file.content) {
-      setActiveFile(fileName);
-      setCode(file.content);
-      setCurrentLanguage(file.language || getLanguageFromFileName(fileName));
-      if (!openFiles.includes(fileName)) {
-        setOpenFiles([...openFiles, fileName]);
+    const _file = findFile(fileTree, filePath);
+    if (_file) {
+      setActiveFile(filePath);
+      setCode(_file?.content!);
+      setCurrentLanguage(_file.language || getLanguageFromFileName(fileName));
+      if (!openFiles.includes(filePath)) {
+        setOpenFiles([...openFiles, filePath]);
       }
     }
   };
 
-  const closeFile = (fileName: string) => {
-    const newOpenFiles = openFiles.filter((f) => f !== fileName);
+  const getFileName = (fileName: string) => {
+    if (!fileName) return;
+    const names = fileName.split("/");
+    return names[names.length - 1];
+  };
+
+  const closeFile = (filePath: string) => {
+    const newOpenFiles = openFiles.filter((f) => f !== filePath);
+
     setOpenFiles(newOpenFiles);
-    if (activeFile === fileName && newOpenFiles.length > 0) {
+    if (activeFile === filePath && newOpenFiles.length > 0) {
       setActiveFile(newOpenFiles[0]);
       const file = findFile(fileTree, newOpenFiles[0]);
-      if (file?.content) {
-        setCode(file.content);
-        setCurrentLanguage(
-          file.language || getLanguageFromFileName(newOpenFiles[0])
-        );
-      }
+      setCode(file?.content!);
+      setCurrentLanguage(
+        file?.language || getLanguageFromFileName(newOpenFiles[0])
+      );
     }
   };
 
@@ -654,38 +288,42 @@ MIT`,
   };
 
   const renderFileTree = (nodes: FileNode[], path: string[] = []) => {
-    return nodes.map((node) => (
-      <div key={node.name} className="select-none">
-        <div
-          className={`flex items-center gap-2 px-2 py-1 rounded text-sm cursor-pointer hover:bg-muted/50 ${
-            activeFile === node.name ? "bg-muted" : ""
-          }`}
-          style={{ paddingLeft: `${(path.length + 1) * 12}px` }}
-          onClick={() => {
-            if (node.type === "folder") {
-              toggleFolder([...path, node.name]);
-            } else {
-              openFile(node.name);
-            }
-          }}
-        >
-          {node.type === "folder" && (
-            <span className="w-4 h-4 flex items-center justify-center">
-              {node.isOpen ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
+    return nodes.map((node, i) => {
+      return (
+        <span key={node.path + i}>
+          <div className="select-none">
+            <div
+              className={`flex items-center gap-2 px-2 py-1 rounded text-sm cursor-pointer hover:bg-muted/50 ${
+                activeFile === node.path ? "bg-muted" : ""
+              }`}
+              style={{ paddingLeft: `${(path.length + 1) * 12}px` }}
+              onClick={() => {
+                if (node.type === "folder") {
+                  toggleFolder([...path, node.name]);
+                } else {
+                  openFile(node);
+                }
+              }}
+            >
+              {node.type === "folder" && (
+                <span className="w-4 h-4 flex items-center justify-center">
+                  {node.isOpen ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </span>
               )}
-            </span>
-          )}
-          <span className="text-xs">{node.icon}</span>
-          <span className="truncate">{node.name}</span>
-        </div>
-        {node.type === "folder" && node.isOpen && node.children && (
-          <div>{renderFileTree(node.children, [...path, node.name])}</div>
-        )}
-      </div>
-    ));
+              <span className="text-xs">{node.icon}</span>
+              <span className="truncate">{node.name}</span>
+            </div>
+            {node.type === "folder" && node.isOpen && node.children && (
+              <div>{renderFileTree(node.children, [...path, node.path])}</div>
+            )}
+          </div>
+        </span>
+      );
+    });
   };
 
   const handleMarkAsCompleted = async (id: string) => {
@@ -844,29 +482,27 @@ MIT`,
             <div className="h-full flex flex-col">
               {/* File Tabs */}
               <div className="flex items-center border-b bg-muted/20">
-                {openFiles.map((fileName) => (
+                {openFiles.map((filePath) => (
                   <div
-                    key={fileName}
+                    key={filePath}
                     className={`flex items-center gap-2 px-3 py-2 text-sm border-r cursor-pointer hover:bg-muted/50 ${
-                      activeFile === fileName ? "bg-background" : ""
+                      activeFile === filePath ? "bg-background" : ""
                     }`}
                     onClick={() => {
-                      setActiveFile(fileName);
-                      const file = findFile(fileTree, fileName);
-                      if (file?.content) {
-                        setCode(file.content);
-                        setCurrentLanguage(
-                          file.language || getLanguageFromFileName(fileName)
-                        );
-                      }
+                      setActiveFile(filePath);
+                      const file = findFile(fileTree, filePath);
+                      setCode(file?.content!);
+                      setCurrentLanguage(
+                        file?.language || getLanguageFromFileName(file?.name!)
+                      );
                     }}
                   >
                     <File className="h-3 w-3" />
-                    <span>{fileName}</span>
+                    <span>{getFileName(filePath)}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        closeFile(fileName);
+                        closeFile(filePath);
                       }}
                       className="hover:bg-muted rounded p-0.5"
                     >
@@ -881,7 +517,7 @@ MIT`,
                 <Editor
                   height="100%"
                   language={currentLanguage}
-                  theme={editorTheme}
+                  theme={theme?.includes("dark") ? "vs-dark" : "light"}
                   value={code}
                   onChange={(value) => setCode(value || "")}
                   onMount={handleEditorDidMount}
@@ -961,10 +597,12 @@ MIT`,
                       </h3>
                     </div>
                     <div className="flex-1 p-4">
-                      {/* const current = count++; */}
                       <Accordion type="single" collapsible>
                         {tasks?.map((task: any, i: number) => (
-                          <AccordionItem key={task.id} value={`week-${i + 1}`}>
+                          <AccordionItem
+                            key={task.id + i}
+                            value={`week-${i + 1}`}
+                          >
                             <AccordionTrigger className="hover:no-underline">
                               <div className="flex items-center justify-between w-full mr-4">
                                 <div className="text-left">
@@ -989,17 +627,16 @@ MIT`,
                                   {task?.userTask?.isCompleted ? (
                                     <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
                                   ) : (
-                                    <Button
+                                    <div
                                       onClick={() => {
                                         setActiveTask(task);
                                         setMarkAsCompleted(true);
                                       }}
                                       title="Mark as completed"
-                                      variant="default"
-                                      className="text-xs h-3 w-3"
+                                      className="text-xs bg-primary px-1 rounded-md"
                                     >
-                                      <Check className="h-3 w-3" />
-                                    </Button>
+                                      <Check className="h-4 w-4" />
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -1008,9 +645,7 @@ MIT`,
                             <AccordionContent className="w-80 h-full ">
                               <div className="space-y-3 pt-4 w-full ">
                                 <div
-                                  key={task.id}
                                   className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors w-full`}
-                                  onClick={() => {}}
                                 >
                                   <div className="flex-1 space-y-1 min-w-0">
                                     <h4 className="font-medium text-sm md:text-base">
@@ -1102,7 +737,7 @@ MIT`,
                       <div className="space-y-1 font-mono text-xs">
                         {terminalOutput.map((line, index) => (
                           <div
-                            key={index}
+                            key={line + index}
                             className={
                               line.startsWith("$")
                                 ? "text-yellow-400"

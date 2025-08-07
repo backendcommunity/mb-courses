@@ -11,6 +11,70 @@ export function onNavigate(path: string) {
   // In a real app, this would use Next.js router or similar
   console.log(`Navigating to: ${path}`);
 }
+export const terminalSample = [
+  "Welcome to MB Projects Terminal",
+  "$ npm install",
+  "✓ Dependencies installed successfully",
+  "$ npm start",
+  "Server running on http://localhost:3000",
+  "",
+];
+
+export const sortFiles = (files: any) => {
+  return files.sort((a: any, b: any) => {
+    if (a.type === b.type) {
+      return a.name.localeCompare(b.name);
+    }
+    return a.type === "folder" ? -1 : 1;
+  });
+};
+
+export const getLanguageFromFileName = (fileName: string): string => {
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  switch (extension) {
+    case "js":
+    case "jsx":
+      return "javascript";
+    case "ts":
+    case "tsx":
+      return "typescript";
+    case "json":
+      return "json";
+    case "html":
+      return "html";
+    case "css":
+      return "css";
+    case "scss":
+    case "sass":
+      return "scss";
+    case "md":
+      return "markdown";
+    case "py":
+      return "python";
+    case "java":
+      return "java";
+    case "cpp":
+    case "c":
+      return "cpp";
+    case "php":
+      return "php";
+    case "rb":
+      return "ruby";
+    case "go":
+      return "go";
+    case "rs":
+      return "rust";
+    case "sql":
+      return "sql";
+    case "xml":
+      return "xml";
+    case "yaml":
+    case "yml":
+      return "yaml";
+    default:
+      return "plaintext";
+  }
+};
 
 export function codeSample() {
   return `
