@@ -12,6 +12,22 @@ body {
   }
 }
 
+.menu-separator {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
+/* vscode-menu.css */
+.vscode-menu {
+  background-color: #252526;
+  color: white;
+  font-size: 13px;
+}
+.vscode-menu-item:hover {
+  background-color: #094771;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

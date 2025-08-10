@@ -20,15 +20,6 @@ export const terminalSample = [
   "",
 ];
 
-export const sortFiles = (files: any) => {
-  return files.sort((a: any, b: any) => {
-    if (a.type === b.type) {
-      return a.name.localeCompare(b.name);
-    }
-    return a.type === "folder" ? -1 : 1;
-  });
-};
-
 export const getLanguageFromFileName = (fileName: string): string => {
   const extension = fileName.split(".").pop()?.toLowerCase();
   switch (extension) {

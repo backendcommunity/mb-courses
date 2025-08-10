@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -44,9 +43,10 @@ import {
   Wrench,
   Check,
   ArrowLeft,
+  AlertTriangle,
 } from "lucide-react";
-import { getUser, Project, updateUser } from "@/lib/data";
-import Editor from "@monaco-editor/react";
+import { getUser, Project, updateUser, user } from "@/lib/data";
+import Editor, { OnChange } from "@monaco-editor/react";
 import {
   Accordion,
   AccordionContent,
@@ -59,19 +59,21 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import socket from "@/lib/socketIo";
-import {
-  getLanguageFromFileName,
-  sortFiles,
-  terminalSample,
-} from "@/lib/utils";
+import { getLanguageFromFileName, terminalSample } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { ContextMenu } from "./../ContextMenu";
+import { Input } from "../ui/input";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { useUser } from "@/hooks/use-user";
 
+let saveTimer: NodeJS.Timeout | null = null;
 interface ProjectPlaygroundPageProps {
   slug: string;
   onNavigate: Function;
@@ -81,7 +83,7 @@ interface FileNode {
   name: string;
   type: "file" | "folder";
   icon: string;
-  folder: string;
+  folder?: string;
   path: string;
   children?: FileNode[];
   content?: string;
@@ -94,6 +96,7 @@ export function ProjectPlaygroundPage({
   onNavigate,
 }: ProjectPlaygroundPageProps) {
   const store = useAppStore();
+  const user = useUser();
   const { theme } = useTheme();
   const [project, setProject] = useState<Project>();
   const [activeFile, setActiveFile] = useState("");
@@ -109,11 +112,30 @@ export function ProjectPlaygroundPage({
   const [activeTask, setActiveTask] = useState<any>();
   const [celebration, setCelebration] = useState(false);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [deleteFile, setDeleteFile] = useState<FileNode | null>();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [code, setCode] = useState(fileTree?.[0]?.children?.[0]?.content || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
   const editorRef = useRef<any>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    target: null as FileNode | null,
+  });
+  const [creatingItem, setCreatingItem] = useState<{
+    parentPath?: string;
+    exists?: boolean;
+    type?: "file" | "folder";
+  } | null>(null);
+  const [renamingItem, setRenamingItem] = useState<{
+    parentPath?: string;
+    name?: string;
+    exists?: boolean;
+    type?: "file" | "folder";
+  } | null>(null);
 
   const findFile = (nodes: FileNode[], filePath: string): FileNode | null => {
     for (const node of nodes) {
@@ -129,33 +151,6 @@ export function ProjectPlaygroundPage({
   };
 
   useEffect(() => {
-    socket.emit("folder:read", {
-      userId: "user123",
-      projectName: "my-project",
-      path: "/",
-    });
-
-    socket.on("folder:response", (data) => {
-      setLoadingFiles(true);
-      const sorted = sortFiles(data.files);
-      const active = sorted.find((f: FileNode) => f.type === "file");
-      setActiveFile(active.path);
-      setOpenFiles([active.path]);
-      setFileTree(sorted);
-      setLoadingFiles(false);
-    });
-  }, []);
-
-  if (loadingFiles) return <Loader isLoader={false} />;
-
-  useEffect(() => {
-    const file = findFile(fileTree, activeFile);
-    if (file) {
-      setCurrentLanguage(file.language || getLanguageFromFileName(file.name));
-    }
-  }, [activeFile, fileTree]);
-
-  useEffect(() => {
     setLoading(true);
     async function findProject(slug: string) {
       const project = await store.getProject(slug);
@@ -165,53 +160,228 @@ export function ProjectPlaygroundPage({
     findProject(slug);
   }, [slug]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (treeRef.current && !treeRef.current.contains(event.target as Node)) {
+        setContextMenu((prev) => ({ ...prev, visible: false }));
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    socket.emit("folder:read", {
+      userId: user?.id,
+      projectName: slug,
+      path: "/",
+    });
+
+    socket.on("folder:response", (data) => {
+      setLoadingFiles(true);
+      const active = data.files[0].children.find(
+        (f: FileNode) => f.type === "file"
+      );
+      setActiveFile(active.path);
+      setCode(active.content);
+      setOpenFiles([active.path]);
+      setFileTree(data.files);
+      setLoadingFiles(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    const file = findFile(fileTree, activeFile);
+    if (file) {
+      setCurrentLanguage(file.language || getLanguageFromFileName(file.name));
+    }
+  }, [activeFile, fileTree]);
+
   if (loading) return <Loader isLoader={false} />;
+  if (loadingFiles) return <Loader isLoader={false} />;
 
   const tasks = project?.projectTasks?.flatMap((p: any) => p.tasks);
 
-  const toggleFolder = (path: string[]) => {
-    const updateTree = (
-      nodes: FileNode[],
-      currentPath: string[]
-    ): FileNode[] => {
+  const toggleFolder = (targetPath: string) => {
+    const updateTree = (nodes: FileNode[]): FileNode[] => {
       return nodes.map((node) => {
-        if (currentPath.length === 1 && node.name === currentPath[0]) {
+        // If this is the target folder, toggle it
+
+        if (node.name === targetPath && node.type === "folder") {
           return { ...node, isOpen: !node.isOpen };
-        } else if (
-          currentPath.length > 1 &&
-          node.name === currentPath[0] &&
-          node.children
-        ) {
-          return {
-            ...node,
-            children: updateTree(node.children, currentPath.slice(1)),
-          };
         }
+
+        // Otherwise, if it has children, recurse
+        if (node.children) {
+          return { ...node, children: updateTree(node.children) };
+        }
+
         return node;
       });
     };
-    setFileTree(updateTree(fileTree, path));
+
+    // Use functional updater to avoid stale closure issues
+    setFileTree((prev) => updateTree(prev));
+  };
+
+  const handleRightClick = (event: React.MouseEvent, node: FileNode) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      target: node,
+    });
+  };
+
+  const addItem = (name: string) => {
+    if (!creatingItem?.parentPath || !creatingItem.type) return;
+
+    const language = getLanguageFromFileName(name);
+
+    let newItem: FileNode | any = {
+      name,
+      type: creatingItem.type,
+      icon: creatingItem.type === "folder" ? "" : "📄",
+      path: `${creatingItem.parentPath}/${name}`,
+    };
+
+    if (creatingItem.type.includes("file"))
+      socket.emit("file:create", {
+        userId: user?.id,
+        name,
+        // projectName: "my-project",
+        path: `${creatingItem.parentPath}/${name}`,
+      });
+    else
+      socket.emit("folder:create", {
+        userId: user?.id,
+        // projectName: "my-project",
+        path: `${creatingItem.parentPath}/${name}`,
+      });
+
+    socket.on("file:created", (data) => {
+      setLoadingFiles(true);
+
+      newItem = {
+        ...data,
+        name,
+        type: creatingItem.type,
+        language,
+      };
+
+      setActiveFile(newItem.path);
+      setOpenFiles([newItem.path]);
+      setLoadingFiles(false);
+    });
+
+    socket.on("folder:created", (data) => {
+      setLoadingFiles(true);
+
+      newItem = {
+        ...data,
+      };
+      setLoadingFiles(false);
+    });
+
+    const addToTree = (nodes: FileNode[]): FileNode[] =>
+      nodes.map((node) => {
+        if (node.path === creatingItem?.parentPath) {
+          if (creatingItem.type === "folder") newItem.children = [];
+
+          return {
+            ...node,
+            children: [...(node.children || []), newItem],
+          };
+        }
+        if (node.children) {
+          return { ...node, children: addToTree(node.children) };
+        }
+        return node;
+      });
+
+    setFileTree((prev) => addToTree(prev));
+    if (creatingItem.type.includes("file")) openFile(newItem);
+    setCreatingItem(null);
+  };
+
+  const handleMenuAction = (action: string) => {
+    if (!contextMenu.target) return;
+
+    const node = contextMenu.target;
+    switch (action) {
+      case "Open":
+        openFile(node);
+        break;
+      case "New File":
+        setCreatingItem({ parentPath: node.path, type: "file" });
+        break;
+      case "New Folder":
+        setCreatingItem({ parentPath: node.path, type: "folder" });
+        break;
+      case "Delete":
+        setDeleteFile(node);
+        break;
+      case "Rename":
+        setRenamingItem({ parentPath: node.path, ...node });
+        break;
+    }
   };
 
   const openFile = (file: FileNode) => {
-    const fileName = file.name;
     const filePath = file.path;
-
-    const _file = findFile(fileTree, filePath);
-    if (_file) {
-      setActiveFile(filePath);
-      setCode(_file?.content!);
-      setCurrentLanguage(_file.language || getLanguageFromFileName(fileName));
-      if (!openFiles.includes(filePath)) {
-        setOpenFiles([...openFiles, filePath]);
+    socket.emit("file:open", { userId: user?.id, path: filePath });
+    socket.once("file:opened", ({ content }) => {
+      const fileName = file.name;
+      const _file = findFile(fileTree, filePath);
+      if (_file) {
+        setActiveFile(filePath);
+        setCode(content);
+        setCurrentLanguage(_file.language || getLanguageFromFileName(fileName));
+        if (!openFiles.includes(filePath)) {
+          setOpenFiles([...openFiles, filePath]);
+        }
       }
-    }
+    });
   };
 
   const getFileName = (fileName: string) => {
     if (!fileName) return;
     const names = fileName.split("/");
     return names[names.length - 1];
+  };
+
+  // Recursive search for a node by path
+  const findNodeByPath = (
+    nodes: FileNode[],
+    path: string
+  ): FileNode | undefined => {
+    for (const n of nodes) {
+      if (n.folder! === path) return n;
+
+      if (n.children) {
+        const found = findNodeByPath(n.children, path);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
+  const isFileExist = (nodes: FileNode[], node: FileNode, fileName: string) => {
+    {
+      // Find the target folder in the tree
+
+      const currentFolder = findNodeByPath(fileTree, node?.folder!);
+
+      // Does a file/folder with this name already exist here?
+      const exists = currentFolder?.children?.some(
+        (child) => child?.name?.toLowerCase() === fileName?.toLowerCase()
+      );
+
+      return exists;
+    }
   };
 
   const closeFile = (filePath: string) => {
@@ -269,7 +439,6 @@ export function ProjectPlaygroundPage({
 
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
-
     // Configure editor options
     editor.updateOptions({
       fontSize: fontSize,
@@ -286,27 +455,78 @@ export function ProjectPlaygroundPage({
       bracketPairColorization: { enabled: true },
     });
   };
+  const fileBuffer: Record<string, NodeJS.Timeout> = {};
+
+  const handleTyping: OnChange = (value, v) => {
+    clearTimeout(fileBuffer[activeFile]);
+
+    fileBuffer[activeFile] = setTimeout(async () => {
+      socket.emit("file:flush", {
+        userId: user?.id,
+        path: activeFile,
+        content: value,
+      });
+    }, 300); // Wait 300ms after last change
+    setCode(value ?? "");
+  };
+
+  const handleDeleteFile = (file: FileNode) => {
+    if (!file) return;
+
+    const event = file.type === "file" ? "file:delete" : "folder:delete";
+    socket.emit(event, {
+      userId: user?.id,
+      path: file.path,
+    });
+
+    // Recursively remove deleted file/folder from the tree
+    const removeNode = (nodes: FileNode[], targetPath: string): FileNode[] => {
+      return nodes
+        .filter((node) => node.path !== targetPath)
+        .map((node) =>
+          node.children
+            ? { ...node, children: removeNode(node.children, targetPath) }
+            : node
+        );
+    };
+
+    socket.on("file:deleted", (data) => {
+      if (!data.success) return;
+      setFileTree((prevTree) => removeNode(prevTree, file.path));
+      setDeleteFile(null);
+    });
+
+    socket.on("folder:deleted", (data) => {
+      if (!data.success) return;
+      setFileTree((prevTree) => removeNode(prevTree, file.path));
+      setDeleteFile(null);
+    });
+  };
 
   const renderFileTree = (nodes: FileNode[], path: string[] = []) => {
     return nodes.map((node, i) => {
       return (
-        <span key={node.path + i}>
+        <span
+          key={node.path + i}
+          onContextMenu={(e) => handleRightClick(e, node)}
+          ref={treeRef}
+        >
           <div className="select-none">
             <div
-              className={`flex items-center gap-2 px-2 py-1 rounded text-sm cursor-pointer hover:bg-muted/50 ${
+              className={`flex items-center gap-2 px-2  py-1 rounded text-sm cursor-pointer hover:bg-muted/50 ${
                 activeFile === node.path ? "bg-muted" : ""
               }`}
               style={{ paddingLeft: `${(path.length + 1) * 12}px` }}
               onClick={() => {
                 if (node.type === "folder") {
-                  toggleFolder([...path, node.name]);
+                  toggleFolder(node.name);
                 } else {
                   openFile(node);
                 }
               }}
             >
               {node.type === "folder" && (
-                <span className="w-4 h-4 flex items-center justify-center">
+                <span className="h-4 flex items-center">
                   {node.isOpen ? (
                     <ChevronDown className="h-3 w-3" />
                   ) : (
@@ -314,9 +534,71 @@ export function ProjectPlaygroundPage({
                   )}
                 </span>
               )}
-              <span className="text-xs">{node.icon}</span>
-              <span className="truncate">{node.name}</span>
+              {node.type === "file" && (
+                <span className="text-md">{node.icon}</span>
+              )}
+
+              {renamingItem?.parentPath === contextMenu.target?.path &&
+              node.path == contextMenu.target?.path ? (
+                <div className="w-full flex items-center">
+                  <Input
+                    value={renamingItem?.name}
+                    autoFocus
+                    onChange={(e) => {
+                      const name = e.target.value.trim();
+                      const exists = isFileExist(nodes, node, name);
+                      console.log(exists);
+                      setRenamingItem((prev) => ({
+                        ...prev,
+                        name,
+                        exists,
+                      }));
+                    }}
+                    className={`z-5 h-8 mb-2 mt-1 w-full border-primary !ring-offset-0 !ring-0 ${
+                      renamingItem?.exists ? "border-red-500" : ""
+                    }`}
+                    onBlur={() => setRenamingItem({})}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !renamingItem?.exists) {
+                        addItem((e.target as HTMLInputElement).value);
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <span className="truncate text-md">{node.name}</span>
+              )}
             </div>
+
+            {creatingItem?.parentPath === contextMenu.target?.path &&
+              node.path == contextMenu.target?.path && (
+                <div className="w-full pl-6 flex items-center gap-2">
+                  <span>{creatingItem?.type === "folder" ? "📁" : "📄"}</span>
+
+                  <Input
+                    autoFocus
+                    onChange={(e) => {
+                      const name = e.target.value.trim();
+                      const exists = isFileExist(nodes, node, name);
+                      setCreatingItem((prev) => ({
+                        ...prev,
+                        name,
+                        exists,
+                      }));
+                    }}
+                    className={`z-5 h-8 mb-2 mt-1 w-full border-primary !ring-offset-0 !ring-0 ${
+                      creatingItem?.exists ? "border-red-500" : ""
+                    }`}
+                    onBlur={() => setCreatingItem({})}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !creatingItem?.exists) {
+                        addItem((e.target as HTMLInputElement).value);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
             {node.type === "folder" && node.isOpen && node.children && (
               <div>{renderFileTree(node.children, [...path, node.path])}</div>
             )}
@@ -469,9 +751,20 @@ export function ProjectPlaygroundPage({
                   WORKSPACE
                 </p>
               </div>
-              <ScrollArea className="flex-1 p-2">
-                {renderFileTree(fileTree)}
+              <ScrollArea className="flex-1 p-2 relative">
+                <div>{renderFileTree(fileTree)}</div>
               </ScrollArea>
+
+              <ContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                visible={contextMenu.visible}
+                target={contextMenu.target}
+                onClose={() =>
+                  setContextMenu((prev) => ({ ...prev, visible: false }))
+                }
+                onAction={handleMenuAction}
+              />
             </div>
           </ResizablePanel>
 
@@ -489,12 +782,8 @@ export function ProjectPlaygroundPage({
                       activeFile === filePath ? "bg-background" : ""
                     }`}
                     onClick={() => {
-                      setActiveFile(filePath);
                       const file = findFile(fileTree, filePath);
-                      setCode(file?.content!);
-                      setCurrentLanguage(
-                        file?.language || getLanguageFromFileName(file?.name!)
-                      );
+                      openFile(file!);
                     }}
                   >
                     <File className="h-3 w-3" />
@@ -519,7 +808,7 @@ export function ProjectPlaygroundPage({
                   language={currentLanguage}
                   theme={theme?.includes("dark") ? "vs-dark" : "light"}
                   value={code}
-                  onChange={(value) => setCode(value || "")}
+                  onChange={handleTyping}
                   onMount={handleEditorDidMount}
                   options={{
                     fontSize: fontSize,
@@ -894,6 +1183,37 @@ export function ProjectPlaygroundPage({
               </>
             )}
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!deleteFile?.name}
+        onOpenChange={() => setDeleteFile(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete file</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Warning</AlertTitle>
+              <AlertDescription>
+                Are you sure you want to delete '{deleteFile?.name}'?.
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteFile(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteFile(deleteFile!)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
