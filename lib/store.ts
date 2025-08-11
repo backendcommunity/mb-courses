@@ -99,6 +99,8 @@ interface AppState {
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  handleProjectEnrollment: (slug: string) => Project | any;
+  updateUserProject: (slug: string, payload: any) => Project | any;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
   updateInterview: (id: string, updates: Partial<Interview>) => void;
   enrollInCourse: (courseId: string) => void;
@@ -366,6 +368,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Actions
   startProject30: async (slug: string) => {
     const { data } = await api.post("/project30s/" + slug);
+    return data?.data;
+  },
+  handleProjectEnrollment: async (slug: string) => {
+    const { data } = await api.post(`/projects/${slug}`);
+    return data?.data;
+  },
+  updateUserProject: async (slug: string, payload: any) => {
+    const { data } = await api.put(`/users/projects/${slug}`, payload);
     return data?.data;
   },
   startQuiz: async (id: string, { userQuizId }: { userQuizId: string }) => {

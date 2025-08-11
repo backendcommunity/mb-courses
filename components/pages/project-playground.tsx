@@ -45,7 +45,7 @@ import {
   ArrowLeft,
   AlertTriangle,
 } from "lucide-react";
-import { getUser, Project, updateUser, user } from "@/lib/data";
+import { getUser, Project, updateUser } from "@/lib/data";
 import Editor, { OnChange } from "@monaco-editor/react";
 import {
   Accordion,
@@ -72,6 +72,13 @@ import { ContextMenu } from "./../ContextMenu";
 import { Input } from "../ui/input";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { useUser } from "@/hooks/use-user";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 let saveTimer: NodeJS.Timeout | null = null;
 interface ProjectPlaygroundPageProps {
@@ -199,6 +206,24 @@ export function ProjectPlaygroundPage({
 
   if (loading) return <Loader isLoader={false} />;
   if (loadingFiles) return <Loader isLoader={false} />;
+  if (!project?.enrolled)
+    return (
+      <div className="container max-w-4xl py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Not enrolled</CardTitle>
+            <CardDescription>
+              You need to enroll to access the playgroun
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => onNavigate(`/projects/${slug}`)}>
+              View Project
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
 
   const tasks = project?.projectTasks?.flatMap((p: any) => p.tasks);
 

@@ -17,17 +17,11 @@ import {
   Play,
   CheckCircle2,
   Clock,
-  Star,
   BookOpen,
   Award,
   Share,
-  Heart,
   Lock,
   ArrowLeft,
-  Brain,
-  Code,
-  Gamepad2,
-  FolderOpen,
   ChevronDown,
   ChevronUp,
   BadgeIcon as Certificate,
@@ -37,22 +31,40 @@ import {
   Database,
   ChevronRight,
   Users,
+  Settings,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import DisqusCommentBlock from "../ui/comment";
 import { PaymentDialog } from "../payment-dialog";
-import { Chapter, Project, UserChapter, Video } from "@/lib/data";
+import { Chapter, Project } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { useUser } from "@/hooks/use-user";
 import { Loader } from "../ui/loader";
+import languages from "@/lib/languages.json";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import socket from "@/lib/socketIo";
 
 interface ProjectDetailPageProps {
   slug: string;
@@ -71,6 +83,10 @@ export function ProjectDetailPage({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [celebration, setCelebration] = useState(false);
+  const [language, setLanguage] = useState("");
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressText, setProgressText] = useState("");
+  const [progressValue, setProgressValue] = useState(0);
   let count = 1;
 
   useEffect(() => {
@@ -158,25 +174,48 @@ export function ProjectDetailPage({
         return;
       }
 
-      // const userProject = await handleEnrollment(project?.id!);
-      // if (!userProject) {
-      //   toast.error("An error occurred. Please try again");
-      //   return;
-      // }
+      // add from here inside dialog
+      const userProject = await handleEnrollment(slug);
+      if (!userProject) {
+        toast.error("An error occurred. Please try again");
+        return;
+      }
       updateProject(project?.id!, { enrolled: true });
       Object.assign(project!, { enrolled: true });
 
-      // Trigger celebration for first-time enrollment
-      setCelebration(true);
-      toast.success("You have successfully enrolled");
+      // Connect to socket
+      socket.emit("project:start", {
+        userId: user.id,
+        template: language,
+        projectName: slug,
+        // socketId: socket.id,
+      });
+
+      socket.on("clone:progress", (data) => {
+        setShowProgress(true);
+        setProgressText(data.message);
+        setProgressValue(Math.min(Math.max(data.percent, 0), 100));
+      });
+
+      socket.on("clone:done", (data) => {
+        // Update userproject if cloned successfully
+        store.updateUserProject(slug, { cloned: true });
+
+        setShowProgress(true);
+        setProgressText(data.message);
+        setProgressValue(100);
+
+        setCelebration(true);
+        toast.success("You have successfully enrolled");
+      });
     } catch (error: any) {
       const e = error?.response?.message ?? error?.message;
       toast.error(e ?? "An error occurred");
     }
   };
 
-  const handleEnrollment = async (projectId: string) => {
-    // return await store.handleProjectEnrollment(projectId);
+  const handleEnrollment = async (slug: string) => {
+    return await store.handleProjectEnrollment(slug);
   };
 
   const handlePreviewProject = () => {
@@ -186,29 +225,8 @@ export function ProjectDetailPage({
   };
 
   const handleContinueLearning = (slug: string) => {
-    // Navigate to first incomplete chapter or continue from current
-    // const nextChapter =
-    //   project?.projectTasks.find((c: any) => !c.isCompleted) ||
-    //   project?.projectTasks[0];
-    // const nextVideo =
-    //   nextChapter?.videos?.find((v: Video) => !v.isCompleted) ||
-    //   nextChapter?.videos[0];
     const watchPath = routes.projectPlayground(slug);
     onNavigate(watchPath);
-  };
-
-  const handleChapterClick = (chapter: Chapter, index: number) => {
-    if (project?.enrolled) {
-      // Default to video watch
-      // const watchPath = routes.projectWatch(
-      //   slug,
-      //   chapter.slug,
-      //   chapter?.videos[0]?.slug
-      // );
-      // onNavigate(watchPath);
-    } else {
-      handlePreviewProject();
-    }
   };
 
   const handleWatchPage = (video: string) => {
@@ -233,7 +251,6 @@ export function ProjectDetailPage({
   const nextLessonWeek = project?.projectTasks?.find(
     (ch: any) => ch.id === nextWeek
   );
-  console.log(project?.progress);
   const completed = project?.progress! >= 100;
   const canEarnCertificate = project?.enrolled && completed;
 
@@ -434,7 +451,31 @@ export function ProjectDetailPage({
                 </div>
               ) : user.isPremium && user?.subscription ? (
                 <div className="space-y-3">
-                  <Button className="w-full" onClick={handleEnrollNow}>
+                  <div className="pt-3">
+                    <Label>Choose your preferred language</Label>
+                    <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languages.map((l) => (
+                          <SelectItem key={l.code} value={l.code}>
+                            {l.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!language && (
+                      <p className="text-red-700 italic text-xs">
+                        This field is required
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    disabled={!language}
+                    className="w-full"
+                    onClick={handleEnrollNow}
+                  >
                     <Play className="mr-2 h-4 w-4" />
                     Start Building
                   </Button>
@@ -461,19 +502,13 @@ export function ProjectDetailPage({
                   <Button className="w-full" onClick={handleEnrollNow}>
                     Start Building
                   </Button>
-                  {/* <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handlePreviewProject}
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    Preview Project
-                  </Button> */}
+                  {/*  */}
                 </div>
               )}
-
               {showPaymentDialog && (
                 <PaymentDialog
+                  disableMB={true}
+                  disableOnetime={true}
                   onClose={() => setShowPaymentDialog(false)}
                   open={showPaymentDialog}
                   data={{ ...project, type: "project" }}
@@ -653,7 +688,7 @@ export function ProjectDetailPage({
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
                             {projectTask.tasks.reduce(
-                              (a: number, c: any) => c.mb + a,
+                              (a: number, c: any) => (c?.mb ?? 0) + a,
                               0
                             )}{" "}
                             MB
@@ -799,6 +834,35 @@ export function ProjectDetailPage({
         celebrationType="enrollment"
         courseName={project?.title!}
       />
+
+      <Dialog open={showProgress} onOpenChange={setShowProgress}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#F2C94C]" />
+              Setting up Project...
+            </DialogTitle>
+            <DialogDescription>
+              Relax while Kap set up your project playground
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-6">
+            <p className="capitalize pb-1 italic text-sm">{progressText}...</p>
+            <Progress value={progressValue} />
+          </div>
+
+          {progressValue >= 100 && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleContinueLearning(slug)}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Goto Playground
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
