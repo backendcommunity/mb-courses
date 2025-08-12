@@ -500,6 +500,7 @@ export interface Project {
   dueDate?: string;
   projectTasks: any;
   banner: string;
+  cloned?: boolean;
   requirements: string[];
   resources: Resource[];
 }

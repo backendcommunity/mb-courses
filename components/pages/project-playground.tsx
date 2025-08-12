@@ -96,6 +96,7 @@ interface FileNode {
   content?: string;
   isOpen?: boolean;
   language?: string;
+  isBlocked?: boolean;
 }
 
 export function ProjectPlaygroundPage({
@@ -187,7 +188,7 @@ export function ProjectPlaygroundPage({
     socket.on("folder:response", (data) => {
       setLoadingFiles(true);
       const active = data.files[0].children.find(
-        (f: FileNode) => f.type === "file"
+        (f: FileNode) => f.type === "file" && !f.isBlocked
       );
       setActiveFile(active.path);
       setCode(active.content);
@@ -213,7 +214,7 @@ export function ProjectPlaygroundPage({
           <CardHeader>
             <CardTitle>Not enrolled</CardTitle>
             <CardDescription>
-              You need to enroll to access the playgroun
+              You need to enroll to access the playground.
             </CardDescription>
           </CardHeader>
           <CardFooter>
@@ -261,6 +262,22 @@ export function ProjectPlaygroundPage({
     });
   };
 
+  const addToTree = (nodes: FileNode[], item: FileNode): FileNode[] =>
+    nodes.map((node) => {
+      if (node.path === creatingItem?.parentPath) {
+        if (creatingItem.type === "folder") item.children = [];
+
+        return {
+          ...node,
+          children: [...(node.children || []), item],
+        };
+      }
+      if (node.children) {
+        return { ...node, children: addToTree(node.children, item) };
+      }
+      return node;
+    });
+
   const addItem = (name: string) => {
     if (!creatingItem?.parentPath || !creatingItem.type) return;
 
@@ -297,6 +314,9 @@ export function ProjectPlaygroundPage({
         language,
       };
 
+      setFileTree((prev) => addToTree(prev, newItem));
+      if (creatingItem?.type?.includes("file")) openFile(newItem);
+
       setActiveFile(newItem.path);
       setOpenFiles([newItem.path]);
       setLoadingFiles(false);
@@ -308,27 +328,17 @@ export function ProjectPlaygroundPage({
       newItem = {
         ...data,
       };
+
+      setFileTree((prev) => addToTree(prev, newItem));
       setLoadingFiles(false);
     });
 
-    const addToTree = (nodes: FileNode[]): FileNode[] =>
-      nodes.map((node) => {
-        if (node.path === creatingItem?.parentPath) {
-          if (creatingItem.type === "folder") newItem.children = [];
+    socket.on("file:error", (data) => {
+      setLoadingFiles(true);
+      toast.error(data);
+      setLoadingFiles(false);
+    });
 
-          return {
-            ...node,
-            children: [...(node.children || []), newItem],
-          };
-        }
-        if (node.children) {
-          return { ...node, children: addToTree(node.children) };
-        }
-        return node;
-      });
-
-    setFileTree((prev) => addToTree(prev));
-    if (creatingItem.type.includes("file")) openFile(newItem);
     setCreatingItem(null);
   };
 
@@ -408,6 +418,8 @@ export function ProjectPlaygroundPage({
       return exists;
     }
   };
+
+  const isBlocked = findFile(fileTree, activeFile)?.isBlocked;
 
   const closeFile = (filePath: string) => {
     const newOpenFiles = openFiles.filter((f) => f !== filePath);
@@ -572,7 +584,6 @@ export function ProjectPlaygroundPage({
                     onChange={(e) => {
                       const name = e.target.value.trim();
                       const exists = isFileExist(nodes, node, name);
-                      console.log(exists);
                       setRenamingItem((prev) => ({
                         ...prev,
                         name,
@@ -591,7 +602,13 @@ export function ProjectPlaygroundPage({
                   />
                 </div>
               ) : (
-                <span className="truncate text-md">{node.name}</span>
+                <span
+                  className={`truncate text-md ${
+                    node.isBlocked ? "text-gray-500" : ""
+                  }`}
+                >
+                  {node.name}
+                </span>
               )}
             </div>
 
@@ -828,33 +845,39 @@ export function ProjectPlaygroundPage({
 
               {/* Monaco Editor */}
               <div className="flex-1 relative">
-                <Editor
-                  height="100%"
-                  language={currentLanguage}
-                  theme={theme?.includes("dark") ? "vs-dark" : "light"}
-                  value={code}
-                  onChange={handleTyping}
-                  onMount={handleEditorDidMount}
-                  options={{
-                    fontSize: fontSize,
-                    fontFamily:
-                      "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
-                    lineHeight: 1.6,
-                    minimap: { enabled: true },
-                    scrollBeyondLastLine: false,
-                    wordWrap: "on",
-                    automaticLayout: true,
-                    tabSize: 2,
-                    insertSpaces: true,
-                    renderWhitespace: "selection",
-                    bracketPairColorization: { enabled: true },
-                    suggestOnTriggerCharacters: true,
-                    quickSuggestions: true,
-                    parameterHints: { enabled: true },
-                    formatOnPaste: true,
-                    formatOnType: true,
-                  }}
-                />
+                {isBlocked ? (
+                  <div className="flex items-center justify-center w-full h-full bg-muted/20">
+                    <div> Preview not supported </div>
+                  </div>
+                ) : (
+                  <Editor
+                    height="100%"
+                    language={currentLanguage}
+                    theme={theme?.includes("dark") ? "vs-dark" : "light"}
+                    value={code}
+                    onChange={handleTyping}
+                    onMount={handleEditorDidMount}
+                    options={{
+                      fontSize: fontSize,
+                      fontFamily:
+                        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                      lineHeight: 1.6,
+                      minimap: { enabled: true },
+                      scrollBeyondLastLine: false,
+                      wordWrap: "on",
+                      automaticLayout: true,
+                      tabSize: 2,
+                      insertSpaces: true,
+                      renderWhitespace: "selection",
+                      bracketPairColorization: { enabled: true },
+                      suggestOnTriggerCharacters: true,
+                      quickSuggestions: true,
+                      parameterHints: { enabled: true },
+                      formatOnPaste: true,
+                      formatOnType: true,
+                    }}
+                  />
+                )}
               </div>
             </div>
           </ResizablePanel>

@@ -183,35 +183,39 @@ export function ProjectDetailPage({
       updateProject(project?.id!, { enrolled: true });
       Object.assign(project!, { enrolled: true });
 
-      // Connect to socket
-      socket.emit("project:start", {
-        userId: user.id,
-        template: language,
-        projectName: slug,
-        // socketId: socket.id,
-      });
-
-      socket.on("clone:progress", (data) => {
-        setShowProgress(true);
-        setProgressText(data.message);
-        setProgressValue(Math.min(Math.max(data.percent, 0), 100));
-      });
-
-      socket.on("clone:done", (data) => {
-        // Update userproject if cloned successfully
-        store.updateUserProject(slug, { cloned: true });
-
-        setShowProgress(true);
-        setProgressText(data.message);
-        setProgressValue(100);
-
-        setCelebration(true);
-        toast.success("You have successfully enrolled");
-      });
+      handleProjectSetup();
     } catch (error: any) {
       const e = error?.response?.message ?? error?.message;
       toast.error(e ?? "An error occurred");
     }
+  };
+
+  const handleProjectSetup = () => {
+    // Connect to socket
+    socket.emit("project:start", {
+      userId: user.id,
+      template: language,
+      projectName: slug,
+      // socketId: socket.id,
+    });
+
+    socket.on("clone:progress", (data) => {
+      setShowProgress(true);
+      setProgressText(data.message);
+      setProgressValue(Math.min(Math.max(data.percent, 0), 100));
+    });
+
+    socket.on("clone:done", (data) => {
+      // Update userproject if cloned successfully
+      store.updateUserProject(slug, { cloned: true });
+
+      setShowProgress(true);
+      setProgressText(data.message);
+      setProgressValue(100);
+
+      setCelebration(true);
+      toast.success("You have successfully enrolled");
+    });
   };
 
   const handleEnrollment = async (slug: string) => {
@@ -247,10 +251,6 @@ export function ProjectDetailPage({
   const isCompleted = (id: string) =>
     []?.find((c: any) => c?.videoId === id && c?.completed);
 
-  const nextWeek = ""; //p?.nextWeek ?? chapters?.[0]?.id;
-  const nextLessonWeek = project?.projectTasks?.find(
-    (ch: any) => ch.id === nextWeek
-  );
   const completed = project?.progress! >= 100;
   const canEarnCertificate = project?.enrolled && completed;
 
@@ -441,9 +441,37 @@ export function ProjectDetailPage({
                     <span>{Math.floor(project?.progress ?? 0)}%</span>
                   </div>
                   <Progress value={project?.progress ?? 0} className="h-2" />
+
+                  {!project.cloned && (
+                    <div className="pt-3">
+                      <Label>Choose your preferred language</Label>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {languages.map((l) => (
+                            <SelectItem key={l.code} value={l.code}>
+                              {l.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!language && (
+                        <p className="text-red-700 italic text-xs">
+                          This field is required
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <Button
+                    disabled={!language}
                     className="w-full"
-                    onClick={() => handleContinueLearning(project.slug)}
+                    onClick={() => {
+                      if (project.cloned)
+                        return handleContinueLearning(project.slug);
+                      return handleProjectSetup();
+                    }}
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Continue Building
