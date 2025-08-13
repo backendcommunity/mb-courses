@@ -229,7 +229,6 @@ export function ProjectPlaygroundPage({
     });
 
     socket.on("project:run:error", (data) => {
-      setActiveTab("terminal");
       setTerminalOutput((prev) => {
         if (prev.includes(data?.message)) return prev;
         return [...prev, data?.message];
