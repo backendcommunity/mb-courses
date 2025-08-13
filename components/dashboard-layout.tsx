@@ -63,7 +63,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <>
-      <ProfitWellScript userEmail={user?.email!} />
+      {/* <ProfitWellScript userEmail={user?.email!} /> */}
+
+      <NavigationBar
+        onNavigate={handleNavigate}
+        onMenuToggle={toggleSidebar}
+        isMobile={isMobile}
+      />
+
       <div className="flex min-h-screen bg-background">
         {/* Sidebar - conditionally shown based on sidebarOpen state */}
         <div
@@ -88,13 +95,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col md:ml-72">
-          <NavigationBar
-            onNavigate={handleNavigate}
-            onMenuToggle={toggleSidebar}
-            isMobile={isMobile}
-          />
-          <main className="flex-1 overflow-auto p-8">{children}</main>
+        <div className="flex-1 flex flex-col overflow-hidden w-full  md:ml-72">
+          <main className="flex-1 overflow-auto p-4">{children}</main>
+
           <KapAIAssistant />
         </div>
       </div>

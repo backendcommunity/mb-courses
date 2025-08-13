@@ -11,8 +11,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -25,25 +24,22 @@ import {
   Save,
   Share,
   FileText,
-  Terminal,
   CheckCircle2,
   FolderOpen,
   File,
-  Globe,
   ChevronRight,
   ChevronDown,
   X,
-  Maximize2,
-  Minimize2,
   RotateCcw,
-  Download,
-  Search,
   Settings,
-  BookOpen,
   Wrench,
   Check,
   ArrowLeft,
   AlertTriangle,
+  Link,
+  Paintbrush,
+  EllipsisVertical,
+  Ellipsis,
 } from "lucide-react";
 import { getUser, Project, updateUser } from "@/lib/data";
 import Editor, { OnChange } from "@monaco-editor/react";
@@ -79,8 +75,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { PaymentDialog } from "../payment-dialog";
 
-let saveTimer: NodeJS.Timeout | null = null;
 interface ProjectPlaygroundPageProps {
   slug: string;
   onNavigate: Function;
@@ -112,8 +108,9 @@ export function ProjectPlaygroundPage({
   const [fontSize, setFontSize] = useState(14);
   const [terminalOutput, setTerminalOutput] = useState(terminalSample);
   const [terminalInput, setTerminalInput] = useState("");
+  const [progressText, setProgressText] = useState("");
   const [previewUrl, setPreviewUrl] = useState("http://localhost:3000");
-  const [isPreviewMaximized, setIsPreviewMaximized] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(true);
   const [loading, setLoading] = useState(false);
   const [marking, setMarking] = useState(false);
   const [markAsCompleted, setMarkAsCompleted] = useState(false);
@@ -122,11 +119,31 @@ export function ProjectPlaygroundPage({
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deleteFile, setDeleteFile] = useState<FileNode | null>();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
+  const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
+  const [activeTab, setActiveTab] = useState("tasks");
   const [code, setCode] = useState(fileTree?.[0]?.children?.[0]?.content || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
+  const [showPayment, setShowPayment] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [fileMenu, setFileMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+  const [editorContextMenu, setEditorContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+
+  const [progressValue, setProgressValue] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [baseURL, setBaseURL] = useState("");
   const editorRef = useRef<any>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
+  const fileMenuRef = useRef<HTMLDivElement>(null);
+  const editorMenuRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -173,6 +190,20 @@ export function ProjectPlaygroundPage({
       if (treeRef.current && !treeRef.current.contains(event.target as Node)) {
         setContextMenu((prev) => ({ ...prev, visible: false }));
       }
+
+      if (
+        fileMenuRef.current &&
+        !fileMenuRef.current.contains(event.target as Node)
+      ) {
+        setFileMenu((prev) => ({ ...prev, visible: false }));
+      }
+
+      if (
+        editorMenuRef.current &&
+        !editorMenuRef.current.contains(event.target as Node)
+      ) {
+        setEditorContextMenu((prev) => ({ ...prev, visible: false }));
+      }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
@@ -195,6 +226,58 @@ export function ProjectPlaygroundPage({
       setOpenFiles([active.path]);
       setFileTree(data.files);
       setLoadingFiles(false);
+    });
+
+    socket.on("project:run:error", (data) => {
+      setActiveTab("terminal");
+      setTerminalOutput((prev) => {
+        if (prev.includes(data?.message)) return prev;
+        return [...prev, data?.message];
+      });
+    });
+
+    socket.on("project:running", (data) => {
+      setBaseURL(data?.url);
+      setTerminalOutput((prev) => {
+        if (prev.includes(data?.message)) return prev;
+        return [...prev, `[BASE_URL]: ${data?.url}`];
+      });
+      setProgressValue(100);
+    });
+
+    let chunks: any = [];
+    let downloadFilename = "download.zip";
+    socket.on("project:download:start", ({ filename }) => {
+      chunks = [];
+      downloadFilename = filename;
+      setDownloadProgress(0);
+    });
+
+    socket.on("project:download:chunk", (chunk) => {
+      chunks.push(chunk);
+    });
+
+    socket.on("project:download:progress", ({ percent }) => {
+      setProgressText(`Downloading your project... ${percent}%`);
+      setDownloadProgress(percent);
+    });
+
+    socket.on("project:download:end", () => {
+      const blob = new Blob(chunks, { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = downloadFilename;
+      a.click();
+
+      URL.revokeObjectURL(url);
+      setDownloadProgress(100);
+      setProgressText(`Project downloaded successfull... ${100}%`);
+    });
+
+    socket.on("project:download:error", (data) => {
+      toast.error(data.message);
     });
   }, []);
 
@@ -253,7 +336,6 @@ export function ProjectPlaygroundPage({
   const handleRightClick = (event: React.MouseEvent, node: FileNode) => {
     event.preventDefault();
     event.stopPropagation();
-
     setContextMenu({
       visible: true,
       x: event.clientX,
@@ -472,6 +554,16 @@ export function ProjectPlaygroundPage({
         terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight);
       }, 100);
     }
+  };
+
+  const handleDownloadProject = () => {
+    if (!user.isPremium) return;
+    socket.emit("project:download:stream", {
+      projectName: slug,
+      userId: user.id,
+    });
+
+    setShowLoader(true);
   };
 
   const handleEditorDidMount = (editor: any) => {
@@ -700,10 +792,108 @@ export function ProjectPlaygroundPage({
     }
   };
 
+  const handleRunProject = () => {
+    socket.emit("project:start", {
+      language: "node",
+      projectName: slug,
+      userId: user.id,
+    });
+
+    setTerminalOutput(terminalSample);
+  };
+
+  const editorMenu = () => {
+    const menuItems: any = [
+      {
+        label: "Close All",
+        action: () =>
+          user.isPremium ? handleDownloadProject() : setShowPayment(true),
+      },
+      {
+        label: "separator",
+        action: () => {},
+      },
+      {
+        label: "Select Theme",
+        action: () => console.log("Open Folder in Terminal"),
+      },
+
+      {
+        label: "Select Font",
+        action: () => console.log("Open Folder in Terminal"),
+      },
+    ];
+
+    return (
+      <div
+        className="absolute top-5 right-0 bg-secondary text-white shadow-lg rounded-lg py-1 w-40 z-50"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {menuItems.map((item: any, i: number) => {
+          return item.label === "separator" ? (
+            <div key={i} className="my-0.5 bg-gray-700 h-[1px]"></div>
+          ) : (
+            <div
+              key={i}
+              onClick={() => item.action()}
+              className="px-3 my- py-2 hover:bg-primary cursor-pointer text-sm"
+            >
+              {item.label}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const fileTreeMenu = () => {
+    const menuItems: any = [
+      {
+        label: "Download Project",
+        action: () =>
+          user.isPremium ? handleDownloadProject() : setShowPayment(true),
+      },
+      {
+        label: "separator",
+        action: () => {},
+      },
+      {
+        label: "Import Project",
+        action: () => console.log("Open Folder in Terminal"),
+      },
+
+      {
+        label: "Export Project",
+        action: () => console.log("Open Folder in Terminal"),
+      },
+    ];
+
+    return (
+      <div
+        className="absolute top-5 left-1 bg-secondary text-white shadow-lg rounded-lg py-1 w-40 z-50"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {menuItems.map((item: any, i: number) => {
+          return item.label === "separator" ? (
+            <div key={i} className="my-0.5 bg-gray-700 h-[1px]"></div>
+          ) : (
+            <div
+              key={i}
+              onClick={() => item.action()}
+              className="px-3 my- py-2 hover:bg-primary cursor-pointer text-sm"
+            >
+              {item.label}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex-1 h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pb-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex-1 h-full flex flex-col w-full overflow-hidden">
+      {/* Progress Bar */}
+      <div className="flex items-center justify-between pb-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -712,43 +902,18 @@ export function ProjectPlaygroundPage({
             <ArrowLeft className="mr-2 h-4 w-4" />
             {/* Back to Projects */}
           </Button>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 capitalize">
-              <Badge
-                variant={
-                  project?.level === "Hard"
-                    ? "destructive"
-                    : project?.level === "Medium"
-                    ? "default"
-                    : "secondary"
-                }
-              >
-                {project?.level}
-              </Badge>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight">
-              {project?.title}
-            </h1>
-          </div>
         </div>
+        {project?.status !== "Not Started" && (
+          <div className="px-4  w-full">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+              <span>Progress</span>
+              <span>{project?.progress}%</span>
+            </div>
+            <Progress value={project?.progress} className="h-1" />
+          </div>
+        )}
 
         <div className="flex items-right gap-2">
-          {/* <div className="flex items-center gap-2 mr-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setEditorTheme(editorTheme === "vs-dark" ? "light" : "vs-dark")
-              }
-            >
-              {editorTheme === "vs-dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-          </div> */}
-
           <Button variant="outline" size="sm">
             <Save className="mr-2 h-4 w-4" />
             Save
@@ -758,35 +923,43 @@ export function ProjectPlaygroundPage({
             <Share className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Button size="sm">
+          <Button onClick={handleRunProject} size="sm">
             <Play className="mr-2 h-4 w-4" />
             Run
           </Button>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {project?.status !== "Not Started" && (
-        <div className="px-4 py-4 border-b">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span>
-            <span>{project?.progress}%</span>
-          </div>
-          <Progress value={project?.progress} className="h-1" />
-        </div>
-      )}
-
       {/* Main Editor Layout */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col w-full h-full ">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Left Sidebar - File Explorer */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full flex flex-col border-r bg-muted/20">
-              <div className="p-3 border-b bg-muted/30">
+          <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
+            <div className="h-full  flex flex-col border-r bg-muted/20 ">
+              <div
+                ref={fileMenuRef}
+                className="p-3 relative flex justify-between border-b bg-muted/30 "
+              >
                 <h3 className="font-medium text-sm flex items-center gap-2">
                   <FolderOpen className="h-4 w-4" />
                   EXPLORER
                 </h3>
+                <Button
+                  onClick={(e) => {
+                    setFileMenu((prev) => {
+                      return {
+                        visible: !prev.visible,
+                        x: e.clientX,
+                        y: e.clientY,
+                      };
+                    });
+                  }}
+                  size={"sm"}
+                  variant={"ghost"}
+                  className="!p-0 gap-0 !hover:bg-destructive/90"
+                >
+                  <Ellipsis />
+                </Button>
               </div>
               <div className="p-2 border-b bg-muted/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
@@ -813,389 +986,443 @@ export function ProjectPlaygroundPage({
           <ResizableHandle />
 
           {/* Center - Code Editor */}
-          <ResizablePanel defaultSize={55} minSize={40}>
-            <div className="h-full flex flex-col">
-              {/* File Tabs */}
-              <div className="flex items-center border-b bg-muted/20">
-                {openFiles.map((filePath) => (
-                  <div
-                    key={filePath}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm border-r cursor-pointer hover:bg-muted/50 ${
-                      activeFile === filePath ? "bg-background" : ""
-                    }`}
-                    onClick={() => {
-                      const file = findFile(fileTree, filePath);
-                      openFile(file!);
-                    }}
-                  >
-                    <File className="h-3 w-3" />
-                    <span>{getFileName(filePath)}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeFile(filePath);
-                      }}
-                      className="hover:bg-muted rounded p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <ResizablePanel className="h-full relative">
+            {fileMenu.visible && fileTreeMenu()}
 
-              {/* Monaco Editor */}
-              <div className="flex-1 relative">
-                {isBlocked ? (
-                  <div className="flex items-center justify-center w-full h-full bg-muted/20">
-                    <div> Preview not supported </div>
-                  </div>
-                ) : (
-                  <Editor
-                    height="100%"
-                    language={currentLanguage}
-                    theme={theme?.includes("dark") ? "vs-dark" : "light"}
-                    value={code}
-                    onChange={handleTyping}
-                    onMount={handleEditorDidMount}
-                    options={{
-                      fontSize: fontSize,
-                      fontFamily:
-                        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
-                      lineHeight: 1.6,
-                      minimap: { enabled: true },
-                      scrollBeyondLastLine: false,
-                      wordWrap: "on",
-                      automaticLayout: true,
-                      tabSize: 2,
-                      insertSpaces: true,
-                      renderWhitespace: "selection",
-                      bracketPairColorization: { enabled: true },
-                      suggestOnTriggerCharacters: true,
-                      quickSuggestions: true,
-                      parameterHints: { enabled: true },
-                      formatOnPaste: true,
-                      formatOnType: true,
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle />
-
-          {/* Right Panel - Instructions & Tools */}
-          <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
-            <div className="h-full flex flex-col">
-              <Tabs
-                defaultValue="instructions"
-                className="h-full flex flex-col"
-              >
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger
-                    value="instructions"
-                    className="flex items-center gap-1"
-                  >
-                    <BookOpen className="h-3 w-3" />
-                    <span className="hidden sm:inline">Tasks</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="preview"
-                    className="flex items-center gap-1"
-                  >
-                    <Globe className="h-3 w-3" />
-                    <span className="hidden sm:inline">Preview</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="terminal"
-                    className="flex items-center gap-1"
-                  >
-                    <Terminal className="h-3 w-3" />
-                    <span className="hidden sm:inline">Terminal</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="tools"
-                    className="flex items-center gap-1"
-                  >
-                    <Wrench className="h-3 w-3" />
-                    <span className="hidden sm:inline">Tools</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent
-                  value="instructions"
-                  className="flex-1 m-0 max-h-screen overflow-y-auto"
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={100}>
+                <ResizablePanelGroup
+                  direction="vertical"
+                  className="relative h-full"
                 >
-                  <div className=" flex  flex-col border rounded-lg  ">
-                    <div className="p-3 border-b bg-muted/30">
-                      <h3 className="font-medium text-sm flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Project Tasks
-                      </h3>
-                    </div>
-                    <div className="flex-1 p-4">
-                      <Accordion type="single" collapsible>
-                        {tasks?.map((task: any, i: number) => (
-                          <AccordionItem
-                            key={task.id + i}
-                            value={`week-${i + 1}`}
-                          >
-                            <AccordionTrigger className="hover:no-underline">
-                              <div className="flex items-center justify-between w-full mr-4">
-                                <div className="text-left">
-                                  <h3 className="font-semibold">
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      Task {i + 1}:
-                                    </Badge>{" "}
-                                    {task?.title}
-                                  </h3>
-
-                                  <article
-                                    dangerouslySetInnerHTML={{
-                                      __html: task?.summary,
-                                    }}
-                                    className="text-xs text-muted-foreground [&>*>span]:!text-muted-foreground"
-                                  ></article>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {task?.userTask?.isCompleted ? (
-                                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
-                                  ) : (
-                                    <div
-                                      onClick={() => {
-                                        setActiveTask(task);
-                                        setMarkAsCompleted(true);
-                                      }}
-                                      title="Mark as completed"
-                                      className="text-xs bg-primary px-1 rounded-md"
-                                    >
-                                      <Check className="h-4 w-4" />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </AccordionTrigger>
-
-                            <AccordionContent className="w-80 h-full ">
-                              <div className="space-y-3 pt-4 w-full ">
-                                <div
-                                  className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors w-full`}
-                                >
-                                  <div className="flex-1 space-y-1 min-w-0">
-                                    <h4 className="font-medium text-sm md:text-base">
-                                      {task.title}
-                                    </h4>
-                                    <article
-                                      dangerouslySetInnerHTML={{
-                                        __html: task?.description,
-                                      }}
-                                      className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
-                                    ></article>
-                                  </div>
-                                </div>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="preview" className="flex-1 m-0">
-                  <div className="h-full flex flex-col border rounded-lg">
-                    <div className="flex items-center justify-between p-2 border-b bg-muted/30">
-                      <div className="flex items-center gap-2 flex-1">
-                        <div className="flex gap-1">
-                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        </div>
-                        <input
-                          type="text"
-                          value={previewUrl}
-                          onChange={(e) => setPreviewUrl(e.target.value)}
-                          className="flex-1 px-2 py-1 text-xs bg-background border rounded"
-                        />
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() =>
-                            setIsPreviewMaximized(!isPreviewMaximized)
-                          }
-                        >
-                          {isPreviewMaximized ? (
-                            <Minimize2 className="h-3 w-3" />
-                          ) : (
-                            <Maximize2 className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex-1 bg-white">
-                      <iframe
-                        src={previewUrl}
-                        className="w-full h-full border-none"
-                        title="Preview"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="terminal" className="flex-1 m-0">
-                  <div className="h-full flex flex-col bg-black text-green-400 rounded-lg overflow-hidden">
-                    <div className="flex items-center justify-between p-2 bg-gray-800">
-                      <span className="text-xs font-medium">Terminal</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-gray-400"
-                        onClick={() =>
-                          setTerminalOutput(["Welcome to MB Projects Terminal"])
-                        }
+                  {editorContextMenu.visible && editorMenu()}
+                  <ResizablePanel
+                    className=""
+                    defaultSize={isRightPanelVisible ? 40 : 70}
+                    minSize={30}
+                  >
+                    <div className="h-full flex flex-col">
+                      {/* File Tabs */}
+                      <div
+                        ref={editorMenuRef}
+                        className="flex items-center gap-2 justify-between border-b bg-muted/20"
                       >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <ScrollArea className="flex-1 p-3" ref={terminalRef}>
-                      <div className="space-y-1 font-mono text-xs">
-                        {terminalOutput.map((line, index) => (
-                          <div
-                            key={line + index}
-                            className={
-                              line.startsWith("$")
-                                ? "text-yellow-400"
-                                : line.startsWith("✓")
-                                ? "text-green-400"
-                                : "text-gray-300"
-                            }
-                          >
-                            {line}
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                    <form
-                      onSubmit={handleTerminalSubmit}
-                      className="p-3 border-t border-gray-700"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-yellow-400 font-mono text-xs">
-                          $
-                        </span>
-                        <input
-                          type="text"
-                          value={terminalInput}
-                          onChange={(e) => setTerminalInput(e.target.value)}
-                          className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono text-xs"
-                          placeholder="Enter command..."
-                        />
-                      </div>
-                    </form>
-                  </div>
-                </TabsContent>
+                        <ScrollArea>
+                          <ScrollBar orientation="horizontal" />
 
-                <TabsContent value="tools" className="flex-1 m-0">
-                  <div className="h-full flex flex-col border rounded-lg">
-                    <div className="p-3 border-b bg-muted/30">
-                      <h3 className="font-medium text-sm flex items-center gap-2">
-                        <Wrench className="h-4 w-4" />
-                        Development Tools
-                      </h3>
-                    </div>
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-3">
-                        <Select
-                          value={fontSize.toString()}
-                          onValueChange={(value) =>
-                            setFontSize(Number.parseInt(value))
+                          <div className="flex items-center">
+                            {openFiles.map((filePath) => (
+                              <div
+                                key={filePath}
+                                className={`flex  items-center gap-2 px-3 py-2 text-sm border-r cursor-pointer hover:bg-muted/50 ${
+                                  activeFile === filePath ? "bg-background" : ""
+                                }`}
+                                onClick={() => {
+                                  const file = findFile(fileTree, filePath);
+                                  openFile(file!);
+                                }}
+                              >
+                                <File className="h-3 w-3" />
+                                <span>{getFileName(filePath)}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    closeFile(filePath);
+                                  }}
+                                  className="hover:bg-muted rounded p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        <Button
+                          onClick={(e) =>
+                            setEditorContextMenu((prev) => {
+                              return {
+                                visible: !prev.visible,
+                                x: e.clientX,
+                                y: e.clientY,
+                              };
+                            })
                           }
+                          variant={"ghost"}
                         >
-                          <SelectTrigger className="w-full h-8">
-                            <SelectValue placeholder="Select size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="12">12</SelectItem>
-                            <SelectItem value="14">14</SelectItem>
-                            <SelectItem value="16">16</SelectItem>
-                            <SelectItem value="18">18</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          size="sm"
-                        >
-                          <Search className="mr-2 h-4 w-4" />
-                          Search Files
+                          <EllipsisVertical />
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          size="sm"
-                        >
-                          <Settings className="mr-2 h-4 w-4" />
-                          Editor Settings
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          size="sm"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Project
-                        </Button>
-                        <Separator />
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Quick Actions
-                          </h4>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start"
-                            size="sm"
-                          >
-                            Format Code
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            Export project
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start"
-                            size="sm"
-                          >
-                            Run Tests
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start"
-                            size="sm"
-                          >
-                            Deploy Project
-                          </Button>
-                        </div>
                       </div>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+
+                      {/* Monaco Editor */}
+                      <div className="flex-1 relative">
+                        {isBlocked ? (
+                          <div className="flex items-center justify-center w-full h-full bg-muted/20">
+                            <div> Preview not supported </div>
+                          </div>
+                        ) : (
+                          <Editor
+                            height="100%"
+                            language={currentLanguage}
+                            theme={
+                              theme?.includes("dark") ? "vs-dark" : "light"
+                            }
+                            value={code}
+                            onChange={handleTyping}
+                            onMount={handleEditorDidMount}
+                            options={{
+                              fontSize: fontSize,
+                              fontFamily:
+                                "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                              lineHeight: 1.6,
+                              minimap: { enabled: true },
+                              scrollBeyondLastLine: false,
+                              wordWrap: "on",
+                              automaticLayout: true,
+                              tabSize: 2,
+                              insertSpaces: true,
+                              renderWhitespace: "selection",
+                              bracketPairColorization: { enabled: true },
+                              suggestOnTriggerCharacters: true,
+                              quickSuggestions: true,
+                              parameterHints: { enabled: true },
+                              formatOnPaste: true,
+                              formatOnType: true,
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </ResizablePanel>
+
+                  {showTerminal && (
+                    <>
+                      <ResizableHandle />
+                      <ResizablePanel defaultSize={15} minSize={10}>
+                        {/* TERMINAL */}
+                        <div className="h-full flex flex-col bg-black text-green-400  overflow-hidden">
+                          <div className="flex items-center justify-between px-4 py-2 bg-gray-800">
+                            <span className="text-xs font-medium">
+                              Terminal
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                title="Clear terminal"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-gray-400"
+                                onClick={() =>
+                                  setTerminalOutput([
+                                    "Welcome to MB Projects Terminal",
+                                  ])
+                                }
+                              >
+                                <Paintbrush />
+                              </Button>
+
+                              <Button
+                                title="Close terminal"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-gray-400"
+                                onClick={() => setShowTerminal(false)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <ScrollArea className="flex-1 p-3" ref={terminalRef}>
+                            <div className="space-y-1 font-mono text-xs">
+                              {terminalOutput.map((line, index) => (
+                                <div
+                                  key={line + index}
+                                  className={
+                                    line.startsWith("$")
+                                      ? "text-yellow-400"
+                                      : line.startsWith("✓")
+                                      ? "text-green-400"
+                                      : "text-gray-300"
+                                  }
+                                >
+                                  {line}
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                          <form
+                            onSubmit={handleTerminalSubmit}
+                            className="p-3 border-t border-gray-700"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-yellow-400 font-mono text-xs">
+                                $
+                              </span>
+                              <input
+                                type="text"
+                                value={terminalInput}
+                                onChange={(e) =>
+                                  setTerminalInput(e.target.value)
+                                }
+                                className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono text-xs"
+                                placeholder="Enter command..."
+                              />
+                            </div>
+                          </form>
+                        </div>
+                      </ResizablePanel>
+                    </>
+                  )}
+                </ResizablePanelGroup>
+              </ResizablePanel>
+
+              {/* Right Panel - Instructions & Tools */}
+              {isRightPanelVisible && (
+                <>
+                  <ResizableHandle />
+                  <ResizablePanel defaultSize={40} minSize={20}>
+                    <div className="h-full flex flex-col">
+                      <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        defaultValue="tasks"
+                        className="h-full flex flex-col"
+                      >
+                        <TabsList className="grid w-full grid-cols-4 rounded-none">
+                          <TabsTrigger
+                            value="tasks"
+                            className="flex items-center gap-1"
+                          >
+                            <span className="hidden sm:inline">Tasks</span>
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="preview"
+                            className="flex items-center gap-1"
+                          >
+                            {/* <Globe className="h-3 w-3" /> */}
+                            <span className="hidden sm:inline">Preview</span>
+                          </TabsTrigger>
+
+                          <TabsTrigger
+                            value="tools"
+                            className="flex items-center gap-1"
+                          >
+                            <span className="hidden sm:inline">Tools</span>
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent
+                          value="tasks"
+                          className="flex-1 m-0 max-h-screen overflow-y-auto"
+                        >
+                          <div className=" flex  flex-col border">
+                            <div className="p-3 border-b bg-muted/30">
+                              <h3 className="font-medium text-sm flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                Project Tasks
+                              </h3>
+                            </div>
+                            <div className="flex-1 p-4">
+                              <Accordion type="single" collapsible>
+                                {tasks?.map((task: any, i: number) => (
+                                  <AccordionItem
+                                    key={task.id + i}
+                                    value={`week-${i + 1}`}
+                                  >
+                                    <AccordionTrigger className="hover:no-underline">
+                                      <div className="flex items-center justify-between w-full mr-4">
+                                        <div className="text-left">
+                                          <h3 className="font-semibold">
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-xs"
+                                            >
+                                              Task {i + 1}:
+                                            </Badge>{" "}
+                                            {task?.title}
+                                          </h3>
+
+                                          <article
+                                            dangerouslySetInnerHTML={{
+                                              __html: task?.summary,
+                                            }}
+                                            className="text-xs text-muted-foreground [&>*>span]:!text-muted-foreground"
+                                          ></article>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {task?.userTask?.isCompleted ? (
+                                            <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+                                          ) : (
+                                            <div
+                                              onClick={() => {
+                                                setActiveTask(task);
+                                                setMarkAsCompleted(true);
+                                              }}
+                                              title="Mark as completed"
+                                              className="text-xs bg-primary px-1 rounded-md"
+                                            >
+                                              <Check className="h-4 w-4" />
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </AccordionTrigger>
+
+                                    <AccordionContent className="w-80 h-full ">
+                                      <div className="space-y-3 pt-4 w-full ">
+                                        <div
+                                          className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors w-full`}
+                                        >
+                                          <div className="flex-1 space-y-1 min-w-0">
+                                            <h4 className="font-medium text-sm md:text-base">
+                                              {task.title}
+                                            </h4>
+                                            <article
+                                              dangerouslySetInnerHTML={{
+                                                __html: task?.description,
+                                              }}
+                                              className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                                            ></article>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                ))}
+                              </Accordion>
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="preview" className="flex-1 m-0">
+                          <div className="h-full flex flex-col border">
+                            <div className="flex items-center justify-between p-2 border-b bg-muted/30">
+                              <div className="flex items-center gap-2 flex-1">
+                                <div className="flex gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={previewUrl}
+                                  onChange={(e) =>
+                                    setPreviewUrl(e.target.value)
+                                  }
+                                  className="flex-1 px-2 py-1 text-xs bg-background border rounded"
+                                />
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  onClick={() => {
+                                    setPreviewUrl((prev) => {
+                                      const url = new URL(
+                                        prev,
+                                        window.location.origin
+                                      );
+                                      url.searchParams.set(
+                                        "_t",
+                                        Date.now() + ""
+                                      );
+                                      return url.toString();
+                                    });
+                                  }}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                </Button>
+                                <a target="_blank" href={previewUrl}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Link className="h-3 w-3" />
+                                  </Button>
+                                </a>
+                              </div>
+                            </div>
+                            <div className="flex-1 bg-white">
+                              <iframe
+                                src={previewUrl}
+                                className="w-full h-full border-none"
+                                title="Preview"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="tools" className="flex-1 m-0">
+                          <div className="h-full flex flex-col border rounded-lg">
+                            <div className="p-3 border-b bg-muted/30">
+                              <h3 className="font-medium text-sm flex items-center gap-2">
+                                <Wrench className="h-4 w-4" />
+                                Development Tools
+                              </h3>
+                            </div>
+                            <ScrollArea className="flex-1 p-4">
+                              <div className="space-y-3">
+                                <Select
+                                  value={fontSize.toString()}
+                                  onValueChange={(value) =>
+                                    setFontSize(Number.parseInt(value))
+                                  }
+                                >
+                                  <SelectTrigger className="w-full h-8">
+                                    <SelectValue placeholder="Select size" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="12">12</SelectItem>
+                                    <SelectItem value="14">14</SelectItem>
+                                    <SelectItem value="16">16</SelectItem>
+                                    <SelectItem value="18">18</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
           </ResizablePanel>
         </ResizablePanelGroup>
+
+        <div className="bg-muted/20 border-t">
+          <div className="flex w-full justify-start text-gray-400 px- gap- text-sm">
+            <button
+              onClick={() => setShowTerminal((prev) => !prev)}
+              className="border-x rounded px-2 h-full hover:bg-secondary border-gray-800 py-1"
+            >
+              Terminal
+            </button>
+            <button
+              onClick={() => {
+                setIsRightPanelVisible((prev) => !prev);
+                setActiveTab("tasks");
+              }}
+              className={`border-x rounded px-2 h-full hover:bg-secondary border-gray-800 py-1 ${
+                activeTab === "tasks" ? "bg-secondary" : ""
+              }`}
+            >
+              Tasks
+            </button>
+            <button
+              onClick={() => {
+                setIsRightPanelVisible((prev) => !prev);
+                setActiveTab("preview");
+              }}
+              className={`border-x rounded px-2 h-full hover:bg-secondary border-gray-800 py-1 ${
+                activeTab === "preview" ? "bg-secondary" : ""
+              }`}
+            >
+              Browser
+            </button>
+          </div>
+        </div>
       </div>
 
       <Dialog
@@ -1271,6 +1498,48 @@ export function ProjectPlaygroundPage({
         celebrationType="completion"
         courseName={activeTask?.title!}
       />
+
+      <Dialog open={showLoader} onOpenChange={setShowLoader}>
+        <DialogContent className="sm:max-w-[500px] w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#F2C94C]" />
+              Downloading your Project...
+            </DialogTitle>
+            <DialogDescription>
+              Relax! Let Kap AI do the hard work.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-6 w-full">
+            <p className="capitalize pb-1 italic text-sm w-full">
+              {progressText}...
+            </p>
+
+            <Progress value={downloadProgress} />
+          </div>
+
+          {progressValue >= 100 && (
+            <a href={baseURL} target="_blank">
+              <Button variant="outline" className="w-full">
+                <Play className="mr-2 h-4 w-4" />
+                Open Base URL
+              </Button>
+            </a>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* {showPayment && ( */}
+      <PaymentDialog
+        disableMB={true}
+        disableOnetime={true}
+        onClose={() => setShowPayment(false)}
+        open={showPayment}
+        data={{ ...project, type: "project" }}
+        onHandlePreview={() => {}}
+        onHandlePurchase={(id: string, type: any, success: boolean) => {}}
+      />
+      {/* )} */}
     </div>
   );
 }
