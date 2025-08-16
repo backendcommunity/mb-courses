@@ -222,12 +222,6 @@ export function ProjectDetailPage({
     return await store.handleProjectEnrollment(slug);
   };
 
-  const handlePreviewProject = () => {
-    //TODO: Add user to project and set preview true
-    // const previewPath = routes.projectPreview(slug);
-    // onNavigate(previewPath);
-  };
-
   const handleContinueLearning = (slug: string) => {
     const watchPath = routes.projectPlayground(slug);
     onNavigate(watchPath);
@@ -468,7 +462,7 @@ export function ProjectDetailPage({
                     disabled={!language}
                     className="w-full"
                     onClick={() => {
-                      if (project.cloned)
+                      if (project?.cloned)
                         return handleContinueLearning(project.slug);
                       return handleProjectSetup();
                     }}

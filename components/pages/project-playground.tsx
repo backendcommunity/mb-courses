@@ -37,9 +37,9 @@ import {
   ArrowLeft,
   AlertTriangle,
   Link,
-  Paintbrush,
   EllipsisVertical,
   Ellipsis,
+  Paintbrush,
 } from "lucide-react";
 import { getUser, Project, updateUser } from "@/lib/data";
 import Editor, { OnChange } from "@monaco-editor/react";
@@ -76,6 +76,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { PaymentDialog } from "../payment-dialog";
+import TerminalComponent from "../Terminal";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -125,6 +126,8 @@ export function ProjectPlaygroundPage({
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
   const [showPayment, setShowPayment] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [term, setTerm] = useState<any>(null);
+  const [sessionId, setSessionId] = useState(null);
   const [fileMenu, setFileMenu] = useState({
     visible: false,
     x: 0,
@@ -140,6 +143,7 @@ export function ProjectPlaygroundPage({
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [baseURL, setBaseURL] = useState("");
   const editorRef = useRef<any>(null);
+  const terminal = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
   const fileMenuRef = useRef<HTMLDivElement>(null);
@@ -278,6 +282,65 @@ export function ProjectPlaygroundPage({
     socket.on("project:download:error", (data) => {
       toast.error(data.message);
     });
+  }, []);
+
+  useEffect(() => {
+    if (!terminalRef.current) return;
+    const t = new Terminal({
+      convertEol: true,
+      cursorBlink: true,
+      fontSize: 12,
+    });
+    console.log(terminalRef?.current);
+    t.open(terminalRef?.current!);
+
+    // setTerm(t);
+
+    // socket.on("connect", () => {
+    //   socket.emit("term:start", {
+    //     userId: user.id,
+    //     projectName: slug,
+    //     image: "node:20-alpine",
+    //     allowNetwork: false, // flip to true to allow npm install
+    //     shell: "sh",
+    //     cols: t.cols,
+    //     rows: t.rows,
+    //   });
+    // });
+
+    // socket.on("term:started", (info) => {
+    //   setSessionId(info.sessionId);
+    //   t.focus();
+    //   t.write(`\r\nConnected to ${info.container} in /workspace\r\n`);
+    // });
+
+    // socket.on("term:data", ({ data }) => t.write(data));
+    // socket.on("term:exit", ({ code }) =>
+    //   t.write(`\r\n[process exited with code ${code}]\r\n`)
+    // );
+    // socket.on("term:info", ({ message }) =>
+    //   t.write(`\r\n[info] ${message}\r\n`)
+    // );
+    // socket.on("term:error", ({ message }) =>
+    //   t.write(`\r\n[error] ${message}\r\n`)
+    // );
+
+    // t.onData((d) => {
+    //   if (sessionId) socket.emit("term:stdin", { sessionId, data: d });
+    // });
+
+    // const handleResize = () => {
+    //   if (!t || !sessionId) return;
+    //   socket.emit("term:resize", { sessionId, cols: t.cols, rows: t.rows });
+    // };
+    // window.addEventListener("resize", handleResize);
+
+    // return () => {
+    //   window.removeEventListener("resize", handleResize);
+    //   if (sessionId) socket.emit("term:stop", { sessionId });
+    //   socket.disconnect();
+    //   t.dispose();
+    // };
   }, []);
 
   useEffect(() => {
@@ -792,8 +855,8 @@ export function ProjectPlaygroundPage({
   };
 
   const handleRunProject = () => {
-    socket.emit("project:start", {
-      language: "node",
+    socket.emit("project:run", {
+      language: project?.template ?? "node",
       projectName: slug,
       userId: user.id,
     });
@@ -1098,7 +1161,11 @@ export function ProjectPlaygroundPage({
                       <ResizableHandle />
                       <ResizablePanel defaultSize={15} minSize={10}>
                         {/* TERMINAL */}
-                        <div className="h-full flex flex-col bg-black text-green-400  overflow-hidden">
+                        {/* <TerminalComponent /> */}
+                        <div
+                          ref={terminal}
+                          className="h-full flex flex-col bg-black text-green-400  overflow-hidden"
+                        >
                           <div className="flex items-center justify-between px-4 py-2 bg-gray-800">
                             <span className="text-xs font-medium">
                               Terminal
