@@ -18,7 +18,7 @@ class SoundManager {
   private checkUserPreferences() {
     const soundEnabled = localDB.get("soundEnabled", "");
     if (soundEnabled !== null) {
-      this.isEnabled = JSON.parse(soundEnabled);
+      this.isEnabled = Boolean(soundEnabled);
     }
   }
 
