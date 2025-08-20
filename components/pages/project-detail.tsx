@@ -814,15 +814,15 @@ export function ProjectDetailPage({
                   <h3 className="text-lg font-semibold">
                     {project?.instructor ?? "Mastering Backend"}
                   </h3>
-                  <p className="text-muted-foreground">
+                  {/* <p className="text-muted-foreground">
                     Senior Backend Engineer with 8+ years of experience building
                     scalable systems. Previously worked at Google and Netflix.
-                  </p>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
+                  </p> */}
+                  {/* <div className="flex gap-4 text-sm text-muted-foreground">
                     <span>15 projects</span>
                     <span>50k+ students</span>
                     <span>4.9 rating</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </CardContent>

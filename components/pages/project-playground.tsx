@@ -76,7 +76,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { PaymentDialog } from "../payment-dialog";
-import TerminalComponent from "../Terminal";
+import { Terminal } from "../atoms/Terminal";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -105,10 +105,9 @@ export function ProjectPlaygroundPage({
   const { theme } = useTheme();
   const [project, setProject] = useState<Project>();
   const [activeFile, setActiveFile] = useState("");
+  const [terminalOutput, setTerminalOutput] = useState(terminalSample);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [fontSize, setFontSize] = useState(14);
-  const [terminalOutput, setTerminalOutput] = useState(terminalSample);
-  const [terminalInput, setTerminalInput] = useState("");
   const [progressText, setProgressText] = useState("");
   const [previewUrl, setPreviewUrl] = useState("http://localhost:3000");
   const [showTerminal, setShowTerminal] = useState(true);
@@ -126,8 +125,6 @@ export function ProjectPlaygroundPage({
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
   const [showPayment, setShowPayment] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const [term, setTerm] = useState<any>(null);
-  const [sessionId, setSessionId] = useState(null);
   const [fileMenu, setFileMenu] = useState({
     visible: false,
     x: 0,
@@ -138,16 +135,14 @@ export function ProjectPlaygroundPage({
     x: 0,
     y: 0,
   });
-
   const [progressValue, setProgressValue] = useState(0);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [baseURL, setBaseURL] = useState("");
   const editorRef = useRef<any>(null);
-  const terminal = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
   const fileMenuRef = useRef<HTMLDivElement>(null);
   const editorMenuRef = useRef<HTMLDivElement>(null);
+  const fileBuffer: Record<string, NodeJS.Timeout> = {};
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -285,73 +280,13 @@ export function ProjectPlaygroundPage({
   }, []);
 
   useEffect(() => {
-    if (!terminalRef.current) return;
-    const t = new Terminal({
-      convertEol: true,
-      cursorBlink: true,
-      fontSize: 12,
-    });
-    console.log(terminalRef?.current);
-    t.open(terminalRef?.current!);
-
-    // setTerm(t);
-
-    // socket.on("connect", () => {
-    //   socket.emit("term:start", {
-    //     userId: user.id,
-    //     projectName: slug,
-    //     image: "node:20-alpine",
-    //     allowNetwork: false, // flip to true to allow npm install
-    //     shell: "sh",
-    //     cols: t.cols,
-    //     rows: t.rows,
-    //   });
-    // });
-
-    // socket.on("term:started", (info) => {
-    //   setSessionId(info.sessionId);
-    //   t.focus();
-    //   t.write(`\r\nConnected to ${info.container} in /workspace\r\n`);
-    // });
-
-    // socket.on("term:data", ({ data }) => t.write(data));
-    // socket.on("term:exit", ({ code }) =>
-    //   t.write(`\r\n[process exited with code ${code}]\r\n`)
-    // );
-    // socket.on("term:info", ({ message }) =>
-    //   t.write(`\r\n[info] ${message}\r\n`)
-    // );
-    // socket.on("term:error", ({ message }) =>
-    //   t.write(`\r\n[error] ${message}\r\n`)
-    // );
-
-    // t.onData((d) => {
-    //   if (sessionId) socket.emit("term:stdin", { sessionId, data: d });
-    // });
-
-    // const handleResize = () => {
-    //   if (!t || !sessionId) return;
-    //   socket.emit("term:resize", { sessionId, cols: t.cols, rows: t.rows });
-    // };
-    // window.addEventListener("resize", handleResize);
-
-    // return () => {
-    //   window.removeEventListener("resize", handleResize);
-    //   if (sessionId) socket.emit("term:stop", { sessionId });
-    //   socket.disconnect();
-    //   t.dispose();
-    // };
-  }, []);
-
-  useEffect(() => {
     const file = findFile(fileTree, activeFile);
     if (file) {
       setCurrentLanguage(file.language || getLanguageFromFileName(file.name));
     }
   }, [activeFile, fileTree]);
 
-  if (loading) return <Loader isLoader={false} />;
-  if (loadingFiles) return <Loader isLoader={false} />;
+  if (loading || loadingFiles) return <Loader isLoader={false} />;
   if (!project?.enrolled)
     return (
       <div className="container max-w-4xl py-12">
@@ -579,45 +514,6 @@ export function ProjectPlaygroundPage({
     }
   };
 
-  const handleTerminalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (terminalInput.trim()) {
-      const command = terminalInput.trim();
-      let output = "";
-
-      // Simulate some basic commands
-      switch (command) {
-        case "npm install":
-          output = "✓ Dependencies installed successfully";
-          break;
-        case "npm start":
-          output = "Server running on http://localhost:3000";
-          break;
-        case "npm test":
-          output = "✓ All tests passed";
-          break;
-        case "ls":
-          output = "src/  package.json  .env  README.md";
-          break;
-        case "pwd":
-          output = "/workspace/ecommerce-api";
-          break;
-        case "clear":
-          setTerminalOutput(["Welcome to MB Projects Terminal"]);
-          setTerminalInput("");
-          return;
-        default:
-          output = `Command '${command}' not found`;
-      }
-
-      setTerminalOutput((prev) => [...prev, `$ ${command}`, output, ""]);
-      setTerminalInput("");
-      setTimeout(() => {
-        terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight);
-      }, 100);
-    }
-  };
-
   const handleDownloadProject = () => {
     if (!user.isPremium) return;
     socket.emit("project:download:stream", {
@@ -646,7 +542,6 @@ export function ProjectPlaygroundPage({
       bracketPairColorization: { enabled: true },
     });
   };
-  const fileBuffer: Record<string, NodeJS.Timeout> = {};
 
   const handleTyping: OnChange = (value, v) => {
     clearTimeout(fileBuffer[activeFile]);
@@ -1161,79 +1056,11 @@ export function ProjectPlaygroundPage({
                       <ResizableHandle />
                       <ResizablePanel defaultSize={15} minSize={10}>
                         {/* TERMINAL */}
-                        {/* <TerminalComponent /> */}
-                        <div
-                          ref={terminal}
-                          className="h-full flex flex-col bg-black text-green-400  overflow-hidden"
-                        >
-                          <div className="flex items-center justify-between px-4 py-2 bg-gray-800">
-                            <span className="text-xs font-medium">
-                              Terminal
-                            </span>
-                            <div className="flex gap-2">
-                              <Button
-                                title="Clear terminal"
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-gray-400"
-                                onClick={() =>
-                                  setTerminalOutput([
-                                    "Welcome to MB Projects Terminal",
-                                  ])
-                                }
-                              >
-                                <Paintbrush />
-                              </Button>
-
-                              <Button
-                                title="Close terminal"
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-gray-400"
-                                onClick={() => setShowTerminal(false)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <ScrollArea className="flex-1 p-3" ref={terminalRef}>
-                            <div className="space-y-1 font-mono text-xs">
-                              {terminalOutput.map((line, index) => (
-                                <div
-                                  key={line + index}
-                                  className={
-                                    line.startsWith("$")
-                                      ? "text-yellow-400"
-                                      : line.startsWith("✓")
-                                      ? "text-green-400"
-                                      : "text-gray-300"
-                                  }
-                                >
-                                  {line}
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                          <form
-                            onSubmit={handleTerminalSubmit}
-                            className="p-3 border-t border-gray-700"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-yellow-400 font-mono text-xs">
-                                $
-                              </span>
-                              <input
-                                type="text"
-                                value={terminalInput}
-                                onChange={(e) =>
-                                  setTerminalInput(e.target.value)
-                                }
-                                className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono text-xs"
-                                placeholder="Enter command..."
-                              />
-                            </div>
-                          </form>
-                        </div>
+                        <Terminal
+                          onClose={() => setShowTerminal(false)}
+                          slug={slug}
+                          output={terminalOutput}
+                        />
                       </ResizablePanel>
                     </>
                   )}
