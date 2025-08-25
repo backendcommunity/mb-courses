@@ -40,6 +40,8 @@ export function BootcampWeekPage({
           type: "video",
           duration: "45 min",
           completed: true,
+          slug: "javascript-es6-features",
+          week: 1,
         },
         {
           id: "2",
@@ -47,6 +49,8 @@ export function BootcampWeekPage({
           type: "video",
           duration: "60 min",
           completed: true,
+          slug: "nodejs-introduction",
+          week: 1,
         },
         {
           id: "3",
@@ -54,6 +58,9 @@ export function BootcampWeekPage({
           type: "video",
           duration: "40 min",
           completed: false,
+
+          slug: "git-github-workflow",
+          week: 1,
         },
         {
           id: "4",
@@ -61,6 +68,8 @@ export function BootcampWeekPage({
           type: "project",
           duration: "2 hours",
           completed: false,
+          slug: "week-1-project",
+          week: 1,
         },
       ],
     },
@@ -74,6 +83,8 @@ export function BootcampWeekPage({
           type: "video",
           duration: "30 min",
           completed: false,
+          slug: "expressjs-setup",
+          week: 2,
         },
         {
           id: "2",
@@ -81,6 +92,8 @@ export function BootcampWeekPage({
           type: "video",
           duration: "50 min",
           completed: false,
+          slug: "routing-middleware",
+          week: 2,
         },
         {
           id: "3",
@@ -88,6 +101,8 @@ export function BootcampWeekPage({
           type: "video",
           duration: "70 min",
           completed: false,
+          slug: "building-rest-apis",
+          week: 2,
         },
         {
           id: "4",
@@ -95,6 +110,8 @@ export function BootcampWeekPage({
           type: "project",
           duration: "3 hours",
           completed: false,
+          slug: "api-project",
+          week: 2,
         },
       ],
     },
@@ -108,7 +125,7 @@ export function BootcampWeekPage({
         <div className="text-center">
           <h1 className="text-2xl font-bold">Week not found</h1>
           <Button
-            onClick={() => onNavigate?.(`/bootcamps/${bootcampId}`)}
+            onClick={() => onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)}
             className="mt-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -119,13 +136,23 @@ export function BootcampWeekPage({
     );
   }
 
+  const handleStart = (lesson: any) => {
+    if (lesson.type?.toLowerCase() === "quiz") return onNavigate?.("");
+    if (lesson.type?.toLowerCase() === "project")
+      return onNavigate?.(`/projects/${lesson?.slug}`);
+
+    return onNavigate?.(
+      `/bootcamps/${bootcampId}/weeks/${lesson.week}/${lesson?.slug}`
+    );
+  };
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(`/bootcamps/${bootcampId}`)}
+          onClick={() => onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -187,9 +214,7 @@ export function BootcampWeekPage({
                 <div
                   key={lesson.id}
                   className={`border rounded-lg p-4 ${
-                    lesson.completed
-                      ? "bg-green-50 border-green-200"
-                      : "bg-white"
+                    lesson.completed ? "border-green-500/10" : "" //bg-green-500/10
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -225,14 +250,24 @@ export function BootcampWeekPage({
                     </div>
                     <div className="flex items-center gap-2">
                       {lesson.completed ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200"
-                        >
-                          Completed
-                        </Badge>
+                        <>
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
+                            Completed
+                          </Badge>
+
+                          <Button
+                            variant={"secondary"}
+                            onClick={() => handleStart(lesson)}
+                            size="sm"
+                          >
+                            Review
+                          </Button>
+                        </>
                       ) : (
-                        <Button size="sm">
+                        <Button onClick={() => handleStart(lesson)} size="sm">
                           <Play className="mr-2 h-4 w-4" />
                           Start
                         </Button>
@@ -283,12 +318,10 @@ export function BootcampWeekPage({
                 <div
                   key={week}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    week.toString() === weekId
-                      ? "bg-blue-50 border border-blue-200"
-                      : ""
+                    week.toString() === weekId ? "border border-blue-200" : ""
                   }`}
                   onClick={() =>
-                    onNavigate?.(`/bootcamps/${bootcampId}/week/${week}`)
+                    onNavigate?.(`/bootcamps/${bootcampId}/weeks/${week}`)
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">

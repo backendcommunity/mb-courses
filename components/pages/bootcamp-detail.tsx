@@ -241,10 +241,10 @@ export function BootcampDetailPage({
                       key={index}
                       className={`border rounded-lg p-4 ${
                         module.status === "current"
-                          ? "border-blue-200 bg-blue-50"
+                          ? "border-gray-500 dark:border-gray-100/90"
                           : module.status === "completed"
-                          ? "border-green-200 bg-green-50"
-                          : "border-gray-200"
+                          ? "border-green-500/50 bg-green-500/10"
+                          : "border-gray-500/30"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -255,7 +255,7 @@ export function BootcampDetailPage({
                           <Badge
                             variant={
                               module.status === "completed"
-                                ? "default"
+                                ? "secondary"
                                 : module.status === "current"
                                 ? "destructive"
                                 : "outline"
@@ -273,7 +273,7 @@ export function BootcampDetailPage({
                               variant="ghost"
                               onClick={() =>
                                 onNavigate?.(
-                                  `/bootcamps/${bootcampId}/week/${index + 1}`
+                                  `/bootcamps/${bootcampId}/weeks/${index + 1}`
                                 )
                               }
                             >

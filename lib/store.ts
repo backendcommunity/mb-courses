@@ -63,7 +63,7 @@ interface AppState {
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
   getTransactions: (payload: { size?: number }) => any;
-  getBootcamps: () => Bootcamp[];
+  getBootcamps: (filters: { skip?: number; size?: number }) => Bootcamp[] | any;
   getLearningPaths: () => LearningPath[];
   getRoadmaps: (filters?: { skip?: number; size?: number }) => Roadmap[] | any;
   getUserRoadmaps: (data: UserRoadmapFilters) => any;
@@ -297,7 +297,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   getProjects: () => dataStore.projects,
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
-  getBootcamps: () => dataStore.bootcamps,
+  getBootcamps: async (filters?) => {
+    const { data } = await api.get(`/bootcamps`, { params: filters });
+    return data?.data?.bootcamps;
+  },
   getLearningPaths: () => dataStore.learningPaths,
   getRoadmaps: async (filters?) => {
     const { data } = await api.get(

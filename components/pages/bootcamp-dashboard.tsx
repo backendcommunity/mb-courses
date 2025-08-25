@@ -41,6 +41,16 @@ export function BootcampDashboardPage({
     );
   }
 
+  const handleContinue = (lesson: any) => {
+    if (lesson.type?.toLowerCase() === "quiz") return onNavigate?.("");
+    if (lesson.type?.toLowerCase() === "project")
+      return onNavigate?.(`/projects/${lesson?.slug}`);
+
+    return onNavigate?.(
+      `/bootcamps/${bootcampId}/weeks/${lesson.week}/${lesson?.slug}`
+    );
+  };
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -107,24 +117,42 @@ export function BootcampDashboardPage({
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 {[
-                  { title: "Express.js Setup", completed: true, type: "video" },
+                  {
+                    title: "Express.js Setup",
+                    completed: true,
+                    type: "VIDEO",
+                    slug: "expressjs-setup",
+                    week: 1,
+                  },
                   {
                     title: "Routing & Middleware",
                     completed: true,
-                    type: "video",
+                    type: "VIDEO",
+                    slug: "routing-middleware",
+                    week: 1,
                   },
                   {
                     title: "Building REST APIs",
                     completed: false,
-                    type: "video",
+                    type: "VIDEO",
                     current: true,
+                    slug: "building-rest-apis",
+                    week: 1,
                   },
-                  { title: "API Project", completed: false, type: "project" },
+                  {
+                    title: "API Project",
+                    completed: false,
+                    type: "PROJECT",
+                    slug: "api-project",
+                    week: 1,
+                  },
                 ].map((lesson, index) => (
                   <div
                     key={index}
                     className={`flex items-center gap-3 p-3 rounded-lg border ${
-                      lesson.current ? "border-blue-200 bg-blue-50" : ""
+                      lesson.current
+                        ? "border-green-900/20 dark:border-green-200/20 bg-green-400/10"
+                        : ""
                     }`}
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
@@ -136,11 +164,24 @@ export function BootcampDashboardPage({
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium">{lesson.title}</h4>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs lowercase">
                         {lesson.type}
                       </Badge>
                     </div>
-                    {lesson.current && <Button size="sm">Continue</Button>}
+                    {lesson.current && (
+                      <Button onClick={() => handleContinue(lesson)} size="sm">
+                        Continue
+                      </Button>
+                    )}
+                    {lesson.completed && (
+                      <Button
+                        onClick={() => onNavigate?.(``)}
+                        variant={"outline"}
+                        size="sm"
+                      >
+                        Review
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -193,6 +234,7 @@ export function BootcampDashboardPage({
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Stats */}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Quick Stats</CardTitle>
@@ -216,6 +258,38 @@ export function BootcampDashboardPage({
                   <span className="font-medium">56 days</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Bootcamp Weeks</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 md:grid grid-cols-3">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => (
+                <div
+                  key={week}
+                  className={`flex items-center  gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                    week.toString() === "1" //weekId
+                      ? "border border-blue-200"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    onNavigate?.(`/bootcamps/${bootcampId}/weeks/${week}`)
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    {week <= 2 ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{week}</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Week {week}</p>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -263,7 +337,7 @@ export function BootcampDashboardPage({
               ].map((achievement, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg"
+                  className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-50/20 rounded-lg"
                 >
                   <span className="text-lg">{achievement.icon}</span>
                   <span className="text-sm font-medium">
