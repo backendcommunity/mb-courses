@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -25,27 +25,15 @@ import {
   Download,
   Share,
   Clock,
-  Brain,
-  Code,
-  Gamepad2,
   Code2,
   Save,
   Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import {
-  Chapter,
-  Course,
-  Note,
-  UserChapter,
-  UserCourse,
-  UserVideo,
-  Video,
-} from "@/lib/data";
+import { Lesson, Note, UserLesson, Week } from "@/lib/data";
 import { useUser } from "@/hooks/use-user";
 import DisqusCommentBlock from "../ui/comment";
-import { markVideoComplete } from "@/lib/courses";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { codeSample, handleShare } from "@/lib/utils";
@@ -53,33 +41,28 @@ import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
-import { localDB } from "@/lib/localDB";
 
 interface BootcampWatchPageProps {
   slug: string;
-  chapterId: string;
-  videoId?: string;
+  id: string;
+  weekId: string;
+  cohort: string;
   onNavigate?: (route: string) => void;
 }
 
-export function BootcampWatchPage({
+export function BootcampVideoWatchPage({
   slug,
-  chapterId,
-  videoId,
+  id,
+  weekId,
+  cohort,
   onNavigate,
 }: BootcampWatchPageProps) {
   const store = useAppStore();
-  const [course, setCourse] = useState<Course>();
-  const [userCourse, setUserCourse] = useState<UserCourse>();
-  const [userVideos, setUserVideos] = useState<any[]>();
-  const [userChapters, setUserChapters] = useState<any[]>();
-  const chapter: Chapter | any = course?.chapters.find(
-    (ch: Chapter) => ch.slug === chapterId
-  );
+  const [lesson, setLesson] = useState<Lesson>();
+  const [week, setWeek] = useState<Week>();
+  const [userLessons, setUserLessons] = useState<UserLesson[]>([]);
+  const [currentLesson, setCurrentLesson] = useState<Lesson>();
   const user = useUser();
-  const currentVideo = videoId
-    ? chapter?.videos.find((v: Video) => v.slug === videoId)
-    : chapter?.videos[0];
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -90,33 +73,39 @@ export function BootcampWatchPage({
   const [note, setNote] = useState("");
   const path = usePathname();
 
-  useEffect(() => {
+  useMemo(() => {
     setLoading(true);
-    async function findUserCourse(slug: string) {
-      const userCourse = await store.getUserCourse(slug);
-      setCourse(userCourse.course);
-      setUserCourse(userCourse);
-      setUserChapters(userCourse?.userChapters);
-      setUserVideos(userCourse?.userVideos);
+    const load = async () => {
+      const week = await store.getWeek(id, cohort, weekId);
 
+      const lesson = week.lessons.find((l: Lesson) => l.id === slug);
+      console.log(week);
+      setUserLessons(week?.userCohort?.userLessons);
+      setLesson(lesson);
+
+      const currentLesson = slug
+        ? week?.lessons.find((v: Lesson) => v.id === slug)
+        : week?.lessons[0];
+      setCurrentLesson(currentLesson);
+      setWeek(week);
       setLoading(false);
-    }
-    findUserCourse(slug);
-  }, [slug]);
+    };
+    load();
+  }, [slug, id, weekId]);
 
   useEffect(() => {
-    async function loadNotes(courseId: string, videoId: string) {
-      store.getVideoNotes(courseId, videoId).then((notes: any) => {
+    async function loadNotes(lessonId: string, videoId: string) {
+      store.getVideoNotes(lessonId, videoId).then((notes: any) => {
         setNotes(notes);
       });
     }
 
-    loadNotes(course?.id!, videoId!);
-  }, [course, videoId]);
+    loadNotes(lesson?.id!, slug!);
+  }, [lesson, slug]);
 
   if (loading) return <Loader isLoader={false} />;
 
-  if (!course || !chapter) {
+  if (!lesson) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -133,92 +122,24 @@ export function BootcampWatchPage({
     );
   }
 
-  const handleMarkComplete = async () => {
-    if (!currentVideo || !course || !chapter || !userCourse) return;
-
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
-        toast.warning("This quiz is required and you have to meet the mark");
-        return;
-      }
-    }
-
-    try {
-      // Combine completed videos + the one being marked now
-      const completedVideoIds = new Set(
-        userCourse
-          ?.userVideos!.filter((v) => v.isCompleted)
-          .map((v) => v.videoId)
-      );
-      completedVideoIds.add(currentVideo.id); // include this one just marked
-
-      // Check if all chapter videos are now complete
-      const allVideosComplete = chapter.videos.every((v: Video) =>
-        completedVideoIds.has(v.id)
-      );
-
-      const hasOtherContent =
-        chapter.quiz || chapter.exercise || chapter.playground;
-      const isChapterCompleted = allVideosComplete && !hasOtherContent;
-
-      const completedVideos = [
-        ...(userVideos ?? []),
-        {
-          ...currentVideo,
-          isCompleted: true,
-          videoId: currentVideo.id,
-        },
-      ];
-      setUserVideos(completedVideos);
-
-      // Update UserChapter locally
-      const userChapter = [
-        ...(userChapters ?? []),
-        {
-          ...chapter,
-          chapterId: chapter.id,
-          isCompleted: isChapterCompleted,
-        },
-      ];
-      setUserChapters(userChapter);
-
-      // Backend update with proper `isChapterCompleted`
-      markVideoComplete(course.id, chapter.id, currentVideo.id, {
-        isChapterCompleted,
-      }).then(() => {
-        localDB.remove(`course_${course.slug}`);
-        store.getCourse(course.slug);
-      });
-
-      toast.success("You just earned some points!");
-      setCelebration(true);
-    } catch (error) {
-      toast.error("An error occurred. Please try again");
-    }
-  };
-
-  const isChapterCompleted = (chapterId: string) => {
-    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
-      ?.isCompleted;
-  };
-
-  const isVideoCompleted = (videoId: string) => {
-    return userVideos?.find((ch: any) => ch.videoId === videoId)?.isCompleted;
+  const isVideoCompleted = (lessonId: string) => {
+    return userLessons?.find((ch: UserLesson) => ch.lessonId === lessonId)
+      ?.completed;
   };
 
   const next = () => {
-    return chapter.videos.find((v: Video, index: number) => {
-      const currentIndex = chapter.videos.findIndex(
-        (video: Video) => video.id === currentVideo?.id
+    return week?.lessons?.find((v: Lesson, index: number) => {
+      const currentIndex = week.lessons.findIndex(
+        (video: Lesson) => video.id === currentLesson?.id
       );
       return index === currentIndex + 1;
     });
   };
 
   const prev = () => {
-    return chapter.videos.find((v: Video, index: number) => {
-      const currentIndex = chapter.videos.findIndex(
-        (video: Video) => video.id === currentVideo?.id
+    return week?.lessons?.find((v: Lesson, index: number) => {
+      const currentIndex = week.lessons.findIndex(
+        (video: Lesson) => video.id === currentLesson?.id
       );
       return index === currentIndex - 1;
     });
@@ -227,76 +148,28 @@ export function BootcampWatchPage({
   const nextVideo = next();
   const prevVideo = prev();
 
-  const nextChapter =
-    course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
-    ];
-
-  const prevChapter =
-    course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
-    ];
-
-  const handleVideoClick = (video: Video) => {
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
-        toast.warning("This quiz is required and you have to meet the mark");
-        return;
-      }
-    }
-    if (onNavigate) {
-      onNavigate(routes.courseWatch(slug, chapterId, video.slug));
-    }
-  };
-
-  const handleChapterFeatureClick = (type: string, id?: string) => {
-    if (!onNavigate) return;
-    let url = "";
-    switch (type?.toLowerCase()) {
-      case "quiz":
-        url = routes.courseQuizzes(slug);
-        break;
-      case "exercise":
-        url = routes.courseExercises(slug);
-        break;
-      case "playground":
-        url = routes.coursePlaygrounds(slug);
-        break;
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleChapterClick = (next: boolean) => {
-    if (!onNavigate) return;
-
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
+  const handleVideoClick = (lesson: Lesson) => {
+    if (currentLesson?.type == "QUIZ") {
+      if (!quizPassed || currentLesson?.quiz?.required) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
     }
 
-    if (next) {
-      onNavigate(
-        routes.courseWatch(slug, nextChapter.slug, nextChapter?.videos[0]?.slug)
-      );
-      return;
-    }
-
-    onNavigate(
-      routes.courseWatch(
-        slug,
-        prevChapter.slug,
-        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
-      )
-    );
+    const _lesson = lesson?.id
+      ? week?.lessons.find((v: Lesson) => v.id === lesson.id)
+      : week?.lessons[0];
+    setCurrentLesson(_lesson);
   };
 
   const handleSaveNotes = async () => {
     if (!note) return;
     try {
-      const saveNote = await store.saveNote(note, course.id, currentVideo.id);
+      const saveNote = await store.saveNote(
+        note,
+        lesson.id,
+        currentLesson?.id!
+      );
       setNotes([...notes, saveNote]);
     } catch (error) {
       toast.error("Error occurred adding note");
@@ -305,20 +178,64 @@ export function BootcampWatchPage({
 
   const markCourseAsCompleted = async () => {
     try {
-      const completed = await store.markCourseCompleted(
-        course?.userCourse?.id!
-      );
+      const completed = await store.markCourseCompleted(week?.bootcampId!);
 
       setCelebration(true);
       setCompleted(true);
       toast.success(
-        `You've earned ${completed?.totalPoints} MB from the course`
+        `You've earned ${completed?.totalPoints} MB from the lesson`
       );
-      // onNavigate?.(routes.courseCertificate(slug));
+      // onNavigate?.(routes.lessonCertificate(slug));
     } catch (error: any) {
       toast.error("An error occurred updating your points. Try again");
       setCompleted(false);
     }
+  };
+
+  const handleMarkComplete = async () => {
+    if (!currentLesson || !lesson || !week) return;
+
+    if (currentLesson?.type == "QUIZ") {
+      if (!quizPassed || currentLesson?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
+    try {
+      const completedLessons = [
+        ...(userLessons ?? []),
+        {
+          ...currentLesson,
+          completed: true,
+          lessonId: currentLesson.id,
+        },
+      ];
+      setUserLessons(completedLessons);
+
+      store.markLessonCompleted(
+        id,
+        week?.bootcamp?.cohort.id,
+        week?.id,
+        currentLesson.id,
+        {
+          nextWeekId: week?.id,
+          nextLessonId: nextVideo?.id,
+        }
+      );
+
+      toast.success("You just earned some points!");
+      setCelebration(true);
+      handleVideoClick(nextVideo!);
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occurred. Please try again");
+    }
+  };
+
+  const progress = () => {
+    const completed = userLessons?.filter((ul) => weekId === ul.weekId);
+    return completed?.length / week?.lessons!?.length / 100;
   };
 
   return (
@@ -327,23 +244,28 @@ export function BootcampWatchPage({
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(routes.courseDetail(slug))}
+          onClick={() => onNavigate?.(`/bootcamps/${id}/dashboard`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">
-            {currentVideo ? currentVideo.title : chapter.title}
+            {currentLesson ? currentLesson.title : week?.title}
           </h1>
           <p className="text-muted-foreground">
-            {course.title} • {chapter.title}
+            {lesson.title} • {week?.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{chapter.type}</Badge>
-          <Badge variant="outline">
-            {currentVideo?.duration ?? chapter?.duration ?? 0} hours
-          </Badge>
+          <Badge variant="outline">{currentLesson?.type}</Badge>
+          {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
+            <Badge variant="outline" className="flex gap-1">
+              <Clock className="h-3 w-3" />
+              <span className="">
+                {lesson?.video?.duration ?? lesson.quiz?.timeLimit} mins
+              </span>
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -352,19 +274,19 @@ export function BootcampWatchPage({
         <div className="lg:col-span-2 space-y-4 flex flex-col">
           <Card className="overflow-hidden">
             {/* Video Player */}
-            {currentVideo?.type === "VIDEO" && (
+            {currentLesson?.type === "VIDEO" && (
               <Card className="overflow-hidden">
                 <div className="aspect-video bg-black relative">
-                  <VimeoPlayer video={currentVideo} />
+                  <VimeoPlayer video={currentLesson?.video} />
                 </div>
               </Card>
             )}
-            {currentVideo?.type === "QUIZ" && (
+            {currentLesson?.type === "QUIZ" && (
               <Card className="overflow-hidden">
                 <CourseQuizPage
                   courseId={slug}
                   onNavigate={() => {}}
-                  quiz={currentVideo?.quiz!}
+                  quiz={currentLesson?.quiz!}
                   showNav={false}
                   handleQuizSubmit={(passed) => {
                     setQuizPassed(passed);
@@ -377,11 +299,11 @@ export function BootcampWatchPage({
               </Card>
             )}
 
-            {currentVideo?.type === "EXERCISE" && (
+            {currentLesson?.type === "EXERCISE" && (
               <ExercisePage
-                courseId={course.id}
+                courseId={lesson.id}
                 onNavigate={(path) => onNavigate?.(path)}
-                exercise={currentVideo?.exercise!}
+                exercise={currentLesson?.exercise!}
               />
             )}
           </Card>
@@ -389,35 +311,31 @@ export function BootcampWatchPage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => handleShare(currentVideo.title, path)}
+                onClick={() => handleShare(currentLesson?.title!, path)}
                 variant="outline"
                 size="sm"
               >
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={userCourse?.enrollmentType?.includes("SUBSCRIPTION")}
-              >
+              <Button variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              {currentVideo && (
+              {currentLesson && (
                 <>
-                  {currentVideo.type === "VIDEO" &&
-                    !isVideoCompleted(currentVideo.id) && (
+                  {currentLesson.type === "VIDEO" &&
+                    !isVideoCompleted(currentLesson.id) && (
                       <Button onClick={handleMarkComplete}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Complete
                       </Button>
                     )}
 
-                  {(currentVideo.type === "QUIZ" && quizPassed) ||
-                    (currentVideo?.quiz && !currentVideo?.quiz?.required && (
+                  {(currentLesson.type === "QUIZ" && quizPassed) ||
+                    (currentLesson?.quiz && !currentLesson?.quiz?.required && (
                       <Button onClick={handleMarkComplete}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Quiz Complete
@@ -435,15 +353,9 @@ export function BootcampWatchPage({
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
               )}
-              {!nextVideo && nextChapter && (
-                <Button onClick={() => handleChapterClick(true)}>
-                  Next Chapter
-                  <SkipForward className="ml-2 h-4 w-4" />
-                </Button>
-              )}
 
               {/* TODO: Add check for Everything task/video is completed */}
-              {!nextVideo && !nextChapter && (
+              {!nextVideo && (
                 <div>
                   {!completed ? (
                     <Button
@@ -486,8 +398,8 @@ export function BootcampWatchPage({
               <Card>
                 <CardHeader>
                   <CardTitle className="capitalize">
-                    {currentVideo
-                      ? currentVideo?.type?.toLowerCase()
+                    {currentLesson
+                      ? currentLesson?.type?.toLowerCase()
                       : "Chapter"}{" "}
                     Overview
                   </CardTitle>
@@ -497,32 +409,29 @@ export function BootcampWatchPage({
                     <article
                       className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
-                        __html: currentVideo?.summary,
+                        __html: currentLesson?.summary!,
                       }}
                     ></article>
                   </div>
                 </CardContent>
                 <CardContent>
-                  {currentVideo?.description ??
-                    (nextChapter?.description && (
-                      <CardContent>
-                        <div className="space-y-4  pt-4">
-                          <div className="flex w-full justify-center items-center">
-                            <span className="border-t flex-1"></span>
-                            <div className="px-2 text-xs">description</div>
-                            <span className="border-t flex-1"></span>
-                          </div>
-                          <p
-                            className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
-                            dangerouslySetInnerHTML={{
-                              __html:
-                                currentVideo?.description ??
-                                nextChapter?.description,
-                            }}
-                          ></p>
+                  {currentLesson?.description && (
+                    <CardContent>
+                      <div className="space-y-4  pt-4">
+                        <div className="flex w-full justify-center items-center">
+                          <span className="border-t flex-1"></span>
+                          <div className="px-2 text-xs">description</div>
+                          <span className="border-t flex-1"></span>
                         </div>
-                      </CardContent>
-                    ))}
+                        <p
+                          className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: currentLesson?.description,
+                          }}
+                        ></p>
+                      </div>
+                    </CardContent>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -617,7 +526,7 @@ export function BootcampWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {currentVideo?.resources?.map(
+                    {currentLesson?.video?.resources?.map(
                       (resource: any, index: number) => (
                         <div
                           key={index}
@@ -653,9 +562,9 @@ export function BootcampWatchPage({
                 <CardContent>
                   <DisqusCommentBlock
                     config={{
-                      identifier: currentVideo?.slug,
-                      title: currentVideo?.title,
-                      url: `/courses/${slug}/watch/${chapterId}/${videoId}`,
+                      identifier: currentLesson?.id,
+                      title: currentLesson?.title,
+                      url: `/lessons/${slug}/watch/${weekId}/${slug}`,
                     }}
                   />
                 </CardContent>
@@ -676,7 +585,7 @@ export function BootcampWatchPage({
                       {
                         time: "00:00",
                         text: `Welcome to ${
-                          currentVideo?.title || chapter.title
+                          currentLesson?.title || week?.title
                         }.`,
                       },
                       {
@@ -720,19 +629,19 @@ export function BootcampWatchPage({
           {/* Course Progress */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Course Progress</CardTitle>
+              <CardTitle className="text-lg">Week Progress</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{Math.floor(course?.progress ?? 0)}%</span>
+                  <span>{Math.floor(progress() ?? 0)}%</span>
                 </div>
-                <Progress value={course?.progress ?? 0} className="h-2" />
+                <Progress value={progress() ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {userVideos?.filter((ch: UserVideo) => ch?.isCompleted).length}{" "}
-                of {course.totalContent} videos completed
+                {userLessons?.filter((ul: UserLesson) => ul?.completed).length}{" "}
+                of {week?.lessons?.length} videos completed
               </div>
             </CardContent>
           </Card>
@@ -740,227 +649,55 @@ export function BootcampWatchPage({
           {/* Chapter Content */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Chapter Content</CardTitle>
+              <CardTitle className="text-lg">Week Content</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {/* Videos */}
-              {chapter.videos.map((video: Video) => (
+              {week?.lessons?.map((lesson: Lesson) => (
                 <div
-                  key={video.id}
+                  key={lesson.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    video.id === currentVideo?.id
+                    lesson.id === currentLesson?.id
                       ? "border border-blue-200"
                       : ""
                   }`}
-                  onClick={() => handleVideoClick(video)}
+                  onClick={() => handleVideoClick(lesson)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isVideoCompleted(video.id) ? (
+                    {isVideoCompleted(lesson.id) ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Play className="h-4 w-4" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{video.title}</p>
+                    <p className="text-sm font-medium">{lesson.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {video?.duration ?? video.quiz?.timeLimit} mins
-                      </span>
-                      <Badge variant="outline" className="text-xs">
-                        {video?.type}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Chapter Features */}
-              {chapter.quiz && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Brain className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.quiz.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{chapter.quiz.timeLimit} min</span>
-                      <Badge variant="outline" className="text-xs">
-                        QUIZ
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {chapter.exercise && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick("exercise", chapter.exercise!.id)
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Code className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {chapter?.exercise?.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {chapter?.exercise?.difficulty}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        EXERCISE
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {chapter.playground && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick(
-                      "playground",
-                      chapter.playground!.id
-                    )
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Gamepad2 className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {chapter.playground.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {chapter.playground.language.toUpperCase()}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        PLAYGROUND
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Chapter Navigation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">All Chapters</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {course.chapters.map((ch: Chapter, index: number) => (
-                <div
-                  key={ch.slug}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.slug === chapterId ? "border border-blue-200" : ""
-                  }`}
-                  onClick={() =>
-                    onNavigate?.(
-                      routes.courseWatch(slug, ch.slug, ch?.videos[0]?.slug)
-                    )
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isChapterCompleted(ch?.id!) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <span>{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{ch.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {ch.videos.reduce((a: number, c: any) => {
-                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
-                        }, 0)}{" "}
-                        mins
-                      </span>
-                      <Badge variant="outline" className="text-xs">
-                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
-                        videos
-                      </Badge>
-
-                      {ch.videos.filter((v) => v.type === "QUIZ").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
-                          quizzes
-                        </Badge>
+                      {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
+                        <>
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            {lesson?.video?.duration ?? lesson.quiz?.timeLimit}{" "}
+                            mins
+                          </span>
+                        </>
                       )}
-                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "EXERCISE")
-                              .length
-                          }{" "}
-                          exercises
-                        </Badge>
-                      )}
-
-                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "PLAYGROUND")
-                              .length
-                          }{" "}
-                          playgrounds
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {lesson?.type}
+                      </Badge>
                     </div>
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
-
-          {/* Navigation */}
-          <div className="space-y-2">
-            {prevChapter && (
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => handleChapterClick(false)}
-              >
-                <SkipBack className="mr-2 h-4 w-4" />
-                Previous: {prevChapter.title}
-              </Button>
-            )}
-            {nextChapter && (
-              <Button
-                className="w-full justify-start"
-                onClick={() => handleChapterClick(true)}
-              >
-                Next: {nextChapter.title}
-                <SkipForward className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-          </div>
         </div>
       </div>
       <ConfettiCelebration
         onComplete={() => setCelebration(false)}
         isVisible={celebration}
         celebrationType="enrollment"
-        courseName={course?.title!}
+        courseName={lesson?.title!}
         duration={2000}
       />
     </div>

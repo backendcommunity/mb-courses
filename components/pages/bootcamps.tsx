@@ -27,9 +27,10 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { WIP } from "../WIP";
 import { useMemo, useState } from "react";
-import { Bootcamp } from "@/lib/data";
+import { Bootcamp, Meta } from "@/lib/data";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Loader } from "../ui/loader";
 
 interface BootcampsPageProps {
   onNavigate?: (url: string) => void;
@@ -37,20 +38,60 @@ interface BootcampsPageProps {
 
 export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
   const store = useAppStore();
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDuration, setSelectedDuration] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
   const [bootcamps, setBootcamps] = useState<Bootcamp[] | any>([]);
+  const [meta, setMeta] = useState<Meta>();
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  const load = async () => {
+    setLoading(true);
+    const data = await store.getBootcamps({
+      size: 2,
+      skip: 0,
+    });
+
+    setBootcamps(data?.bootcamps);
+    setMeta(data?.meta);
+    setLoading(false);
+  };
 
   useMemo(() => {
-    const load = async () => {
-      const bootcamps = await store.getBootcamps({
-        size: 2,
-        skip: 0,
-      });
-
-      setBootcamps(bootcamps);
-    };
-
     load();
   }, []);
+
+  useMemo(() => {
+    async function load() {
+      if (
+        selectedDuration.includes("all") &&
+        !debouncedSearch &&
+        selectedLevel.includes("all") &&
+        selectedType.includes("all")
+      )
+        return;
+
+      const data = await store.getBootcamps({
+        size: 2,
+        skip: 0,
+        filters: {
+          type: selectedType,
+          terms: debouncedSearch,
+          level: selectedLevel,
+          duration: selectedDuration,
+        },
+      });
+
+      setBootcamps(data?.bootcamps);
+      setMeta(data?.meta);
+    }
+
+    load();
+  }, [debouncedSearch, selectedType, selectedDuration, selectedLevel]);
+
+  if (loading) return <Loader isLoader={false} />;
 
   return (
     <div className="flex-1 space-y-6 relative">
@@ -63,10 +104,6 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
             engineering skills
           </p>
         </div>
-        <Button>
-          <Zap className="mr-2 h-4 w-4" />
-          Apply for Bootcamp
-        </Button>
       </div>
 
       {/* Stats */}
@@ -121,9 +158,13 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
       <div className="flex gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search bootcamps..." className="pl-8" />
+          <Input
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search bootcamps..."
+            className="pl-8"
+          />
         </div>
-        <Select>
+        <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Bootcamps" />
           </SelectTrigger>
@@ -134,7 +175,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
             <SelectItem value="popular">Popular</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Level" />
           </SelectTrigger>
@@ -145,7 +186,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
             <SelectItem value="advanced">Advanced</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select value={selectedDuration} onValueChange={setSelectedDuration}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Duration" />
           </SelectTrigger>
@@ -159,115 +200,143 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
       </div>
 
       {/* Bootcamps Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {bootcamps.map((bootcamp: Bootcamp | any) => (
-          <Card key={bootcamp.id} className="overflow-hidden">
-            <div className="aspect-video bg-gradient-to-r from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
-              {bootcamp.banner ? (
-                <img src={bootcamp.banner} alt="" />
-              ) : (
-                <div className="text-center text-white">
-                  <Zap className="h-12 w-12 mx-auto mb-2" />
-                  <h3 className="text-lg font-bold">{bootcamp.title}</h3>
-                </div>
-              )}
-            </div>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Badge
-                    variant={
-                      bootcamp?.level === "Advanced"
-                        ? "destructive"
-                        : bootcamp?.level === "Intermediate"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {bootcamp?.level}
-                  </Badge>
-                  <Badge variant={"destructive"}>{bootcamp.cohort.name}</Badge>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm">{bootcamp.rating}</span>
-                </div>
-              </div>
-              <CardTitle className="line-clamp-2">{bootcamp.title}</CardTitle>
-              <CardDescription className="line-clamp-2">
-                {bootcamp.summary}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{bootcamp?.cohort?.duration} weeks</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    Starts{" "}
-                    {new Date(bootcamp?.cohort?.startsAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>{bootcamp.totalEnrolled} graduates</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span>{bootcamp?.cohort?.spotsLeft} spots left</span>
-                </div>
-              </div>
+      <div className={`grid gap-6 ${bootcamps.length ? "md:grid-cols-2" : ""}`}>
+        {bootcamps.length <= 0 && (
+          <Card className="">
+            <CardHeader></CardHeader>
 
-              {bootcamp.enrolled ? (
-                <div className="space-y-2">
-                  <Badge
-                    variant="outline"
-                    className="bg-green-50 text-green-700 border-green-200"
-                  >
-                    Enrolled
-                  </Badge>
-                  <Button
-                    className="w-full"
-                    onClick={() =>
-                      onNavigate?.(routes.bootcampDashboard(bootcamp.id))
-                    }
-                  >
-                    Access Bootcamp
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">
-                      ${bootcamp?.cohort?.amount?.toLocaleString()}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-orange-600 border-orange-200"
-                    >
-                      {bootcamp?.cohort?.spotsLeft} spots left
-                    </Badge>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={() =>
-                      onNavigate?.(routes.bootcampDetail(bootcamp.id))
-                    }
-                  >
-                    View Details
-                  </Button>
-                </div>
-              )}
-
-              <div className="text-xs text-muted-foreground">
-                Instructor: {bootcamp?.instructor ?? "Mastering Backend"}
+            <CardContent className="text-center">
+              <div className="text-gray-400 py-3">
+                The applied filter has returned no results
               </div>
+              <Button
+                onClick={() => {
+                  setSelectedDuration("all");
+                  setSelectedLevel("all");
+                  setSelectedType("all");
+                  setSearchQuery("");
+                  load();
+                }}
+                variant={"secondary"}
+              >
+                Remove all filters
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        )}
+        {bootcamps.length > 0 &&
+          bootcamps?.map((bootcamp: Bootcamp | any) => (
+            <Card key={bootcamp.id} className="overflow-hidden">
+              <div className="aspect-video bg-gradient-to-r from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
+                {bootcamp.banner ? (
+                  <img src={bootcamp.banner} alt="" />
+                ) : (
+                  <div className="text-center text-white">
+                    <Zap className="h-12 w-12 mx-auto mb-2" />
+                    <h3 className="text-lg font-bold">{bootcamp.title}</h3>
+                  </div>
+                )}
+              </div>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <Badge
+                      variant={
+                        bootcamp?.level === "Advanced"
+                          ? "destructive"
+                          : bootcamp?.level === "Intermediate"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {bootcamp?.level}
+                    </Badge>
+                    <Badge variant={"destructive"}>
+                      {bootcamp.cohort.name}
+                    </Badge>
+                  </div>
+                  {/* <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm">{bootcamp.rating}</span>
+                </div> */}
+                </div>
+                <CardTitle className="line-clamp-2">{bootcamp.title}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {bootcamp.summary}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{bootcamp?.cohort?.duration} weeks</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Starts{" "}
+                      {new Date(
+                        bootcamp?.cohort?.startsAt
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{bootcamp.totalEnrolled} graduates</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span>{bootcamp?.cohort?.spotsLeft} spots left</span>
+                  </div>
+                </div>
+
+                {bootcamp.enrolled ? (
+                  <div className="space-y-2">
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200"
+                    >
+                      Enrolled
+                    </Badge>
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        onNavigate?.(routes.bootcampDetail(bootcamp.id))
+                      }
+                    >
+                      Access Bootcamp
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold">
+                        ${bootcamp?.cohort?.amount?.toLocaleString()}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-orange-600 border-orange-200"
+                      >
+                        {bootcamp?.cohort?.spotsLeft} spots left
+                      </Badge>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        onNavigate?.(routes.bootcampDetail(bootcamp.id))
+                      }
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground">
+                  Instructor: {bootcamp?.instructor ?? "Mastering Backend"}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
       </div>
 
       {/* Why Choose Our Bootcamps */}

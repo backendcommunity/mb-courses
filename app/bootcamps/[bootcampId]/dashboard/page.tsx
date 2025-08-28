@@ -2,18 +2,15 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { BootcampDashboardPage } from "@/components/pages/bootcamp-dashboard";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-interface BootcampDashboardPageRouteProps {
-  params: {
-    bootcampId: string;
-  };
-}
+type BootcampDashboardPageRouteProps = {
+  bootcampId: string;
+};
 
-export default function BootcampDashboardPageRoute({
-  params,
-}: BootcampDashboardPageRouteProps) {
+export default function BootcampDashboardPageRoute() {
   const router = useRouter();
+  const { bootcampId } = useParams() as BootcampDashboardPageRouteProps;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -22,7 +19,7 @@ export default function BootcampDashboardPageRoute({
   return (
     <DashboardLayout>
       <BootcampDashboardPage
-        bootcampId={params.bootcampId}
+        bootcampId={bootcampId}
         onNavigate={handleNavigate}
       />
     </DashboardLayout>

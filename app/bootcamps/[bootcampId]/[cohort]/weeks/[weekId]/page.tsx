@@ -2,19 +2,17 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { BootcampWeekPage } from "@/components/pages/bootcamp-week";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-interface BootcampWeekPageRouteProps {
-  params: {
-    bootcampId: string;
-    weekId: string;
-  };
-}
+type BootcampWeekPageRouteProps = {
+  bootcampId: string;
+  weekId: string;
+  cohort: string;
+};
 
-export default function BootcampWeekPageRoute({
-  params,
-}: BootcampWeekPageRouteProps) {
+export default function BootcampWeekPageRoute() {
   const router = useRouter();
+  const { bootcampId, weekId } = useParams() as BootcampWeekPageRouteProps;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -23,8 +21,8 @@ export default function BootcampWeekPageRoute({
   return (
     <DashboardLayout>
       <BootcampWeekPage
-        bootcampId={params.bootcampId}
-        weekId={params.weekId}
+        bootcampId={bootcampId}
+        weekId={weekId}
         onNavigate={handleNavigate}
       />
     </DashboardLayout>

@@ -239,6 +239,13 @@ export function Certificate({
                   <span className="text-gray-600">Roadmap Duration:</span>
                   <span className="font-medium">{course?.timeframe}</span>
                 </div>
+              ) : type.includes("bootcamp") ? (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bootcamp Duration:</span>
+                  <span className="font-medium">
+                    {course?.cohort?.duration} weeks
+                  </span>
+                </div>
               ) : (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Course Duration:</span>
@@ -249,7 +256,7 @@ export function Certificate({
               )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Skill Level:</span>
-                <span className="font-medium">{course.level}</span>
+                <span className="font-medium">{course?.level}</span>
               </div>
               {type.includes("Roadmap") ? (
                 <div className="flex justify-between">
@@ -257,6 +264,13 @@ export function Certificate({
                   <span className="font-medium">
                     {course?.userRoadmap?.userTopics?.length ?? 0}/
                     {course?.topics?.length}
+                  </span>
+                </div>
+              ) : type.includes("bootcamp") ? (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Lessons Completed:</span>
+                  <span className="font-medium">
+                    {course?.userCohort?.totalLessonsCompleted}
                   </span>
                 </div>
               ) : (
@@ -272,9 +286,16 @@ export function Certificate({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Final Score:</span>
-                <span className="font-medium text-green-600">
-                  {course.progress}%
-                </span>
+
+                {type.includes("bootcamp") ? (
+                  <span className="font-medium text-green-600">
+                    {course?.userCohort?.assigmentScore}%
+                  </span>
+                ) : (
+                  <span className="font-medium text-green-600">
+                    {course?.progress}%
+                  </span>
+                )}
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Verification:</span>

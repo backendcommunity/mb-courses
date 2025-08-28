@@ -8,13 +8,14 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { useUser } from "@/hooks/use-user";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useTheme } from "next-themes";
 import countries from "@/lib/countries.json";
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import Link from "next/link";
+import { PaymentChannel, Plan } from "@/lib/data";
 
 interface PaymentDialogProps {
   data: any;
@@ -41,6 +42,8 @@ export function PaymentDialog({
   const store = useAppStore();
   const { theme } = useTheme();
   const [paddle, setPaddle] = useState<Paddle>();
+  const [plan, setPlan] = useState<Plan>();
+  const [channel, setChannel] = useState<PaymentChannel>();
 
   useEffect(() => {
     initializePaddle({
@@ -56,7 +59,6 @@ export function PaymentDialog({
             console.log("Checkout closed");
             break;
           case "checkout.completed":
-            console.log("Checkout completed");
             const c_data = data?.custom_data;
             // Track payment (GA or Google)
             onHandlePurchase(c_data.id, c_data.method, true);
@@ -70,6 +72,17 @@ export function PaymentDialog({
       }
     });
   }, []);
+
+  useMemo(async () => {
+    const plan = await store.getPlan(data?.plan ?? "Pro");
+    setPlan(plan);
+
+    //TODO: Select channel based on user country
+    const paymentChannel = plan?.paymentChannels?.find(
+      (pp: any) => pp.channel === "PADDLE"
+    );
+    setChannel(paymentChannel);
+  }, [data?.plan]);
 
   // Callback to open a checkout
   const openCheckout = (priceId: string, data: any) => {
@@ -129,19 +142,15 @@ export function PaymentDialog({
   };
 
   const handlePayment = async (id: string, type: string) => {
-    let enrolled: any = null;
-
     if (type?.includes("subscription")) {
-      const plan = await store.getPlan("Pro");
-      const paymentChannel = plan.paymentChannels.find(
-        (pp: any) => pp.channel === "PADDLE"
-      );
+      if (NODE_ENV === "dev") {
+        const priceId = "pri_01k049swct0nvgdsw8zwh6ys64";
+        openCheckout(priceId, {});
+        return;
+      }
 
-      const priceId =
-        NODE_ENV === "dev"
-          ? "pri_01k049swct0nvgdsw8zwh6ys64"
-          : paymentChannel?.monthlyPlanId;
-
+      if (!channel) return;
+      const priceId = channel?.monthlyPlanId!;
       openCheckout(priceId, {});
     }
 
@@ -150,7 +159,7 @@ export function PaymentDialog({
       const customData = {
         method: "individual",
         id: data?.id,
-        type: "course",
+        type: data?.type ?? "course",
       };
 
       const id =
@@ -160,7 +169,8 @@ export function PaymentDialog({
     }
 
     if (type?.includes("mb")) {
-      enrolled = await handleMBPayment();
+      const purchased = await handleMBPayment();
+      onHandlePurchase(id, type, purchased);
     }
   };
 
@@ -173,7 +183,7 @@ export function PaymentDialog({
               Get Access to {data.title}
             </DialogTitle>
             <DialogDescription className="text-sm">
-              Choose how you'd like to access this course
+              Choose how you'd like to access this {data.type}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 md:space-y-4">
@@ -186,16 +196,16 @@ export function PaymentDialog({
                   <Crown className="h-6 w-6 md:h-8 md:w-8 text-[#F2C94C] flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm md:text-base">
-                      Upgrade to Pro
+                      Upgrade to {data?.plan ?? "Pro"}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground">
-                      Get unlimited access to all courses
+                      Get unlimited access to MB Platform
                     </p>
                   </div>
                   <div>
                     <div className="text-right">
                       <div className="font-bold text-sm md:text-base">
-                        $39.99/mo
+                        ${channel?.originalMonthlyPrice}/mo
                       </div>
                       <div className="text-xs text-muted-foreground">
                         Best value
@@ -205,7 +215,6 @@ export function PaymentDialog({
                       href={"/subscription/plans"}
                       className="text-xs text-primary z-10"
                     >
-                      {" "}
                       Choose another plan
                     </Link>
                   </div>

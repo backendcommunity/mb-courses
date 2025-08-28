@@ -1,25 +1,24 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { BootcampDetailPage } from "@/components/pages/bootcamp-detail"
-import { useRouter } from "next/navigation"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { BootcampDetailPage } from "@/components/pages/bootcamp-detail";
+import { useParams, useRouter } from "next/navigation";
 
-interface BootcampDetailPageRouteProps {
-  params: {
-    bootcampId: string
-  }
-}
+type BootcampDetailPageRouteProps = {
+  bootcampId: string;
+};
 
-export default function BootcampDetailPageRoute({ params }: BootcampDetailPageRouteProps) {
-  const router = useRouter()
+export default function BootcampDetailPageRoute() {
+  const router = useRouter();
+  const { bootcampId } = useParams() as BootcampDetailPageRouteProps;
 
   const handleNavigate = (path: string) => {
-    router.push(path)
-  }
+    router.push(path);
+  };
 
   return (
     <DashboardLayout>
-      <BootcampDetailPage bootcampId={params.bootcampId} onNavigate={handleNavigate} />
+      <BootcampDetailPage bootcampId={bootcampId} onNavigate={handleNavigate} />
     </DashboardLayout>
-  )
+  );
 }

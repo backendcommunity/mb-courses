@@ -13,6 +13,9 @@ import {
   Code2,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useMemo, useState } from "react";
+import { Loader } from "../ui/loader";
+import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
 
 interface BootcampWeekPageProps {
   bootcampId: string;
@@ -26,100 +29,41 @@ export function BootcampWeekPage({
   onNavigate,
 }: BootcampWeekPageProps) {
   const store = useAppStore();
-  const bootcamp = store.getBootcamps().find((b) => b.id === bootcampId);
+  const [bootcamp, setBootcamp] = useState<Bootcamp>();
+  const [userCohort, setUserCohort] = useState<UserCohort>();
+  const [loading, setLoading] = useState(false);
+  const [currentWeek, setCurrentWeek] = useState<Week & { index: number }>();
+  const [weeks, setWeeks] = useState<Week[]>([]);
 
-  // Mock week data
-  const weekData = {
-    "1": {
-      title: "Foundations",
-      description: "JavaScript ES6+, Node.js Basics, Git & GitHub",
-      lessons: [
-        {
-          id: "1",
-          title: "JavaScript ES6+ Features",
-          type: "video",
-          duration: "45 min",
-          completed: true,
-          slug: "javascript-es6-features",
-          week: 1,
-        },
-        {
-          id: "2",
-          title: "Node.js Introduction",
-          type: "video",
-          duration: "60 min",
-          completed: true,
-          slug: "nodejs-introduction",
-          week: 1,
-        },
-        {
-          id: "3",
-          title: "Git & GitHub Workflow",
-          type: "video",
-          duration: "40 min",
-          completed: false,
+  useMemo(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const bootcamp = await store.getBootcamp(bootcampId);
 
-          slug: "git-github-workflow",
-          week: 1,
-        },
-        {
-          id: "4",
-          title: "Week 1 Project",
-          type: "project",
-          duration: "2 hours",
-          completed: false,
-          slug: "week-1-project",
-          week: 1,
-        },
-      ],
-    },
-    "2": {
-      title: "Backend Fundamentals",
-      description: "Express.js, RESTful APIs, Middleware",
-      lessons: [
-        {
-          id: "1",
-          title: "Express.js Setup",
-          type: "video",
-          duration: "30 min",
-          completed: false,
-          slug: "expressjs-setup",
-          week: 2,
-        },
-        {
-          id: "2",
-          title: "Routing & Middleware",
-          type: "video",
-          duration: "50 min",
-          completed: false,
-          slug: "routing-middleware",
-          week: 2,
-        },
-        {
-          id: "3",
-          title: "Building REST APIs",
-          type: "video",
-          duration: "70 min",
-          completed: false,
-          slug: "building-rest-apis",
-          week: 2,
-        },
-        {
-          id: "4",
-          title: "API Project",
-          type: "project",
-          duration: "3 hours",
-          completed: false,
-          slug: "api-project",
-          week: 2,
-        },
-      ],
-    },
-  };
+        const weeks = bootcamp?.weeks;
+        setWeeks(weeks);
+        const week = weeks?.find((w: any) => w.id === weekId);
+        const index = weeks?.findIndex((w: any) => w.id === weekId) + 1;
+        setCurrentWeek({
+          ...week,
+          index,
+        });
 
-  const week = weekData[weekId as keyof typeof weekData];
+        setUserCohort(bootcamp.userCohort);
+        setBootcamp(bootcamp);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+      }
+    };
 
-  if (!bootcamp || !week) {
+    load();
+  }, []);
+
+  if (loading) return <Loader isLoader={false} />;
+
+  if (!bootcamp) {
     return (
       <div className="flex-1 p-6">
         <div className="text-center">
@@ -136,15 +80,65 @@ export function BootcampWeekPage({
     );
   }
 
-  const handleStart = (lesson: any) => {
+  const handleStart = (lesson: Lesson) => {
     if (lesson.type?.toLowerCase() === "quiz") return onNavigate?.("");
     if (lesson.type?.toLowerCase() === "project")
-      return onNavigate?.(`/projects/${lesson?.slug}`);
+      return onNavigate?.(`/projects/${lesson?.project?.slug}`);
 
     return onNavigate?.(
-      `/bootcamps/${bootcampId}/weeks/${lesson.week}/${lesson?.slug}`
+      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${currentWeek?.id}/${lesson?.id}`
     );
   };
+
+  const isWeekCompleted = () => {
+    if (!userCohort?.userLessons?.length) return 0;
+    const userLessons = userCohort.userLessons;
+
+    const completed = userLessons.filter(
+      (ul) => ul.completed && ul.weekId === currentWeek?.id
+    );
+    return currentWeek?.lessons?.length === completed?.length;
+  };
+
+  const isCurrentWeekCompleted = () => {
+    const activeWeek = userCohort?.currentWeekId;
+    const week = weeks?.find((w: any) => w.id === activeWeek);
+    const totalLessons = week?.lessons.length;
+
+    if (!userCohort?.userLessons?.length) return false;
+    const userLessons = userCohort.userLessons;
+
+    const completed = userLessons.filter(
+      (ul) => ul.completed && ul.weekId === currentWeek?.id
+    );
+
+    return totalLessons === completed?.length;
+  };
+
+  const isLessonCompleted = (lesson: Lesson) => {
+    if (!userCohort?.userLessons?.length) return 0;
+    const userLessons = userCohort.userLessons;
+
+    const completed = userLessons.find(
+      (ul) => ul.lessonId === lesson.id && ul.completed
+    );
+    return !!completed;
+  };
+
+  const lessonsCompletedByWeek = () => {
+    if (!userCohort?.userLessons?.length) return 0;
+
+    const userLessons = userCohort.userLessons;
+    const completed = userLessons.filter(
+      (ul) => ul.completed && ul.weekId === currentWeek?.id
+    )?.length;
+    return completed;
+  };
+
+  const lessonsCompleted = lessonsCompletedByWeek() ?? 0;
+
+  const progress =
+    (lessonsCompletedByWeek() / currentWeek?.lessons!?.length) * 100;
 
   return (
     <div className="flex-1 space-y-6">
@@ -158,7 +152,7 @@ export function BootcampWeekPage({
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Week {weekId}: {week.title}
+            Week {currentWeek?.index}: {currentWeek?.title}
           </h1>
           <p className="text-muted-foreground">{bootcamp.title}</p>
         </div>
@@ -173,11 +167,13 @@ export function BootcampWeekPage({
               <CardTitle>Week Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">{week.description}</p>
+              <p className="text-muted-foreground mb-4">
+                {currentWeek?.summary}
+              </p>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {week.lessons.length}
+                    {currentWeek?.lessons?.length}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Total Lessons
@@ -185,18 +181,13 @@ export function BootcampWeekPage({
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {week.lessons.filter((l) => l.completed).length}
+                    {lessonsCompleted}
                   </div>
                   <div className="text-sm text-muted-foreground">Completed</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {Math.round(
-                      (week.lessons.filter((l) => l.completed).length /
-                        week.lessons.length) *
-                        100
-                    )}
-                    %
+                    {Math.round(progress)}%
                   </div>
                   <div className="text-sm text-muted-foreground">Progress</div>
                 </div>
@@ -207,20 +198,20 @@ export function BootcampWeekPage({
           {/* Lessons */}
           <Card>
             <CardHeader>
-              <CardTitle>Week {weekId} Lessons</CardTitle>
+              <CardTitle>Week {currentWeek?.index} Lessons</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {week.lessons.map((lesson, index) => (
+              {currentWeek?.lessons?.map((lesson: Lesson, index: number) => (
                 <div
                   key={lesson.id}
                   className={`border rounded-lg p-4 ${
-                    lesson.completed ? "border-green-500/10" : "" //bg-green-500/10
+                    isLessonCompleted(lesson) ? "border-green-500/10" : "" //bg-green-500/10
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                        {lesson.completed ? (
+                        {isLessonCompleted(lesson) ? (
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
                         ) : (
                           <span className="text-sm font-medium">
@@ -232,9 +223,9 @@ export function BootcampWeekPage({
                         <h4 className="font-medium">{lesson.title}</h4>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            {lesson.type === "video" ? (
+                            {lesson.type === "VIDEO" ? (
                               <Play className="h-4 w-4" />
-                            ) : lesson.type === "project" ? (
+                            ) : lesson.type === "PROJECT" ? (
                               <Code2 className="h-4 w-4" />
                             ) : (
                               <BookOpen className="h-4 w-4" />
@@ -242,14 +233,23 @@ export function BootcampWeekPage({
                             <span>{lesson.type}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{lesson.duration}</span>
+                            {(lesson.type === "VIDEO" ||
+                              lesson.type === "QUIZ") && (
+                              <Badge variant="outline" className="flex gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span className="">
+                                  {lesson?.video?.duration ??
+                                    lesson.quiz?.timeLimit}{" "}
+                                  mins
+                                </span>
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {lesson.completed ? (
+                    <div>
+                      {isCurrentWeekCompleted() && (
                         <>
                           <Badge
                             variant="outline"
@@ -266,10 +266,40 @@ export function BootcampWeekPage({
                             Review
                           </Button>
                         </>
+                      )}
+
+                      {userCohort?.currentWeekId === currentWeek.id ? (
+                        <div className="flex items-center gap-2">
+                          {isLessonCompleted(lesson) ? (
+                            <>
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                Completed
+                              </Badge>
+
+                              <Button
+                                variant={"secondary"}
+                                onClick={() => handleStart(lesson)}
+                                size="sm"
+                              >
+                                Review
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              onClick={() => handleStart(lesson)}
+                              size="sm"
+                            >
+                              <Play className="mr-2 h-4 w-4" />
+                              Start
+                            </Button>
+                          )}
+                        </div>
                       ) : (
-                        <Button onClick={() => handleStart(lesson)} size="sm">
-                          <Play className="mr-2 h-4 w-4" />
-                          Start
+                        <Button variant={"secondary"} size="sm">
+                          Locked
                         </Button>
                       )}
                     </div>
@@ -292,18 +322,10 @@ export function BootcampWeekPage({
                 <div className="flex items-center justify-between text-sm">
                   <span>Lessons Completed</span>
                   <span>
-                    {week.lessons.filter((l) => l.completed).length}/
-                    {week.lessons.length}
+                    {lessonsCompleted}/{currentWeek?.lessons?.length}
                   </span>
                 </div>
-                <Progress
-                  value={
-                    (week.lessons.filter((l) => l.completed).length /
-                      week.lessons.length) *
-                    100
-                  }
-                  className="h-2"
-                />
+                <Progress value={progress} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -314,25 +336,28 @@ export function BootcampWeekPage({
               <CardTitle className="text-lg">Bootcamp Weeks</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => (
+              {weeks.map((week: Week, i: number) => (
                 <div
-                  key={week}
+                  key={i + 1}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    week.toString() === weekId ? "border border-blue-200" : ""
+                    week?.id === currentWeek?.id ? "border border-blue-200" : ""
                   }`}
-                  onClick={() =>
-                    onNavigate?.(`/bootcamps/${bootcampId}/weeks/${week}`)
-                  }
+                  onClick={() => {
+                    setCurrentWeek({
+                      ...week,
+                      index: i + 1,
+                    });
+                  }}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {week <= 2 ? (
+                    {isWeekCompleted() ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
-                      <span>{week}</span>
+                      <span>{i + 1}</span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Week {week}</p>
+                    <p className="text-sm font-medium">Week {i + 1}</p>
                   </div>
                 </div>
               ))}

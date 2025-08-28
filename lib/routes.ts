@@ -99,10 +99,14 @@ export const routes = {
   bootcampDetail: (bootcampId: string) => `/bootcamps/${bootcampId}`,
   bootcampDashboard: (bootcampId: string) =>
     `/bootcamps/${bootcampId}/dashboard`,
-  bootcampWeek: (bootcampId: string, weekId: string) =>
-    `/bootcamps/${bootcampId}/weeks/${weekId}`,
-  bootcampWatch: (bootcampId: string, weekId: string, slug: string) =>
-    `/bootcamps/${bootcampId}/weeks/${weekId}/${slug}`,
+  bootcampWeek: (bootcampId: string, cohort: string, weekId: string) =>
+    `/bootcamps/${bootcampId}/${cohort}/weeks/${weekId}`,
+  bootcampWatch: (
+    bootcampId: string,
+    cohort: string,
+    weekId: string,
+    slug: string
+  ) => `/bootcamps/${bootcampId}/${cohort}/weeks/${weekId}/${slug}`,
 
   // Project30
   project30: "/project30",
