@@ -41,7 +41,7 @@ export function BootcampWeekPage({
         setLoading(true);
         const bootcamp = await store.getBootcamp(bootcampId);
 
-        const weeks = bootcamp?.weeks;
+        const weeks = bootcamp?.cohort?.weeks;
         setWeeks(weeks);
         const week = weeks?.find((w: any) => w.id === weekId);
         const index = weeks?.findIndex((w: any) => w.id === weekId) + 1;
@@ -90,30 +90,30 @@ export function BootcampWeekPage({
     );
   };
 
-  const isWeekCompleted = () => {
+  const isWeekCompleted = (week: Week) => {
     if (!userCohort?.userLessons?.length) return 0;
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === currentWeek?.id
+      (ul) => ul.completed && ul.weekId === week?.id
     );
-    return currentWeek?.lessons?.length === completed?.length;
+    return week?.lessons?.length === completed?.length;
   };
 
-  const isCurrentWeekCompleted = () => {
-    const activeWeek = userCohort?.currentWeekId;
-    const week = weeks?.find((w: any) => w.id === activeWeek);
-    const totalLessons = week?.lessons.length;
+  // const isCurrentWeekCompleted = () => {
+  //   const activeWeek = userCohort?.currentWeekId;
+  //   const week = weeks?.find((w: any) => w.id === activeWeek);
+  //   const totalLessons = week?.lessons.length;
 
-    if (!userCohort?.userLessons?.length) return false;
-    const userLessons = userCohort.userLessons;
+  //   if (!userCohort?.userLessons?.length) return false;
+  //   const userLessons = userCohort.userLessons;
 
-    const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === currentWeek?.id
-    );
+  //   const completed = userLessons.filter(
+  //     (ul) => ul.completed && ul.weekId === currentWeek?.id
+  //   );
 
-    return totalLessons === completed?.length;
-  };
+  //   return totalLessons === completed?.length;
+  // };
 
   const isLessonCompleted = (lesson: Lesson) => {
     if (!userCohort?.userLessons?.length) return 0;
@@ -249,8 +249,8 @@ export function BootcampWeekPage({
                       </div>
                     </div>
                     <div>
-                      {isCurrentWeekCompleted() && (
-                        <>
+                      {isWeekCompleted(currentWeek) ? (
+                        <div className="space-x-2">
                           <Badge
                             variant="outline"
                             className="bg-green-50 text-green-700 border-green-200"
@@ -265,10 +265,8 @@ export function BootcampWeekPage({
                           >
                             Review
                           </Button>
-                        </>
-                      )}
-
-                      {userCohort?.currentWeekId === currentWeek.id ? (
+                        </div>
+                      ) : userCohort?.currentWeekId === currentWeek.id ? (
                         <div className="flex items-center gap-2">
                           {isLessonCompleted(lesson) ? (
                             <>
@@ -293,7 +291,13 @@ export function BootcampWeekPage({
                               size="sm"
                             >
                               <Play className="mr-2 h-4 w-4" />
-                              Start
+                              {lesson.type === "VIDEO"
+                                ? "Watch"
+                                : lesson.type === "QUIZ"
+                                ? "Solve"
+                                : lesson.type === "PROJECT"
+                                ? "Build"
+                                : "Complete"}
                             </Button>
                           )}
                         </div>
@@ -350,7 +354,7 @@ export function BootcampWeekPage({
                   }}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isWeekCompleted() ? (
+                    {isWeekCompleted(week) ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <span>{i + 1}</span>

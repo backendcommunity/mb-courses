@@ -17,6 +17,7 @@ import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
+import Countdown from "../ui/count-down";
 
 interface BootcampDashboardPageProps {
   bootcampId: string;
@@ -41,17 +42,19 @@ export function BootcampDashboardPage({
         const bootcamp = await store.getBootcamp(bootcampId);
 
         const currentWeekId = bootcamp?.userCohort?.currentWeekId;
-        const week = bootcamp?.weeks?.find(
+        const week = bootcamp?.cohort?.weeks?.find(
           (week: any) => week.id === currentWeekId
         );
 
         const index =
-          bootcamp?.weeks?.findIndex((week: any) => week.id === currentWeekId) +
-          1;
+          bootcamp?.cohort?.weeks?.findIndex(
+            (week: any) => week.id === currentWeekId
+          ) + 1;
+
         setCurrentWeek({ ...week, index });
 
         const currentLessonId = bootcamp?.userCohort?.currentLessonId;
-        const lesson = bootcamp?.weeks
+        const lesson = bootcamp?.cohort?.weeks
           ?.find((week: any) => week.id === currentWeekId)
           ?.lessons?.find((l: any) => l.id === currentLessonId);
 
@@ -85,6 +88,25 @@ export function BootcampDashboardPage({
     );
   }
 
+  if (!(new Date(bootcamp?.cohort!?.startsAt) < new Date()))
+    return (
+      <Card>
+        <CardHeader></CardHeader>
+        <CardContent className="text-center space-y-5">
+          <Countdown
+            startDate={bootcamp?.cohort!?.startsAt.toString()}
+          ></Countdown>
+
+          <Button
+            onClick={() => onNavigate?.("/bootcamps/" + bootcamp?.id)}
+            variant={"secondary"}
+          >
+            Back to Bootcamp
+          </Button>
+        </CardContent>
+      </Card>
+    );
+
   const handleContinue = (lesson: any) => {
     if (lesson.type?.toLowerCase() === "quiz") return onNavigate?.("");
     if (lesson.type?.toLowerCase() === "project")
@@ -94,14 +116,14 @@ export function BootcampDashboardPage({
     );
   };
 
-  const isWeekCompleted = () => {
+  const isWeekCompleted = (week: Week) => {
     if (!userCohort?.userLessons?.length) return 0;
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === currentWeek?.id
+      (ul) => ul.completed && ul.weekId === week?.id
     );
-    return currentWeek?.lessons?.length === completed?.length;
+    return week?.lessons?.length === completed?.length;
   };
 
   const isLessonCompleted = (lesson: Lesson) => {
@@ -254,7 +276,13 @@ export function BootcampDashboardPage({
                           onClick={() => handleContinue(lesson)}
                           size="sm"
                         >
-                          Watch
+                          {lesson.type === "VIDEO"
+                            ? "Watch"
+                            : lesson.type === "QUIZ"
+                            ? "Solve"
+                            : lesson.type === "PROJECT"
+                            ? "Build"
+                            : "Complete"}
                         </Button>
                       )}
                     </div>
@@ -351,7 +379,7 @@ export function BootcampDashboardPage({
               <CardTitle className="text-lg">Bootcamp Weeks</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 md:grid grid-cols-3">
-              {bootcamp?.weeks?.map((week: any, i: number) => (
+              {bootcamp?.cohort?.weeks?.map((week: any, i: number) => (
                 <div
                   key={i}
                   className={`flex items-center  gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
@@ -366,7 +394,7 @@ export function BootcampDashboardPage({
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isWeekCompleted() ? (
+                    {isWeekCompleted(week) ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <span>{i + 1}</span>

@@ -41,6 +41,7 @@ import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
+import Countdown from "../ui/count-down";
 
 interface BootcampWatchPageProps {
   slug: string;
@@ -79,7 +80,6 @@ export function BootcampVideoWatchPage({
       const week = await store.getWeek(id, cohort, weekId);
 
       const lesson = week.lessons.find((l: Lesson) => l.id === slug);
-      console.log(week);
       setUserLessons(week?.userCohort?.userLessons);
       setLesson(lesson);
 
@@ -121,6 +121,23 @@ export function BootcampVideoWatchPage({
       </div>
     );
   }
+
+  if (!(new Date(week?.cohort!?.startsAt) < new Date()))
+    return (
+      <Card>
+        <CardHeader></CardHeader>
+        <CardContent className="text-center space-y-5">
+          <Countdown startDate={week?.cohort!?.startsAt.toString()}></Countdown>
+
+          <Button
+            onClick={() => onNavigate?.("/bootcamps/" + week?.bootcampId)}
+            variant={"secondary"}
+          >
+            Back to Bootcamp
+          </Button>
+        </CardContent>
+      </Card>
+    );
 
   const isVideoCompleted = (lessonId: string) => {
     return userLessons?.find((ch: UserLesson) => ch.lessonId === lessonId)
@@ -176,16 +193,28 @@ export function BootcampVideoWatchPage({
     }
   };
 
+  const isWeekCompleted = (lessons?: UserLesson[]) => {
+    if (!lessons?.length && !userLessons?.length) return false;
+
+    const _lessons = lessons || userLessons;
+
+    const completed = _lessons.filter(
+      (ul) => ul.completed && ul.weekId === week?.id
+    );
+
+    return week?.lessons?.length === completed?.length;
+  };
+
   const markCourseAsCompleted = async () => {
     try {
-      const completed = await store.markCourseCompleted(week?.bootcampId!);
-
       setCelebration(true);
       setCompleted(true);
-      toast.success(
-        `You've earned ${completed?.totalPoints} MB from the lesson`
-      );
-      // onNavigate?.(routes.lessonCertificate(slug));
+
+      const points = week?.lessons.reduce((p, c) => (p += c.mb), 0);
+
+      toast.success(`You've earned ${points} MB from the lesson`);
+
+      // TODO: Show a pop that's shareable on socials
     } catch (error: any) {
       toast.error("An error occurred updating your points. Try again");
       setCompleted(false);
@@ -204,38 +233,36 @@ export function BootcampVideoWatchPage({
 
     try {
       const completedLessons = [
-        ...(userLessons ?? []),
+        ...(userLessons?.filter(
+          (lesson) => lesson.lessonId !== currentLesson.id
+        ) ?? []),
         {
           ...currentLesson,
           completed: true,
+          weekId: week.id,
           lessonId: currentLesson.id,
         },
       ];
+
       setUserLessons(completedLessons);
 
-      store.markLessonCompleted(
-        id,
-        week?.bootcamp?.cohort.id,
-        week?.id,
-        currentLesson.id,
-        {
-          nextWeekId: week?.id,
-          nextLessonId: nextVideo?.id,
-        }
-      );
+      store.markLessonCompleted(id, cohort, week?.id, currentLesson.id, {
+        isWeekCompleted: isWeekCompleted(completedLessons),
+        nextWeekId: week?.id,
+        nextLessonId: nextVideo?.id,
+      });
 
       toast.success("You just earned some points!");
       setCelebration(true);
-      handleVideoClick(nextVideo!);
+      if (nextVideo) handleVideoClick(nextVideo!);
     } catch (error) {
-      console.log(error);
       toast.error("An error occurred. Please try again");
     }
   };
 
   const progress = () => {
     const completed = userLessons?.filter((ul) => weekId === ul.weekId);
-    return completed?.length / week?.lessons!?.length / 100;
+    return (completed?.length / week?.lessons!?.length) * 100;
   };
 
   return (
@@ -253,16 +280,19 @@ export function BootcampVideoWatchPage({
             {currentLesson ? currentLesson.title : week?.title}
           </h1>
           <p className="text-muted-foreground">
-            {lesson.title} • {week?.title}
+            {currentLesson?.title} • {week?.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{currentLesson?.type}</Badge>
-          {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
+          {(currentLesson?.type === "VIDEO" ||
+            currentLesson?.type === "QUIZ") && (
             <Badge variant="outline" className="flex gap-1">
               <Clock className="h-3 w-3" />
               <span className="">
-                {lesson?.video?.duration ?? lesson.quiz?.timeLimit} mins
+                {currentLesson?.video?.duration ??
+                  currentLesson?.quiz?.timeLimit}{" "}
+                mins
               </span>
             </Badge>
           )}
@@ -305,6 +335,34 @@ export function BootcampVideoWatchPage({
                 onNavigate={(path) => onNavigate?.(path)}
                 exercise={currentLesson?.exercise!}
               />
+            )}
+
+            {currentLesson?.type === "ASSIGNMENT" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="capitalize">
+                    {currentLesson
+                      ? currentLesson?.type?.toLowerCase()
+                      : "Chapter"}{" "}
+                    Overview
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  {currentLesson?.description && (
+                    <CardContent>
+                      <div className="space-y-4  pt-4">
+                        <article
+                          className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: currentLesson?.description,
+                          }}
+                        ></article>
+                      </div>
+                    </CardContent>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </Card>
           {/* Video Actions */}
@@ -357,23 +415,18 @@ export function BootcampVideoWatchPage({
               {/* TODO: Add check for Everything task/video is completed */}
               {!nextVideo && (
                 <div>
-                  {!completed ? (
+                  {!isWeekCompleted() ? (
+                    <Button onClick={handleMarkComplete}>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Mark Complete
+                    </Button>
+                  ) : (
                     <Button
                       variant={"destructive"}
                       onClick={() => markCourseAsCompleted()}
                     >
                       Earn Your Rewards
                       <Crown className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant={"outline"}
-                      onClick={() =>
-                        onNavigate?.(routes.courseCertificate(slug))
-                      }
-                    >
-                      View Your Certificate
-                      <SkipForward className="ml-2 h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -415,7 +468,7 @@ export function BootcampVideoWatchPage({
                   </div>
                 </CardContent>
                 <CardContent>
-                  {currentLesson?.description && (
+                  {currentLesson?.video?.description && (
                     <CardContent>
                       <div className="space-y-4  pt-4">
                         <div className="flex w-full justify-center items-center">
@@ -426,7 +479,7 @@ export function BootcampVideoWatchPage({
                         <p
                           className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                           dangerouslySetInnerHTML={{
-                            __html: currentLesson?.description,
+                            __html: currentLesson?.video?.description,
                           }}
                         ></p>
                       </div>
@@ -640,7 +693,11 @@ export function BootcampVideoWatchPage({
                 <Progress value={progress() ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {userLessons?.filter((ul: UserLesson) => ul?.completed).length}{" "}
+                {
+                  userLessons?.filter(
+                    (ul: UserLesson) => ul?.completed && ul.weekId === weekId
+                  ).length
+                }{" "}
                 of {week?.lessons?.length} videos completed
               </div>
             </CardContent>

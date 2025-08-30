@@ -601,6 +601,7 @@ export interface Week {
   lessons: Lesson[];
   bootcampId: string;
   bootcamp: Bootcamp;
+  cohort?: Cohort;
   createdAt: Date;
   updatedAt: Date;
 }

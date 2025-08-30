@@ -9,16 +9,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
   Clock,
   Calendar,
   Users,
-  Star,
   Target,
-  BookOpen,
   Code2,
   Trophy,
   Play,
@@ -106,7 +103,7 @@ export function BootcampDetailPage({
   };
 
   const currentWeekIndex = (weekId: string) => {
-    return bootcamp.weeks.findIndex((w: Week) => w.id === weekId) + 1;
+    return bootcamp?.cohort?.weeks.findIndex((w: Week) => w.id === weekId) + 1;
   };
 
   const handlePurchase = async (id: string, type: string, success: any) => {
@@ -258,65 +255,72 @@ export function BootcampDetailPage({
             <TabsContent value="curriculum" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>12-Week Curriculum</CardTitle>
+                  <CardTitle>
+                    {bootcamp?.cohort?.duration}-Week Curriculum
+                  </CardTitle>
                   <CardDescription>
-                    Comprehensive backend development program
+                    Comprehensive cohort-based program to help you learn{" "}
+                    {bootcamp.title}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {bootcamp?.weeks?.map((module: any, index: number) => (
-                    <div
-                      key={index}
-                      className={`border rounded-lg p-4 ${
-                        module?.status === "current"
-                          ? "border-gray-500 dark:border-gray-100/90"
-                          : module?.status === "completed"
-                          ? "border-green-500/50 bg-green-500/10"
-                          : "border-gray-500/30"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h4 className="font-medium">
-                            Week {index + 1}: {module?.title}
-                          </h4>
-                          <p className="text-xs">{module.summary}</p>
+                  {bootcamp?.cohort?.weeks?.map(
+                    (module: any, index: number) => (
+                      <div
+                        key={index}
+                        className={`border rounded-lg p-4 ${
+                          module?.status === "current"
+                            ? "border-gray-500 dark:border-gray-100/90"
+                            : module?.status === "completed"
+                            ? "border-green-500/50 bg-green-500/10"
+                            : "border-gray-500/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h4 className="font-medium">
+                              Week {index + 1}: {module?.title}
+                            </h4>
+                            <p className="text-xs">{module.summary}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                bootcamp?.enrolled ? "default" : "outline"
+                              }
+                            >
+                              {bootcamp?.enrolled ? "In Progress" : "Locked"}
+                            </Badge>
+                            {bootcamp?.enrolled &&
+                              module?.status !== "locked" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    onNavigate?.(
+                                      `/bootcamps/${bootcampId}/${bootcamp?.userCohort?.cohortId}/weeks/${module.id}`
+                                    )
+                                  }
+                                >
+                                  <Play className="h-4 w-4" />
+                                </Button>
+                              )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={bootcamp?.enrolled ? "default" : "outline"}
-                          >
-                            {bootcamp?.enrolled ? "In Progress" : "Locked"}
-                          </Badge>
-                          {bootcamp?.enrolled &&
-                            module?.status !== "locked" && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  onNavigate?.(
-                                    `/bootcamps/${bootcampId}/${bootcamp?.userCohort?.cohortId}/weeks/${module.id}`
-                                  )
-                                }
-                              >
-                                <Play className="h-4 w-4" />
-                              </Button>
-                            )}
+                        <div className="flex flex-wrap gap-2">
+                          {module?.tags?.map((tag: string, i: number) => (
+                            <Badge
+                              key={i}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {module?.tags?.map((tag: string, i: number) => (
-                          <Badge
-                            key={i}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -467,6 +471,7 @@ export function BootcampDetailPage({
                         Enrolled
                       </Badge>
 
+                      {/* TODO: Add timer to add bootcamp pages */}
                       <Button variant={"secondary"} className="w-full">
                         <Countdown
                           startDate={bootcamp?.userCohort?.cohort!?.startsAt}
@@ -499,25 +504,24 @@ export function BootcampDetailPage({
                       </div>
                     )}
 
-                  {started &&
-                    bootcamp.userCohort.cohort.status === "Started" && (
-                      <div className="space-y-2">
-                        <Badge
-                          variant="outline"
-                          className="w-full justify-center bg-green-50 text-green-700 border-green-200"
-                        >
-                          Enrolled
-                        </Badge>
-                        <Button
-                          className="w-full"
-                          onClick={() =>
-                            onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
-                          }
-                        >
-                          Access Bootcamp
-                        </Button>
-                      </div>
-                    )}
+                  {started && bootcamp.userCohort.cohort.status === "Open" && (
+                    <div className="space-y-2">
+                      <Badge
+                        variant="outline"
+                        className="w-full justify-center bg-green-50 text-green-700 border-green-200"
+                      >
+                        Enrolled
+                      </Badge>
+                      <Button
+                        className="w-full"
+                        onClick={() =>
+                          onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
+                        }
+                      >
+                        Access Bootcamp
+                      </Button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <Button
