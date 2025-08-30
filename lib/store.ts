@@ -62,7 +62,8 @@ interface AppState {
   getVideoNotes: (courseId: string, videoId: string) => Note[] | any;
   getCourseQuizzes: (courseId: string) => Quiz[] | any;
   getCourseExercises: (courseId: string) => Quiz[] | any;
-  getProjects: () => Project[];
+  getProjects: (queries?: Project30Query) => Project[] | any;
+  getProject: (slug: string) => Project | any;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
@@ -95,7 +96,9 @@ interface AppState {
   getActivities: (queries: { size?: number; skip?: number }) => any;
   getVideo: (slug: string) => any;
   getProject30Leaderboard: (slug: string, filter?: any) => any;
+  getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
+  getProjectAchievements: (slug: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -114,6 +117,8 @@ interface AppState {
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  handleProjectEnrollment: (slug: string) => Project | any;
+  updateUserProject: (slug: string, payload: any) => Project | any;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
   updateInterview: (id: string, updates: Partial<Interview>) => void;
   enrollInCourse: (courseId: string) => void;
@@ -146,7 +151,7 @@ interface AppState {
   ) => any;
 
   markCourseCompleted: (id: string) => any;
-
+  markProjectTaskAsCompleted: (slug: string, id: string) => any;
   markRoadmapVideoCompleted: (
     slug: string,
     topicId: string,
@@ -188,8 +193,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  getProjectLeaderboard: async (slug: string, filters?: any) => {
+    const { data } = await api.get(`/projects/${slug}/leaderboard`, {
+      params: {
+        filters,
+      },
+    });
+    return data?.data;
+  },
+
   getProject30Achievements: async (slug: string) => {
     const { data } = await api.get(`/project30s/${slug}/achievements`);
+    return data?.data;
+  },
+
+  getProjectAchievements: async (slug: string) => {
+    const { data } = await api.get(`/projects/${slug}/achievements`);
     return data?.data;
   },
 
@@ -317,7 +336,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     localDB.set(`milestone_${topicId}`, data?.data);
     return data?.data;
   },
-  getProjects: () => dataStore.projects,
+  getProjects: async (queries?: Project30Query) => {
+    const { page, size, filters } = queries!;
+    const { data } = await api.get(`/projects/`, {
+      params: {
+        skip: size,
+        size: page,
+        filters,
+      },
+    });
+    return data?.data;
+  },
+  getProject: async (slug: string) => {
+    const { data } = await api.get(`/projects/${slug}`);
+    return data?.data;
+  },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
   getBootcamps: async (filters?) => {
@@ -393,6 +426,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post("/project30s/" + slug);
     return data?.data;
   },
+  handleProjectEnrollment: async (slug: string) => {
+    const { data } = await api.post(`/projects/${slug}`);
+    return data?.data;
+  },
+  updateUserProject: async (slug: string, payload: any) => {
+    const { data } = await api.put(`/users/projects/${slug}`, payload);
+    return data?.data;
+  },
   startQuiz: async (id: string, { userQuizId }: { userQuizId: string }) => {
     const { data } = await api.post("/quizzes/" + id + "/start", {
       userQuizId,
@@ -403,7 +444,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post(`/payments/subscriptions/${id}/resume`);
     return data?.data;
   },
-
+  markProjectTaskAsCompleted: async (slug: string, id: string) => {
+    const { data } = await api.post(`/projects/${slug}/tasks/${id}`);
+    return data?.data;
+  },
   cancelSubscription: async (id: string) => {
     const { data } = await api.post(`/payments/subscriptions/${id}/cancel`);
     return data?.data;

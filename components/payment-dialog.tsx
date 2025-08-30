@@ -19,6 +19,9 @@ import { PaymentChannel, Plan } from "@/lib/data";
 
 interface PaymentDialogProps {
   data: any;
+  disableMB?: boolean;
+  disableOnetime?: boolean;
+  disableSubscription?: boolean;
   onHandlePreview: (id?: string) => void;
   onHandlePurchase: (id: string, type: string, success: boolean) => void;
   onClose: () => void;
@@ -34,6 +37,9 @@ const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 export function PaymentDialog({
   data,
   open,
+  disableMB,
+  disableOnetime,
+  disableSubscription,
   onHandlePreview,
   onHandlePurchase,
   onClose,
@@ -188,8 +194,15 @@ export function PaymentDialog({
           </DialogHeader>
           <div className="space-y-3 md:space-y-4">
             <Card
-              className="cursor-pointer  border hover:border-primary"
-              onClick={() => handlePayment(data.id, "subscription")}
+              className={`border ${
+                disableSubscription
+                  ? "bg-muted/10"
+                  : "hover:border-primary hover:bg-muted/50 cursor-pointer"
+              }`}
+              onClick={() => {
+                if (!disableSubscription)
+                  handlePayment(data.id, "subscription");
+              }}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">
@@ -223,8 +236,14 @@ export function PaymentDialog({
             </Card>
 
             <Card
-              className="cursor-pointer hover:bg-muted/50 border hover:border-primary"
-              onClick={() => handlePayment(data.id, "individual")}
+              className={`border ${
+                disableOnetime
+                  ? "bg-muted/10"
+                  : "hover:border-primary hover:bg-muted/50 cursor-pointer"
+              }`}
+              onClick={() => {
+                if (!disableOnetime) handlePayment(data.id, "individual");
+              }}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">
@@ -250,8 +269,14 @@ export function PaymentDialog({
             </Card>
 
             <Card
-              className="cursor-pointer hover:bg-muted/50 border hover:border-primary"
-              onClick={() => handlePayment(data.id, "mb")}
+              className={`border ${
+                disableMB
+                  ? "bg-muted/10"
+                  : "hover:border-primary hover:bg-muted/50 cursor-pointer"
+              }`}
+              onClick={() => {
+                if (!disableMB) handlePayment(data.id, "mb");
+              }}
             >
               <CardContent className="p-3 md:p-4">
                 <div className="flex items-center gap-3">

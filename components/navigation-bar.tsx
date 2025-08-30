@@ -225,7 +225,7 @@ export function NavigationBar({
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky md:pl-72 top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex gap-2 h-16 items-center px-4">
           {/* Mobile Menu Button */}
           {isMobile && (
