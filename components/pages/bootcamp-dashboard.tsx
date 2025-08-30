@@ -14,6 +14,10 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useMemo, useState } from "react";
+import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
+import { Loader } from "../ui/loader";
+import Countdown from "../ui/count-down";
 
 interface BootcampDashboardPageProps {
   bootcampId: string;
@@ -25,7 +29,50 @@ export function BootcampDashboardPage({
   onNavigate,
 }: BootcampDashboardPageProps) {
   const store = useAppStore();
-  const bootcamp = store.getBootcamps().find((b) => b.id === bootcampId);
+  const [loading, setLoading] = useState(false);
+  const [bootcamp, setBootcamp] = useState<Bootcamp | any>();
+  const [currentWeek, setCurrentWeek] = useState<Week & { index: number }>();
+  const [currentLesson, setCurrentLesson] = useState<Lesson>();
+  const [userCohort, setUserCohort] = useState<UserCohort>();
+
+  useMemo(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const bootcamp = await store.getBootcamp(bootcampId);
+
+        const currentWeekId = bootcamp?.userCohort?.currentWeekId;
+        const week = bootcamp?.cohort?.weeks?.find(
+          (week: any) => week.id === currentWeekId
+        );
+
+        const index =
+          bootcamp?.cohort?.weeks?.findIndex(
+            (week: any) => week.id === currentWeekId
+          ) + 1;
+
+        setCurrentWeek({ ...week, index });
+
+        const currentLessonId = bootcamp?.userCohort?.currentLessonId;
+        const lesson = bootcamp?.cohort?.weeks
+          ?.find((week: any) => week.id === currentWeekId)
+          ?.lessons?.find((l: any) => l.id === currentLessonId);
+
+        setCurrentLesson(lesson);
+        setUserCohort(bootcamp.userCohort);
+        setBootcamp({
+          ...bootcamp,
+        });
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  if (loading) return <Loader isLoader={false} />;
 
   if (!bootcamp) {
     return (
@@ -41,6 +88,55 @@ export function BootcampDashboardPage({
     );
   }
 
+  if (!(new Date(bootcamp?.cohort!?.startsAt) < new Date()))
+    return (
+      <Card>
+        <CardHeader></CardHeader>
+        <CardContent className="text-center space-y-5">
+          <Countdown
+            startDate={bootcamp?.cohort!?.startsAt.toString()}
+          ></Countdown>
+
+          <Button
+            onClick={() => onNavigate?.("/bootcamps/" + bootcamp?.id)}
+            variant={"secondary"}
+          >
+            Back to Bootcamp
+          </Button>
+        </CardContent>
+      </Card>
+    );
+
+  const handleContinue = (lesson: any) => {
+    if (lesson.type?.toLowerCase() === "quiz") return onNavigate?.("");
+    if (lesson.type?.toLowerCase() === "project")
+      return onNavigate?.(`/projects/${lesson?.project?.slug}`);
+    return onNavigate?.(
+      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${lesson.weekId}/${lesson?.id}`
+    );
+  };
+
+  const isWeekCompleted = (week: Week) => {
+    if (!userCohort?.userLessons?.length) return 0;
+    const userLessons = userCohort.userLessons;
+
+    const completed = userLessons.filter(
+      (ul) => ul.completed && ul.weekId === week?.id
+    );
+    return week?.lessons?.length === completed?.length;
+  };
+
+  const isLessonCompleted = (lesson: Lesson) => {
+    if (!userCohort?.userLessons?.length) return false;
+    const userLessons = userCohort.userLessons;
+
+    const completed = userLessons.find(
+      (ul) => ul.lessonId === lesson.id && ul.completed
+    );
+
+    return !!completed;
+  };
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -51,11 +147,29 @@ export function BootcampDashboardPage({
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {bootcamp.title} Dashboard
-          </h1>
-          <p className="text-muted-foreground">Week 4 of 12 • 33% Complete</p>
+
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {bootcamp.title} Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Week {currentWeek?.index} of {bootcamp?.cohort?.duration} •{" "}
+              {bootcamp?.userCohort?.progress ?? 0}% Complete
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Badge variant={"secondary"}>{userCohort?.cohort.name}</Badge>
+            <Badge
+              variant={
+                userCohort?.cohort.status === "Open" ? "default" : "destructive"
+              }
+            >
+              {new Date(userCohort?.cohort!?.startsAt) < new Date()
+                ? "In Progress"
+                : userCohort?.cohort.status}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -71,25 +185,36 @@ export function BootcampDashboardPage({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Overall Progress</span>
-              <span>33%</span>
+              <span>{bootcamp?.userCohort?.progress ?? 0}%</span>
             </div>
-            <Progress value={33} className="h-3" />
+            <Progress
+              value={bootcamp?.userCohort?.progress ?? 0}
+              className="h-3"
+            />
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">4</div>
+                <div className="text-2xl font-bold">{currentWeek?.index}</div>
                 <div className="text-xs text-blue-100">Current Week</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">24</div>
+                <div className="text-2xl font-bold">
+                  {bootcamp?.userCohort?.totalLessonsCompleted ?? 0}
+                </div>
                 <div className="text-xs text-blue-100">Lessons Completed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">3</div>
+                <div className="text-2xl font-bold">
+                  {userCohort?.projectBuilt}
+                </div>
                 <div className="text-xs text-blue-100">Projects Built</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">48</div>
-                <div className="text-xs text-blue-100">Hours Invested</div>
+                <div className="text-2xl font-bold">
+                  {userCohort?.totalAssigments}
+                </div>
+                <div className="text-xs text-blue-100">
+                  Assigments Completed
+                </div>
               </div>
             </div>
           </div>
@@ -102,48 +227,68 @@ export function BootcampDashboardPage({
           {/* Current Week */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Week: Backend Fundamentals</CardTitle>
+              <CardTitle>Current Week: {currentWeek?.title}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                {[
-                  { title: "Express.js Setup", completed: true, type: "video" },
-                  {
-                    title: "Routing & Middleware",
-                    completed: true,
-                    type: "video",
-                  },
-                  {
-                    title: "Building REST APIs",
-                    completed: false,
-                    type: "video",
-                    current: true,
-                  },
-                  { title: "API Project", completed: false, type: "project" },
-                ].map((lesson, index) => (
-                  <div
-                    key={index}
-                    className={`flex items-center gap-3 p-3 rounded-lg border ${
-                      lesson.current ? "border-blue-200 bg-blue-50" : ""
-                    }`}
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                      {lesson.completed ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+              {!currentWeek ? (
+                <div>Nothing to do this week. Relax!</div>
+              ) : (
+                <div className="space-y-3">
+                  {currentWeek?.lessons?.map((lesson: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-3 rounded-lg border ${
+                        lesson.id === currentLesson?.id
+                          ? "border-green-900/20 dark:border-green-200/20 bg-green-400/10"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                        {isLessonCompleted(lesson) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{lesson.title}</h4>
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {lesson.type}
+                        </Badge>
+                      </div>
+                      {lesson.id === currentLesson?.id ? (
+                        <Button
+                          onClick={() => handleContinue(lesson)}
+                          size="sm"
+                        >
+                          Continue
+                        </Button>
+                      ) : isLessonCompleted(lesson) ? (
+                        <Button
+                          onClick={() => handleContinue(lesson)}
+                          variant={"outline"}
+                          size="sm"
+                        >
+                          Review
+                        </Button>
                       ) : (
-                        <Play className="h-4 w-4" />
+                        <Button
+                          onClick={() => handleContinue(lesson)}
+                          size="sm"
+                        >
+                          {lesson.type === "VIDEO"
+                            ? "Watch"
+                            : lesson.type === "QUIZ"
+                            ? "Solve"
+                            : lesson.type === "PROJECT"
+                            ? "Build"
+                            : "Complete"}
+                        </Button>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{lesson.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {lesson.type}
-                      </Badge>
-                    </div>
-                    {lesson.current && <Button size="sm">Continue</Button>}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -193,6 +338,7 @@ export function BootcampDashboardPage({
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Stats */}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Quick Stats</CardTitle>
@@ -201,21 +347,64 @@ export function BootcampDashboardPage({
               <div className="grid gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Attendance Rate</span>
-                  <span className="font-medium">95%</span>
+                  <span className="font-medium">
+                    {bootcamp?.userCohort?.attendanceRate ?? 0}%
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Assignment Score</span>
-                  <span className="font-medium">88%</span>
+                  <span className="font-medium">
+                    {bootcamp?.userCohort?.assigmentScore ?? 0}%
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Peer Ranking</span>
-                  <span className="font-medium">#12 of 25</span>
+                  <span className="font-medium">
+                    #{bootcamp.userCohort?.peerRanking ?? 0} of{" "}
+                    {bootcamp?.students ?? bootcamp?.cohort?.maxStudents}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Days Until Graduation</span>
-                  <span className="font-medium">56 days</span>
+                  <span className="text-sm">Weeks Until Graduation</span>
+                  <span className="font-medium">
+                    {bootcamp.cohort.duration - currentWeek?.index!} weeks
+                  </span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Bootcamp Weeks</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 md:grid grid-cols-3">
+              {bootcamp?.cohort?.weeks?.map((week: any, i: number) => (
+                <div
+                  key={i}
+                  className={`flex items-center  gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                    week?.id?.toString() === currentWeek?.id
+                      ? "border border-blue-200"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    onNavigate?.(
+                      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${week.id}`
+                    )
+                  }
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                    {isWeekCompleted(week) ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span>{i + 1}</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Week {i + 1}</p>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -229,13 +418,17 @@ export function BootcampDashboardPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold">25</div>
+                <div className="text-2xl font-bold">
+                  {bootcamp?.students ?? 0}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Total Students
                 </div>
               </div>
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold">23</div>
+                <div className="text-2xl font-bold">
+                  {bootcamp?.userCohort?.activeStudents ?? 0}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Still Active
                 </div>
@@ -263,7 +456,7 @@ export function BootcampDashboardPage({
               ].map((achievement, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg"
+                  className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-50/20 rounded-lg"
                 >
                   <span className="text-lg">{achievement.icon}</span>
                   <span className="text-sm font-medium">

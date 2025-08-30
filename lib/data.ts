@@ -91,17 +91,17 @@ export interface Plan {
 }
 
 export interface PaymentChannel {
-  id: String;
+  id: string;
   channel: PaymentChannelType;
-  planId: String;
+  planId: string;
   originalMonthlyPrice: number;
   discountedMonthlyPrice: number;
   discountMonthlyDate?: Date | string;
   originalYearlyPrice: number;
   discountedYearlyPrice: number;
   discountYearlyDate?: Date | string;
-  monthlyPlanId?: String;
-  yearlyPlanId?: String;
+  monthlyPlanId?: string;
+  yearlyPlanId?: string;
   plan: Plan;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -479,6 +479,7 @@ export interface PlaygroundFile {
 export interface Project {
   id: string;
   title: string;
+  slug: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
   estimatedTime: string;
@@ -554,6 +555,91 @@ export interface Bootcamp {
   instructor: string;
   rating: number;
   students: number;
+  userCohort: any;
+  cohort: any;
+  cohorts: any[];
+}
+
+export interface Cohort {
+  id: string;
+  name: string;
+  duration: number;
+  amount: number;
+  maxStudent: number;
+  bootcampId: string;
+  bootcamp: Bootcamp;
+  startsAt: Date;
+  endsAt: Date;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userCohorts: UserCohort[];
+}
+
+export interface UserCohort {
+  id: string;
+  userId: string;
+  cohortId: number;
+  cohort: Cohort;
+  completed: Boolean;
+  score: number;
+  currentWeekId: string;
+  projectBuilt: number;
+  totalAssigments: number;
+  totalLessonsCompleted: number;
+  currentLessonId: string;
+  endedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  userLessons: UserLesson[];
+}
+
+export interface Week {
+  id: string;
+  title: string;
+  summary: string;
+  lessons: Lesson[];
+  bootcampId: string;
+  bootcamp: Bootcamp;
+  cohort?: Cohort;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  summary: string;
+  description: string;
+  itemId: string;
+  type: any;
+  quizId: string;
+  projectId: string;
+  videoId: string;
+  weekId: string;
+  mb: number;
+  week: Week;
+  video: Video;
+  quiz: Quiz;
+  project: Project;
+  exercise?: any;
+  createdAt: Date;
+  updatedAt: Date;
+  userLessons: UserLesson[];
+}
+
+export interface UserLesson {
+  id: string;
+  userId?: string;
+  cohortId?: string;
+  lessonId: string;
+  weekId: string;
+  lesson?: Lesson;
+  userCohortId?: string;
+  userCohort?: UserCohort;
+  completed: Boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface LearningPath {

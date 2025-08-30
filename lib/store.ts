@@ -30,6 +30,10 @@ import {
   MBPayload,
   Project30Query,
   Project30,
+  UserCohort,
+  Lesson,
+  Week,
+  UserLesson,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -63,7 +67,19 @@ interface AppState {
   getChallenges: () => Challenge[];
   getInterviews: () => Interview[];
   getTransactions: (payload: { size?: number }) => any;
-  getBootcamps: () => Bootcamp[];
+  getBootcamps: (filters: {
+    skip?: number;
+    size?: number;
+    filters?: {
+      type?: string;
+      duration?: string;
+      terms?: string;
+      level?: string;
+    };
+  }) => Bootcamp[] | any;
+  getBootcamp: (id: string) => Bootcamp | any;
+  getLesson: (id: string, week: string, lesson: string) => Lesson | any;
+  getWeek: (id: string, cohort: string, week: string) => Week | any;
   getLearningPaths: () => LearningPath[];
   getRoadmaps: (filters?: { skip?: number; size?: number }) => Roadmap[] | any;
   getUserRoadmaps: (data: UserRoadmapFilters) => any;
@@ -101,7 +117,14 @@ interface AppState {
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
   updateInterview: (id: string, updates: Partial<Interview>) => void;
   enrollInCourse: (courseId: string) => void;
-  enrollInBootcamp: (bootcampId: string) => void;
+  enrollInBootcamp: (bootcampId: string, cohortId: string) => UserCohort | any;
+  markLessonCompleted: (
+    id: string,
+    cohortId: string,
+    weekId: string,
+    lessonId: string,
+    payload: any
+  ) => UserLesson | any;
   enrollInPath: (pathId: string) => void;
   handleMBPayment: (payload: MBPayload) => any;
   completeChallenge: (challengeId: string) => void;
@@ -297,7 +320,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   getProjects: () => dataStore.projects,
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
-  getBootcamps: () => dataStore.bootcamps,
+  getBootcamps: async (filters?) => {
+    const { data } = await api.get(`/bootcamps`, { params: filters });
+    return data?.data;
+  },
+  getBootcamp: async (id: string) => {
+    const { data } = await api.get(`/bootcamps/${id}`);
+    return data?.data;
+  },
+  getLesson: async (id: string, week: string, lesson: string) => {
+    const { data } = await api.get(
+      `/bootcamps/${id}/weeks/${week}/lessons/${lesson}`
+    );
+    return data?.data;
+  },
+
+  getWeek: async (id: string, cohort: string, week: string) => {
+    const { data } = await api.get(
+      `/bootcamps/${id}/cohorts/${cohort}/weeks/${week}`
+    );
+    return data?.data;
+  },
+
   getLearningPaths: () => dataStore.learningPaths,
   getRoadmaps: async (filters?) => {
     const { data } = await api.get(
@@ -520,12 +564,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  enrollInBootcamp: (bootcampId) => {
-    const bootcamp = dataStore.bootcamps.find((b) => b.id === bootcampId);
-    if (bootcamp) {
-      bootcamp.enrolled = true;
-      get().forceUpdate();
-    }
+  enrollInBootcamp: async (bootcampId: string, cohortId: string) => {
+    const { data } = await api.post(
+      `/bootcamps/${bootcampId}/cohorts/${cohortId}`
+    );
+    return data?.data;
+  },
+
+  markLessonCompleted: async (
+    id: string,
+    cohortId: string,
+    weekId: string,
+    lessonId: string,
+    payload: any
+  ) => {
+    const { data } = await api.post(
+      `/bootcamps/${id}/cohorts/${cohortId}/weeks/${weekId}/lessons/${lessonId}`,
+      payload
+    );
+    return data?.data;
   },
 
   enrollInPath: (pathId) => {

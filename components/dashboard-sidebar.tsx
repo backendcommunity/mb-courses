@@ -45,7 +45,7 @@ const navigationData = {
       title: "Bootcamps",
       url: routes.bootcamps,
       icon: Zap,
-      active: false,
+      active: true,
     },
     {
       title: "Learning Paths",
