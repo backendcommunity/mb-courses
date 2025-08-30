@@ -314,7 +314,7 @@ export function ProjectDetailPage({
             </div>
             <div className="flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
-              {project?.projectTasks.length} Project Tasks
+              {project?.projectTasks?.length} Project Tasks
             </div>
             <div className="flex items-center gap-1">
               <Award className="h-4 w-4" />
