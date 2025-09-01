@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { Chapter, Course, Topic, updateCourse } from "@/lib/data";
+import { Chapter, Course, Topic, updateCourse, Video } from "@/lib/data";
 import DisqusCommentBlock from "../ui/comment";
 import { PaymentDialog } from "../payment-dialog";
 import ConfettiCelebration from "@/components/confetti-celebration";
@@ -149,7 +149,9 @@ export function CoursePreviewPage({
     return await store.handleCourseEnrollment(courseId);
   };
 
-  const previewChapters = course?.chapters?.filter((ch) => !ch.isPremium); // First 3 chapters as preview
+  const previewChapters = course?.chapters?.filter((chapter) =>
+    chapter.videos?.some((video: Video) => !video.isPremium)
+  ); // First 3 chapters as preview
   const currentPreview = previewChapters[selectedPreview];
 
   // if (!previewChapters.length) {

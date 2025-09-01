@@ -397,6 +397,7 @@ export interface Video {
   instructor?: any;
   technologies?: Array<string>;
   difficulty?: string;
+  isPremium: boolean;
 }
 
 export interface Resource {

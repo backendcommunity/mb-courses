@@ -2,20 +2,16 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { CoursePreviewPage } from "@/components/pages/course-preview";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
-interface CoursePreviewPageRouteProps {
-  params: {
-    slug: string;
-  };
-}
+type CoursePreviewPageRouteProps = {
+  slug: string;
+};
 
-export default function CoursePreviewPageRoute({
-  params,
-}: CoursePreviewPageRouteProps) {
+export default function CoursePreviewPageRoute() {
   const router = useRouter();
-  const { slug } = React.use(params);
+  const { slug } = useParams() as CoursePreviewPageRouteProps;
 
   const handleNavigate = (path: string) => {
     router.push(path);
