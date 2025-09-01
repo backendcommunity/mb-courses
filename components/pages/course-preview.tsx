@@ -199,8 +199,8 @@ export function CoursePreviewPage({
           <Card className="overflow-hidden">
             <div className="aspect-video bg-black relative">
               {/* Video placeholder with preview content */}
-              {/* <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900"> */}
-              {previewChapters?.length ? (
+
+              {freeVideos?.length ? (
                 <div className="text-center text-white aspect-video bg-black relative">
                   <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
                   {/* <div className="mb-4">
@@ -225,26 +225,27 @@ export function CoursePreviewPage({
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 p-6">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold">
-                      No free preview for this course. Enrol now to have full
-                      access.
-                    </h1>
-                    <Button
-                      onClick={() => onNavigate?.("/courses")}
-                      className="mt-4"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Enrol now
-                    </Button>
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
+                  <div className="flex-1 p-6">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold">
+                        No free preview for this course. Enrol now to have full
+                        access.
+                      </h1>
+                      <Button
+                        onClick={() => onNavigate?.("/courses")}
+                        className="mt-4"
+                      >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Enrol now
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
-              {/* </div> */}
 
               {/* Video Controls */}
-              {previewChapters?.length && (
+              {previewChapters?.length && freeVideos?.length && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <div className="space-y-2">
                     {/* Progress Bar */}
