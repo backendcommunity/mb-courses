@@ -7,7 +7,7 @@ import { Video } from "@/lib/data";
 import { Play } from "lucide-react";
 
 interface VimeoPlayerProps {
-  video: Video;
+  video: Partial<Video>;
   onEnded?: () => void;
   onPlay?: () => void;
   onPause?: () => void;

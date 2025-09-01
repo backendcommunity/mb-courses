@@ -362,7 +362,6 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                     Nigerians only
                   </Badge>
                   <RadioGroupItem
-                    disabled={true}
                     value="paystack"
                     id="paystack"
                     className="peer sr-only"

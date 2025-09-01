@@ -48,7 +48,7 @@ export function CoursePreviewPage({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration] = useState(300); // 5 minutes preview
-  const [selectedPreview, setSelectedPreview] = useState<Video>();
+  const [selectedPreview, setSelectedPreview] = useState<Partial<Video>>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,6 +56,9 @@ export function CoursePreviewPage({
     async function findCourse(slug: string) {
       const course = await store.getCourse(slug);
       setCourse(course);
+      setSelectedPreview({
+        video: course?.preview,
+      });
       setLoading(false);
     }
 
@@ -346,7 +349,9 @@ export function CoursePreviewPage({
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
                           selectedPreview?.id === video.id ? "bg-muted/90" : ""
                         }`}
-                        onClick={() => setSelectedPreview(video)}
+                        onClick={() => {
+                          setSelectedPreview(video);
+                        }}
                       >
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
                           <Play className="h-4 w-4" />

@@ -1,5 +1,8 @@
+import { dataStore } from "./data";
+
 const isBrowser = typeof window !== "undefined";
-const PREFIX = "mb_";
+// const user = dataStore.user;
+const PREFIX = `mb_`;
 
 export const localDB = {
   set<T>(key: string, value: T): void {
