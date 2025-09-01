@@ -30,6 +30,7 @@ import ConfettiCelebration from "@/components/confetti-celebration";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { Loader } from "../ui/loader";
+import { VimeoPlayer } from "../ui/vimeo-player";
 interface CoursePreviewPageProps {
   slug: string;
   onNavigate?: (route: string) => void;
@@ -47,7 +48,7 @@ export function CoursePreviewPage({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration] = useState(300); // 5 minutes preview
-  const [selectedPreview, setSelectedPreview] = useState(0);
+  const [selectedPreview, setSelectedPreview] = useState<Video>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -149,10 +150,16 @@ export function CoursePreviewPage({
     return await store.handleCourseEnrollment(courseId);
   };
 
-  const previewChapters = course?.chapters?.filter((chapter) =>
-    chapter.videos?.some((video: Video) => !video.isPremium)
-  ); // First 3 chapters as preview
-  const currentPreview = previewChapters[selectedPreview];
+  const previewChapters = course?.chapters
+    ?.map((chapter) => ({
+      ...chapter,
+      videos: chapter.videos?.filter((video) => !video.isPremium) ?? [],
+    }))
+    .filter((chapter) => chapter.videos.length > 0); // First 3 chapters as preview
+  const freeVideos =
+    previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
+  setSelectedPreview(freeVideos[0]);
+  // const currentPreview = previewChapters[selectedPreview];
 
   // if (!previewChapters.length) {
   //   return (
@@ -190,7 +197,7 @@ export function CoursePreviewPage({
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{course.title}</h1>
           <p className="text-muted-foreground">
-            Free preview • {previewChapters.length} chapters available
+            Free preview • {freeVideos?.length} videos available
           </p>
         </div>
         <div className="text-right">
@@ -209,7 +216,8 @@ export function CoursePreviewPage({
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
                 {previewChapters?.length ? (
                   <div className="text-center text-white">
-                    <div className="mb-4">
+                    <VimeoPlayer video={selectedPreview!} />
+                    {/* <div className="mb-4">
                       <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
                         {isPlaying ? (
                           <Pause className="h-8 w-8" />
@@ -223,7 +231,7 @@ export function CoursePreviewPage({
                       <p className="text-blue-200">
                         Preview: {calculateHours(currentPreview)}
                       </p>
-                    </div>
+                    </div> */}
 
                     {/* Preview watermark */}
                     <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
@@ -354,26 +362,26 @@ export function CoursePreviewPage({
             <TabsContent value="preview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Free Preview Chapters</CardTitle>
+                  <CardTitle>Free Preview Videos</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Get a taste of what you'll learn in this course
                   </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {previewChapters.map((chapter, index) => (
+                    {freeVideos.map((video) => (
                       <div
-                        key={chapter.id}
+                        key={video.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
-                          selectedPreview === index ? "" : ""
+                          selectedPreview?.id === video.id ? "" : ""
                         }`}
-                        onClick={() => setSelectedPreview(index)}
+                        onClick={() => setSelectedPreview(video)}
                       >
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
                           <Play className="h-4 w-4" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium">{chapter.title}</p>
+                          <p className="font-medium">{video.title}</p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Badge
                               variant="outline"
@@ -383,11 +391,11 @@ export function CoursePreviewPage({
                             </Badge>
                             <Clock className="h-3 w-3" />
                             <span>
-                              {calculateHours(chapter)} hour
-                              {calculateHours(chapter)! > 1 ? "s" : ""}
+                              {video.duration} hour
+                              {Number(video.duration) > 1 ? "s" : ""}
                             </span>
                             <Badge variant="outline" className="text-xs">
-                              {chapter.type}
+                              {video.type}
                             </Badge>
                           </div>
                         </div>
@@ -418,9 +426,6 @@ export function CoursePreviewPage({
                               ? "cursor-pointer hover:bg-muted/50"
                               : "opacity-60"
                           }`}
-                          onClick={() =>
-                            !chapter.isPremium && setSelectedPreview(index)
-                          }
                         >
                           <div
                             className={`flex h-8 w-8 items-center justify-center rounded-full ${
