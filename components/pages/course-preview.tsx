@@ -156,26 +156,12 @@ export function CoursePreviewPage({
       videos: chapter.videos?.filter((video) => !video.isPremium) ?? [],
     }))
     .filter((chapter) => chapter.videos.length > 0); // First 3 chapters as preview
+
   const freeVideos =
     previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
-  setSelectedPreview(freeVideos[0]);
+  console.log(freeVideos);
+  // setSelectedPreview(freeVideos[0]);
   // const currentPreview = previewChapters[selectedPreview];
-
-  // if (!previewChapters.length) {
-  //   return (
-  //     <div className="flex-1 p-6">
-  //       <div className="text-center">
-  //         <h1 className="text-2xl font-bold">
-  //           No free videos for this course. Enrol now to have full access.
-  //         </h1>
-  //         <Button onClick={() => onNavigate?.("/courses")} className="mt-4">
-  //           <ArrowLeft className="mr-2 h-4 w-4" />
-  //           Enrol now
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="flex-1 space-y-6">
@@ -216,7 +202,7 @@ export function CoursePreviewPage({
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
                 {previewChapters?.length ? (
                   <div className="text-center text-white">
-                    <VimeoPlayer video={selectedPreview!} />
+                    <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
                     {/* <div className="mb-4">
                       <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
                         {isPlaying ? (
