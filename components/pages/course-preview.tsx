@@ -203,21 +203,6 @@ export function CoursePreviewPage({
               {freeVideos?.length ? (
                 <div className="text-center text-white aspect-video bg-black relative">
                   <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
-                  {/* <div className="mb-4">
-                      <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
-                        {isPlaying ? (
-                          <Pause className="h-8 w-8" />
-                        ) : (
-                          <Play className="h-8 w-8" />
-                        )}
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">
-                        {currentPreview?.title}
-                      </h3>
-                      <p className="text-blue-200">
-                        Preview: {calculateHours(currentPreview)}
-                      </p>
-                    </div> */}
 
                   {/* Preview watermark */}
                   <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
@@ -245,7 +230,7 @@ export function CoursePreviewPage({
               )}
 
               {/* Video Controls */}
-              {previewChapters?.length && freeVideos?.length && (
+              {!previewChapters?.length && !freeVideos?.length && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <div className="space-y-2">
                     {/* Progress Bar */}
