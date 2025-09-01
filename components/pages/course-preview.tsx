@@ -159,9 +159,8 @@ export function CoursePreviewPage({
 
   const freeVideos =
     previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
-  console.log(freeVideos);
-  // setSelectedPreview(freeVideos[0]);
-  // const currentPreview = previewChapters[selectedPreview];
+
+  console.log(course.level);
 
   return (
     <div className="flex-1 space-y-6">
