@@ -199,11 +199,11 @@ export function CoursePreviewPage({
           <Card className="overflow-hidden">
             <div className="aspect-video bg-black relative">
               {/* Video placeholder with preview content */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
-                {previewChapters?.length ? (
-                  <div className="text-center text-white">
-                    <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
-                    {/* <div className="mb-4">
+              {/* <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900"> */}
+              {previewChapters?.length ? (
+                <div className="text-center text-white aspect-video bg-black relative">
+                  <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
+                  {/* <div className="mb-4">
                       <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
                         {isPlaying ? (
                           <Pause className="h-8 w-8" />
@@ -219,29 +219,29 @@ export function CoursePreviewPage({
                       </p>
                     </div> */}
 
-                    {/* Preview watermark */}
-                    {/* <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
-                      FREE PREVIEW
-                    </div> */}
+                  {/* Preview watermark */}
+                  <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
+                    FREE PREVIEW
                   </div>
-                ) : (
-                  <div className="flex-1 p-6">
-                    <div className="text-center">
-                      <h1 className="text-2xl font-bold">
-                        No free preview for this course. Enrol now to have full
-                        access.
-                      </h1>
-                      <Button
-                        onClick={() => onNavigate?.("/courses")}
-                        className="mt-4"
-                      >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Enrol now
-                      </Button>
-                    </div>
+                </div>
+              ) : (
+                <div className="flex-1 p-6">
+                  <div className="text-center">
+                    <h1 className="text-2xl font-bold">
+                      No free preview for this course. Enrol now to have full
+                      access.
+                    </h1>
+                    <Button
+                      onClick={() => onNavigate?.("/courses")}
+                      className="mt-4"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Enrol now
+                    </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+              {/* </div> */}
 
               {/* Video Controls */}
               {previewChapters?.length && (
