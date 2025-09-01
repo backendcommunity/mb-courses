@@ -160,7 +160,7 @@ export function CoursePreviewPage({
   const freeVideos =
     previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
 
-  console.log(course.level);
+  console.log(course);
 
   return (
     <div className="flex-1 space-y-6">
@@ -344,7 +344,7 @@ export function CoursePreviewPage({
                       <div
                         key={video.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
-                          selectedPreview?.id === video.id ? "" : ""
+                          selectedPreview?.id === video.id ? "bg-muted/90" : ""
                         }`}
                         onClick={() => setSelectedPreview(video)}
                       >
