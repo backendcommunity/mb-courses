@@ -65,7 +65,7 @@ const navigationData = {
       title: "MB Projects",
       url: routes.projects,
       icon: Code2,
-      active: true,
+      active: false,
     },
     {
       title: "Project30",
