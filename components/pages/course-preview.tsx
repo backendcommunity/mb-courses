@@ -220,9 +220,9 @@ export function CoursePreviewPage({
                     </div> */}
 
                     {/* Preview watermark */}
-                    <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
+                    {/* <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
                       FREE PREVIEW
-                    </div>
+                    </div> */}
                   </div>
                 ) : (
                   <div className="flex-1 p-6">
