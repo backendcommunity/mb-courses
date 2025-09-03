@@ -98,7 +98,7 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 relative">
-      <WIP />
+      {/* <WIP /> */}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

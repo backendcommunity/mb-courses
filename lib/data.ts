@@ -489,7 +489,7 @@ export interface Project {
   userProject: any;
   enrolled: boolean;
   timeframe: string;
-  slug: string;
+  totalTasks: number;
   isPremium: boolean;
   prerequisites: Array<string>;
   skills: Array<string>;

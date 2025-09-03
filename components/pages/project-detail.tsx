@@ -223,7 +223,8 @@ export function ProjectDetailPage({
   };
 
   const handleContinueLearning = (slug: string) => {
-    const watchPath = routes.projectPlayground(slug);
+    // const watchPath = routes.projectPlayground(slug);
+    const watchPath = `/projects/${slug}/tasks`;
     onNavigate(watchPath);
   };
 
@@ -436,7 +437,7 @@ export function ProjectDetailPage({
                   </div>
                   <Progress value={project?.progress ?? 0} className="h-2" />
 
-                  {!project.cloned && (
+                  {!project.cloned && false && (
                     <div className="pt-3">
                       <Label>Choose your preferred language</Label>
                       <Select value={language} onValueChange={setLanguage}>
@@ -459,12 +460,12 @@ export function ProjectDetailPage({
                     </div>
                   )}
                   <Button
-                    disabled={!language}
+                    //disabled={!language}
                     className="w-full"
                     onClick={() => {
-                      if (project?.cloned)
-                        return handleContinueLearning(project.slug);
-                      return handleProjectSetup();
+                      // if (project?.cloned)
+                      return handleContinueLearning(project.slug);
+                      // return handleProjectSetup();
                     }}
                   >
                     <Play className="mr-2 h-4 w-4" />

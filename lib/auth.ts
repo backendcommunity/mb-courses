@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import api from "./api";
 import { NewUser } from "./data";
 import { localDB } from "./localDB";
+import { deleteCookie } from "cookies-next/client";
 
 export const login = async (email: string, password: string) => {
   const response = await api.post("/auth/login", { email, password });
@@ -23,6 +24,7 @@ export const logout = async () => {
 
     localDB.remove("token");
     localDB.remove("user");
+    deleteCookie("mb_token");
   } catch (error: any) {
     console.log("Trying to logout error:", error.message);
   }
