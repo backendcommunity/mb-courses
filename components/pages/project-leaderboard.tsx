@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Medal, Trophy, Award, ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
+import { Loader } from "../ui/loader";
 
 interface LeaderboardUser {
   id: string;
@@ -47,7 +48,7 @@ export function ProjectLeaderboardPage({
   >([]);
   const [topUsers, setTopUsers] = useState<LeaderboardUser[]>([]);
   const [achievements, setAchievements] = useState<Archievement[]>([]);
-
+  const [loading, setLoading] = useState(false);
   const [weeklyTopUsers, setWeeklyTopUsers] = useState<LeaderboardUser[]>([]);
   const [currentUser, setCurrentUser] = useState<LeaderboardUser>();
   const [weeklycurrentUser, setWeeklyCurrentUser] = useState<LeaderboardUser>();
@@ -64,13 +65,14 @@ export function ProjectLeaderboardPage({
   };
 
   const load = async () => {
+    setLoading(true);
     const data = await store.getProjectLeaderboard(slug, {
       weekly: false,
     });
     setLeaderboards(data.leaderboardUsers);
     setTopUsers(data.topUsers);
     setCurrentUser(data.currentUser);
-    console.log(data.currentUser);
+    setLoading(false);
   };
 
   const loadAchievements = async () => {
@@ -91,6 +93,8 @@ export function ProjectLeaderboardPage({
       loadAchievements();
     }
   }, [activeTab]);
+
+  if (loading) return <Loader isLoader={false} />;
 
   const isTop10 = (id: string) => {
     return !!(
