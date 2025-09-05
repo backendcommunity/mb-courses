@@ -357,6 +357,7 @@ export interface Chapter {
   isCompleted?: boolean;
   isPremium: boolean;
   slug: string;
+  quiz?: Quiz;
   videos: Video[];
   quizzes?: Quiz[];
   exercise?: Exercise;

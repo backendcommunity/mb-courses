@@ -73,13 +73,9 @@ export function CourseWatchPage({
   const [userCourse, setUserCourse] = useState<UserCourse>();
   const [userVideos, setUserVideos] = useState<any[]>();
   const [userChapters, setUserChapters] = useState<any[]>();
-  const chapter: Chapter | any = course?.chapters.find(
-    (ch: Chapter) => ch.slug === chapterId
-  );
+  const [chapter, setChapter] = useState<Chapter>();
   const user = useUser();
-  const currentVideo = videoId
-    ? chapter?.videos.find((v: Video) => v.slug === videoId)
-    : chapter?.videos[0];
+  const [currentVideo, setCurrentVideo] = useState<Video>();
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -99,6 +95,16 @@ export function CourseWatchPage({
       setUserChapters(userCourse?.userChapters);
       setUserVideos(userCourse?.userVideos);
 
+      const course = userCourse.course;
+      const chapter: Chapter | any = course?.chapters.find(
+        (ch: Chapter) => ch.slug === chapterId
+      );
+      setChapter(chapter);
+      const currentVideo = videoId
+        ? chapter?.videos.find((v: Video) => v.slug === videoId)
+        : chapter?.videos[0];
+      setCurrentVideo(currentVideo);
+
       setLoading(false);
     }
     findUserCourse(slug);
@@ -112,7 +118,7 @@ export function CourseWatchPage({
     }
 
     loadNotes(course?.id!, videoId!);
-  }, [course, videoId]);
+  }, [course, currentVideo?.slug]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -146,9 +152,7 @@ export function CourseWatchPage({
     try {
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
-        userCourse
-          ?.userVideos!.filter((v) => v.isCompleted)
-          .map((v) => v.videoId)
+        userVideos!.filter((v) => v.isCompleted).map((v) => v.videoId)
       );
       completedVideoIds.add(currentVideo.id); // include this one just marked
 
@@ -158,7 +162,7 @@ export function CourseWatchPage({
       );
 
       const hasOtherContent =
-        chapter.quiz || chapter.exercise || chapter.playground;
+        chapter?.quiz || chapter.exercise || chapter.playground;
       const isChapterCompleted = allVideosComplete && !hasOtherContent;
 
       const completedVideos = [
@@ -185,9 +189,6 @@ export function CourseWatchPage({
       // Backend update with proper `isChapterCompleted`
       markVideoComplete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
-      }).then(() => {
-        localDB.remove(`course_${course.slug}`);
-        store.getCourse(course.slug);
       });
 
       toast.success("You just earned some points!");
@@ -207,7 +208,7 @@ export function CourseWatchPage({
   };
 
   const next = () => {
-    return chapter.videos.find((v: Video, index: number) => {
+    return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
         (video: Video) => video.id === currentVideo?.id
       );
@@ -216,7 +217,7 @@ export function CourseWatchPage({
   };
 
   const prev = () => {
-    return chapter.videos.find((v: Video, index: number) => {
+    return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
         (video: Video) => video.id === currentVideo?.id
       );
@@ -228,13 +229,15 @@ export function CourseWatchPage({
   const prevVideo = prev();
 
   const nextChapter =
-    course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
+    course?.chapters[
+      course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) +
+        1
     ];
 
   const prevChapter =
-    course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
+    course?.chapters[
+      course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
+        1
     ];
 
   const handleVideoClick = (video: Video) => {
@@ -244,9 +247,13 @@ export function CourseWatchPage({
         return;
       }
     }
-    if (onNavigate) {
-      onNavigate(routes.courseWatch(slug, chapterId, video.slug));
-    }
+
+    setCurrentVideo(video);
+    window.history.pushState(
+      {},
+      "",
+      `${routes.courseWatch(slug, chapter?.slug, video.slug)}?`
+    );
   };
 
   const handleChapterFeatureClick = (type: string, id?: string) => {
@@ -267,36 +274,30 @@ export function CourseWatchPage({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleChapterClick = (next: boolean) => {
-    if (!onNavigate) return;
-
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
-        toast.warning("This quiz is required and you have to meet the mark");
-        return;
-      }
-    }
-
-    if (next) {
-      onNavigate(
-        routes.courseWatch(slug, nextChapter.slug, nextChapter?.videos[0]?.slug)
+  const handleChapterClick = (chapter: Chapter) => {
+    if (
+      currentVideo?.type == "QUIZ" &&
+      (!quizPassed || currentVideo?.quiz?.required)
+    )
+      return toast.warning(
+        "This quiz is required and you have to meet the mark"
       );
-      return;
-    }
 
-    onNavigate(
-      routes.courseWatch(
-        slug,
-        prevChapter.slug,
-        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
-      )
+    setChapter(chapter);
+    setCurrentVideo(chapter?.videos[0]);
+    window.history.pushState(
+      {},
+      "",
+      `${routes.courseWatch(slug, chapter.slug, chapter?.videos[0]?.slug)}?`
     );
+
+    console.log(chapter);
   };
 
   const handleSaveNotes = async () => {
     if (!note) return;
     try {
-      const saveNote = await store.saveNote(note, course.id, currentVideo.id);
+      const saveNote = await store.saveNote(note, course.id, currentVideo?.id!);
       setNotes([...notes, saveNote]);
     } catch (error) {
       toast.error("Error occurred adding note");
@@ -389,7 +390,7 @@ export function CourseWatchPage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => handleShare(currentVideo.title, path)}
+                onClick={() => handleShare(currentVideo?.title!, path)}
                 variant="outline"
                 size="sm"
               >
@@ -436,7 +437,7 @@ export function CourseWatchPage({
                 </Button>
               )}
               {!nextVideo && nextChapter && (
-                <Button onClick={() => handleChapterClick(true)}>
+                <Button onClick={() => handleChapterClick(nextChapter)}>
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
@@ -497,7 +498,7 @@ export function CourseWatchPage({
                     <article
                       className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
-                        __html: currentVideo?.summary,
+                        __html: currentVideo?.summary!,
                       }}
                     ></article>
                   </div>
@@ -655,7 +656,7 @@ export function CourseWatchPage({
                     config={{
                       identifier: currentVideo?.slug,
                       title: currentVideo?.title,
-                      url: `/courses/${slug}/watch/${chapterId}/${videoId}`,
+                      url: `/courses/${slug}`,
                     }}
                   />
                 </CardContent>
@@ -867,13 +868,9 @@ export function CourseWatchPage({
                 <div
                   key={ch.slug}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.slug === chapterId ? "border border-blue-200" : ""
+                    ch.slug === chapter?.slug ? "border border-blue-200" : ""
                   }`}
-                  onClick={() =>
-                    onNavigate?.(
-                      routes.courseWatch(slug, ch.slug, ch?.videos[0]?.slug)
-                    )
-                  }
+                  onClick={() => handleChapterClick(ch)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     {isChapterCompleted(ch?.id!) ? (
@@ -938,7 +935,7 @@ export function CourseWatchPage({
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => handleChapterClick(false)}
+                onClick={() => handleChapterClick(prevChapter)}
               >
                 <SkipBack className="mr-2 h-4 w-4" />
                 Previous: {prevChapter.title}
@@ -947,7 +944,7 @@ export function CourseWatchPage({
             {nextChapter && (
               <Button
                 className="w-full justify-start"
-                onClick={() => handleChapterClick(true)}
+                onClick={() => handleChapterClick(nextChapter)}
               >
                 Next: {nextChapter.title}
                 <SkipForward className="ml-2 h-4 w-4" />

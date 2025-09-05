@@ -283,11 +283,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getCourse: async (slug: string, params?: any) => {
     try {
-      if (localDB.has(`course_${slug}`))
-        return localDB.get(`course_${slug}`, {});
-
       const res = await fetchCourse(slug, params);
-      localDB.set(`course_${slug}`, res?.data);
       return res.data;
     } catch (error) {
       throw error;
