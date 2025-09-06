@@ -474,7 +474,7 @@ export function ProjectDetailPage({
                 </div>
               ) : user.isPremium && user?.subscription ? (
                 <div className="space-y-3">
-                  <div className="pt-3">
+                  {/* <div className="pt-3">
                     <Label>Choose your preferred language</Label>
                     <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger>
@@ -493,9 +493,9 @@ export function ProjectDetailPage({
                         This field is required
                       </p>
                     )}
-                  </div>
+                  </div> */}
                   <Button
-                    disabled={!language}
+                    // disabled={!language}
                     className="w-full"
                     onClick={handleEnrollNow}
                   >
