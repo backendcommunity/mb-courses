@@ -22,8 +22,7 @@ export const logout = async () => {
   try {
     await api.post("/auth/logout");
 
-    localDB.remove("token");
-    localDB.remove("user");
+    localDB.clear();
     deleteCookie("mb_token");
   } catch (error: any) {
     console.log("Trying to logout error:", error.message);

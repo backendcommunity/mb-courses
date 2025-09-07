@@ -217,7 +217,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
   getPlan: async (name: string) => {
+    if (localDB.has(`plan_${name}`)) return localDB.get(`plan_${name}`, {});
+
     const { data } = await api.get(`/plans/${name}`);
+    localDB.set(`plan_${name}`, data?.data);
+
     return data?.data;
   },
   getActivities: async (params: { size?: number; skip?: number }) => {

@@ -48,7 +48,16 @@ export const localDB = {
   clear(): void {
     if (!isBrowser) return;
     try {
-      localStorage.clear();
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(PREFIX)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => this.remove(key));
     } catch (err) {
       console.error("Error clearing localStorage", err);
     }
