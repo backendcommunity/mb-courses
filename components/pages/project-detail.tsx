@@ -169,7 +169,7 @@ export function ProjectDetailPage({
 
   const handleEnrollNow = async () => {
     try {
-      if (!user.isPremium || !user?.subscription) {
+      if (!user.isPremium) {
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
@@ -472,7 +472,7 @@ export function ProjectDetailPage({
                     Continue Building
                   </Button>
                 </div>
-              ) : user.isPremium && user?.subscription ? (
+              ) : user.isPremium ? (
                 <div className="space-y-3">
                   {/* <div className="pt-3">
                     <Label>Choose your preferred language</Label>

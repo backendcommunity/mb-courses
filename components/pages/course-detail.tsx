@@ -124,7 +124,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handleEnrollNow = async () => {
     try {
-      if (!user.isPremium || !user?.subscription) {
+      if (!user.isPremium) {
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
@@ -411,7 +411,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                     Continue Learning
                   </Button>
                 </div>
-              ) : user.isPremium && user?.subscription ? (
+              ) : user.isPremium ? (
                 <div className="space-y-3">
                   <Button className="w-full" onClick={handleEnrollNow}>
                     <Play className="mr-2 h-4 w-4" />

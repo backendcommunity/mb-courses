@@ -95,7 +95,7 @@ export function RoadmapDetailPage({
   if (!roadmap) return <div className="p-6">Roadmap not found</div>;
 
   const handleEnroll = async () => {
-    if (!user.isPremium && !user?.subscription) {
+    if (!user.isPremium) {
       setShowPaymentDialog(!showPaymentDialog);
       return;
     }
