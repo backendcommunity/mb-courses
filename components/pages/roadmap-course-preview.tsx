@@ -538,14 +538,14 @@ export function CourseDetailPage({
                       Start Learning
                     </Button>
                   )}
-                  <Button
+                  {/* <Button
                     variant="outline"
                     className="w-full"
                     onClick={handlePreviewCourse}
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Preview Course
-                  </Button>
+                  </Button> */}
                 </div>
               )}
               {showPaymentDialog && (

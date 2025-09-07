@@ -34,13 +34,7 @@ import {
   BarChart3,
   Loader2,
 } from "lucide-react";
-import {
-  Chapter,
-  Course,
-  enrollInRoadmap,
-  Milestone,
-  Roadmap,
-} from "@/lib/data";
+import { Course, enrollInRoadmap, Milestone, Roadmap } from "@/lib/data";
 import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import DisqusCommentBlock from "../ui/comment";
@@ -95,7 +89,7 @@ export function RoadmapDetailPage({
   if (!roadmap) return <div className="p-6">Roadmap not found</div>;
 
   const handleEnroll = async () => {
-    if (!user.isPremium) {
+    if (!user.isPremium && user.subscription.name !== "Enterprise") {
       setShowPaymentDialog(!showPaymentDialog);
       return;
     }
