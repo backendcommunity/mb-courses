@@ -501,6 +501,8 @@ export function Project30Page({
     return course.chapters.map((ch: Chapter) => ch);
   });
 
+  console.log(bonusCourses);
+
   // const dailyLessons = [
   //   {
   //     day: 15,
@@ -1543,77 +1545,81 @@ export function Project30Page({
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-                {bonusCourses.map(({ course, video, resource }) => {
-                  return course ? (
-                    <div className="space-y-4  pb-4">
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium flex items-center gap-2">
-                          <BookOpen className="h-4 w-4 text-blue-600" />
-                          Course
-                          {/* TODO: show videos and resources */}
-                        </h4>
-                        <Card key={course.id} className="overflow-hidden">
-                          <div className="flex flex-col md:flex-row">
-                            <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
-                              <img
-                                src={course?.banner || "/placeholder.svg"}
-                                alt={course?.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 p-4">
-                              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                <div>
-                                  <h5 className="font-medium">
-                                    {course?.title}
-                                  </h5>
-                                  <article
-                                    dangerouslySetInnerHTML={{
-                                      __html: course?.summary,
-                                    }}
-                                    className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
-                                  ></article>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{course.type}</Badge>
-                                  <Badge variant="outline">
-                                    {course?.totalDuration ?? 0} mins
-                                  </Badge>
-                                </div>
+                {bonusCourses.map(({ id, course, video, resource }) => {
+                  if (course)
+                    return (
+                      <div key={id} className="space-y-4  pb-4">
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            Course
+                            {/* TODO: show videos and resources */}
+                          </h4>
+                          <Card key={course.id} className="overflow-hidden">
+                            <div className="flex flex-col md:flex-row">
+                              <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                <img
+                                  src={course?.banner || "/placeholder.svg"}
+                                  alt={course?.title}
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
-                              <div className="mt-4 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <PlayCircle className="h-4 w-4 text-blue-600" />
-                                  <span className="text-sm">
-                                    {course.chapters?.length} chapters
-                                  </span>
+                              <div className="flex-1 p-4">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                  <div>
+                                    <h5 className="font-medium">
+                                      {course?.title}
+                                    </h5>
+                                    <article
+                                      dangerouslySetInnerHTML={{
+                                        __html: course?.summary,
+                                      }}
+                                      className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                                    ></article>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline">
+                                      {course.type}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {course?.totalDuration ?? 0} mins
+                                    </Badge>
+                                  </div>
                                 </div>
-                                <a
-                                  target="_blank"
-                                  href={routes.courseDetail(course?.slug)}
-                                >
-                                  <Button
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                    }}
+                                <div className="mt-4 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <PlayCircle className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm">
+                                      {course.chapters?.length} chapters
+                                    </span>
+                                  </div>
+                                  <a
+                                    target="_blank"
+                                    href={routes.courseDetail(course?.slug)}
                                   >
-                                    View Course
-                                  </Button>
-                                </a>
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      View Course
+                                    </Button>
+                                  </a>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Card>
+                          </Card>
+                        </div>
                       </div>
-                    </div>
-                  ) : video && (
-                      <div className="space-y-4  pb-4">
+                    );
+                  if (video)
+                    return (
+                      <div key={id} className="space-y-4  pb-4">
                         <div className="space-y-2">
                           <h4 className="text-sm font-medium flex items-center gap-2">
                             <BookOpen className="h-4 w-4 text-blue-600" />
                             Video
-                            {/* TODO: show videos and resources */}
                           </h4>
                           <Card key={video.id} className="overflow-hidden">
                             <div className="flex flex-col md:flex-row">
@@ -1648,12 +1654,12 @@ export function Project30Page({
                                   </div>
                                 </div>
                                 <div className="mt-4 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                                  {/* <div className="flex items-center gap-2">
                                     <PlayCircle className="h-4 w-4 text-blue-600" />
                                     <span className="text-sm">
                                       {course.chapters?.length} chapters
                                     </span>
-                                  </div>
+                                  </div> */}
                                   <a
                                     target="_blank"
                                     href={routes.project30Day(
@@ -1676,9 +1682,10 @@ export function Project30Page({
                           </Card>
                         </div>
                       </div>
-                    ) ? (
-                    resource && (
-                      <div className="space-y-4  pb-4">
+                    );
+                  if (resource)
+                    return (
+                      <div key={id} className="space-y-4  pb-4">
                         <div className="space-y-2">
                           <h4 className="text-sm font-medium flex items-center gap-2">
                             <BookOpen className="h-4 w-4 text-blue-600" />
@@ -1707,14 +1714,6 @@ export function Project30Page({
                                       className="text-xs text-muted-foreground"
                                     ></article>
                                   </div>
-                                  {/* <div className="flex items-center gap-2">
-                                    <Badge variant="outline">
-                                      {resource.difficulty}
-                                    </Badge>
-                                    <Badge variant="outline">
-                                      {resource.estimatedTime}
-                                    </Badge>
-                                  </div> */}
                                 </div>
                                 <div className="mt-4 flex items-center justify-between">
                                   <a target="_blank" href={resource.link}>
@@ -1724,7 +1723,7 @@ export function Project30Page({
                                         e.stopPropagation();
                                       }}
                                     >
-                                      View Project
+                                      View Resource
                                     </Button>
                                   </a>
                                 </div>
@@ -1733,10 +1732,7 @@ export function Project30Page({
                           </Card>
                         </div>
                       </div>
-                    )
-                  ) : (
-                    ""
-                  );
+                    );
                 })}
               </Accordion>
             </CardContent>
