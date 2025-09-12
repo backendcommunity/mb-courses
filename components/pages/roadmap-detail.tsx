@@ -1194,7 +1194,7 @@ export function RoadmapDetailPage({
         <PaymentDialog
           onClose={() => setShowPaymentDialog(false)}
           open={showPaymentDialog}
-          data={roadmap}
+          data={{ ...roadmap, plan: "Enterprise" }}
           onHandlePreview={() => {}}
           onHandlePurchase={() => {}}
         />
