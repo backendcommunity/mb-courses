@@ -60,6 +60,8 @@ export function RoadmapDetailPage({
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [roadmap, setRoadmap] = useState<Roadmap>();
   const [loading, setLoading] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [celebration, setCelebration] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -93,11 +95,12 @@ export function RoadmapDetailPage({
       setShowPaymentDialog(!showPaymentDialog);
       return;
     }
-
+    setEnrolling(true);
     const data = await enrollInRoadmap(slug);
     // Force re-render
     setRoadmap(data);
     setActiveTab(activeTab);
+    setEnrolling(false);
   };
 
   const handleContinue = async () => {
@@ -112,7 +115,7 @@ export function RoadmapDetailPage({
 
   const startMilestone = async (milestoneId: string) => {
     try {
-      setLoading(true);
+      setStarting(true);
       await store.startMilestone(slug, milestoneId, {
         completed: false,
       });
@@ -122,7 +125,7 @@ export function RoadmapDetailPage({
     } catch (error: any) {
       toast.error(error?.message ?? "Error occurred. Please try again");
     } finally {
-      setLoading(false);
+      setStarting(false);
     }
   };
 
@@ -166,14 +169,14 @@ export function RoadmapDetailPage({
   function firstStartableMilestone(milestone: any) {
     return (
       <Button
-        disabled={loading}
+        disabled={starting}
         size="sm"
         onClick={(e) => {
           e.preventDefault();
           startMilestone(milestone.id);
         }}
       >
-        {loading ? (
+        {starting ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>Start...</span>
@@ -207,14 +210,15 @@ export function RoadmapDetailPage({
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           {!roadmap?.enrolled ? (
-            <Button onClick={handleEnroll}>Enroll in Roadmap</Button>
+            <Button disabled={enrolling} onClick={handleEnroll}>
+              {enrolling ? "Enrolling..." : <>Enroll in Roadmap</>}
+            </Button>
           ) : (
             <Button onClick={handleContinue}>Continue Roadmap</Button>
           )}
           <Button variant="outline">Download Syllabus</Button>
         </div>
       </div>
-
       {/* Progress Overview */}
       {roadmap?.enrolled && (
         <Card>
@@ -259,7 +263,6 @@ export function RoadmapDetailPage({
           </CardContent>
         </Card>
       )}
-
       {/* Tabs */}
       <Tabs
         defaultValue="overview"
@@ -1187,7 +1190,6 @@ export function RoadmapDetailPage({
           </Card>
         </TabsContent>
       </Tabs>
-
       {showPaymentDialog && (
         <PaymentDialog
           onClose={() => setShowPaymentDialog(false)}
@@ -1197,7 +1199,6 @@ export function RoadmapDetailPage({
           onHandlePurchase={() => {}}
         />
       )}
-
       {/* Confetti Celebration */}
       <ConfettiCelebration
         onComplete={() => setCelebration(false)}
