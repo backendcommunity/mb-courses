@@ -73,6 +73,8 @@ export function RoadmapDetailPage({
       setRoadmap(roadmap);
       setMilestones(roadmap?.topics || []);
 
+      console.log(roadmap.topics);
+
       setLoading(false);
     }
     loadData();
