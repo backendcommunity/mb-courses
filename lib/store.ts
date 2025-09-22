@@ -34,6 +34,7 @@ import {
   Lesson,
   Week,
   UserLesson,
+  Playground,
 } from "./data";
 import { fetchUser } from "./auth";
 import {
@@ -66,6 +67,7 @@ interface AppState {
   getProject: (slug: string) => Project | any;
   getPlans: () => any;
   getChallenges: () => Challenge[];
+  getSavedPlaygrounds: () => Playground[] | any;
   getInterviews: () => Interview[];
   getTransactions: (payload: { size?: number }) => any;
   getBootcamps: (filters: {
@@ -123,6 +125,7 @@ interface AppState {
   updateInterview: (id: string, updates: Partial<Interview>) => void;
   enrollInCourse: (courseId: string) => void;
   enrollInBootcamp: (bootcampId: string, cohortId: string) => UserCohort | any;
+  savePlayground: (payload: any) => Playground | any;
   markLessonCompleted: (
     id: string,
     cohortId: string,
@@ -190,6 +193,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(
       `/project30s/${slug}/leaderboard?filters=${JSON.stringify(filters)}`
     );
+    return data?.data;
+  },
+
+  getSavedPlaygrounds: async () => {
+    const { data } = await api.get(`/playgrounds/saved`);
     return data?.data;
   },
 
@@ -559,6 +567,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     updateUserInStore(data?.data);
     get().forceUpdate();
+    return data?.data;
+  },
+
+  savePlayground: async (payload: any) => {
+    const { data } = await api.post("/playgrounds/save", payload);
     return data?.data;
   },
 

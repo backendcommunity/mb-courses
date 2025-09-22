@@ -53,7 +53,7 @@ import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
-import { localDB } from "@/lib/localDB";
+import { SimpleEditor } from "./SimpleEditor";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -529,37 +529,7 @@ export function CourseWatchPage({
             </TabsContent>
 
             <TabsContent value="code">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Code2 className="h-5 w-5" />
-                    Code Editor
-                  </CardTitle>
-                  <CardDescription>
-                    Follow along with the video and write your code here
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
-                    <textarea
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
-                      placeholder="Start coding your project here..."
-                    />
-                  </div>
-                </CardContent>
-                <div className="flex justify-between p-4">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Save
-                  </Button>
-                  <Button className="flex items-center gap-2">
-                    <Play className="h-4 w-4" />
-                    Run
-                  </Button>
-                </div>
-              </Card>
+              <SimpleEditor playground={currentVideo?.playground!} />
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4">

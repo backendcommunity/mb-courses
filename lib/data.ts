@@ -399,6 +399,7 @@ export interface Video {
   technologies?: Array<string>;
   difficulty?: string;
   isPremium: boolean;
+  playground: Playground;
 }
 
 export interface Resource {
@@ -463,12 +464,15 @@ export interface TestCase {
 
 export interface Playground {
   id: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   language: string;
-  files: PlaygroundFile[];
-  dependencies: string[];
-  completed: boolean;
+  files?: PlaygroundFile[];
+  dependencies?: string[];
+  completed?: boolean;
+  code: string;
+  isReadyOnly?: boolean;
+  shouldShowInput?: boolean;
 }
 
 export interface PlaygroundFile {

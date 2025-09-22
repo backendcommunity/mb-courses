@@ -1,0 +1,329 @@
+import { PanelRightClose, PanelRightOpen, Play, Save } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
+import { useMemo, useRef, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import languages from "@/lib/languages.json";
+import Editor from "@monaco-editor/react";
+import { useTheme } from "next-themes";
+import { Input } from "../ui/input";
+import { Playground } from "@/lib/data";
+import { useAppStore } from "@/lib/store";
+import { toast } from "sonner";
+import { codeSample } from "@/lib/utils";
+
+interface EditorProps {
+  playground: Playground;
+}
+
+export function SimpleEditor({ playground }: EditorProps) {
+  const { theme } = useTheme();
+  const store = useAppStore();
+  const editorRef = useRef<any>(null);
+  const [language, setLanguage] = useState(playground?.language);
+  const [code, setCode] = useState(
+    playground?.code ? atob(playground?.code) : codeSample
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [userInputOpen, setUserInputOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [result, setResult] = useState<string | null>(null);
+  const [savedCodes, setSavedCodes] = useState<Playground[]>([]);
+  const [userInput, setUserInput] = useState("");
+  const [isTextRequired, setIsTextRequired] = useState(false);
+
+  useMemo(() => {
+    const load = async () => {
+      try {
+        const playgrounds = await store.getSavedPlaygrounds();
+        setSavedCodes(playgrounds);
+      } catch (error) {}
+    };
+    load();
+  }, []);
+
+  async function saveCode() {
+    try {
+      if (!language) {
+        toast.error("Select a programming language to save with");
+        return;
+      }
+
+      if (!title) {
+        setIsTextRequired(true);
+        return;
+      }
+
+      const playground = await store.savePlayground({
+        code: btoa(code),
+        title,
+        language,
+      });
+
+      setSavedCodes((prev) => [...prev, playground]);
+
+      toast.success("Playground saved successfully");
+    } catch (error) {
+      toast.error("Playground failed to save");
+    }
+  }
+
+  function runCode() {
+    setDrawerOpen(true);
+
+    if (!language) {
+      setResult(
+        "<p class='text-red-500'>Please select a programming language</p>"
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    setResult(null);
+
+    // Fake async run
+    setTimeout(() => {
+      setIsLoading(false);
+      setResult(
+        `✅ Code executed successfully!\nOutput: Hello World\n\nUser Input:\n${userInput}`
+      );
+    }, 2000);
+  }
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+    // Configure editor options
+    editor.updateOptions({
+      fontSize: 14,
+      fontFamily:
+        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+      lineHeight: 1.6,
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      wordWrap: "on",
+      automaticLayout: true,
+      tabSize: 2,
+      insertSpaces: true,
+      renderWhitespace: "selection",
+      bracketPairColorization: { enabled: true },
+    });
+  };
+
+  return (
+    <Card className="relative">
+      <CardHeader className="flex justify-between lg:flex-row flex-col">
+        <span>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            Code Editor
+          </CardTitle>
+          <CardDescription>
+            Follow along with the video and write your code here
+          </CardDescription>
+        </span>
+
+        <div className="flex gap-5 justify-between">
+          <Select onValueChange={setLanguage}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((l) => (
+                <SelectItem key={l.code} value={l.code}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            onValueChange={(id) => {
+              const playground = savedCodes.find(
+                (c: Playground) => c.id === id
+              );
+              setCode(atob(playground?.code!));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue
+                className="w-full"
+                placeholder="Select your saved code"
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {savedCodes.map((c: Playground) => (
+                <SelectItem key={c?.id} value={c?.id}>
+                  {c?.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="relative flex h-[600px] border rounded-md overflow-hidden flex-col">
+          {/* Code box */}
+          <div
+            className="flex-1  text-white p- font-mono text-sm"
+            onClick={() => {
+              setDrawerOpen(false);
+              setUserInputOpen(false);
+            }}
+          >
+            <Editor
+              height="100%"
+              language="javascript"
+              // language={currentLanguage}
+              theme={theme?.includes("dark") ? "vs-dark" : "light"}
+              value={code}
+              onChange={(e) => setCode(e!)}
+              onMount={handleEditorDidMount}
+              options={{
+                fontSize: 14,
+                fontFamily:
+                  "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                lineHeight: 1.6,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: "on",
+                automaticLayout: true,
+                tabSize: 2,
+                insertSpaces: true,
+                renderWhitespace: "selection",
+                bracketPairColorization: { enabled: true },
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: true,
+                parameterHints: { enabled: true },
+                formatOnPaste: true,
+                formatOnType: true,
+              }}
+            />
+          </div>
+
+          {/* Right Drawer */}
+          <div
+            className={`absolute top-0 right-0 h-full w-80 bg-white dark:bg-secondary border-l shadow-md transform transition-transform duration-300 ${
+              drawerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="p-4">
+              <h3 className="font-semibold text-lg">Execution Result</h3>
+              <p className="text-sm text-muted-foreground">
+                Output from your code will appear here
+              </p>
+              <div className="mt-4">
+                {isLoading ? (
+                  <div className="animate-pulse text-gray-500">
+                    Running code...
+                  </div>
+                ) : result ? (
+                  <pre
+                    className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: result }}
+                  ></pre>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Click "Run" to execute your code
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle button on edge */}
+          <Button
+            onClick={() => setDrawerOpen((o) => !o)}
+            className="absolute top-1/2 right-8 -translate-y-1/2 translate-x-full rounded-l-none"
+            size="icon"
+            variant="outline"
+          >
+            {drawerOpen ? (
+              <PanelRightClose className="h-4 w-4" />
+            ) : (
+              <PanelRightOpen className="h-4 w-4" />
+            )}
+          </Button>
+
+          {/* Bottom Drawer for User Input */}
+          <div
+            className={`absolute bottom-0 left-0 w-full bg-white dark:bg-secondary border-t shadow-md transform transition-transform duration-300 ${
+              userInputOpen ? "translate-y-0" : "translate-y-full"
+            }`}
+          >
+            <div className="p-4">
+              <h3 className="font-semibold text-lg">User Input</h3>
+              <textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                className="w-full h-32 resize-none border rounded-md p-2 text-sm font-mono"
+                placeholder="Enter input for your program..."
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      <div className="flex justify-between items-center p-4 gap-4">
+        <div className="flex items-center gap-2">
+          <div className="flex w-1/2 gap-2">
+            <Input
+              required
+              name="Title"
+              value={title}
+              onChange={(e) => {
+                setIsTextRequired(false);
+                setTitle(e.target.value);
+              }}
+              type="text"
+              className={`${
+                isTextRequired ? "border-red-300 focus:ring-red-500" : ""
+              }`}
+            ></Input>
+          </div>
+          <Button
+            onClick={() => saveCode()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="toggle-input"
+              checked={userInputOpen}
+              onCheckedChange={(checked) =>
+                setUserInputOpen(checked as boolean)
+              }
+            />
+            <label htmlFor="toggle-input" className="text-sm">
+              Add Input
+            </label>
+          </div>
+          <Button onClick={runCode} className="flex items-center gap-2">
+            <Play className="h-4 w-4" />
+            Run
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}

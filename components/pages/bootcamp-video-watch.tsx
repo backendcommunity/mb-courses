@@ -42,6 +42,7 @@ import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import Countdown from "../ui/count-down";
+import { SimpleEditor } from "./SimpleEditor";
 
 interface BootcampWatchPageProps {
   slug: string;
@@ -490,7 +491,8 @@ export function BootcampVideoWatchPage({
             </TabsContent>
 
             <TabsContent value="code">
-              <Card>
+              <SimpleEditor codeSample={code} />
+              {/* <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code2 className="h-5 w-5" />
@@ -520,7 +522,7 @@ export function BootcampVideoWatchPage({
                     Run
                   </Button>
                 </div>
-              </Card>
+              </Card> */}
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4">
