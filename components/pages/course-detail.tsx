@@ -128,8 +128,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
-
-      const { data } = await handleEnrollment(course?.id!);
+      const data = await handleEnrollment(course?.id!);
       if (!data) {
         toast.error("An error occurred. Please try again");
         return;
@@ -147,7 +146,8 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   };
 
   const handleEnrollment = async (courseId: string) => {
-    return await store.handleCourseEnrollment(courseId);
+    const data = await store.handleCourseEnrollment(courseId);
+    return data;
   };
 
   const handlePreviewCourse = () => {
