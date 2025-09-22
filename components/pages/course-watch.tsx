@@ -342,9 +342,11 @@ export function CourseWatchPage({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{chapter.type}</Badge>
-          <Badge variant="outline">
-            {currentVideo?.duration ?? chapter?.duration ?? 0} hours
-          </Badge>
+          {currentVideo?.duration && chapter?.duration && (
+            <Badge variant="outline">
+              {currentVideo?.duration ?? chapter?.duration ?? 0} hours
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -504,26 +506,23 @@ export function CourseWatchPage({
                   </div>
                 </CardContent>
                 <CardContent>
-                  {currentVideo?.description ??
-                    (nextChapter?.description && (
-                      <CardContent>
-                        <div className="space-y-4  pt-4">
-                          <div className="flex w-full justify-center items-center">
-                            <span className="border-t flex-1"></span>
-                            <div className="px-2 text-xs">description</div>
-                            <span className="border-t flex-1"></span>
-                          </div>
-                          <p
-                            className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
-                            dangerouslySetInnerHTML={{
-                              __html:
-                                currentVideo?.description ??
-                                nextChapter?.description,
-                            }}
-                          ></p>
+                  {currentVideo?.description && (
+                    <CardContent>
+                      <div className="space-y-4  pt-4">
+                        <div className="flex w-full justify-center items-center">
+                          <span className="border-t flex-1"></span>
+                          <div className="px-2 text-xs">description</div>
+                          <span className="border-t flex-1"></span>
                         </div>
-                      </CardContent>
-                    ))}
+                        <p
+                          className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: currentVideo?.description!,
+                          }}
+                        ></p>
+                      </div>
+                    </CardContent>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -734,11 +733,17 @@ export function CourseWatchPage({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{video.title}</p>
+
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {video?.duration ?? video.quiz?.timeLimit} mins
-                      </span>
+                      {(!video?.duration.includes("0") ||
+                        video.quiz?.timeLimit! > 0) && (
+                        <>
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            {video?.duration ?? video.quiz?.timeLimit} mins
+                          </span>
+                        </>
+                      )}
                       <Badge variant="outline" className="text-xs">
                         {video?.type}
                       </Badge>
@@ -852,13 +857,6 @@ export function CourseWatchPage({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{ch.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {ch.videos.reduce((a: number, c: any) => {
-                          return a + Number(c?.duration ?? c?.quiz?.timeLimit);
-                        }, 0)}{" "}
-                        mins
-                      </span>
                       <Badge variant="outline" className="text-xs">
                         {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
                         videos
