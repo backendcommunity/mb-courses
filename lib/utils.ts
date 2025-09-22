@@ -70,51 +70,10 @@ export const getLanguageFromFileName = (fileName: string): string => {
 
 export function codeSample() {
   return `
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const redis = require('redis');
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
-// Redis client for storing user sessions
-const redisClient = redis.createClient();
-
-// Middleware
-app.use(express.json());
-app.use(express.static('public'));
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
-  // Join room
-  socket.on('join-room', (roomId, username) => {
-    socket.join(roomId);
-    socket.to(roomId).emit('user-joined', username);
-  });
-  
-  // Handle messages
-  socket.on('send-message', (roomId, message, username) => {
-    io.to(roomId).emit('receive-message', {
-      message,
-      username,
-      timestamp: new Date().toISOString()
-    });
-  });
-  
-  // Handle disconnect
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});`;
+  // Online Code Editor for free
+  // Write, Edit and Run your code using Online Compiler
+  // Select your programming language below
+`;
 }
 
 export const handleShare = (title: string, url: string) => {
