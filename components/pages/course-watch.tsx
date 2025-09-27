@@ -28,8 +28,6 @@ import {
   Brain,
   Code,
   Gamepad2,
-  Code2,
-  Save,
   Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -48,7 +46,7 @@ import DisqusCommentBlock from "../ui/comment";
 import { markVideoComplete } from "@/lib/courses";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
-import { codeSample, handleShare } from "@/lib/utils";
+import { handleShare } from "@/lib/utils";
 import { CourseQuizPage } from "./course-quiz";
 import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
@@ -81,7 +79,6 @@ export function CourseWatchPage({
   const [currentTime, setCurrentTime] = useState(0);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
-  const [code, setCode] = useState(codeSample);
   const [quizPassed, setQuizPassed] = useState(false);
   const [note, setNote] = useState("");
   const path = usePathname();
@@ -290,8 +287,6 @@ export function CourseWatchPage({
       "",
       `${routes.courseWatch(slug, chapter.slug, chapter?.videos[0]?.slug)}?`
     );
-
-    console.log(chapter);
   };
 
   const handleSaveNotes = async () => {
@@ -321,6 +316,15 @@ export function CourseWatchPage({
       setCompleted(false);
     }
   };
+
+  const calculateProgress = () => {
+    const completed = userVideos?.filter(
+      (ch: UserVideo) => ch?.isCompleted
+    ).length;
+
+    return Math.floor(((completed ?? 0) / course.totalContent) * 100);
+  };
+  const progress = calculateProgress();
 
   return (
     <div className="flex-1 space-y-6">
@@ -696,9 +700,9 @@ export function CourseWatchPage({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Overall Progress</span>
-                  <span>{Math.floor(course?.progress ?? 0)}%</span>
+                  <span>{progress}%</span>
                 </div>
-                <Progress value={course?.progress ?? 0} className="h-2" />
+                <Progress value={progress ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
                 {userVideos?.filter((ch: UserVideo) => ch?.isCompleted).length}{" "}
