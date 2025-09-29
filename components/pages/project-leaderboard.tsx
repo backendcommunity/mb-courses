@@ -134,7 +134,7 @@ export function ProjectLeaderboardPage({
           <h2 className="text-xl font-semibold mb-4">Top Performers</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* 2nd Place */}
-            <Card className="border-2 border-silver">
+            <Card className="border-2 border-gray-400">
               <CardHeader className="text-center pb-2">
                 <div className="mx-auto mb-2">
                   <Medal className="h-8 w-8 text-gray-400" />
