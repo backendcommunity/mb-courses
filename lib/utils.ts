@@ -7,6 +7,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// {
+//     "name": "Python",
+//     "code": "python"
+// },
+// {
+//     "name": "Java",
+//     "code": "java"
+// },
+// {
+//     "name": "Rust",
+//     "code": "rust"
+// }
+
 export function onNavigate(path: string) {
   // This is a placeholder function for navigation
   // In a real app, this would use Next.js router or similar

@@ -12,6 +12,7 @@
     "@asyncpay/checkout": "^0.0.37",
     "@hookform/resolvers": "^3.9.1",
     "@monaco-editor/react": "latest",
+    "@next/bundle-analyzer": "^15.5.4",
     "@paddle/paddle-js": "^1.4.2",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "1.1.4",

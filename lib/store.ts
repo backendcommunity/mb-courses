@@ -46,7 +46,7 @@ import {
   handleCourseEnrollment,
   loadVideoNotes,
 } from "./courses";
-import api from "./api";
+import { api, socketAPI } from "./api";
 import { localDB } from "./localDB";
 
 interface AppState {
@@ -166,6 +166,7 @@ interface AppState {
       chapter?: any;
     }
   ) => any;
+  executeCode: (payload: { language: string; code: string }) => any;
 
   // Force re-render trigger
   version: number;
@@ -177,11 +178,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   getUser: async () => {
     try {
       const user = localDB.get("user", "");
+
       if (user && user !== "null") {
         const pUser = JSON.parse(user);
         if (pUser) return pUser;
       }
-
+      console.log(user);
       const res = await fetchUser();
       updateUserInStore(res.data);
       return res.data;
@@ -433,6 +435,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   startProject30: async (slug: string) => {
     const { data } = await api.post("/project30s/" + slug);
     return data?.data;
+  },
+  executeCode: async (payload: { language: string; code: string }) => {
+    const { data } = await socketAPI.post(`/projects/execute`, payload);
+    return data;
   },
   handleProjectEnrollment: async (slug: string) => {
     const { data } = await api.post(`/projects/${slug}`);

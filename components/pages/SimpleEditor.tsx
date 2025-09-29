@@ -8,7 +8,7 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import languages from "@/lib/languages.json";
+import { languages } from "@/lib/languages";
 import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { Input } from "../ui/input";
@@ -24,6 +24,7 @@ import { Playground } from "@/lib/data";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import { codeSample } from "@/lib/utils";
+import { Label } from "../ui/label";
 
 interface EditorProps {
   playground: Playground;
@@ -33,7 +34,7 @@ export function SimpleEditor({ playground }: EditorProps) {
   const { theme } = useTheme();
   const store = useAppStore();
   const editorRef = useRef<any>(null);
-  const [language, setLanguage] = useState(playground?.language);
+  const [language, setLanguage] = useState<any>({});
   const [code, setCode] = useState(
     playground?.code ? atob(playground?.code) : codeSample
   );
@@ -56,6 +57,15 @@ export function SimpleEditor({ playground }: EditorProps) {
     load();
   }, []);
 
+  useEffect(() => {
+    const language = languages.find((l) => l.code === playground?.language);
+    setLanguage(language);
+  }, [playground]);
+
+  useEffect(() => {
+    setCode(language?.snippet);
+  }, [language]);
+
   async function saveCode() {
     try {
       if (!language) {
@@ -71,7 +81,7 @@ export function SimpleEditor({ playground }: EditorProps) {
       const playground = await store.savePlayground({
         code: btoa(code),
         title,
-        language,
+        language: language.code,
       });
 
       setSavedCodes((prev) => [...prev, playground]);
@@ -82,7 +92,7 @@ export function SimpleEditor({ playground }: EditorProps) {
     }
   }
 
-  function runCode() {
+  async function runCode() {
     setDrawerOpen(true);
 
     if (!language) {
@@ -91,17 +101,15 @@ export function SimpleEditor({ playground }: EditorProps) {
       );
       return;
     }
-
     setIsLoading(true);
-    setResult(null);
+    const data = await store.executeCode({
+      language: language.code,
+      code: btoa(code),
+    });
 
-    // Fake async run
-    setTimeout(() => {
-      setIsLoading(false);
-      setResult(
-        `✅ Code executed successfully!\nOutput: Hello World\n\nUser Input:\n${userInput}`
-      );
-    }, 2000);
+    const result = data?.stdout ?? data?.stderr;
+    setResult(result);
+    setIsLoading(false);
   }
 
   const handleEditorDidMount = (editor: any) => {
@@ -137,7 +145,12 @@ export function SimpleEditor({ playground }: EditorProps) {
         </span>
 
         <div className="flex gap-5 justify-between">
-          <Select onValueChange={setLanguage}>
+          <Select
+            onValueChange={(lang) => {
+              const language = languages.find((l) => l.code === lang);
+              setLanguage(language);
+            }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Language" />
             </SelectTrigger>
@@ -147,6 +160,18 @@ export function SimpleEditor({ playground }: EditorProps) {
                   {l.name}
                 </SelectItem>
               ))}
+              <SelectItem value="python">Python</SelectItem>
+              <SelectItem value="php">PHP</SelectItem>
+              <SelectItem value="ruby">Ruby</SelectItem>
+              <SelectItem value="java">Java</SelectItem>
+              <SelectItem value="c">C</SelectItem>
+              <SelectItem value="cpp">C++</SelectItem>
+              <SelectItem value="go">Go</SelectItem>
+              <SelectItem value="rust">Rust</SelectItem>
+              <SelectItem value="csharp">C#</SelectItem>
+              <SelectItem value="kotlin">Kotlin</SelectItem>
+              <SelectItem value="scala">Scala</SelectItem>
+              <SelectItem value="perl">Perl</SelectItem>
             </SelectContent>
           </Select>
 
@@ -280,10 +305,12 @@ export function SimpleEditor({ playground }: EditorProps) {
 
       <div className="flex justify-between items-center p-4 gap-4">
         <div className="flex items-center gap-2">
-          <div className="flex w-1/2 gap-2">
+          <div className="flex w-1/2 gap-2 items-center">
+            <Label htmlFor="title">Title</Label>
             <Input
               required
               name="Title"
+              id="title"
               value={title}
               onChange={(e) => {
                 setIsTextRequired(false);
@@ -296,6 +323,7 @@ export function SimpleEditor({ playground }: EditorProps) {
             ></Input>
           </div>
           <Button
+            disabled={isLoading}
             onClick={() => saveCode()}
             variant="outline"
             className="flex items-center gap-2"
@@ -308,6 +336,7 @@ export function SimpleEditor({ playground }: EditorProps) {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Checkbox
+              disabled={isLoading}
               id="toggle-input"
               checked={userInputOpen}
               onCheckedChange={(checked) =>
@@ -318,9 +347,19 @@ export function SimpleEditor({ playground }: EditorProps) {
               Add Input
             </label>
           </div>
-          <Button onClick={runCode} className="flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            Run
+          <Button
+            disabled={true || isLoading}
+            onClick={runCode}
+            className="flex items-center gap-2"
+          >
+            {isLoading ? (
+              <i>Compiling</i>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                Run
+              </>
+            )}
           </Button>
         </div>
       </div>

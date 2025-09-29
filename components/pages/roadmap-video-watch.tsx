@@ -53,15 +53,9 @@ import ConfettiCelebration from "../confetti-celebration";
 import { VimeoPlayer } from "../ui/vimeo-player";
 import { CourseQuizPage } from "./course-quiz";
 import { ExercisePage } from "../exercise";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { Loader } from "../ui/loader";
 import { localDB } from "@/lib/localDB";
+import { SimpleEditor } from "./SimpleEditor";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -87,7 +81,6 @@ export function RoadmapVideoWatchPage({
   const [roadmap, setRoadmap] = useState<Roadmap>();
   const [userCourse, setUserCourse] = useState<UserCourse>();
   const [course, setCourse] = useState<Course>();
-  const [code, setCode] = useState(codeSample);
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [quizPassed, setQuizPassed] = useState(false);
@@ -99,14 +92,15 @@ export function RoadmapVideoWatchPage({
   const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
+  const [userVideos, setUserVideos] = useState<any[]>();
+  const [currentVideo, setCurrentVideo] = useState<Video>();
+  const [chapter, setChapter] = useState<Chapter>();
 
-  const chapter: Chapter | any = course?.chapters.find(
-    (ch: Chapter) => ch.slug === chapterId
-  );
+  //  ;
 
-  const video = videoId
-    ? chapter?.videos.find((v: Video) => v.slug === videoId)
-    : chapter?.videos[0];
+  // const video = videoId
+  //   ? chapter?.videos.find((v: Video) => v.slug === videoId)
+  //   : chapter?.videos[0];
 
   async function loadMilestone() {
     const milestone = await store.getMilestone(slug, topicId);
@@ -124,12 +118,22 @@ export function RoadmapVideoWatchPage({
       setCourse(course);
       setUserCourse(course?.userCourse);
       setUserChapters(course?.userCourse?.userChapters);
+      setUserVideos(userCourse?.userVideos);
 
       const completed =
         completedItems.find((c: any) => c.itemId === course.id)?.completed ??
         false;
-
       setCompleted(completed);
+
+      const chapter: Chapter | any = course?.chapters.find(
+        (ch: Chapter) => ch.slug === chapterId
+      );
+      setChapter(chapter);
+
+      const currentVideo = videoId
+        ? chapter?.videos.find((v: Video) => v.slug === videoId)
+        : chapter?.videos[0];
+      setCurrentVideo(currentVideo);
       setLoading(false);
     }
 
@@ -137,10 +141,14 @@ export function RoadmapVideoWatchPage({
   }, []);
 
   useEffect(() => {
-    if (video?.type === "QUIZ" && video?.quiz?.required && !quizPassed) {
+    if (
+      currentVideo?.type === "QUIZ" &&
+      currentVideo?.quiz?.required &&
+      !quizPassed
+    ) {
       setShowRequiredQuiz(true);
     } else setShowRequiredQuiz(false);
-  }, [video, quizPassed]);
+  }, [currentVideo, quizPassed]);
   if (loading) return <Loader isLoader={false} />;
 
   if (!roadmap || !course) {
@@ -168,18 +176,18 @@ export function RoadmapVideoWatchPage({
     ];
 
   const next = () => {
-    return chapter.videos.find((v: Video, index: number) => {
+    return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
-        (vid: Video) => vid.id === video?.id
+        (vid: Video) => vid.id === currentVideo?.id
       );
       return index === currentIndex + 1;
     });
   };
 
   const prev = () => {
-    return chapter.videos.find((v: Video, index: number) => {
+    return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
-        (vid: Video) => vid.id === video?.id
+        (vid: Video) => vid.id === currentVideo?.id
       );
       return index === currentIndex - 1;
     });
@@ -191,7 +199,7 @@ export function RoadmapVideoWatchPage({
   const handleSaveNotes = async () => {
     if (!note) return;
     try {
-      const saveNote = await store.saveNote(note, course.id, video?.id!);
+      const saveNote = await store.saveNote(note, course.id, currentVideo?.id!);
       setNotes([...notes, saveNote]);
     } catch (error) {
       toast.error("Error occurred adding note");
@@ -218,50 +226,47 @@ export function RoadmapVideoWatchPage({
 
   const handleVideoClick = (vid: Video) => {
     if (!vid) return;
-    if (onNavigate) {
-      onNavigate(
-        routes.roadmapVideoWatch(
-          slug,
-          topicId,
-          course.slug,
-          chapterId,
-          vid.slug
-        )
-      );
-    }
-  };
-
-  const handleChapterClick = (next: boolean) => {
-    if (!onNavigate) return;
-
-    if (video?.type == "QUIZ") {
-      if (!quizPassed && video?.quiz?.required) {
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed || currentVideo?.quiz?.required) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
     }
 
-    if (next) {
-      onNavigate(
-        routes.roadmapVideoWatch(
-          slug,
-          topicId,
-          course.slug,
-          nextChapter.slug,
-          nextChapter?.videos[0]?.slug
-        )
-      );
-      return;
-    }
-
-    onNavigate(
-      routes.roadmapVideoWatch(
+    setCurrentVideo(currentVideo);
+    window.history.pushState(
+      {},
+      "",
+      `${routes.roadmapVideoWatch(
         slug,
         topicId,
         course.slug,
-        prevChapter.slug,
-        prevChapter?.videos[prevChapter?.videos?.length - 1]?.slug
-      )
+        chapterId,
+        vid.slug
+      )}?`
+    );
+  };
+
+  const handleChapterClick = (chapter: Chapter) => {
+    if (currentVideo?.type == "QUIZ") {
+      if (!quizPassed && currentVideo?.quiz?.required) {
+        toast.warning("This quiz is required and you have to meet the mark");
+        return;
+      }
+    }
+
+    setChapter(chapter);
+    setCurrentVideo(chapter?.videos[0]);
+    window.history.pushState(
+      {},
+      "",
+      `${routes.roadmapVideoWatch(
+        slug,
+        topicId,
+        course.slug,
+        chapter.slug,
+        chapter?.videos[chapter?.videos?.length - 1]?.slug
+      )}?`
     );
   };
 
@@ -284,7 +289,7 @@ export function RoadmapVideoWatchPage({
   };
 
   const handleMarkComplete = async () => {
-    if (!video || !course || !chapter || !userCourse) return;
+    if (!currentVideo || !course || !chapter || !userCourse) return;
 
     try {
       setIsMarking(true);
@@ -294,23 +299,22 @@ export function RoadmapVideoWatchPage({
           ?.filter((v: any) => v.completed)
           .map((v: any) => v.itemId)
       );
-      completedVideoIds.add(video.id); // include this one just marked
+      completedVideoIds.add(currentVideo.id); // include this one just marked
       // Check if all chapter videos are now complete
       const allVideosComplete = chapter.videos.every((v: Video) =>
         completedVideoIds.has(v.id)
       );
 
-      const hasOtherContent =
-        chapter.quizzes || chapter.exercises || chapter.playgrounds;
+      const hasOtherContent = chapter?.quizzes; //|| chapter?.exercises || chapter?.playgrounds;
       const isChapterCompleted =
-        allVideosComplete && hasOtherContent.length < 1;
+        allVideosComplete && hasOtherContent?.length! < 1;
 
       // Update Milestone locally
       const completedItem = [
         ...completedItems,
         {
           completed: true,
-          itemId: video.id,
+          itemId: currentVideo.id,
           itemType: "VIDEO",
         },
       ];
@@ -341,14 +345,14 @@ export function RoadmapVideoWatchPage({
         },
       });
 
-      if (video?.type === "QUIZ")
+      if (currentVideo?.type === "QUIZ")
         return markQuizAsCompleted(isChapterCompleted);
 
       // Backend update with proper `isChapterCompleted`
 
       store
         .markRoadmapVideoCompleted(slug, topicId, {
-          itemId: video.id,
+          itemId: currentVideo.id,
           type: "VIDEO",
           isChapterCompleted,
           chapter: {
@@ -398,13 +402,13 @@ export function RoadmapVideoWatchPage({
 
   const markQuizAsCompleted = async (isChapterCompleted?: boolean) => {
     await store.markRoadmapVideoCompleted(slug, topicId, {
-      itemId: video.id,
+      itemId: currentVideo?.id!,
       type: "QUIZ",
       isChapterCompleted,
-      courseId: video.quizId,
+      courseId: currentVideo?.quizId!,
     });
 
-    handleVideoClick(nextVideo);
+    handleVideoClick(nextVideo!);
 
     return;
   };
@@ -424,16 +428,19 @@ export function RoadmapVideoWatchPage({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{video?.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {currentVideo?.title}
+          </h1>
           <p className="text-muted-foreground">
-            {roadmap.title} • {course.title} • {chapter.title}
+            {roadmap.title} • {course.title} • {chapter?.title}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            {video?.duration ??
-              video?.quiz?.timeLimit ??
-              video?.exercise?.duration}{" "}
+            {
+              currentVideo?.duration ?? currentVideo?.quiz?.timeLimit //??
+              //currentVideo?.exercise?.duration
+            }{" "}
             mins
           </Badge>
           <Badge className="bg-blue-600">Milestone Content</Badge>
@@ -445,14 +452,14 @@ export function RoadmapVideoWatchPage({
         <div className="lg:col-span-2 space-y-4">
           {/* Video Player */}
           <Card className="overflow-hidden">
-            {video?.type === "VIDEO" && (
+            {currentVideo?.type === "VIDEO" && (
               <Card className="overflow-hidden">
                 <div className="aspect-video bg-black relative">
-                  <VimeoPlayer video={video} />
+                  <VimeoPlayer video={currentVideo} />
                 </div>
               </Card>
             )}
-            {video?.type === "QUIZ" &&
+            {currentVideo?.type === "QUIZ" &&
               (showRequiredQuiz ? (
                 <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-lg flex items-center justify-center p-4">
                   <Card className="w-full max-w-4xl  overflow-y-auto relative">
@@ -462,7 +469,7 @@ export function RoadmapVideoWatchPage({
                     <CourseQuizPage
                       courseId={courseId}
                       onNavigate={(path) => onNavigate?.(path)}
-                      quiz={video?.quiz!}
+                      quiz={currentVideo?.quiz!}
                       showNav={false}
                       handleQuizSubmit={(passed) => {
                         setQuizPassed(passed);
@@ -476,7 +483,7 @@ export function RoadmapVideoWatchPage({
                   <CourseQuizPage
                     courseId={courseId}
                     onNavigate={(path) => onNavigate?.(path)}
-                    quiz={video?.quiz!}
+                    quiz={currentVideo?.quiz!}
                     showNav={false}
                     handleQuizSubmit={(passed) => {
                       setQuizPassed(passed);
@@ -486,11 +493,11 @@ export function RoadmapVideoWatchPage({
                 </Card>
               ))}
 
-            {video?.type === "EXERCISE" && (
+            {currentVideo?.type === "EXERCISE" && (
               <ExercisePage
                 courseId={courseId}
                 onNavigate={(path) => onNavigate?.(path)}
-                exercise={video?.exercise!}
+                exercise={currentVideo?.exercise!}
               />
             )}
           </Card>
@@ -499,14 +506,14 @@ export function RoadmapVideoWatchPage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => handleShare(video?.title!, path)}
+                onClick={() => handleShare(currentVideo?.title!, path)}
                 variant="outline"
                 size="sm"
               >
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              {video?.type === "VIDEO" && (
+              {currentVideo?.type === "VIDEO" && (
                 <Button disabled={true} variant="outline" size="sm">
                   <Download className="mr-2 h-4 w-4" />
                   Download
@@ -515,9 +522,9 @@ export function RoadmapVideoWatchPage({
             </div>
 
             <div className="flex items-center gap-2">
-              {video &&
-                video?.type === "VIDEO" &&
-                !isVideoCompleted(video?.id) && (
+              {currentVideo &&
+                currentVideo?.type === "VIDEO" &&
+                !isVideoCompleted(currentVideo?.id) && (
                   <Button disabled={isMarking} onClick={handleMarkComplete}>
                     {isMarking ? (
                       <>
@@ -545,7 +552,7 @@ export function RoadmapVideoWatchPage({
               {!nextVideo && nextChapter && (
                 <Button
                   disabled={isMarking}
-                  onClick={() => handleChapterClick(true)}
+                  onClick={() => handleChapterClick(nextChapter)}
                 >
                   Next Chapter
                   <SkipForward className="ml-2 h-4 w-4" />
@@ -583,7 +590,7 @@ export function RoadmapVideoWatchPage({
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              {video?.type === "VIDEO" && (
+              {currentVideo?.type === "VIDEO" && (
                 <>
                   <TabsTrigger value="code">Code Editor</TabsTrigger>
                   <TabsTrigger value="transcript">Transcript</TabsTrigger>
@@ -598,7 +605,7 @@ export function RoadmapVideoWatchPage({
               <Card>
                 <CardHeader>
                   <CardTitle className="capitalize">
-                    {video?.type?.toLowerCase()} Overview
+                    {currentVideo?.type?.toLowerCase()} Overview
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -606,13 +613,13 @@ export function RoadmapVideoWatchPage({
                     <article
                       className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
-                        __html: video?.summary!,
+                        __html: currentVideo?.summary!,
                       }}
                     ></article>
                   </div>
                 </CardContent>
                 <CardContent>
-                  {video?.description ??
+                  {currentVideo?.description ??
                     (nextChapter?.description && (
                       <CardContent>
                         <div className="space-y-4  pt-4">
@@ -625,7 +632,8 @@ export function RoadmapVideoWatchPage({
                             className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
                             dangerouslySetInnerHTML={{
                               __html:
-                                video?.description ?? nextChapter?.description,
+                                currentVideo?.description ??
+                                nextChapter?.description,
                             }}
                           ></article>
                         </div>
@@ -635,7 +643,7 @@ export function RoadmapVideoWatchPage({
               </Card>
             </TabsContent>
 
-            {video?.type === "VIDEO" && (
+            {currentVideo?.type === "VIDEO" && (
               <>
                 <TabsContent value="transcript" className="space-y-4">
                   <Card>
@@ -677,63 +685,7 @@ export function RoadmapVideoWatchPage({
                 </TabsContent>
 
                 <TabsContent value="code">
-                  <Card>
-                    <CardHeader className="flex flex-row justify-between items-center w-full">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Code2 className="h-5 w-5" />
-                          Code Editor
-                        </CardTitle>
-                        <CardDescription>
-                          Follow along with the video and write your code here
-                        </CardDescription>
-                      </div>
-                      <div>
-                        <Select>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Save code samples" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">
-                              Fibonacci Series
-                            </SelectItem>
-                            <SelectItem value="beginner">
-                              Two sum Algorithms
-                            </SelectItem>
-                            <SelectItem value="intermediate">
-                              Find the sum of two triangles
-                            </SelectItem>
-                            <SelectItem value="advanced">
-                              Multiples of two Algorithms
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="border rounded-md bg-black text-white p-4 font-mono text-sm h-[600px]">
-                        <textarea
-                          value={code}
-                          onChange={(e) => setCode(e.target.value)}
-                          className="w-full h-full resize-none border-none outline-none bg-transparent font-mono text-sm"
-                          placeholder="Start coding your project here..."
-                        />
-                      </div>
-                    </CardContent>
-                    <div className="flex justify-between p-4">
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                      >
-                        <Save className="h-4 w-4" />
-                        Save
-                      </Button>
-                      <Button className="flex items-center gap-2">
-                        <Play className="h-4 w-4" />
-                        Run
-                      </Button>
-                    </div>
-                  </Card>
+                  <SimpleEditor playground={currentVideo.playground} />
                 </TabsContent>
               </>
             )}
@@ -793,27 +745,29 @@ export function RoadmapVideoWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {video?.resources?.map((resource: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <BookOpen className="h-4 w-4 text-blue-600" />
-                          <div>
-                            <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {resource.type}
-                            </p>
+                    {currentVideo?.resources?.map(
+                      (resource: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <h4 className="font-medium">{resource.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {resource.type}
+                              </p>
+                            </div>
                           </div>
+                          <Button asChild={true} variant="link">
+                            <a target="_blank" href={resource?.link}>
+                              View
+                            </a>
+                          </Button>
                         </div>
-                        <Button asChild={true} variant="link">
-                          <a target="_blank" href={resource?.link}>
-                            View
-                          </a>
-                        </Button>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -827,8 +781,8 @@ export function RoadmapVideoWatchPage({
                 <CardContent>
                   <DisqusCommentBlock
                     config={{
-                      identifier: `roadmap-${video?.slug}`,
-                      title: video?.title,
+                      identifier: `roadmap-${currentVideo?.slug}`,
+                      title: currentVideo?.title,
                       url: `/roadmaps/${slug}/courses/${course.slug}/watch/${chapterId}/${videoId}`,
                     }}
                   />
@@ -879,17 +833,7 @@ export function RoadmapVideoWatchPage({
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
                     vid.slug === videoId ? "border border-blue-200" : ""
                   }`}
-                  onClick={() =>
-                    onNavigate?.(
-                      routes.roadmapVideoWatch(
-                        slug,
-                        topicId,
-                        course.slug,
-                        chapterId,
-                        vid.slug
-                      )
-                    )
-                  }
+                  onClick={() => handleVideoClick(vid)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     {isVideoCompleted(vid.id) ? (
@@ -913,21 +857,23 @@ export function RoadmapVideoWatchPage({
               ))}
 
               {/* Chapter Features */}
-              {chapter.quiz && (
+              {chapter?.quiz && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
-                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                    handleChapterFeatureClick("quiz", chapter?.quiz!.id)
                   }
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     <Brain className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.quiz.title}</p>
+                    <p className="text-sm font-medium">
+                      {chapter?.quiz?.title}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{chapter.quiz.timeLimit} min</span>
+                      <span>{chapter?.quiz?.timeLimit} min</span>
                       <Badge variant="outline" className="text-xs">
                         QUIZ
                       </Badge>
@@ -936,7 +882,7 @@ export function RoadmapVideoWatchPage({
                 </div>
               )}
 
-              {chapter.exercise && (
+              {/* {chapter.exercise && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -960,9 +906,9 @@ export function RoadmapVideoWatchPage({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
-              {chapter.playground && (
+              {/* {chapter.playground && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -989,7 +935,7 @@ export function RoadmapVideoWatchPage({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
 
@@ -1005,17 +951,7 @@ export function RoadmapVideoWatchPage({
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
                     ch.slug === chapterId ? "border border-blue-200" : ""
                   }`}
-                  onClick={() =>
-                    onNavigate?.(
-                      routes.roadmapVideoWatch(
-                        slug,
-                        topicId,
-                        course.slug,
-                        ch.slug,
-                        ch?.videos[0]?.slug
-                      )
-                    )
-                  }
+                  onClick={() => handleChapterClick(ch)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                     {isChapterCompleted(ch?.id!) ? (

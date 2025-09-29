@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import api from "./api";
+import { api } from "./api";
 import { NewUser } from "./data";
 import { localDB } from "./localDB";
 import { deleteCookie } from "cookies-next/client";

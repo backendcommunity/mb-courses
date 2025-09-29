@@ -1,4 +1,4 @@
-import api from "./api";
+import { api } from "./api";
 import { CoursesQuery } from "./data";
 
 export const fetchCourses = async (queries?: CoursesQuery): Promise<any> => {
@@ -47,7 +47,6 @@ export const fetchUserCourse = async (courseId: string) => {
 
 export const handleCourseEnrollment = async (courseId: string) => {
   const { data } = await api.post("/courses/" + courseId);
-
   return data;
 };
 
