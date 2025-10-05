@@ -739,7 +739,7 @@ export function CourseWatchPage({
                     <p className="text-sm font-medium">{video.title}</p>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {(!video?.duration.includes("0") ||
+                      {(!video?.duration?.includes("0") ||
                         video.quiz?.timeLimit! > 0) && (
                         <>
                           <Clock className="h-3 w-3" />
