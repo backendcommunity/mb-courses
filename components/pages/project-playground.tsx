@@ -105,7 +105,10 @@ export function ProjectPlaygroundPage({
   const { theme } = useTheme();
   const [project, setProject] = useState<Project>();
   const [activeFile, setActiveFile] = useState("");
-  const [terminalOutput, setTerminalOutput] = useState(terminalSample);
+  const [terminalOutput, setTerminalOutput] = useState<any[]>([
+    "Welcome to MB Projects Terminal",
+    "",
+  ]);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [fontSize, setFontSize] = useState(14);
   const [progressText, setProgressText] = useState("");
@@ -116,6 +119,7 @@ export function ProjectPlaygroundPage({
   const [markAsCompleted, setMarkAsCompleted] = useState(false);
   const [activeTask, setActiveTask] = useState<any>();
   const [celebration, setCelebration] = useState(false);
+  const [showTask, setShowTask] = useState(false);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deleteFile, setDeleteFile] = useState<FileNode | null>();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
@@ -124,6 +128,7 @@ export function ProjectPlaygroundPage({
   const [code, setCode] = useState(fileTree?.[0]?.children?.[0]?.content || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
   const [showPayment, setShowPayment] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [fileMenu, setFileMenu] = useState({
     visible: false,
@@ -229,18 +234,20 @@ export function ProjectPlaygroundPage({
 
     socket.on("project:run:error", (data) => {
       setTerminalOutput((prev) => {
-        if (prev.includes(data?.message)) return prev;
+        if (prev === data?.message) return prev;
         return [...prev, data?.message];
       });
+      setIsRunning(false);
     });
 
     socket.on("project:running", (data) => {
       setBaseURL(data?.url);
       setTerminalOutput((prev) => {
-        if (prev.includes(data?.message)) return prev;
+        if (prev === data?.message) return prev;
         return [...prev, `[BASE_URL]: ${data?.url}`];
       });
       setProgressValue(100);
+      setIsRunning(false);
     });
 
     let chunks: any = [];
@@ -257,6 +264,9 @@ export function ProjectPlaygroundPage({
 
     socket.on("project:download:progress", ({ percent }) => {
       setProgressText(`Downloading your project... ${percent}%`);
+      setTerminalOutput((prev) => {
+        return [...prev, `Downloading your project... ${percent}%`];
+      });
       setDownloadProgress(percent);
     });
 
@@ -272,10 +282,26 @@ export function ProjectPlaygroundPage({
       URL.revokeObjectURL(url);
       setDownloadProgress(100);
       setProgressText(`Project downloaded successfull... ${100}%`);
+      setTerminalOutput((prev) => {
+        return [...prev, `Project downloaded successfull... ${100}%`];
+      });
     });
 
     socket.on("project:download:error", (data) => {
       toast.error(data.message);
+      setTerminalOutput((prev) => {
+        if (prev === data?.message) return prev;
+        return [...prev, data?.message];
+      });
+    });
+
+    socket.on("project:run:status", (data) => {
+      setTerminalOutput((prev) => {
+        if (prev === data?.message) return prev;
+        return [...prev, data?.message];
+      });
+
+      console.log(data);
     });
   }, []);
 
@@ -750,6 +776,7 @@ export function ProjectPlaygroundPage({
   };
 
   const handleRunProject = () => {
+    setIsRunning(true);
     socket.emit("project:run", {
       language: project?.template ?? "node",
       projectName: slug,
@@ -880,9 +907,15 @@ export function ProjectPlaygroundPage({
             <Share className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Button onClick={handleRunProject} size="sm">
-            <Play className="mr-2 h-4 w-4" />
-            Run
+          <Button disabled={isRunning} onClick={handleRunProject} size="sm">
+            {isRunning ? (
+              <i>Running</i>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Run
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -1120,7 +1153,13 @@ export function ProjectPlaygroundPage({
                                     key={task.id + i}
                                     value={`week-${i + 1}`}
                                   >
-                                    <AccordionTrigger className="hover:no-underline">
+                                    <AccordionTrigger
+                                      onClick={() => {
+                                        setActiveTask(task);
+                                        setShowTask(true);
+                                      }}
+                                      className="hover:no-underline"
+                                    >
                                       <div className="flex items-center justify-between w-full mr-4">
                                         <div className="text-left">
                                           <h3 className="font-semibold">
@@ -1141,43 +1180,12 @@ export function ProjectPlaygroundPage({
                                           ></article>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                          {task?.userTask?.isCompleted ? (
+                                          {task?.userTask?.isCompleted && (
                                             <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
-                                          ) : (
-                                            <div
-                                              onClick={() => {
-                                                setActiveTask(task);
-                                                setMarkAsCompleted(true);
-                                              }}
-                                              title="Mark as completed"
-                                              className="text-xs bg-primary px-1 rounded-md"
-                                            >
-                                              <Check className="h-4 w-4" />
-                                            </div>
                                           )}
                                         </div>
                                       </div>
                                     </AccordionTrigger>
-
-                                    <AccordionContent className="w-80 h-full ">
-                                      <div className="space-y-3 pt-4 w-full ">
-                                        <div
-                                          className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors w-full`}
-                                        >
-                                          <div className="flex-1 space-y-1 min-w-0">
-                                            <h4 className="font-medium text-sm md:text-base">
-                                              {task.title}
-                                            </h4>
-                                            <article
-                                              dangerouslySetInnerHTML={{
-                                                __html: task?.description,
-                                              }}
-                                              className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
-                                            ></article>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </AccordionContent>
                                   </AccordionItem>
                                 ))}
                               </Accordion>
@@ -1318,6 +1326,42 @@ export function ProjectPlaygroundPage({
         </div>
       </div>
 
+      <Dialog open={showTask} onOpenChange={() => setShowTask(false)}>
+        <DialogContent className="w-full max-w-[60vw] sm:max-w-3xl md:max-w-5xl lg:max-w-7xl  max-h-[80vh] sm:max-h-[90vh] overflow-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>{activeTask?.title}</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            <div className="space-y-3 pt-4 w-full ">
+              <div
+                className={`flex items-center space-x-4 rounded-lg border p-4 transition-colors w-full`}
+              >
+                <div className="flex-1 space-y-1 min-w-0">
+                  <article
+                    dangerouslySetInnerHTML={{
+                      __html: activeTask?.description,
+                    }}
+                    className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                  ></article>
+                </div>
+              </div>
+            </div>
+          </DialogDescription>
+
+          <DialogFooter className="sticky bottom-0  pt-4 sm:pt-6">
+            <Button variant="outline" onClick={() => setShowTask(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => setMarkAsCompleted(activeTask!)}
+            >
+              Mark Completed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={markAsCompleted}
         onOpenChange={() => setMarkAsCompleted(false)}
@@ -1422,7 +1466,6 @@ export function ProjectPlaygroundPage({
         </DialogContent>
       </Dialog>
 
-      {/* {showPayment && ( */}
       <PaymentDialog
         disableMB={true}
         disableOnetime={true}
@@ -1432,7 +1475,6 @@ export function ProjectPlaygroundPage({
         onHandlePreview={() => {}}
         onHandlePurchase={(id: string, type: any, success: boolean) => {}}
       />
-      {/* )} */}
     </div>
   );
 }

@@ -134,3 +134,81 @@ export const formatDate = (date: string) => {
       return `${month}/${day}/${year}`;
   }
 };
+
+export function preprocessTerminalOutput(raw: string) {
+  // --- Handle carriage return (\r) ---
+  const lines = raw.split("\n").reduce<string[]>((acc, line) => {
+    if (line.includes("\r")) {
+      const parts = line.split("\r");
+      acc.push(parts[parts.length - 1]); // keep last overwrite
+    } else {
+      acc.push(line);
+    }
+    return acc;
+  }, []);
+
+  // --- Regex for ANSI escape sequences ---
+  const ansiRegex = /\x1b\[(\d+)(;\d+)*m/g; // e.g. \x1b[31m or \x1b[1;32m
+
+  // Mapping ANSI codes → Tailwind classes
+  const ansiToClass: Record<string, string> = {
+    "0": "text-gray-300", // reset/default
+    "1": "font-bold",
+    "30": "text-black",
+    "31": "text-red-400",
+    "32": "text-green-400",
+    "33": "text-yellow-400",
+    "34": "text-blue-400",
+    "35": "text-pink-400",
+    "36": "text-cyan-400",
+    "37": "text-white",
+    "90": "text-gray-500",
+    "91": "text-red-500",
+    "92": "text-green-500",
+    "93": "text-yellow-500",
+    "94": "text-blue-500",
+    "95": "text-pink-500",
+    "96": "text-cyan-500",
+    "97": "text-white",
+  };
+
+  // --- Split lines and parse ANSI ---
+  return lines.map((line) => {
+    const spans = [];
+    let lastIndex = 0;
+    let currentClass = "text-gray-300"; // default
+
+    line.replace(ansiRegex, (match, p1, p2, offset) => {
+      // Push text before ANSI code
+      if (offset > lastIndex) {
+        spans.push({
+          text: line.slice(lastIndex, offset),
+          className: currentClass,
+        });
+      }
+
+      // Parse codes (may be multiple: e.g. "1;32")
+      const codes = [p1, ...(p2 ? p2.split(";").slice(1) : [])];
+      codes.forEach((c) => {
+        if (ansiToClass[c]) {
+          currentClass = ansiToClass[c];
+        } else if (c === "0") {
+          currentClass = "text-gray-300"; // reset
+        }
+      });
+
+      lastIndex = offset + match.length;
+      return "";
+    });
+
+    // Push any trailing text
+    if (lastIndex < line.length) {
+      spans.push({
+        text: line.slice(lastIndex).replace(/\t/g, "    "),
+        className: currentClass,
+      });
+    }
+
+    return spans;
+  });
+}

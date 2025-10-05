@@ -1,6 +1,22 @@
 [
     {
         "name": "Node.js",
-        "code": "node"
+        "code": "node",
+        "supported": true
+    },
+    {
+        "name": "Python",
+        "code": "python",
+        "supported": false
+    },
+    {
+        "name": "Java",
+        "code": "java",
+        "supported": false
+    },
+    {
+        "name": "Rust",
+        "code": "rust",
+        "supported": false
     }
 ]

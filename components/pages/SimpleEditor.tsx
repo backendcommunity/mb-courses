@@ -58,7 +58,8 @@ export function SimpleEditor({ playground }: EditorProps) {
   }, []);
 
   useEffect(() => {
-    const language = languages.find((l) => l.code === playground?.language);
+    const lan = playground?.language ?? "node";
+    const language = languages.find((l) => l.code === lan);
     setLanguage(language);
   }, [playground]);
 
@@ -160,18 +161,6 @@ export function SimpleEditor({ playground }: EditorProps) {
                   {l.name}
                 </SelectItem>
               ))}
-              <SelectItem value="python">Python</SelectItem>
-              <SelectItem value="php">PHP</SelectItem>
-              <SelectItem value="ruby">Ruby</SelectItem>
-              <SelectItem value="java">Java</SelectItem>
-              <SelectItem value="c">C</SelectItem>
-              <SelectItem value="cpp">C++</SelectItem>
-              <SelectItem value="go">Go</SelectItem>
-              <SelectItem value="rust">Rust</SelectItem>
-              <SelectItem value="csharp">C#</SelectItem>
-              <SelectItem value="kotlin">Kotlin</SelectItem>
-              <SelectItem value="scala">Scala</SelectItem>
-              <SelectItem value="perl">Perl</SelectItem>
             </SelectContent>
           </Select>
 
@@ -203,6 +192,7 @@ export function SimpleEditor({ playground }: EditorProps) {
       <CardContent className="p-0">
         <div className="relative flex h-[600px] border rounded-md overflow-hidden flex-col">
           {/* Code box */}
+
           <div
             className="flex-1  text-white p- font-mono text-sm"
             onClick={() => {
@@ -212,8 +202,7 @@ export function SimpleEditor({ playground }: EditorProps) {
           >
             <Editor
               height="100%"
-              language="javascript"
-              // language={currentLanguage}
+              language={language.code === "node" ? "javascript" : language.code}
               theme={theme?.includes("dark") ? "vs-dark" : "light"}
               value={code}
               onChange={(e) => setCode(e!)}
@@ -348,7 +337,7 @@ export function SimpleEditor({ playground }: EditorProps) {
             </label>
           </div>
           <Button
-            disabled={true || isLoading}
+            disabled={isLoading}
             onClick={runCode}
             className="flex items-center gap-2"
           >

@@ -91,41 +91,6 @@ export function NavigationBar({
     if (isNotificationsOpen) load();
   }, [isNotificationsOpen]);
 
-  // const notifications = [
-  //   {
-  //     id: "1",
-  //     title: "Course Completed!",
-  //     message: "You've completed Advanced Node.js Patterns",
-  //     time: "2 hours ago",
-  //     type: "success",
-  //     read: false,
-  //   },
-  //   {
-  //     id: "2",
-  //     title: "Subscription Renewed",
-  //     message: "Your Pro subscription has been renewed for another month",
-  //     time: "3 hours ago",
-  //     type: "billing",
-  //     read: false,
-  //   },
-  //   {
-  //     id: "3",
-  //     title: "New Assignment",
-  //     message: "Database Design exercise is now available",
-  //     time: "4 hours ago",
-  //     type: "info",
-  //     read: false,
-  //   },
-  //   {
-  //     id: "4",
-  //     title: "MB Earned!",
-  //     message: "You earned 150 MB for completing the API challenge",
-  //     time: "1 day ago",
-  //     type: "achievement",
-  //     read: true,
-  //   },
-  // ];
-
   const skillGuides = [
     {
       name: "Python",
@@ -225,7 +190,7 @@ export function NavigationBar({
 
   return (
     <>
-      <nav className="sticky md:pl-72 top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky p-1 md:pl-72 top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex gap-2 h-16 items-center px-4">
           {/* Mobile Menu Button */}
           {isMobile && (

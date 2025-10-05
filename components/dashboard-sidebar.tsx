@@ -16,6 +16,8 @@ import {
   Gift,
   Award,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,54 +33,21 @@ interface DashboardSidebarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
   isMobile: boolean;
+  onCollapsed: Function;
+  isCollapsed: boolean;
 }
 
 const navigationData = {
   learn: [
-    {
-      title: "Courses",
-      url: routes.courses,
-      icon: BookOpen,
-      active: true,
-    },
-    {
-      title: "Bootcamps",
-      url: routes.bootcamps,
-      icon: Zap,
-      active: true,
-    },
-    {
-      title: "Learning Paths",
-      url: routes.paths,
-      icon: Target,
-      active: false,
-    },
-    {
-      title: "Roadmaps",
-      url: routes.roadmaps,
-      icon: TrendingUp,
-      active: true,
-    },
+    { title: "Courses", url: routes.courses, icon: BookOpen, active: true },
+    { title: "Bootcamps", url: routes.bootcamps, icon: Zap, active: true },
+    { title: "Learning Paths", url: routes.paths, icon: Target, active: false },
+    { title: "Roadmaps", url: routes.roadmaps, icon: TrendingUp, active: true },
   ],
   build: [
-    {
-      title: "MB Projects",
-      url: routes.projects,
-      icon: Code2,
-      active: false,
-    },
-    {
-      title: "Project30",
-      url: routes.project30,
-      icon: Sparkles,
-      active: true,
-    },
-    {
-      title: "MB Lands",
-      url: routes.lands,
-      icon: Trophy,
-      active: false,
-    },
+    { title: "MB Projects", url: routes.projects, icon: Code2, active: false },
+    { title: "Project30", url: routes.project30, icon: Sparkles, active: true },
+    { title: "MB Lands", url: routes.lands, icon: Trophy, active: false },
   ],
   grow: [
     {
@@ -99,12 +68,7 @@ const navigationData = {
       icon: Award,
       active: false,
     },
-    {
-      title: "Community",
-      url: routes.community,
-      icon: Users,
-      active: false,
-    },
+    { title: "Community", url: routes.community, icon: Users, active: false },
   ],
 };
 
@@ -112,181 +76,171 @@ export function DashboardSidebar({
   currentPath,
   onNavigate,
   isMobile,
+  isCollapsed,
+  onCollapsed,
 }: DashboardSidebarProps) {
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const user = useUser();
   const level = useLevel();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+  useEffect(() => setMounted(true), []);
+  useEffect(() => setCollapsed(isCollapsed), [isCollapsed]);
+  if (!mounted) return null;
 
   return (
-    <div className="flex fixed w-72 flex-col h-full bg-sidebar border-r border-border overflow-hidden">
+    <div
+      className={`flex fixed flex-col h-full bg-sidebar border-r border-border overflow-hidden transition-all duration-300 ${
+        collapsed ? "w-20" : "w-72"
+      }`}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <button
           onClick={() => onNavigate(routes.dashboard)}
-          className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 rounded-lg transition-colors w-full"
+          className="flex items-center gap-2"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <span className="text-sm font-bold">MB</span>
           </div>
-          {/* <BrandLogo /> */}
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Masteringbackend
-            </span>
-            <span className="truncate text-xs text-muted-foreground">
-              Career Platform
-            </span>
-          </div>
-        </button>
-
-        {/* User Progress Card */}
-        <div className="mt-4 rounded-lg border border-border bg-card p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="h-4 w-4 text-yellow-500" />
-            <span className="text-sm font-medium">
-              Level {user?.level} Engineer
-            </span>
-            {user?.isPremium ? (
-              <Badge
-                variant="outline"
-                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
-              >
-                <Crown className="h-3 w-3 mr-1" />
-                {user?.subscription?.name}
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
-              >
-                Free
-              </Badge>
-            )}
-          </div>
-          <Progress
-            value={(user?.points / user?.xpToNextLevel) * 100}
-            className="h-2 mb-1"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{user?.points?.toLocaleString()} MB</span>
-            <span>
-              {level?.mbToNextLevel?.toLocaleString()} MB to Level{" "}
-              {user?.level + 1}
-            </span>
-          </div>
-        </div>
-
-        {/* MB Balance */}
-        <div className="mt-3">
-          <Button
-            variant="outline"
-            className="w-full justify-between border-border hover:bg-primary/10 hover:border-primary/50 transition-colors"
-            onClick={() => onNavigate(routes.xpStore)}
-          >
-            <div className="flex items-center gap-2">
-              <Gift className="h-4 w-4 text-primary" />
-              <span className="text-primary">
-                {user?.points?.toLocaleString()} MB
+          {!collapsed && (
+            <div className="grid text-left text-sm leading-tight">
+              <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Masteringbackend
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
+                Career Platform
               </span>
             </div>
-            <span className="text-xs text-primary">Redeem</span>
-          </Button>
-        </div>
+          )}
+        </button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            onCollapsed(!collapsed);
+            setCollapsed(!collapsed);
+          }}
+          className="ml-auto"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
+      {/* User Progress (hidden when collapsed) */}
+      {!collapsed && (
+        <div className="p-4 border-b border-border">
+          <div className="rounded-lg border border-border bg-card p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Star className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm font-medium">
+                Level {user?.level} Engineer
+              </span>
+              {user?.isPremium ? (
+                <Badge
+                  variant="outline"
+                  className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  {user?.subscription?.name}
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 text-yellow-600 border-yellow-400/30 dark:text-yellow-400"
+                >
+                  Free
+                </Badge>
+              )}
+            </div>
+            <Progress
+              value={(user?.points / user?.xpToNextLevel) * 100}
+              className="h-2 mb-1"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{user?.points?.toLocaleString()} MB</span>
+              <span>
+                {level?.mbToNextLevel?.toLocaleString()} MB to Level{" "}
+                {user?.level + 1}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              className="w-full justify-between border-border hover:bg-primary/10 hover:border-primary/50 transition-colors"
+              onClick={() => onNavigate(routes.xpStore)}
+            >
+              <div className="flex items-center gap-2">
+                <Gift className="h-4 w-4 text-primary" />
+                <span className="text-primary">
+                  {user?.points?.toLocaleString()} MB
+                </span>
+              </div>
+              <span className="text-xs text-primary">Redeem</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-2">
-        {/* Learn Section */}
-        <div className="px-3 py-2">
-          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
-            Learn
-          </h3>
-          <div className="space-y-1">
-            {navigationData.learn.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => onNavigate(item.url)}
-                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
-                  currentPath === item.url || currentPath.startsWith(item.url)
-                    ? "bg-primary/15 text-primary"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-
-                  {!item.active && <Badge variant={"secondary"}>WIP</Badge>}
-                </div>
-              </button>
-            ))}
+      <div className="flex-1 overflow-y-auto py-2 ">
+        {Object.entries(navigationData).map(([section, items]) => (
+          <div key={section} className="px-3 py-2">
+            {!collapsed && (
+              <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1 capitalize">
+                {section}
+              </h3>
+            )}
+            <div className="space-y-1">
+              {items.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={() => onNavigate(item.url)}
+                  title={collapsed ? item.title : ""}
+                  className={`flex w-full items-center ${
+                    collapsed ? "justify-center" : "justify-between"
+                  } px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
+                    currentPath === item.url || currentPath.startsWith(item.url)
+                      ? "bg-primary/15 text-primary"
+                      : ""
+                  }`}
+                >
+                  <div
+                    className={`flex items-center gap-2 ${
+                      collapsed ? "" : "w-full"
+                    }`}
+                  >
+                    <item.icon
+                      className={`${
+                        collapsed ? "h-6 w-6" : "h-4 w-4"
+                      } transition-all`}
+                    />
+                    {!collapsed && <span>{item.title}</span>}
+                    {!collapsed && !item.active && (
+                      <Badge variant="secondary">WIP</Badge>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-
-        {/* Build Section */}
-        <div className="px-3 py-2">
-          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
-            Build
-          </h3>
-          <div className="space-y-1">
-            {navigationData.build.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => onNavigate(item.url)}
-                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
-                  currentPath === item.url || currentPath.startsWith(item.url)
-                    ? "bg-primary/15 text-primary"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                  {!item.active && <Badge variant="secondary">WIP</Badge>}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Grow Section */}
-        <div className="px-3 py-2">
-          <h3 className="px-4 text-xs font-medium text-muted-foreground mb-1">
-            Grow
-          </h3>
-          <div className="space-y-1">
-            {navigationData.grow.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => onNavigate(item.url)}
-                className={`flex w-full items-center justify-between px-4 py-2 rounded-md hover:bg-primary/10 transition-colors ${
-                  currentPath === item.url || currentPath.startsWith(item.url)
-                    ? "bg-primary/15 text-primary"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                  {!item.active && <Badge variant="secondary">WIP</Badge>}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border p-4 md:p-6">
-        <div className="flex items-center justify-between">
+      <div className="border-t border-border p-4">
+        <div
+          className={`flex items-center ${
+            collapsed ? "justify-center" : "justify-between"
+          }`}
+        >
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8 border border-border">
               <AvatarImage
@@ -297,12 +251,14 @@ export function DashboardSidebar({
                 {user?.name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user?.name}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {user?.email}
-              </span>
-            </div>
+            {!collapsed && (
+              <div className="grid text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user?.name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user?.email}
+                </span>
+              </div>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -312,7 +268,7 @@ export function DashboardSidebar({
               onNavigate(routes.logout);
             }}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className={`${collapsed ? "h-6 w-6" : "h-4 w-4"}`} />
           </Button>
         </div>
       </div>

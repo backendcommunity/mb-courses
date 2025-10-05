@@ -55,8 +55,8 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       setLoading(true);
       if (
         selectedStatus.includes("all") &&
-        selectedLevel.includes("all") &&
-        !debouncedSearch.trim()
+        selectedLevel.includes("all")
+        //&& !debouncedSearch.trim()
       )
         return;
 
