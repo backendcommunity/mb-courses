@@ -240,12 +240,12 @@ export function CourseWatchPage({
     ];
 
   const handleVideoClick = (video: Video) => {
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quizCourse?.quiz?.required) {
-        toast.warning("This quiz is required and you have to meet the mark");
-        return;
-      }
-    }
+    // if (currentVideo?.type == "QUIZ") {
+    //   if (!quizPassed || currentVideo?.quizCourse?.quiz?.required) {
+    //     toast.warning("This quiz is required and you have to meet the mark");
+    //     return;
+    //   }
+    // }
 
     setCurrentVideo(video);
     window.history.pushState(
@@ -274,13 +274,13 @@ export function CourseWatchPage({
   };
 
   const handleChapterClick = (chapter: Chapter) => {
-    if (
-      currentVideo?.type == "QUIZ" &&
-      (!quizPassed || currentVideo?.quizCourse?.quiz?.required)
-    )
-      return toast.warning(
-        "This quiz is required and you have to meet the mark"
-      );
+    // if (
+    //   currentVideo?.type == "QUIZ" &&
+    //   (!quizPassed || currentVideo?.quizCourse?.quiz?.required)
+    // )
+    //   return toast.warning(
+    //     "This quiz is required and you have to meet the mark"
+    //   );
 
     setChapter(chapter);
     setCurrentVideo(chapter?.videos[0]);
