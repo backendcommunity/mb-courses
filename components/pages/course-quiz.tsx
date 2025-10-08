@@ -17,46 +17,93 @@ import { useAppStore } from "@/lib/store";
 import { Quiz } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
+import { Loader } from "../ui/loader";
 
 interface CourseQuizPageProps {
   courseId: string;
-  quiz: Quiz;
+  quizId: string;
   onNavigate: (path: string) => void;
   showNav?: boolean;
   handleQuizSubmit: (passed: boolean) => void;
+  attempted?: boolean;
 }
 
 export function CourseQuizPage({
   courseId,
-  quiz,
+  quizId,
   onNavigate,
   showNav = true,
   handleQuizSubmit,
 }: CourseQuizPageProps) {
   const store = useAppStore();
+
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quizStatus, setQuizStatus] = useState<
+    "loading" | "not_started" | "in_progress" | "completed"
+  >("loading");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes in seconds
-  const [quizStarted, setQuizStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [score, setScore] = useState<number | null>(null);
-  const [newUserQuiz, setNewUserQuiz] = useState<any>();
-  const [quizCompleted, setQuizCompleted] = useState(
-    quiz?.userQuiz?.passed ?? false
-  );
   const [celebration, setCelebration] = useState(false);
 
-  // Timer effect
+  // ✅ Load quiz details on mount
   useEffect(() => {
-    if (quizStarted && !quizCompleted && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    } else if (timeLeft === 0 && !quizCompleted) {
-      handleSubmitQuiz();
-    }
-  }, [quizStarted, quizCompleted, timeLeft]);
+    const loadQuiz = async () => {
+      try {
+        setQuizStatus("loading");
+        const _quiz = await store.getQuiz(quizId);
 
+        if (!_quiz) {
+          toast.error("Quiz not found!");
+          setQuizStatus("not_started");
+          return;
+        }
+
+        setQuiz(_quiz);
+
+        // Determine initial quiz status
+        if (_quiz.userQuiz?.completed || _quiz.userQuiz?.passed) {
+          setQuizStatus("completed");
+          setScore(_quiz.userQuiz?.score);
+          handleQuizSubmit(_quiz.userQuiz?.passed);
+        } else if (_quiz.enrolled) {
+          setQuizStatus("in_progress");
+        } else {
+          setQuizStatus("not_started");
+        }
+
+        // Initialize timer
+        setTimeLeft((_quiz?.timeLimit ?? 20) * 60);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load quiz");
+        setQuizStatus("not_started");
+      }
+    };
+
+    loadQuiz();
+  }, [quizId]);
+
+  // ✅ Timer countdown
+  useEffect(() => {
+    if (quizStatus !== "in_progress" || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmitQuiz();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [quizStatus, timeLeft]);
+
+  // ✅ Utility
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -70,84 +117,102 @@ export function CourseQuizPage({
     }));
   };
 
+  // ✅ Submit quiz
   const handleSubmitQuiz = async () => {
+    if (!quiz) return;
+
     let totalPoints = 0;
     let earnedPoints = 0;
-    let result: any = [];
+    const results: any[] = [];
 
-    quiz?.questions.forEach((question, index) => {
+    quiz.questions.forEach((question, index) => {
       const userAnswerIndex = parseInt(answers[index]);
-
-      // If user didn't answer, skip
       if (isNaN(userAnswerIndex)) return;
 
-      const userAnswerValue = question?.options![userAnswerIndex];
+      const userAnswerValue = question.options![userAnswerIndex];
       const correctAnswerValue = question.correctAnswer;
       const questionPoints = question.points || 0;
 
       totalPoints += questionPoints;
+      const passed = userAnswerValue === correctAnswerValue;
+      if (passed) earnedPoints += questionPoints;
 
-      if (userAnswerValue === correctAnswerValue) {
-        earnedPoints += questionPoints;
-        result.push({
-          ...question,
-          passed: true,
-        });
-      }
+      results.push({ ...question, userAnswer: userAnswerValue, passed });
     });
 
-    // Avoid division by 0
     const finalScore =
       totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
 
     setScore(finalScore);
+    setQuizStatus("completed");
+    setCelebration(finalScore >= (quiz?.passingScore ?? 50));
+    handleQuizSubmit(finalScore >= (quiz?.passingScore ?? 50));
 
-    await store.submitQuiz(quiz?.id, {
-      items: result,
-      userQuizId: quiz?.userQuiz?.id ?? newUserQuiz?.id,
+    const updatedQuiz = {
+      ...quiz,
+      userQuiz: {
+        ...quiz.userQuiz,
+        score: finalScore,
+        completed: true,
+        items: results,
+      },
+      passed: finalScore >= (quiz?.passingScore ?? 50),
+    };
+    setQuiz(updatedQuiz);
+
+    await store.submitQuiz(quiz.id, {
+      items: results,
+      userQuizId: quiz?.userQuiz?.id ?? quiz?.id,
       score: finalScore,
+      completed: true,
     });
-
-    setQuizCompleted(true);
-    setCelebration(finalScore >= quiz?.passingScore);
   };
 
-  const handleClose = () => {
-    handleQuizSubmit(true);
-  };
-
+  // ✅ Start quiz
   const startQuiz = async () => {
+    if (!quiz) return;
     try {
-      const new_quiz = await store.startQuiz(quiz?.id, {
-        userQuizId: quiz?.userQuiz?.id,
-      });
-
-      if (!new_quiz) return;
-
-      setQuizStarted(true);
-
-      setTimeLeft(quiz?.timeLimit * 60);
-      setNewUserQuiz(new_quiz);
-
-      Object.assign(quiz, { userQuiz: new_quiz, enrolled: true });
-      if (!quiz?.userQuiz?.passed)
-        toast.success("Quiz started and your time starts now");
-    } catch (error: any) {
-      console.log(error?.message);
-      toast.error("An error occured. Please try again");
+      const startedQuiz = await store.startQuiz(quiz.id);
+      setQuiz(startedQuiz);
+      setQuizStatus("in_progress");
+      setTimeLeft((quiz?.timeLimit ?? 20) * 60);
+      setCurrentQuestion(0);
+      setAnswers({});
+      toast.success("Quiz started — your time starts now!");
+    } catch {
+      toast.error("Failed to start quiz. Try again.");
     }
   };
 
   const resetQuiz = () => {
-    setCurrentQuestion(0);
+    if (!quiz) return;
+    setQuizStatus("not_started");
     setAnswers({});
-    setQuizStarted(false);
-    setQuizCompleted(false);
     setScore(null);
-    setTimeLeft(quiz?.timeLimit * 60);
+    setCurrentQuestion(0);
+    setTimeLeft((quiz?.timeLimit ?? 20) * 60);
   };
 
-  if (!quizStarted) {
+  const handleClose = () => handleQuizSubmit(true);
+
+  // ===============================
+  // Render Logic
+  // ===============================
+
+  if (quizStatus === "loading") {
+    return (
+      <div className="flex items-center p-6 h-[400px]">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Loader isFull={false} isLoader={true} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!quiz) return null;
+
+  // 🧩 Not Started
+  if (quizStatus === "not_started") {
     return (
       <div className="flex-1 p-6">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -157,9 +222,8 @@ export function CourseQuizPage({
                 variant="ghost"
                 size="sm"
                 onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-                className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Quizzes
               </Button>
             </div>
@@ -167,21 +231,21 @@ export function CourseQuizPage({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">{quiz?.title}</CardTitle>
-              <p className="text-gray-600">{quiz?.description}</p>
+              <CardTitle className="text-2xl">{quiz.title}</CardTitle>
+              <p className="text-gray-600">{quiz.description}</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Questions</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {quiz?.questions.length}
+                    {quiz.questions.length}
                   </p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Time Limit</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {quiz?.timeLimit} min
+                    {quiz.timeLimit} min
                   </p>
                 </div>
               </div>
@@ -194,31 +258,17 @@ export function CourseQuizPage({
                       Quiz Instructions
                     </h4>
                     <ul className="text-sm text-yellow-700 mt-2 space-y-1">
-                      <li>
-                        • You have {quiz?.timeLimit} minutes to complete this
-                        quiz
-                      </li>
-                      <li>• You need {quiz?.passingScore}% to pass</li>
-                      <li>• You can retake the quiz if needed</li>
-                      <li>• Make sure you have a stable internet connection</li>
+                      <li>• You have {quiz.timeLimit} minutes to complete</li>
+                      <li>• You need {quiz.passingScore}% to pass</li>
+                      <li>• You can retake if needed</li>
                     </ul>
                   </div>
                 </div>
               </div>
 
               <Button onClick={startQuiz} className="w-full" size="lg">
-                {quiz?.enrolled && !quiz?.userQuiz?.passed
-                  ? "Retake Quiz"
-                  : quiz?.userQuiz?.passed
-                  ? "Review Quiz"
-                  : "Start Quiz"}
+                Start Quiz
               </Button>
-
-              {score! >= quiz?.passingScore && (
-                <Button onClick={handleClose} className="w-full" size="lg">
-                  Close Quiz
-                </Button>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -226,23 +276,113 @@ export function CourseQuizPage({
     );
   }
 
-  <ConfettiCelebration
-    onComplete={() => setCelebration(false)}
-    isVisible={celebration}
-    celebrationType="completion"
-    courseName={quiz?.title!}
-  />;
-  if (quizCompleted) {
-    const _score = score ?? quiz?.userQuiz?.score;
-    const passed = _score >= quiz?.passingScore!;
-
-    const questions =
-      quiz?.enrolled && quiz?.userQuiz?.completed
-        ? quiz?.userQuiz.items
-        : quiz?.questions;
+  // 🧩 In Progress
+  if (quizStatus === "in_progress") {
+    const currentQ = quiz.questions[currentQuestion];
+    const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
 
     return (
       <div className="flex-1 p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {showNav && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigate(routes.courseQuizzes(courseId))}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Exit Quiz
+            </Button>
+          )}
+
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4" />
+              {formatTime(timeLeft)}
+            </div>
+            <Badge variant="outline">
+              {currentQuestion + 1} / {quiz.questions.length}
+            </Badge>
+          </div>
+
+          <Progress value={progress} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">{currentQ.question}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentQ.options?.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() =>
+                    handleAnswerSelect(currentQuestion, index.toString())
+                  }
+                  className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                    answers[currentQuestion] === index.toString()
+                      ? "border-primary bg-primary text-white"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setCurrentQuestion((prev) => Math.max(0, prev - 1))
+              }
+              disabled={currentQuestion === 0}
+            >
+              Previous
+            </Button>
+
+            {currentQuestion === quiz.questions.length - 1 ? (
+              <Button
+                onClick={handleSubmitQuiz}
+                disabled={Object.keys(answers).length !== quiz.questions.length}
+              >
+                Submit Quiz
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setCurrentQuestion((prev) => prev + 1)}
+                disabled={!answers[currentQuestion]}
+              >
+                Next
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🧩 Completed
+  if (quizStatus === "completed") {
+    const _score =
+      score ?? quiz.enrolled
+        ? quiz.userQuiz.bestScore
+        : quiz.userQuiz?.score ?? 0;
+    const passed = _score >= (quiz.passingScore ?? 50);
+    const questions = quiz.userQuiz?.items ?? quiz.questions;
+
+    return (
+      <div className="flex-1 p-6 relative">
+        {celebration && (
+          <ConfettiCelebration
+            onComplete={() => setCelebration(false)}
+            isVisible={celebration}
+            celebrationType="completion"
+            courseName={quiz.title}
+          />
+        )}
+
         <div className="max-w-2xl mx-auto space-y-6">
           {showNav && (
             <div className="flex items-center gap-4 mb-6">
@@ -276,6 +416,7 @@ export function CourseQuizPage({
                   : "You can retake the quiz to improve your score."}
               </p>
             </CardHeader>
+
             <CardContent className="space-y-6">
               <div className="text-center">
                 <div
@@ -284,55 +425,45 @@ export function CourseQuizPage({
                 >
                   {_score}%
                 </div>
-                <Badge
-                  variant={passed ? "default" : "destructive"}
-                  className="mb-4"
-                >
-                  {passed ? "PASSED" : "FAILED"} (Need {quiz?.passingScore}%)
+                <Badge variant={passed ? "default" : "destructive"}>
+                  {passed ? "PASSED" : "FAILED"} (Need {quiz.passingScore}%)
                 </Badge>
               </div>
 
               <div className="space-y-4">
                 <h4 className="font-semibold">Quiz Review</h4>
-                {questions.map((question: any, index: number) => {
-                  const userAnswerIndex = parseInt(answers[index]);
-                  const userAnswer = question?.options![userAnswerIndex];
-                  const isCorrect = userAnswer === question.correctAnswer;
-
-                  const text = () => {
-                    if (userAnswer) return userAnswer;
-                    if (question.passed) return question.correctAnswer;
-                    return quiz?.userQuiz?.completed
-                      ? "Not available"
-                      : "Not answered";
-                  };
-
-                  return (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-start gap-2 mb-2">
-                        {isCorrect || !question?.passed ? (
-                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium">{question.question}</p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Your answer: {text()}
+                {questions.map((question: any, index: number) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex items-start gap-2 mb-2">
+                      {question.passed ? (
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium">{question.question}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Your answer:{" "}
+                          {question?.userAnswer
+                            ? question.userAnswer
+                            : question.passed
+                            ? question.correctAnswer
+                            : "Not answered"}
+                        </p>
+                        {!question.passed && (
+                          <p className="text-sm text-green-600 mt-1">
+                            Correct answer: {question.correctAnswer}
                           </p>
-                          {(!isCorrect || !question?.passed) && (
-                            <p className="text-sm text-green-600 mt-1">
-                              Correct answer: {question?.correctAnswer}
-                            </p>
-                          )}
+                        )}
+                        {question.explanation && (
                           <p className="text-sm text-gray-500 mt-2">
                             {question.explanation}
                           </p>
-                        </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
 
               <div className="flex gap-4 flex-col">
@@ -343,22 +474,14 @@ export function CourseQuizPage({
                 >
                   Retake Quiz
                 </Button>
-                {score! >= quiz?.passingScore && (
+                {passed && (
                   <Button
-                    variant={"destructive"}
+                    variant="destructive"
                     onClick={handleClose}
                     className="w-full"
                     size="lg"
                   >
                     Close Quiz
-                  </Button>
-                )}
-                {showNav && (
-                  <Button
-                    onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-                    className="flex-1"
-                  >
-                    Back to Quizzes
                   </Button>
                 )}
               </div>
@@ -369,109 +492,5 @@ export function CourseQuizPage({
     );
   }
 
-  const currentQ = quiz?.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / quiz?.questions.length) * 100;
-
-  return (
-    <div className="flex-1 p-6">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          {showNav && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onNavigate(routes.courseQuizzes(courseId))}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Exit Quiz
-            </Button>
-          )}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" />
-              {formatTime(timeLeft)}
-            </div>
-            <Badge variant="outline">
-              {currentQuestion + 1} of {quiz?.questions.length}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600">
-            <span>Progress</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} />
-        </div>
-
-        {/* Question */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">{currentQ.question}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {currentQ?.options?.map((option, index) => (
-              <button
-                key={index}
-                onClick={() =>
-                  handleAnswerSelect(currentQuestion, index.toString())
-                }
-                className={`w-full text-left p-4 rounded-lg border transition-colors ${
-                  answers[currentQuestion] === index.toString()
-                    ? "border-primary bg-primary"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 ${
-                      answers[currentQuestion] === index.toString()
-                        ? "border-primary bg-primary"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {answers[currentQuestion] === index.toString() && (
-                      <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5" />
-                    )}
-                  </div>
-                  <span>{option}</span>
-                </div>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Navigation */}
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
-            disabled={currentQuestion === 0}
-          >
-            Previous
-          </Button>
-
-          {currentQuestion === quiz?.questions?.length - 1 ? (
-            <Button
-              onClick={handleSubmitQuiz}
-              disabled={Object.keys(answers).length !== quiz?.questions.length}
-            >
-              Submit Quiz
-            </Button>
-          ) : (
-            <Button
-              onClick={() => setCurrentQuestion((prev) => prev + 1)}
-              disabled={!answers[currentQuestion]}
-            >
-              Next
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }

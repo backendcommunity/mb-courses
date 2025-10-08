@@ -393,6 +393,10 @@ export interface Video {
   quiz?: Quiz;
   exercise?: Exercise;
   resources?: Resource[];
+  quizCourse?: {
+    quiz: Quiz;
+    required: boolean;
+  };
   video: Number;
   mb: number;
   instructor?: any;

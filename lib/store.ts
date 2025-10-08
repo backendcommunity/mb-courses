@@ -142,7 +142,7 @@ interface AppState {
     slug: string,
     courseId: string
   ) => UserCourse | any;
-  startQuiz: (id: string, data: { userQuizId: string }) => any;
+  startQuiz: (id: string) => any;
   submitQuiz: (id: string, questions: any) => any;
   saveNote: (note: string, courseId: string, videoId: string) => any;
   startMilestone: (slug: string, topicId: string, data: any) => any;
@@ -448,10 +448,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.put(`/users/projects/${slug}`, payload);
     return data?.data;
   },
-  startQuiz: async (id: string, { userQuizId }: { userQuizId: string }) => {
-    const { data } = await api.post("/quizzes/" + id + "/start", {
-      userQuizId,
-    });
+  startQuiz: async (id: string) => {
+    const { data } = await api.post("/quizzes/" + id + "/start");
     return data?.data;
   },
   resumeSubscription: async (id: string) => {

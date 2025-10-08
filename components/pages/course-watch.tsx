@@ -139,11 +139,13 @@ export function CourseWatchPage({
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
 
-    if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
-        toast.warning("This quiz is required and you have to meet the mark");
-        return;
-      }
+    if (
+      currentVideo?.type == "QUIZ" &&
+      !quizPassed &&
+      currentVideo?.quizCourse?.quiz?.required
+    ) {
+      toast.warning("This quiz is required and you have to meet the mark");
+      return;
     }
 
     try {
@@ -239,7 +241,7 @@ export function CourseWatchPage({
 
   const handleVideoClick = (video: Video) => {
     if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
+      if (!quizPassed || currentVideo?.quizCourse?.quiz?.required) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
@@ -274,7 +276,7 @@ export function CourseWatchPage({
   const handleChapterClick = (chapter: Chapter) => {
     if (
       currentVideo?.type == "QUIZ" &&
-      (!quizPassed || currentVideo?.quiz?.required)
+      (!quizPassed || currentVideo?.quizCourse?.quiz?.required)
     )
       return toast.warning(
         "This quiz is required and you have to meet the mark"
@@ -371,14 +373,14 @@ export function CourseWatchPage({
                 <CourseQuizPage
                   courseId={slug}
                   onNavigate={() => {}}
-                  quiz={currentVideo?.quiz!}
+                  quizId={currentVideo?.quizId!}
                   showNav={false}
+                  attempted={isVideoCompleted(currentVideo.id)}
                   handleQuizSubmit={(passed) => {
                     setQuizPassed(passed);
-                    if (!passed) {
-                    }
 
-                    handleMarkComplete();
+                    if (passed && currentVideo?.quizCourse?.required)
+                      handleMarkComplete();
                   }}
                 />
               </Card>
@@ -424,12 +426,13 @@ export function CourseWatchPage({
                     )}
 
                   {(currentVideo.type === "QUIZ" && quizPassed) ||
-                    (currentVideo?.quiz && !currentVideo?.quiz?.required && (
-                      <Button onClick={handleMarkComplete}>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Mark Quiz Complete
-                      </Button>
-                    ))}
+                    (currentVideo?.quizCourse?.quiz &&
+                      !currentVideo?.quizCourse?.quiz?.required && (
+                        <Button onClick={handleMarkComplete}>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Mark Quiz Complete
+                        </Button>
+                      ))}
                 </>
               )}
 
@@ -740,11 +743,13 @@ export function CourseWatchPage({
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       {(!video?.duration?.includes("0") ||
-                        video.quiz?.timeLimit! > 0) && (
+                        video?.quizCourse?.quiz?.timeLimit! > 0) && (
                         <>
                           <Clock className="h-3 w-3" />
                           <span>
-                            {video?.duration ?? video.quiz?.timeLimit} mins
+                            {video?.duration ??
+                              video?.quizCourse?.quiz?.timeLimit}{" "}
+                            mins
                           </span>
                         </>
                       )}
