@@ -161,7 +161,7 @@ export function CourseQuizzesPage({
                   {Math.round(
                     quizzes
                       .filter(({ userQuiz }: any) => {
-                        return userQuiz.bestScore;
+                        return userQuiz?.bestScore;
                       })
                       .reduce(
                         (acc: any, { userQuiz }: any) =>
