@@ -139,14 +139,14 @@ export function CourseWatchPage({
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
 
-    if (
-      currentVideo?.type == "QUIZ" &&
-      !quizPassed &&
-      currentVideo?.quizCourse?.quiz?.required
-    ) {
-      toast.warning("This quiz is required and you have to meet the mark");
-      return;
-    }
+    // if (
+    //   currentVideo?.type == "QUIZ" &&
+    //   !quizPassed &&
+    //   currentVideo?.quizCourse?.quiz?.required
+    // ) {
+    //   toast.warning("This quiz is required and you have to meet the mark");
+    //   return;
+    // }
 
     try {
       // Combine completed videos + the one being marked now
