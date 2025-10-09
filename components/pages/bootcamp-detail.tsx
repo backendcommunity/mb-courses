@@ -425,7 +425,7 @@ export function BootcampDetailPage({
                   >
                     {started
                       ? "In Progress"
-                      : bootcamp?.userCohort?.cohort?.status}
+                      : bootcamp?.userCohort?.cohort?.status ?? "Not enrolled"}
                   </Badge>
                 </div>
               </div>
