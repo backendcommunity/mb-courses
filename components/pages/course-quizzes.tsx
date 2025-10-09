@@ -32,30 +32,41 @@ export function CourseQuizzesPage({
   const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
   const [quizzes, setQuizzes] = useState<Quiz[] | any>();
   const [course, setCourse] = useState<Course | any>();
+  const [filteredQuizzes, setFilteredQuizzes] = useState<any[]>([]);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   async function loadQuizzes() {
     const quizzes = await store.getCourseQuizzes(slug);
-    setQuizzes(quizzes);
-  }
 
-  async function loadUserCourse() {
-    const userCourse = await store.getCourse(slug);
-    setCourse(userCourse);
+    const uniqueFiltered = Array.from(
+      new Map(quizzes.map((item: any) => [item.quiz.id, item])).values()
+    );
+
+    setQuizzes(uniqueFiltered);
+    setCourse(quizzes?.[0]?.course);
   }
 
   useEffect(() => {
     loadQuizzes();
-    loadUserCourse();
   }, []);
 
-  if (!quizzes) return <Loader isLoader={false} />;
+  useEffect(() => {
+    if (!quizzes) return;
 
-  const filteredQuizzes = quizzes.filter(({ userQuiz, enrolled }: any) => {
-    if (filter === "completed") return enrolled && userQuiz?.completed;
-    if (filter === "pending") return !enrolled || !userQuiz?.completed;
-    return true;
-  });
+    const filtered = quizzes?.filter(({ userQuiz, enrolled }: any) => {
+      if (filter === "completed") return enrolled && userQuiz?.completed;
+      if (filter === "pending") return !enrolled || !userQuiz?.completed;
+      return true;
+    });
+
+    const uniqueFiltered = Array.from(
+      new Map(filtered.map((item: any) => [item.quiz.id, item])).values()
+    );
+
+    setFilteredQuizzes(uniqueFiltered);
+  }, [filter, quizzes]);
+
+  if (!quizzes) return <Loader isLoader={false} />;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -76,9 +87,6 @@ export function CourseQuizzesPage({
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
   };
-
-  // const averageScore =
-  // quizScores.reduce((total, score) => total + score, 0) / quizScores.length;
 
   return (
     <div className="flex-1 space-y-6">
@@ -207,7 +215,7 @@ export function CourseQuizzesPage({
 
       {/* Quizzes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {filteredQuizzes.map(({ quiz, userQuiz, enrolled }: any) => (
+        {filteredQuizzes?.map(({ quiz, userQuiz, enrolled }: any) => (
           <Card key={quiz.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -299,7 +307,7 @@ export function CourseQuizzesPage({
         ))}
       </div>
 
-      {filteredQuizzes.length === 0 && (
+      {filteredQuizzes?.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
