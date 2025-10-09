@@ -27,7 +27,7 @@ import { codeSample } from "@/lib/utils";
 import { Label } from "../ui/label";
 
 interface EditorProps {
-  playground: Playground;
+  playground?: Playground;
 }
 
 export function SimpleEditor({ playground }: EditorProps) {

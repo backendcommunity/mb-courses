@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -19,14 +13,11 @@ import {
   ArrowLeft,
   Play,
   SkipForward,
-  SkipBack,
   CheckCircle2,
   BookOpen,
   Download,
   Share,
   Clock,
-  Code2,
-  Save,
   Crown,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -70,7 +61,6 @@ export function BootcampVideoWatchPage({
   const [currentTime, setCurrentTime] = useState(0);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
-  const [code, setCode] = useState(codeSample);
   const [quizPassed, setQuizPassed] = useState(false);
   const [note, setNote] = useState("");
   const path = usePathname();
@@ -123,7 +113,10 @@ export function BootcampVideoWatchPage({
     );
   }
 
-  if (!(new Date(week?.cohort!?.startsAt) < new Date()))
+  if (
+    !(new Date(week?.cohort!?.startsAt) < new Date()) ||
+    week?.cohort?.status !== "Open"
+  )
     return (
       <Card>
         <CardHeader></CardHeader>
@@ -131,7 +124,9 @@ export function BootcampVideoWatchPage({
           <Countdown startDate={week?.cohort!?.startsAt.toString()}></Countdown>
 
           <Button
-            onClick={() => onNavigate?.("/bootcamps/" + week?.bootcampId)}
+            onClick={() =>
+              onNavigate?.("/bootcamps/" + week?.cohort?.bootcampId)
+            }
             variant={"secondary"}
           >
             Back to Bootcamp
@@ -317,7 +312,7 @@ export function BootcampVideoWatchPage({
                 <CourseQuizPage
                   courseId={slug}
                   onNavigate={() => {}}
-                  quiz={currentLesson?.quiz!}
+                  quizId={currentLesson?.quizId!}
                   showNav={false}
                   handleQuizSubmit={(passed) => {
                     setQuizPassed(passed);
@@ -491,7 +486,7 @@ export function BootcampVideoWatchPage({
             </TabsContent>
 
             <TabsContent value="code">
-              <SimpleEditor codeSample={code} />
+              <SimpleEditor />
               {/* <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
