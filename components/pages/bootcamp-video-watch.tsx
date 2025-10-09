@@ -115,7 +115,7 @@ export function BootcampVideoWatchPage({
 
   if (
     !(new Date(week?.cohort!?.startsAt) < new Date()) ||
-    week?.cohort?.status !== "Open"
+    week?.cohort?.status === "Open"
   )
     return (
       <Card>
