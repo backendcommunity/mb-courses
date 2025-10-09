@@ -59,7 +59,7 @@ export function BootcampDashboardPage({
           ?.lessons?.find((l: any) => l.id === currentLessonId);
 
         setCurrentLesson(lesson);
-        setUserCohort(bootcamp.userCohort);
+        setUserCohort(bootcamp?.userCohort);
         setBootcamp({
           ...bootcamp,
         });
@@ -159,15 +159,17 @@ export function BootcampDashboardPage({
             </p>
           </div>
           <div className="flex gap-2">
-            <Badge variant={"secondary"}>{userCohort?.cohort.name}</Badge>
+            <Badge variant={"secondary"}>{userCohort?.cohort?.name}</Badge>
             <Badge
               variant={
-                userCohort?.cohort.status === "Open" ? "default" : "destructive"
+                userCohort?.cohort?.status === "Open"
+                  ? "default"
+                  : "destructive"
               }
             >
               {new Date(userCohort?.cohort!?.startsAt) < new Date()
                 ? "In Progress"
-                : userCohort?.cohort.status}
+                : userCohort?.cohort?.status}
             </Badge>
           </div>
         </div>
@@ -360,7 +362,7 @@ export function BootcampDashboardPage({
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Peer Ranking</span>
                   <span className="font-medium">
-                    #{bootcamp.userCohort?.peerRanking ?? 0} of{" "}
+                    #{bootcamp?.userCohort?.peerRanking ?? 0} of{" "}
                     {bootcamp?.students ?? bootcamp?.cohort?.maxStudents}
                   </span>
                 </div>

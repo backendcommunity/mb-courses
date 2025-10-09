@@ -402,13 +402,15 @@ export function BootcampDetailPage({
                   >
                     {bootcamp?.level}
                   </Badge>
-                  <Badge variant={"destructive"}>{bootcamp?.cohort.name}</Badge>
+                  <Badge variant={"destructive"}>
+                    {bootcamp?.cohort?.name}
+                  </Badge>
                 </span>
                 <div className="flex items-center gap-1">
                   <Badge
                     className="text-sm"
                     variant={
-                      bootcamp?.userCohort?.cohort.status === "Open"
+                      bootcamp?.userCohort?.cohort?.status === "Open"
                         ? "outline"
                         : started
                         ? "default"
@@ -417,7 +419,7 @@ export function BootcampDetailPage({
                   >
                     {started
                       ? "In Progress"
-                      : bootcamp?.userCohort?.cohort.status}
+                      : bootcamp?.userCohort?.cohort?.status}
                   </Badge>
                 </div>
               </div>
@@ -480,16 +482,16 @@ export function BootcampDetailPage({
                     </div>
                   )}
                   {started &&
-                    bootcamp.userCohort.cohort.status === "Closed" && (
+                    bootcamp?.userCohort?.cohort?.status === "Closed" && (
                       <div className="space-y-2">
-                        {bootcamp.cohort.status === "Open" && (
+                        {bootcamp?.cohort?.status === "Open" && (
                           <Button
                             className="w-full"
                             onClick={() =>
                               enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
                             }
                           >
-                            Join {bootcamp.cohort.name} Now
+                            Join {bootcamp?.cohort?.name} Now
                           </Button>
                         )}
                         <Button
@@ -504,24 +506,25 @@ export function BootcampDetailPage({
                       </div>
                     )}
 
-                  {started && bootcamp.userCohort.cohort.status === "Open" && (
-                    <div className="space-y-2">
-                      <Badge
-                        variant="outline"
-                        className="w-full justify-center bg-green-50 text-green-700 border-green-200"
-                      >
-                        Enrolled
-                      </Badge>
-                      <Button
-                        className="w-full"
-                        onClick={() =>
-                          onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
-                        }
-                      >
-                        Access Bootcamp
-                      </Button>
-                    </div>
-                  )}
+                  {started &&
+                    bootcamp?.userCohort?.cohort?.status === "Open" && (
+                      <div className="space-y-2">
+                        <Badge
+                          variant="outline"
+                          className="w-full justify-center bg-green-50 text-green-700 border-green-200"
+                        >
+                          Enrolled
+                        </Badge>
+                        <Button
+                          className="w-full"
+                          onClick={() =>
+                            onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
+                          }
+                        >
+                          Access Bootcamp
+                        </Button>
+                      </div>
+                    )}
                 </>
               ) : (
                 <Button

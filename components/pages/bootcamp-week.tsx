@@ -50,7 +50,7 @@ export function BootcampWeekPage({
           index,
         });
 
-        setUserCohort(bootcamp.userCohort);
+        setUserCohort(bootcamp?.userCohort);
         setBootcamp(bootcamp);
         setLoading(false);
       } catch (error) {
