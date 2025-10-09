@@ -205,6 +205,7 @@ export function BootcampDetailPage({
           {/* Hero Card */}
           <Card className="overflow-hidden">
             <div className="aspect-video bg-gradient-to-r from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
+              {/* TODO: Add a video here */}
               {bootcamp?.banner ? (
                 <img src={bootcamp.banner} alt={bootcamp?.cohort?.name} />
               ) : (
