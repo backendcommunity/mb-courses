@@ -84,22 +84,28 @@ export function BootcampDetailPage({
   const enrollInBootcamp = async (id: string, cohort: string) => {
     if (!cohort) return;
 
-    if (!user.isPremium && user?.subscription?.name !== "Enterprise") {
+    const isPremiumUser =
+      user?.isPremium && user?.subscription?.name === "Enterprise";
+
+    if (!isPremiumUser) {
       setShowPaymentDialog(true);
       return;
     }
+    try {
+      const userCohort = await store.enrollInBootcamp(id, cohort);
+      if (!userCohort) {
+        toast.warning("An error occurred. Please try again");
+        return;
+      }
 
-    const userCohort = await store.enrollInBootcamp(id, cohort);
-    if (!userCohort) {
-      toast.warning("An error occurred. Please try again");
-      return;
+      setBootcamp((prev: Bootcamp) => ({
+        ...prev,
+        enrolled: true,
+        userCohort,
+      }));
+    } catch (error) {
+      toast.error("An unexpected error occurred. Please try again later.");
     }
-
-    setBootcamp((prev: Bootcamp) => ({
-      ...prev,
-      enrolled: true,
-      userCohort,
-    }));
   };
 
   const currentWeekIndex = (weekId: string) => {
