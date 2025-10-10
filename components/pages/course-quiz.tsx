@@ -310,10 +310,10 @@ export function CourseQuizPage({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">{currentQ.question}</CardTitle>
+              <CardTitle className="text-xl">{currentQ?.question}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentQ.options?.map((option, index) => (
+              {currentQ?.options?.map((option, index) => (
                 <button
                   key={index}
                   onClick={() =>
@@ -372,7 +372,7 @@ export function CourseQuizPage({
         ? quiz.userQuiz.bestScore
         : quiz.userQuiz?.score ?? 0;
     const passed = _score >= (quiz.passingScore ?? 50);
-    const questions = quiz.userQuiz?.items ?? quiz.questions;
+    const questions = quiz.userQuiz?.items ?? quiz?.questions;
 
     return (
       <div className="flex-1 p-6 relative">
@@ -434,16 +434,16 @@ export function CourseQuizPage({
 
               <div className="space-y-4">
                 <h4 className="font-semibold">Quiz Review</h4>
-                {questions.map((question: any, index: number) => (
+                {questions?.map((question: any, index: number) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="flex items-start gap-2 mb-2">
-                      {question.passed ? (
+                      {question?.passed ? (
                         <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                       ) : (
                         <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <p className="font-medium">{question.question}</p>
+                        <p className="font-medium">{question?.question}</p>
                         <p className="text-sm text-gray-600 mt-1">
                           Your answer:{" "}
                           {question?.userAnswer
