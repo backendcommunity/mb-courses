@@ -18,6 +18,7 @@ import { Quiz } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { Loader } from "../ui/loader";
+import StableTimer from "../atoms/Timer";
 
 interface CourseQuizPageProps {
   courseId: string;
@@ -25,7 +26,6 @@ interface CourseQuizPageProps {
   onNavigate: (path: string) => void;
   showNav?: boolean;
   handleQuizSubmit: (passed: boolean) => void;
-  attempted?: boolean;
 }
 
 export function CourseQuizPage({
@@ -37,14 +37,14 @@ export function CourseQuizPage({
 }: CourseQuizPageProps) {
   const store = useAppStore();
 
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<Quiz>();
   const [quizStatus, setQuizStatus] = useState<
     "loading" | "not_started" | "in_progress" | "completed"
   >("loading");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
-  const [score, setScore] = useState<number | null>(null);
+  const [score, setScore] = useState<number>(0);
   const [celebration, setCelebration] = useState(false);
 
   // ✅ Load quiz details on mount
@@ -66,7 +66,6 @@ export function CourseQuizPage({
         if (_quiz.userQuiz?.completed || _quiz.userQuiz?.passed) {
           setQuizStatus("completed");
           setScore(_quiz.userQuiz?.score);
-          handleQuizSubmit(_quiz.userQuiz?.passed);
         } else if (_quiz.enrolled) {
           setQuizStatus("in_progress");
         } else {
@@ -76,7 +75,6 @@ export function CourseQuizPage({
         // Initialize timer
         setTimeLeft((_quiz?.timeLimit ?? 20) * 60);
       } catch (error) {
-        console.error(error);
         toast.error("Failed to load quiz");
         setQuizStatus("not_started");
       }
@@ -84,31 +82,6 @@ export function CourseQuizPage({
 
     loadQuiz();
   }, [quizId]);
-
-  // ✅ Timer countdown
-  useEffect(() => {
-    if (quizStatus !== "in_progress" || timeLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmitQuiz();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [quizStatus, timeLeft]);
-
-  // ✅ Utility
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const handleAnswerSelect = (questionIndex: number, answerIndex: string) => {
     setAnswers((prev) => ({
@@ -142,11 +115,12 @@ export function CourseQuizPage({
 
     const finalScore =
       totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+    const passed = finalScore >= (quiz?.passingScore ?? 50);
 
     setScore(finalScore);
     setQuizStatus("completed");
-    setCelebration(finalScore >= (quiz?.passingScore ?? 50));
-    handleQuizSubmit(finalScore >= (quiz?.passingScore ?? 50));
+    setCelebration(passed);
+    handleQuizSubmit(passed);
 
     const updatedQuiz = {
       ...quiz,
@@ -156,7 +130,7 @@ export function CourseQuizPage({
         completed: true,
         items: results,
       },
-      passed: finalScore >= (quiz?.passingScore ?? 50),
+      passed,
     };
     setQuiz(updatedQuiz);
 
@@ -173,7 +147,17 @@ export function CourseQuizPage({
     if (!quiz) return;
     try {
       const startedQuiz = await store.startQuiz(quiz.id);
-      setQuiz(startedQuiz);
+      if (!startedQuiz) throw new Error("asa");
+
+      Object.assign(quiz, { enrolled: true, userQuiz: startedQuiz });
+
+      // setQuiz((prev) => ({
+      //   ...prev,
+      //   enrolled: true,
+      //   userQuiz: startedQuiz,
+      //   id: "asas",
+      // }));
+
       setQuizStatus("in_progress");
       setTimeLeft((quiz?.timeLimit ?? 20) * 60);
       setCurrentQuestion(0);
@@ -188,12 +172,12 @@ export function CourseQuizPage({
     if (!quiz) return;
     setQuizStatus("not_started");
     setAnswers({});
-    setScore(null);
+    setScore(0);
     setCurrentQuestion(0);
     setTimeLeft((quiz?.timeLimit ?? 20) * 60);
   };
 
-  const handleClose = () => handleQuizSubmit(true);
+  const handleClose = () => setQuizStatus("not_started");
 
   // ===============================
   // Render Logic
@@ -299,7 +283,13 @@ export function CourseQuizPage({
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
-              {formatTime(timeLeft)}
+              {/* {formatTime(timeLeft)} */}
+
+              <StableTimer
+                duration={timeLeft} // 5 minutes
+                isRunning={quizStatus === "in_progress"}
+                onComplete={handleSubmitQuiz}
+              />
             </div>
             <Badge variant="outline">
               {currentQuestion + 1} / {quiz?.questions?.length}
@@ -368,9 +358,12 @@ export function CourseQuizPage({
   // 🧩 Completed
   if (quizStatus === "completed") {
     const _score =
-      score ?? quiz.enrolled
+      score > 0
+        ? score
+        : quiz.enrolled
         ? quiz.userQuiz.bestScore
-        : quiz.userQuiz?.score ?? 0;
+        : quiz.userQuiz?.score;
+
     const passed = _score >= (quiz.passingScore ?? 50);
     const questions = quiz.userQuiz?.items ?? quiz?.questions;
 

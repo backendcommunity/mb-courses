@@ -79,7 +79,6 @@ export function CourseWatchPage({
   const [currentTime, setCurrentTime] = useState(0);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
-  const [quizPassed, setQuizPassed] = useState(false);
   const [note, setNote] = useState("");
   const path = usePathname();
 
@@ -375,12 +374,10 @@ export function CourseWatchPage({
                   onNavigate={() => {}}
                   quizId={currentVideo?.quizId!}
                   showNav={false}
-                  attempted={isVideoCompleted(currentVideo.id)}
                   handleQuizSubmit={(passed) => {
-                    setQuizPassed(passed);
-
-                    if (passed && currentVideo?.quizCourse?.required)
-                      handleMarkComplete();
+                    if (!passed && currentVideo?.quizCourse?.required)
+                      toast.info("You need to pass this quiz. Try again");
+                    if (passed) handleMarkComplete();
                   }}
                 />
               </Card>
@@ -425,7 +422,7 @@ export function CourseWatchPage({
                       </Button>
                     )}
 
-                  {(currentVideo.type === "QUIZ" && quizPassed) ||
+                  {currentVideo.type === "QUIZ" ||
                     (currentVideo?.quizCourse?.quiz &&
                       !currentVideo?.quizCourse?.quiz?.required && (
                         <Button onClick={handleMarkComplete}>
