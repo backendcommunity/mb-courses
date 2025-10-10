@@ -239,7 +239,7 @@ export function CourseQuizPage({
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Questions</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {quiz.questions.length}
+                    {quiz?.questions?.length}
                   </p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -278,8 +278,8 @@ export function CourseQuizPage({
 
   // 🧩 In Progress
   if (quizStatus === "in_progress") {
-    const currentQ = quiz.questions[currentQuestion];
-    const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
+    const currentQ = quiz?.questions?.[currentQuestion];
+    const progress = ((currentQuestion + 1) / quiz?.questions?.length) * 100;
 
     return (
       <div className="flex-1 p-6">
@@ -302,7 +302,7 @@ export function CourseQuizPage({
               {formatTime(timeLeft)}
             </div>
             <Badge variant="outline">
-              {currentQuestion + 1} / {quiz.questions.length}
+              {currentQuestion + 1} / {quiz?.questions?.length}
             </Badge>
           </div>
 
@@ -342,10 +342,12 @@ export function CourseQuizPage({
               Previous
             </Button>
 
-            {currentQuestion === quiz.questions.length - 1 ? (
+            {currentQuestion === quiz?.questions?.length - 1 ? (
               <Button
                 onClick={handleSubmitQuiz}
-                disabled={Object.keys(answers).length !== quiz.questions.length}
+                disabled={
+                  Object.keys(answers).length !== quiz?.questions?.length
+                }
               >
                 Submit Quiz
               </Button>
