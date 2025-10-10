@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +13,10 @@ import {
   Lightbulb,
   Eye,
 } from "lucide-react";
-import { routes } from "@/lib/routes";
 import { useAppStore } from "@/lib/store";
 import { Exercise } from "@/lib/data";
-import { toast } from "sonner";
+import { Editor } from "@monaco-editor/react";
+import { useTheme } from "next-themes";
 
 interface CourseExercisePageProps {
   courseId: string;
@@ -29,75 +29,35 @@ export function ExercisePage({
   exercise,
   onNavigate,
 }: CourseExercisePageProps) {
+  const { theme } = useTheme();
   const store = useAppStore();
+  const editorRef = useRef<any>(null);
   const [code, setCode] = useState("");
   const [testResults, setTestResults] = useState<any[]>([]);
   const [showHint, setShowHint] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState(false);
-  // Mock exercise data
-  const exercise1 = {
-    id: "exercise-1",
-    title: "Variable Declaration Practice",
-    description: "Practice declaring and initializing variables in JavaScript",
-    difficulty: "Easy",
-    points: 50,
-    instructions: `
-Write a function called 'createUser' that:
-1. Takes two parameters: name (string) and age (number)
-2. Returns an object with properties: name, age, and isAdult (boolean)
-3. isAdult should be true if age >= 18, false otherwise
-
-Example:
-createUser("John", 25) should return { name: "John", age: 25, isAdult: true }
-createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
-    `,
-    starterCode: `function createUser(name, age) {
-  // Your code here
-  
-}`,
-    solution: `function createUser(name, age) {
-  return {
-    name: name,
-    age: age,
-    isAdult: age >= 18
-  };
-}`,
-    hint: "Remember to return an object with three properties. Use the >= operator to check if age is 18 or greater.",
-    testCases: [
-      {
-        input: ["John", 25],
-        expected: { name: "John", age: 25, isAdult: true },
-        description: "Adult user",
-      },
-      {
-        input: ["Jane", 16],
-        expected: { name: "Jane", age: 16, isAdult: false },
-        description: "Minor user",
-      },
-      {
-        input: ["Bob", 18],
-        expected: { name: "Bob", age: 18, isAdult: true },
-        description: "Exactly 18 years old",
-      },
-    ],
-  };
 
   useEffect(() => {
-    // Initialize with starter code if empty
-    if (!code) {
-      setCode(exercise?.starterCode);
-    }
-  }, []);
+    setCode(exercise?.starterCode);
+  }, [exercise]);
 
   const runTests = async () => {
     setIsRunning(true);
 
     // Simulate test execution
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     try {
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const data = await store.executeCode({
+        language: "java",
+        code: btoa(code),
+      });
+
+      const result = data?.stdout ?? data?.stderr;
+      console.log(result);
+
       // In a real implementation, this would execute the code safely
       const results = exercise?.testCases.map((testCase, index) => {
         // Mock test execution - in reality, you'd run the actual code
@@ -132,26 +92,30 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
   const resetCode = () => {
     setCode(exercise?.starterCode);
     setTestResults([]);
-    setShowHint(false);
-    setShowSolution(false);
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-100 text-green-800";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "Hard":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
   };
 
   const passedTests = testResults.filter((t) => t.passed).length;
   const totalTests = testResults.length;
   const allTestsPassed = totalTests > 0 && passedTests === totalTests;
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+    // Configure editor options
+    editor.updateOptions({
+      fontSize: 14,
+      fontFamily:
+        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+      lineHeight: 1.6,
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      wordWrap: "on",
+      automaticLayout: true,
+      tabSize: 2,
+      insertSpaces: true,
+      renderWhitespace: "selection",
+      bracketPairColorization: { enabled: true },
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -206,12 +170,35 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
                 </div>
               </CardHeader>
               <CardContent>
-                <textarea
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full h-64 p-3 font-mono text-sm border rounded-lg bg-transparent resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Write your code here..."
-                />
+                <div className="relative flex h-80 border rounded-md overflow-hidden flex-col ">
+                  <Editor
+                    height="100%"
+                    language={"java"}
+                    theme={theme?.includes("dark") ? "vs-dark" : "light"}
+                    value={code}
+                    onChange={(e) => setCode(e!)}
+                    onMount={handleEditorDidMount}
+                    options={{
+                      fontSize: 14,
+                      fontFamily:
+                        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                      lineHeight: 1.6,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      wordWrap: "on",
+                      automaticLayout: true,
+                      tabSize: 2,
+                      insertSpaces: true,
+                      renderWhitespace: "selection",
+                      bracketPairColorization: { enabled: true },
+                      suggestOnTriggerCharacters: true,
+                      quickSuggestions: true,
+                      parameterHints: { enabled: true },
+                      formatOnPaste: true,
+                      formatOnType: true,
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -299,7 +286,10 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
               </CardHeader>
               <CardContent>
                 {showHint ? (
-                  <p className="text-sm">{exercise?.hint}</p>
+                  <article
+                    className="text-muted-foreground leading-relaxed [&>*>span]:!text-muted-foreground [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6"
+                    dangerouslySetInnerHTML={{ __html: exercise?.hint! }}
+                  ></article>
                 ) : (
                   <Button
                     variant="outline"

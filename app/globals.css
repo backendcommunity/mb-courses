@@ -588,3 +588,10 @@
   box-shadow: 0 0 6px 1px rgba(19, 174, 206, 0.5);
   animation: pulse-brand-dark 2s infinite;
 }
+
+article ul {
+  @apply list-disc  list-inside  space-y-1 pl-2  text-gray-600 pt-2;
+}
+article ul li {
+  @apply px-1 py-0.5 rounded text-muted-foreground;
+}

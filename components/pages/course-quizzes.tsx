@@ -277,7 +277,7 @@ export function CourseQuizzesPage({
 
               {/* Action Button */}
 
-              {!course?.enrolled ? (
+              {!enrolled && !course?.enrolled ? (
                 <Button
                   className="w-full"
                   onClick={() => setShowPaymentDialog(true)}
