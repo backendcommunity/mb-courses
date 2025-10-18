@@ -72,9 +72,6 @@ export function RoadmapDetailPage({
       const roadmap = await store.getRoadmapBySlug(slug);
       setRoadmap(roadmap);
       setMilestones(roadmap?.topics || []);
-
-      console.log(roadmap.topics);
-
       setLoading(false);
     }
     loadData();

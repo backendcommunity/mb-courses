@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -23,10 +17,6 @@ import {
   Share,
   Clock,
   Target,
-  Save,
-  Code2,
-  Gamepad2,
-  Code,
   Brain,
   Crown,
   Loader2,
@@ -38,11 +28,10 @@ import {
   Milestone,
   Note,
   Roadmap,
-  UserChapter,
   UserCourse,
   Video,
 } from "@/lib/data";
-import { codeSample, handleShare } from "@/lib/utils";
+import { handleShare } from "@/lib/utils";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { format } from "timeago.js";
@@ -96,12 +85,6 @@ export function RoadmapVideoWatchPage({
   const [currentVideo, setCurrentVideo] = useState<Video>();
   const [chapter, setChapter] = useState<Chapter>();
 
-  //  ;
-
-  // const video = videoId
-  //   ? chapter?.videos.find((v: Video) => v.slug === videoId)
-  //   : chapter?.videos[0];
-
   async function loadMilestone() {
     const milestone = await store.getMilestone(slug, topicId);
     setMilestone(milestone);
@@ -119,6 +102,8 @@ export function RoadmapVideoWatchPage({
       setUserCourse(course?.userCourse);
       setUserChapters(course?.userCourse?.userChapters);
       setUserVideos(userCourse?.userVideos);
+
+      console.log(course);
 
       const completed =
         completedItems.find((c: any) => c.itemId === course.id)?.completed ??
@@ -469,7 +454,7 @@ export function RoadmapVideoWatchPage({
                     <CourseQuizPage
                       courseId={courseId}
                       onNavigate={(path) => onNavigate?.(path)}
-                      quiz={currentVideo?.quiz!}
+                      quizId={currentVideo?.quizId!}
                       showNav={false}
                       handleQuizSubmit={(passed) => {
                         setQuizPassed(passed);
@@ -483,7 +468,7 @@ export function RoadmapVideoWatchPage({
                   <CourseQuizPage
                     courseId={courseId}
                     onNavigate={(path) => onNavigate?.(path)}
-                    quiz={currentVideo?.quiz!}
+                    quizId={currentVideo?.quizId!}
                     showNav={false}
                     handleQuizSubmit={(passed) => {
                       setQuizPassed(passed);
