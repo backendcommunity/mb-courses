@@ -171,11 +171,11 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
     const nextChapter =
       course?.chapters.find((c) => !watchedChapterIds.has(c.id)) ||
-      course?.chapters[0];
+      course?.chapters?.[0];
 
     const nextVideo =
       nextChapter?.videos?.find((v: Video) => !watchedVideoIds.has(v.id)) ||
-      nextChapter?.videos[0];
+      nextChapter?.videos?.[0];
 
     const watchPath = routes.courseWatch(
       slug,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -75,12 +75,22 @@ export function CourseWatchPage({
   const user = useUser();
   const [currentVideo, setCurrentVideo] = useState<Video>();
   const [loading, setLoading] = useState(false);
+  const [loadingNotes, setLoadingNotes] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [notes, setNotes] = useState<Note[]>([]);
   const [celebration, setCelebration] = useState(false);
   const [note, setNote] = useState("");
   const path = usePathname();
+  const [activeTab, setActiveTab] = useState("overview");
+
+  async function loadNotes(courseId: string, videoId: string) {
+    setLoadingNotes(true);
+    await store.getVideoNotes(courseId, videoId).then((notes: any) => {
+      setNotes(notes);
+    });
+    setLoadingNotes(false);
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -106,15 +116,11 @@ export function CourseWatchPage({
     findUserCourse(slug);
   }, [slug]);
 
-  useEffect(() => {
-    async function loadNotes(courseId: string, videoId: string) {
-      store.getVideoNotes(courseId, videoId).then((notes: any) => {
-        setNotes(notes);
-      });
+  useMemo(() => {
+    if (activeTab.includes("notes")) {
+      loadNotes(slug, currentVideo?.slug!);
     }
-
-    loadNotes(course?.id!, videoId!);
-  }, [course, currentVideo?.slug]);
+  }, [activeTab, slug, currentVideo?.slug]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -137,15 +143,6 @@ export function CourseWatchPage({
 
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
-
-    // if (
-    //   currentVideo?.type == "QUIZ" &&
-    //   !quizPassed &&
-    //   currentVideo?.quizCourse?.quiz?.required
-    // ) {
-    //   toast.warning("This quiz is required and you have to meet the mark");
-    //   return;
-    // }
 
     try {
       // Combine completed videos + the one being marked now
@@ -239,13 +236,6 @@ export function CourseWatchPage({
     ];
 
   const handleVideoClick = (video: Video) => {
-    // if (currentVideo?.type == "QUIZ") {
-    //   if (!quizPassed || currentVideo?.quizCourse?.quiz?.required) {
-    //     toast.warning("This quiz is required and you have to meet the mark");
-    //     return;
-    //   }
-    // }
-
     setCurrentVideo(video);
     window.history.pushState(
       {},
@@ -273,14 +263,6 @@ export function CourseWatchPage({
   };
 
   const handleChapterClick = (chapter: Chapter) => {
-    // if (
-    //   currentVideo?.type == "QUIZ" &&
-    //   (!quizPassed || currentVideo?.quizCourse?.quiz?.required)
-    // )
-    //   return toast.warning(
-    //     "This quiz is required and you have to meet the mark"
-    //   );
-
     setChapter(chapter);
     setCurrentVideo(chapter?.videos[0]);
     window.history.pushState(
@@ -479,7 +461,12 @@ export function CourseWatchPage({
           <Card></Card>
 
           {/* Content Tabs */}
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs
+            defaultValue="overview"
+            className="w-full"
+            value={activeTab}
+            onValueChange={setActiveTab}
+          >
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
@@ -557,28 +544,32 @@ export function CourseWatchPage({
                     </Button>
                   </div>
                   <div className="border-t mt-5">
-                    <div className="space-y-3  pt-5">
-                      {notes?.map((note: Note) => (
-                        <div className="border rounded-lg p-3" key={note.id}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                              {user.name
-                                .split(" ")
-                                .map((n: any) => n[0])
-                                .join("")}
+                    {loadingNotes ? (
+                      <Loader isLoader={true} isFull={false} />
+                    ) : (
+                      <div className="space-y-3  pt-5">
+                        {notes?.map((note: Note) => (
+                          <div className="border rounded-lg p-3" key={note.id}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+                                {user.name
+                                  .split(" ")
+                                  .map((n: any) => n[0])
+                                  .join("")}
+                              </div>
+                              <span className="font-medium text-sm">
+                                {user.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(note?.createdAt)}
+                              </span>
                             </div>
-                            <span className="font-medium text-sm">
-                              {user.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(note?.createdAt)}
-                            </span>
+                            <p className="text-sm">{note.content}</p>
                           </div>
-                          <p className="text-sm">{note.content}</p>
-                        </div>
-                      ))}
-                      {!notes.length && <div>No notes added yet</div>}
-                    </div>
+                        ))}
+                        {!notes.length && <div>No notes added yet</div>}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

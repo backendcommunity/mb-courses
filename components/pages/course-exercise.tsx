@@ -92,6 +92,9 @@ createUser("Jane", 16) should return { name: "Jane", age: 16, isAdult: false }
     // Simulate test execution
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
+    // Step 1: Execute user code and return the result
+    // Step 2: Compare the result with what you have in TestCase
+
     try {
       // In a real implementation, this would execute the code safely
       const results = exercise.testCases.map((testCase, index) => {
