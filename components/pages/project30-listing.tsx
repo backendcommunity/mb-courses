@@ -61,7 +61,7 @@ export function Project30ListingPage({
   const [activeTab, setActiveTab] = useState("all-courses");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  async function load() {
+  async function loadProject30s() {
     try {
       setLoading(true);
       const data = await store.getProject30s();
@@ -74,17 +74,15 @@ export function Project30ListingPage({
   }
 
   useMemo(() => {
-    load();
-  }, []);
-
-  useMemo(() => {
     async function load() {
       if (
         selectedCategory.includes("all") &&
         !debouncedSearch &&
         selectedLevel.includes("all")
-      )
+      ) {
+        await loadProject30s();
         return;
+      }
 
       const data = await store.getProject30s({
         filters: {
@@ -93,7 +91,6 @@ export function Project30ListingPage({
           level: selectedLevel,
         },
       });
-
       setOffers(data?.offers);
       setMeta(data?.meta);
     }
