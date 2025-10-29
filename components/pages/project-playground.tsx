@@ -39,16 +39,10 @@ import {
   Link,
   EllipsisVertical,
   Ellipsis,
-  Paintbrush,
 } from "lucide-react";
 import { getUser, Project, updateUser } from "@/lib/data";
 import Editor, { OnChange } from "@monaco-editor/react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
 import {
@@ -77,6 +71,8 @@ import {
 } from "../ui/card";
 import { PaymentDialog } from "../payment-dialog";
 import { Terminal } from "../atoms/Terminal";
+import { usePathname, useSearchParams } from "next/navigation";
+import { fetchUser } from "@/lib/auth";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -100,9 +96,14 @@ export function ProjectPlaygroundPage({
   slug,
   onNavigate,
 }: ProjectPlaygroundPageProps) {
+  const lastAutoCommit = useRef(0);
+  const idleTimer = useRef(null);
   const store = useAppStore();
   const user = useUser();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { theme } = useTheme();
+  const [isSaving, setIsSaving] = useState(false);
   const [project, setProject] = useState<Project>();
   const [activeFile, setActiveFile] = useState("");
   const [terminalOutput, setTerminalOutput] = useState<any[]>([
@@ -120,7 +121,7 @@ export function ProjectPlaygroundPage({
   const [activeTask, setActiveTask] = useState<any>();
   const [celebration, setCelebration] = useState(false);
   const [showTask, setShowTask] = useState(false);
-  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [loadingFiles, setLoadingFiles] = useState(true);
   const [deleteFile, setDeleteFile] = useState<FileNode | null>();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
@@ -129,6 +130,7 @@ export function ProjectPlaygroundPage({
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
   const [showPayment, setShowPayment] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [fileMenu, setFileMenu] = useState({
     visible: false,
@@ -166,6 +168,8 @@ export function ProjectPlaygroundPage({
     type?: "file" | "folder";
   } | null>(null);
 
+  const AUTO_COMMIT_INTERVAL = 1 * 60 * 1000; // 2 minutes
+
   const findFile = (nodes: FileNode[], filePath: string): FileNode | null => {
     for (const node of nodes) {
       if (node.path === filePath && node.type === "file") {
@@ -183,11 +187,24 @@ export function ProjectPlaygroundPage({
     setLoading(true);
     async function findProject(slug: string) {
       const project = await store.getProject(slug);
+      console.log(project);
       setProject(project);
       setLoading(false);
     }
+    setConnected(!!user.githubInstallationId);
     findProject(slug);
   }, [slug]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await fetchUser();
+      setConnected(!!data.githubInstallationId);
+      updateUser(data);
+    };
+
+    const searchTerm = searchParams.get("ref");
+    if (searchTerm?.includes("githubapp")) load();
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -218,6 +235,8 @@ export function ProjectPlaygroundPage({
       userId: user?.id,
       projectName: slug,
       path: "/",
+      installationId: user?.githubInstallationId,
+      github: user?.github,
     });
 
     socket.on("folder:response", (data) => {
@@ -225,11 +244,16 @@ export function ProjectPlaygroundPage({
       const active = data.files[0].children.find(
         (f: FileNode) => f.type === "file" && !f.isBlocked
       );
-      setActiveFile(active.path);
-      setCode(active.content);
-      setOpenFiles([active.path]);
+      setActiveFile(active?.path);
+      setCode(active?.content);
+      setOpenFiles([active?.path]);
       setFileTree(data.files);
       setLoadingFiles(false);
+    });
+
+    socket.on("project:commit:result", (data) => {
+      console.log(data);
+      setIsSaving(false);
     });
 
     socket.on("project:run:error", (data) => {
@@ -300,8 +324,6 @@ export function ProjectPlaygroundPage({
         if (prev === data?.message) return prev;
         return [...prev, data?.message];
       });
-
-      console.log(data);
     });
   }, []);
 
@@ -354,6 +376,43 @@ export function ProjectPlaygroundPage({
 
     // Use functional updater to avoid stale closure issues
     setFileTree((prev) => updateTree(prev));
+  };
+
+  const autoSaveAndCommit = () => {
+    const now = Date.now();
+
+    // Throttle commits: only every 2 min
+    if (now - lastAutoCommit.current < AUTO_COMMIT_INTERVAL) return;
+
+    if (!fileTree || fileTree.length === 0) return;
+
+    setIsSaving(true);
+    lastAutoCommit.current = now;
+
+    socket.emit("project:save", {
+      userId: user?.id,
+      projectSlug: project?.slug,
+      token: user?.github,
+      installationId: user?.githubInstallationId,
+      files: fileTree,
+    });
+  };
+
+  const manualSave = () => {
+    clearTimeout(idleTimer?.current!); // cancel pending autosave
+
+    if (!fileTree || fileTree.length === 0) return;
+
+    setIsSaving(true);
+    lastAutoCommit.current = Date.now();
+
+    socket.emit("project:save", {
+      userId: user?.id,
+      projectSlug: project?.slug,
+      token: user?.github,
+      installationId: user?.githubInstallationId,
+      files: fileTree,
+    });
   };
 
   const handleRightClick = (event: React.MouseEvent, node: FileNode) => {
@@ -579,6 +638,12 @@ export function ProjectPlaygroundPage({
         content: value,
       });
     }, 300); // Wait 300ms after last change
+
+    // clearTimeout(idleTimer?.current!);
+    idleTimer.current = setTimeout(
+      () => autoSaveAndCommit(),
+      AUTO_COMMIT_INTERVAL
+    ) as any;
     setCode(value ?? "");
   };
 
@@ -781,9 +846,16 @@ export function ProjectPlaygroundPage({
       language: project?.template ?? "node",
       projectName: slug,
       userId: user.id,
+      installationId: user?.githubInstallationId,
     });
 
     setTerminalOutput(terminalSample);
+  };
+
+  const connectGitHub = () => {
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23li2TmT8axelh1vDq&scope=repo,user&state=githupapp+${encodeURIComponent(
+      window.location.origin + pathname
+    )}+${user.email}`;
   };
 
   const editorMenu = () => {
@@ -898,22 +970,53 @@ export function ProjectPlaygroundPage({
         )}
 
         <div className="flex items-right gap-2">
-          <Button variant="outline" size="sm">
-            <Save className="mr-2 h-4 w-4" />
-            Save
+          <Button
+            onClick={manualSave}
+            disabled={isSaving || !connected}
+            variant="outline"
+            size="sm"
+          >
+            {isSaving ? (
+              <i>Saving</i>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save
+              </>
+            )}
           </Button>
 
           <Button variant="outline" size="sm">
             <Share className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Button disabled={isRunning} onClick={handleRunProject} size="sm">
+          <Button
+            disabled={isSaving || isRunning || !connected}
+            onClick={handleRunProject}
+            size="sm"
+          >
             {isRunning ? (
               <i>Running</i>
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
                 Run
+              </>
+            )}
+          </Button>
+
+          <Button
+            disabled={connected}
+            onClick={connectGitHub}
+            size="sm"
+            variant={"destructive"}
+          >
+            {isRunning ? (
+              <i>Connecting...</i>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                {connected ? "Connected" : "Connect GitHub"}
               </>
             )}
           </Button>

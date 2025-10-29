@@ -34,6 +34,7 @@ export interface User {
   settings: any;
   phone?: string;
   createdAt?: Date | string;
+  githubInstallationId?: string;
 }
 
 export interface Reward {

@@ -846,7 +846,7 @@ ${challenge.testCases
                           <div
                             key={index}
                             className={
-                              line.startsWith("$")
+                              line?.startsWith("$")
                                 ? "text-yellow-400"
                                 : line.includes("passed") ||
                                   line.includes("Score:")

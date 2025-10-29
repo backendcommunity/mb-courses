@@ -1,15 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Play,
   Save,
@@ -34,29 +44,34 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-} from "lucide-react"
-import Editor from "@monaco-editor/react"
+} from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 interface InterviewProjectEditorProps {
-  project: any
-  onNavigate: (route: string) => void
+  project: any;
+  onNavigate: (route: string) => void;
 }
 
 interface FileNode {
-  name: string
-  type: "file" | "folder"
-  icon: string
-  children?: FileNode[]
-  content?: string
-  isOpen?: boolean
-  language?: string
+  name: string;
+  type: "file" | "folder";
+  icon: string;
+  children?: FileNode[];
+  content?: string;
+  isOpen?: boolean;
+  language?: string;
 }
 
-function InterviewProjectEditor({ project, onNavigate }: InterviewProjectEditorProps) {
-  const [activeFile, setActiveFile] = useState("index.js")
-  const [openFiles, setOpenFiles] = useState(["index.js"])
-  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">("vs-dark")
-  const [fontSize, setFontSize] = useState(14)
+function InterviewProjectEditor({
+  project,
+  onNavigate,
+}: InterviewProjectEditorProps) {
+  const [activeFile, setActiveFile] = useState("index.js");
+  const [openFiles, setOpenFiles] = useState(["index.js"]);
+  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">(
+    "vs-dark"
+  );
+  const [fontSize, setFontSize] = useState(14);
   const [terminalOutput, setTerminalOutput] = useState([
     "Welcome to MB Interview Terminal",
     "$ npm install",
@@ -64,66 +79,82 @@ function InterviewProjectEditor({ project, onNavigate }: InterviewProjectEditorP
     "$ npm start",
     "Server running on http://localhost:3000",
     "",
-  ])
-  const [terminalInput, setTerminalInput] = useState("")
-  const [timeRemaining, setTimeRemaining] = useState(3600) // 60 minutes
-  const [isRunning, setIsRunning] = useState(false)
+  ]);
+  const [terminalInput, setTerminalInput] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState(3600); // 60 minutes
+  const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState([
-    { name: "Basic functionality test", status: "passed", message: "All basic features working correctly" },
-    { name: "Edge case handling test", status: "failed", message: "Need to handle empty input arrays" },
-    { name: "Performance test", status: "pending", message: "Test not yet executed" },
-    { name: "Code quality test", status: "passed", message: "Code follows best practices" },
-  ])
-  const [currentScore, setCurrentScore] = useState(75)
-  const terminalRef = useRef<HTMLDivElement>(null)
-  const editorRef = useRef<any>(null)
+    {
+      name: "Basic functionality test",
+      status: "passed",
+      message: "All basic features working correctly",
+    },
+    {
+      name: "Edge case handling test",
+      status: "failed",
+      message: "Need to handle empty input arrays",
+    },
+    {
+      name: "Performance test",
+      status: "pending",
+      message: "Test not yet executed",
+    },
+    {
+      name: "Code quality test",
+      status: "passed",
+      message: "Code follows best practices",
+    },
+  ]);
+  const [currentScore, setCurrentScore] = useState(75);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<any>(null);
 
   const getLanguageFromFileName = (fileName: string): string => {
-    const extension = fileName.split(".").pop()?.toLowerCase()
+    const extension = fileName.split(".").pop()?.toLowerCase();
     switch (extension) {
       case "js":
       case "jsx":
-        return "javascript"
+        return "javascript";
       case "ts":
       case "tsx":
-        return "typescript"
+        return "typescript";
       case "json":
-        return "json"
+        return "json";
       case "html":
-        return "html"
+        return "html";
       case "css":
-        return "css"
+        return "css";
       case "scss":
       case "sass":
-        return "scss"
+        return "scss";
       case "md":
-        return "markdown"
+        return "markdown";
       case "py":
-        return "python"
+        return "python";
       case "java":
-        return "java"
+        return "java";
       case "cpp":
       case "c":
-        return "cpp"
+        return "cpp";
       case "php":
-        return "php"
+        return "php";
       case "rb":
-        return "ruby"
+        return "ruby";
       case "go":
-        return "go"
+        return "go";
       case "rs":
-        return "rust"
+        return "rust";
       case "sql":
-        return "sql"
+        return "sql";
       case "xml":
-        return "xml"
+        return "xml";
       case "yaml":
       case "yml":
-        return "yaml"
+        return "yaml";
       default:
-        return "plaintext"
+        return "plaintext";
     }
-  }
+  };
 
   const [fileTree, setFileTree] = useState<FileNode[]>([
     {
@@ -331,140 +362,155 @@ Build a full-stack task management application with the following features:
 - UI/UX design
 - Performance considerations`,
     },
-  ])
+  ]);
 
-  const [code, setCode] = useState(fileTree[0].children?.[0]?.content || "")
-  const [currentLanguage, setCurrentLanguage] = useState("javascript")
+  const [code, setCode] = useState(fileTree[0].children?.[0]?.content || "");
+  const [currentLanguage, setCurrentLanguage] = useState("javascript");
 
   useEffect(() => {
-    const file = findFile(fileTree, activeFile)
+    const file = findFile(fileTree, activeFile);
     if (file) {
-      setCurrentLanguage(file.language || getLanguageFromFileName(activeFile))
+      setCurrentLanguage(file.language || getLanguageFromFileName(activeFile));
     }
-  }, [activeFile, fileTree])
+  }, [activeFile, fileTree]);
 
   // Timer effect
   useEffect(() => {
     if (timeRemaining > 0) {
-      const timer = setTimeout(() => setTimeRemaining(timeRemaining - 1), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setTimeRemaining(timeRemaining - 1), 1000);
+      return () => clearTimeout(timer);
     }
-  }, [timeRemaining])
+  }, [timeRemaining]);
 
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const toggleFolder = (path: string[]) => {
-    const updateTree = (nodes: FileNode[], currentPath: string[]): FileNode[] => {
+    const updateTree = (
+      nodes: FileNode[],
+      currentPath: string[]
+    ): FileNode[] => {
       return nodes.map((node) => {
         if (currentPath.length === 1 && node.name === currentPath[0]) {
-          return { ...node, isOpen: !node.isOpen }
-        } else if (currentPath.length > 1 && node.name === currentPath[0] && node.children) {
+          return { ...node, isOpen: !node.isOpen };
+        } else if (
+          currentPath.length > 1 &&
+          node.name === currentPath[0] &&
+          node.children
+        ) {
           return {
             ...node,
             children: updateTree(node.children, currentPath.slice(1)),
-          }
+          };
         }
-        return node
-      })
-    }
-    setFileTree(updateTree(fileTree, path))
-  }
+        return node;
+      });
+    };
+    setFileTree(updateTree(fileTree, path));
+  };
 
   const findFile = (nodes: FileNode[], fileName: string): FileNode | null => {
     for (const node of nodes) {
       if (node.name === fileName && node.type === "file") {
-        return node
+        return node;
       }
       if (node.children) {
-        const found = findFile(node.children, fileName)
-        if (found) return found
+        const found = findFile(node.children, fileName);
+        if (found) return found;
       }
     }
-    return null
-  }
+    return null;
+  };
 
   const openFile = (fileName: string) => {
-    const file = findFile(fileTree, fileName)
+    const file = findFile(fileTree, fileName);
     if (file && file.content) {
-      setActiveFile(fileName)
-      setCode(file.content)
-      setCurrentLanguage(file.language || getLanguageFromFileName(fileName))
+      setActiveFile(fileName);
+      setCode(file.content);
+      setCurrentLanguage(file.language || getLanguageFromFileName(fileName));
       if (!openFiles.includes(fileName)) {
-        setOpenFiles([...openFiles, fileName])
+        setOpenFiles([...openFiles, fileName]);
       }
     }
-  }
+  };
 
   const closeFile = (fileName: string) => {
-    const newOpenFiles = openFiles.filter((f) => f !== fileName)
-    setOpenFiles(newOpenFiles)
+    const newOpenFiles = openFiles.filter((f) => f !== fileName);
+    setOpenFiles(newOpenFiles);
     if (activeFile === fileName && newOpenFiles.length > 0) {
-      setActiveFile(newOpenFiles[0])
-      const file = findFile(fileTree, newOpenFiles[0])
+      setActiveFile(newOpenFiles[0]);
+      const file = findFile(fileTree, newOpenFiles[0]);
       if (file?.content) {
-        setCode(file.content)
-        setCurrentLanguage(file.language || getLanguageFromFileName(newOpenFiles[0]))
+        setCode(file.content);
+        setCurrentLanguage(
+          file.language || getLanguageFromFileName(newOpenFiles[0])
+        );
       }
     }
-  }
+  };
 
   const handleTerminalSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (terminalInput.trim()) {
-      const command = terminalInput.trim()
-      let output = ""
+      const command = terminalInput.trim();
+      let output = "";
 
       // Simulate some basic commands
       switch (command) {
         case "npm install":
-          output = "✓ Dependencies installed successfully"
-          break
+          output = "✓ Dependencies installed successfully";
+          break;
         case "npm start":
-          output = "Server running on http://localhost:3000"
-          break
+          output = "Server running on http://localhost:3000";
+          break;
         case "npm test":
-          output = "✓ Running test suite..."
+          output = "✓ Running test suite...";
           setTimeout(() => {
-            setTerminalOutput((prev) => [...prev, "✓ 4 tests passed, 1 test failed"])
-          }, 1000)
-          break
+            setTerminalOutput((prev) => [
+              ...prev,
+              "✓ 4 tests passed, 1 test failed",
+            ]);
+          }, 1000);
+          break;
         case "npm run dev":
-          output = "✓ Development server started on http://localhost:3000"
-          break
+          output = "✓ Development server started on http://localhost:3000";
+          break;
         case "ls":
-          output = "src/  package.json  README.md  node_modules/"
-          break
+          output = "src/  package.json  README.md  node_modules/";
+          break;
         case "pwd":
-          output = "/workspace/interview-task-manager"
-          break
+          output = "/workspace/interview-task-manager";
+          break;
         case "clear":
-          setTerminalOutput(["Welcome to MB Interview Terminal"])
-          setTerminalInput("")
-          return
+          setTerminalOutput(["Welcome to MB Interview Terminal"]);
+          setTerminalInput("");
+          return;
         default:
-          output = `Command '${command}' not found`
+          output = `Command '${command}' not found`;
       }
 
-      setTerminalOutput((prev) => [...prev, `$ ${command}`, output, ""])
-      setTerminalInput("")
+      setTerminalOutput((prev) => [...prev, `$ ${command}`, output, ""]);
+      setTerminalInput("");
       setTimeout(() => {
-        terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight)
-      }, 100)
+        terminalRef.current?.scrollTo(0, terminalRef.current.scrollHeight);
+      }, 100);
     }
-  }
+  };
 
   const handleEditorDidMount = (editor: any) => {
-    editorRef.current = editor
+    editorRef.current = editor;
 
     // Configure editor options
     editor.updateOptions({
       fontSize: fontSize,
-      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+      fontFamily:
+        "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
       lineHeight: 1.6,
       minimap: { enabled: true },
       scrollBeyondLastLine: false,
@@ -474,22 +520,38 @@ Build a full-stack task management application with the following features:
       insertSpaces: true,
       renderWhitespace: "selection",
       bracketPairColorization: { enabled: true },
-    })
-  }
+    });
+  };
 
   const handleRunTests = () => {
-    setIsRunning(true)
+    setIsRunning(true);
     setTimeout(() => {
       setTestResults([
-        { name: "Basic functionality test", status: "passed", message: "All basic features working correctly" },
-        { name: "Edge case handling test", status: "passed", message: "Empty input arrays handled correctly" },
-        { name: "Performance test", status: "passed", message: "Response time under 100ms" },
-        { name: "Code quality test", status: "failed", message: "Missing error handling in some functions" },
-      ])
-      setCurrentScore(85)
-      setIsRunning(false)
-    }, 2000)
-  }
+        {
+          name: "Basic functionality test",
+          status: "passed",
+          message: "All basic features working correctly",
+        },
+        {
+          name: "Edge case handling test",
+          status: "passed",
+          message: "Empty input arrays handled correctly",
+        },
+        {
+          name: "Performance test",
+          status: "passed",
+          message: "Response time under 100ms",
+        },
+        {
+          name: "Code quality test",
+          status: "failed",
+          message: "Missing error handling in some functions",
+        },
+      ]);
+      setCurrentScore(85);
+      setIsRunning(false);
+    }, 2000);
+  };
 
   const renderFileTree = (nodes: FileNode[], path: string[] = []) => {
     return nodes.map((node) => (
@@ -501,15 +563,19 @@ Build a full-stack task management application with the following features:
           style={{ paddingLeft: `${(path.length + 1) * 12}px` }}
           onClick={() => {
             if (node.type === "folder") {
-              toggleFolder([...path, node.name])
+              toggleFolder([...path, node.name]);
             } else {
-              openFile(node.name)
+              openFile(node.name);
             }
           }}
         >
           {node.type === "folder" && (
             <span className="w-4 h-4 flex items-center justify-center">
-              {node.isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              {node.isOpen ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )}
             </span>
           )}
           <span className="text-xs">{node.icon}</span>
@@ -519,21 +585,21 @@ Build a full-stack task management application with the following features:
           <div>{renderFileTree(node.children, [...path, node.name])}</div>
         )}
       </div>
-    ))
-  }
+    ));
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "passed":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-600" />
+        return <XCircle className="h-4 w-4 text-red-600" />;
       case "pending":
-        return <AlertCircle className="h-4 w-4 text-yellow-600" />
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
-  }
+  };
 
   return (
     <div className="flex-1 h-screen flex flex-col">
@@ -543,17 +609,28 @@ Build a full-stack task management application with the following features:
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="destructive">Interview</Badge>
-              <Badge variant="outline" className="border-blue-600 text-blue-600">
+              <Badge
+                variant="outline"
+                className="border-blue-600 text-blue-600"
+              >
                 In Progress
               </Badge>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4" />
-                <span className={`font-mono ${timeRemaining < 600 ? "text-red-600" : "text-muted-foreground"}`}>
+                <span
+                  className={`font-mono ${
+                    timeRemaining < 600
+                      ? "text-red-600"
+                      : "text-muted-foreground"
+                  }`}
+                >
                   {formatTime(timeRemaining)}
                 </span>
               </div>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">{project?.title || "Task Management System"}</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              {project?.title || "Task Management System"}
+            </h1>
           </div>
         </div>
 
@@ -563,11 +640,20 @@ Build a full-stack task management application with the following features:
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setEditorTheme(editorTheme === "vs-dark" ? "light" : "vs-dark")}
+              onClick={() =>
+                setEditorTheme(editorTheme === "vs-dark" ? "light" : "vs-dark")
+              }
             >
-              {editorTheme === "vs-dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {editorTheme === "vs-dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </Button>
-            <Select value={fontSize.toString()} onValueChange={(value) => setFontSize(Number.parseInt(value))}>
+            <Select
+              value={fontSize.toString()}
+              onValueChange={(value) => setFontSize(Number.parseInt(value))}
+            >
               <SelectTrigger className="w-16 h-8">
                 <SelectValue />
               </SelectTrigger>
@@ -621,9 +707,13 @@ Build a full-stack task management application with the following features:
                 </h3>
               </div>
               <div className="p-2 border-b bg-muted/10">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">INTERVIEW PROJECT</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                  INTERVIEW PROJECT
+                </p>
               </div>
-              <ScrollArea className="flex-1 p-2">{renderFileTree(fileTree)}</ScrollArea>
+              <ScrollArea className="flex-1 p-2">
+                {renderFileTree(fileTree)}
+              </ScrollArea>
             </div>
           </ResizablePanel>
 
@@ -641,11 +731,13 @@ Build a full-stack task management application with the following features:
                       activeFile === fileName ? "bg-background" : ""
                     }`}
                     onClick={() => {
-                      setActiveFile(fileName)
-                      const file = findFile(fileTree, fileName)
+                      setActiveFile(fileName);
+                      const file = findFile(fileTree, fileName);
                       if (file?.content) {
-                        setCode(file.content)
-                        setCurrentLanguage(file.language || getLanguageFromFileName(fileName))
+                        setCode(file.content);
+                        setCurrentLanguage(
+                          file.language || getLanguageFromFileName(fileName)
+                        );
                       }
                     }}
                   >
@@ -653,8 +745,8 @@ Build a full-stack task management application with the following features:
                     <span>{fileName}</span>
                     <button
                       onClick={(e) => {
-                        e.stopPropagation()
-                        closeFile(fileName)
+                        e.stopPropagation();
+                        closeFile(fileName);
                       }}
                       className="hover:bg-muted rounded p-0.5"
                     >
@@ -675,7 +767,8 @@ Build a full-stack task management application with the following features:
                   onMount={handleEditorDidMount}
                   options={{
                     fontSize: fontSize,
-                    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+                    fontFamily:
+                      "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
                     lineHeight: 1.6,
                     minimap: { enabled: true },
                     scrollBeyondLastLine: false,
@@ -701,21 +794,36 @@ Build a full-stack task management application with the following features:
           {/* Right Panel - Instructions & Tools */}
           <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
             <div className="h-full flex flex-col">
-              <Tabs defaultValue="instructions" className="h-full flex flex-col">
+              <Tabs
+                defaultValue="instructions"
+                className="h-full flex flex-col"
+              >
                 <TabsList className="grid w-full grid-cols-4 h-12">
-                  <TabsTrigger value="instructions" className="flex flex-col items-center gap-1 py-2">
+                  <TabsTrigger
+                    value="instructions"
+                    className="flex flex-col items-center gap-1 py-2"
+                  >
                     <BookOpen className="h-4 w-4" />
                     <span className="text-xs">Instructions</span>
                   </TabsTrigger>
-                  <TabsTrigger value="tests" className="flex flex-col items-center gap-1 py-2">
+                  <TabsTrigger
+                    value="tests"
+                    className="flex flex-col items-center gap-1 py-2"
+                  >
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-xs">Tests</span>
                   </TabsTrigger>
-                  <TabsTrigger value="terminal" className="flex flex-col items-center gap-1 py-2">
+                  <TabsTrigger
+                    value="terminal"
+                    className="flex flex-col items-center gap-1 py-2"
+                  >
                     <Terminal className="h-4 w-4" />
                     <span className="text-xs">Terminal</span>
                   </TabsTrigger>
-                  <TabsTrigger value="score" className="flex flex-col items-center gap-1 py-2">
+                  <TabsTrigger
+                    value="score"
+                    className="flex flex-col items-center gap-1 py-2"
+                  >
                     <Star className="h-4 w-4" />
                     <span className="text-xs">Score</span>
                   </TabsTrigger>
@@ -737,8 +845,9 @@ Build a full-stack task management application with the following features:
                             Overview
                           </h4>
                           <p className="text-sm text-muted-foreground">
-                            Build a full-stack task management application with CRUD operations, priority levels, and
-                            search functionality.
+                            Build a full-stack task management application with
+                            CRUD operations, priority levels, and search
+                            functionality.
                           </p>
                         </div>
 
@@ -762,9 +871,14 @@ Build a full-stack task management application with the following features:
                               "Input validation",
                               "Unit tests",
                             ].map((req, index) => (
-                              <div key={index} className="flex items-start gap-2 text-sm">
+                              <div
+                                key={index}
+                                className="flex items-start gap-2 text-sm"
+                              >
                                 <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                <span className="text-muted-foreground">{req}</span>
+                                <span className="text-muted-foreground">
+                                  {req}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -778,8 +892,18 @@ Build a full-stack task management application with the following features:
                             Technologies
                           </h4>
                           <div className="flex flex-wrap gap-1">
-                            {["Node.js", "Express", "MongoDB", "React", "Jest"].map((tech) => (
-                              <Badge key={tech} variant="outline" className="text-xs">
+                            {[
+                              "Node.js",
+                              "Express",
+                              "MongoDB",
+                              "React",
+                              "Jest",
+                            ].map((tech) => (
+                              <Badge
+                                key={tech}
+                                variant="outline"
+                                className="text-xs"
+                              >
                                 {tech}
                               </Badge>
                             ))}
@@ -813,7 +937,11 @@ Build a full-stack task management application with the following features:
                         <CheckCircle2 className="h-4 w-4" />
                         Test Results
                       </h3>
-                      <Button size="sm" onClick={handleRunTests} disabled={isRunning}>
+                      <Button
+                        size="sm"
+                        onClick={handleRunTests}
+                        disabled={isRunning}
+                      >
                         <Play className="mr-2 h-3 w-3" />
                         {isRunning ? "Running..." : "Run Tests"}
                       </Button>
@@ -827,15 +955,19 @@ Build a full-stack task management application with the following features:
                               test.status === "passed"
                                 ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
                                 : test.status === "failed"
-                                  ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-                                  : "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+                                ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
+                                : "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
                             }`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               {getStatusIcon(test.status)}
-                              <span className="font-medium text-sm">{test.name}</span>
+                              <span className="font-medium text-sm">
+                                {test.name}
+                              </span>
                             </div>
-                            <p className="text-xs text-muted-foreground pl-6">{test.message}</p>
+                            <p className="text-xs text-muted-foreground pl-6">
+                              {test.message}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -851,7 +983,11 @@ Build a full-stack task management application with the following features:
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-gray-400"
-                        onClick={() => setTerminalOutput(["Welcome to MB Interview Terminal"])}
+                        onClick={() =>
+                          setTerminalOutput([
+                            "Welcome to MB Interview Terminal",
+                          ])
+                        }
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -862,11 +998,11 @@ Build a full-stack task management application with the following features:
                           <div
                             key={index}
                             className={
-                              line.startsWith("$")
+                              line?.startsWith("$")
                                 ? "text-yellow-400"
-                                : line.startsWith("✓")
-                                  ? "text-green-400"
-                                  : "text-gray-300"
+                                : line?.startsWith("✓")
+                                ? "text-green-400"
+                                : "text-gray-300"
                             }
                           >
                             {line}
@@ -874,9 +1010,14 @@ Build a full-stack task management application with the following features:
                         ))}
                       </div>
                     </ScrollArea>
-                    <form onSubmit={handleTerminalSubmit} className="p-3 border-t border-gray-700">
+                    <form
+                      onSubmit={handleTerminalSubmit}
+                      className="p-3 border-t border-gray-700"
+                    >
                       <div className="flex items-center gap-2">
-                        <span className="text-yellow-400 font-mono text-xs">$</span>
+                        <span className="text-yellow-400 font-mono text-xs">
+                          $
+                        </span>
                         <input
                           type="text"
                           value={terminalInput}
@@ -903,7 +1044,9 @@ Build a full-stack task management application with the following features:
                           <span className="font-semibold">Current Score</span>
                           <div className="flex items-center gap-1">
                             <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            <span className="font-semibold">{currentScore}/100</span>
+                            <span className="font-semibold">
+                              {currentScore}/100
+                            </span>
                           </div>
                         </div>
                         <Progress value={currentScore} className="h-2" />
@@ -911,22 +1054,45 @@ Build a full-stack task management application with the following features:
                         <Separator />
 
                         <div className="space-y-3">
-                          <h4 className="font-medium text-sm">Scoring Breakdown</h4>
+                          <h4 className="font-medium text-sm">
+                            Scoring Breakdown
+                          </h4>
                           {[
-                            { criteria: "Code Quality", score: 22, maxScore: 25 },
-                            { criteria: "Functionality", score: 20, maxScore: 25 },
+                            {
+                              criteria: "Code Quality",
+                              score: 22,
+                              maxScore: 25,
+                            },
+                            {
+                              criteria: "Functionality",
+                              score: 20,
+                              maxScore: 25,
+                            },
                             { criteria: "Testing", score: 18, maxScore: 20 },
-                            { criteria: "Error Handling", score: 15, maxScore: 20 },
-                            { criteria: "UI/UX Design", score: 10, maxScore: 10 },
+                            {
+                              criteria: "Error Handling",
+                              score: 15,
+                              maxScore: 20,
+                            },
+                            {
+                              criteria: "UI/UX Design",
+                              score: 10,
+                              maxScore: 10,
+                            },
                           ].map((item, index) => (
                             <div key={index} className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">{item.criteria}</span>
+                                <span className="text-sm font-medium">
+                                  {item.criteria}
+                                </span>
                                 <span className="text-xs">
                                   {item.score}/{item.maxScore}
                                 </span>
                               </div>
-                              <Progress value={(item.score / item.maxScore) * 100} className="h-1" />
+                              <Progress
+                                value={(item.score / item.maxScore) * 100}
+                                className="h-1"
+                              />
                             </div>
                           ))}
                         </div>
@@ -942,7 +1108,9 @@ Build a full-stack task management application with the following features:
                             </div>
                             <div className="flex items-start gap-2">
                               <CheckCircle className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                              <span>Proper use of React hooks and state management</span>
+                              <span>
+                                Proper use of React hooks and state management
+                              </span>
                             </div>
                             <div className="flex items-start gap-2">
                               <XCircle className="h-3 w-3 text-red-600 mt-1 flex-shrink-0" />
@@ -964,9 +1132,9 @@ Build a full-stack task management application with the following features:
         </ResizablePanelGroup>
       </div>
     </div>
-  )
+  );
 }
 
 // Export both named and default for compatibility
-export { InterviewProjectEditor }
-export default InterviewProjectEditor
+export { InterviewProjectEditor };
+export default InterviewProjectEditor;

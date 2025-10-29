@@ -197,7 +197,8 @@ export function ProjectDetailPage({
       userId: user.id,
       template: language,
       projectName: slug,
-      // socketId: socket.id,
+      installationId: user?.githubInstallationId,
+      github: user?.github,
     });
 
     socket.on("clone:progress", (data) => {
@@ -262,7 +263,6 @@ export function ProjectDetailPage({
   const canEarnCertificate = project?.enrolled && completed;
 
   if (loading) return <Loader isLoader={false} />;
-  console.log(project?.cloned);
   return (
     <div className="flex-1 space-y-6">
       {/* Project Header */}
@@ -449,7 +449,7 @@ export function ProjectDetailPage({
                   </div>
                   <Progress value={project?.progress ?? 0} className="h-2" />
 
-                  {!userProject.cloned && (
+                  {!userProject?.cloned && (
                     <div className="pt-3">
                       <Label>Choose your preferred language</Label>
                       <Select value={language} onValueChange={setLanguage}>
@@ -474,7 +474,7 @@ export function ProjectDetailPage({
                     </div>
                   )}
                   <Button
-                    disabled={!language && !userProject.cloned}
+                    disabled={!language && !userProject?.cloned}
                     className="w-full"
                     onClick={() => {
                       if (userProject?.cloned)

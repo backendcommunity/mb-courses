@@ -193,9 +193,9 @@ export function Terminal({ slug, onClose, output }: TerminalProps) {
           <div
             key={index}
             className={
-              line.startsWith("$")
+              line?.startsWith("$")
                 ? "text-yellow-400"
-                : line.startsWith("✓")
+                : line?.startsWith("✓")
                 ? "text-green-400"
                 : "text-gray-300"
             }
