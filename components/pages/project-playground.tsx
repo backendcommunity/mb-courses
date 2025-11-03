@@ -1657,15 +1657,17 @@ export function ProjectPlaygroundPage({
             )}
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => onNavigate(`/projects/${project.slug}`)}
-          >
-            Back
-          </Button>
-          <Button variant="destructive" onClick={() => handleEnrollNow()}>
-            Restart
-          </Button>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate(`/projects/${project.slug}`)}
+            >
+              Back
+            </Button>
+            <Button variant="destructive" onClick={() => handleEnrollNow()}>
+              Restart
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
