@@ -258,7 +258,8 @@ export function ProjectPlaygroundPage({
     socket.on("folder:restart", (data) => {
       setLoadingFiles(true);
       setRestart(true);
-      // setLoadingFiles(false);
+      console.log(data);
+      setLoadingFiles(false);
     });
 
     socket.on("project:commit:result", (data) => {
