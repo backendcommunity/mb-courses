@@ -423,15 +423,6 @@ export function ProjectPlaygroundPage({
         return;
       }
 
-      // add from here inside dialog
-      const userProject = await store.handleProjectEnrollment(slug);
-      if (!userProject) {
-        toast.error("An error occurred. Please try again");
-        return;
-      }
-      store.updateProject(project?.id!, { enrolled: true, userProject });
-      Object.assign(project!, { enrolled: true, userProject });
-
       handleProjectSetup();
     } catch (error: any) {
       const e = error?.response?.message ?? error?.message;
