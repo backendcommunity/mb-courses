@@ -1656,9 +1656,7 @@ export function ProjectPlaygroundPage({
               </p>
             )}
           </div>
-        </DialogContent>
 
-        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onNavigate(`/projects/${project.slug}`)}
@@ -1668,7 +1666,7 @@ export function ProjectPlaygroundPage({
           <Button variant="destructive" onClick={() => handleEnrollNow()}>
             Restart
           </Button>
-        </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       <Dialog open={showLoader} onOpenChange={setShowLoader}>
