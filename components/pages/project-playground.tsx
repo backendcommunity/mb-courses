@@ -389,18 +389,9 @@ export function ProjectPlaygroundPage({
 
     socket.on("clone:done", (data) => {
       // Update userproject if cloned successfully
-      store.updateUserProject(project.userProject?.id, { cloned: true });
       setShowProgress(true);
       setProgressText(data.message);
       setProgressValue(100);
-
-      setProject((prev) => ({
-        ...prev!,
-        userProject: {
-          ...(prev?.userProject || {}),
-          cloned: true,
-        },
-      }));
 
       setCelebration(true);
       toast.success("You have successfully enrolled");
