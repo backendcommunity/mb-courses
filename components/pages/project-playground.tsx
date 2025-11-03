@@ -45,6 +45,7 @@ import Editor, { OnChange } from "@monaco-editor/react";
 import { Accordion, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
+import { languages } from "@/lib/languages";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,7 @@ import { PaymentDialog } from "../payment-dialog";
 import { Terminal } from "../atoms/Terminal";
 import { usePathname, useSearchParams } from "next/navigation";
 import { fetchUser } from "@/lib/auth";
+import { Label } from "../ui/label";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -106,6 +108,7 @@ export function ProjectPlaygroundPage({
   const [isSaving, setIsSaving] = useState(false);
   const [project, setProject] = useState<Project>();
   const [activeFile, setActiveFile] = useState("");
+  const [showProgress, setShowProgress] = useState(false);
   const [terminalOutput, setTerminalOutput] = useState<any[]>([
     "Welcome to MB Projects Terminal",
     "",
@@ -132,6 +135,8 @@ export function ProjectPlaygroundPage({
   const [isRunning, setIsRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [language, setLanguage] = useState("");
+  const [restart, setRestart] = useState(false);
   const [fileMenu, setFileMenu] = useState({
     visible: false,
     x: 0,
@@ -187,7 +192,6 @@ export function ProjectPlaygroundPage({
     setLoading(true);
     async function findProject(slug: string) {
       const project = await store.getProject(slug);
-      console.log(project);
       setProject(project);
       setLoading(false);
     }
@@ -249,6 +253,12 @@ export function ProjectPlaygroundPage({
       setOpenFiles([active?.path]);
       setFileTree(data.files);
       setLoadingFiles(false);
+    });
+
+    socket.on("folder:restart", (data) => {
+      setLoadingFiles(true);
+      setRestart(true);
+      // setLoadingFiles(false);
     });
 
     socket.on("project:commit:result", (data) => {
@@ -355,6 +365,79 @@ export function ProjectPlaygroundPage({
     );
 
   const tasks = project?.projectTasks?.flatMap((p: any) => p.tasks);
+
+  // ====================================
+  const handleProjectSetup = () => {
+    socket.emit("project:start", {
+      userId: user.id,
+      template: language,
+      projectName: slug,
+      installationId: user?.githubInstallationId,
+      github: user?.github,
+    });
+
+    socket.on("clone:progress", (data) => {
+      setShowProgress(true);
+      setProgressText(data.message);
+      setProgressValue(Math.min(Math.max(data.percent, 0), 100));
+    });
+
+    socket.on("project:error", (data) => {
+      console.log(data);
+    });
+
+    socket.on("clone:done", (data) => {
+      // Update userproject if cloned successfully
+      store.updateUserProject(project.userProject?.id, { cloned: true });
+      setShowProgress(true);
+      setProgressText(data.message);
+      setProgressValue(100);
+
+      setProject((prev) => ({
+        ...prev!,
+        userProject: {
+          ...(prev?.userProject || {}),
+          cloned: true,
+        },
+      }));
+
+      setCelebration(true);
+      toast.success("You have successfully enrolled");
+
+      // Read file again
+      socket.emit("folder:read", {
+        userId: user?.id,
+        projectName: slug,
+        path: "/",
+        installationId: user?.githubInstallationId,
+        github: user?.github,
+      });
+    });
+  };
+
+  const handleEnrollNow = async () => {
+    try {
+      if (!user.isPremium) {
+        setShowPayment(!showPayment);
+        return;
+      }
+
+      // add from here inside dialog
+      const userProject = await store.handleProjectEnrollment(slug);
+      if (!userProject) {
+        toast.error("An error occurred. Please try again");
+        return;
+      }
+      store.updateProject(project?.id!, { enrolled: true, userProject });
+      Object.assign(project!, { enrolled: true, userProject });
+
+      handleProjectSetup();
+    } catch (error: any) {
+      const e = error?.response?.message ?? error?.message;
+      toast.error(e ?? "An error occurred");
+    }
+  };
+  // =====================================
 
   const toggleFolder = (targetPath: string) => {
     const updateTree = (nodes: FileNode[]): FileNode[] => {
@@ -1539,6 +1622,54 @@ export function ProjectPlaygroundPage({
         courseName={activeTask?.title!}
       />
 
+      <Dialog open={restart} onOpenChange={setRestart}>
+        <DialogContent className="sm:max-w-[500px] w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#F2C94C]" />
+              Restart your Project...
+            </DialogTitle>
+            <DialogDescription>
+              Relax! Let Kap AI do the hard work.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-3">
+            <Label>Choose your preferred language</Label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages
+                  .filter((l) => l.supported)
+                  .map((l) => (
+                    <SelectItem key={l.code} value={l.code}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {!language && (
+              <p className="text-red-700 italic text-xs">
+                This field is required
+              </p>
+            )}
+          </div>
+        </DialogContent>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onNavigate(`/projects/${project.slug}`)}
+          >
+            Back
+          </Button>
+          <Button variant="destructive" onClick={() => handleEnrollNow()}>
+            Restart
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
       <Dialog open={showLoader} onOpenChange={setShowLoader}>
         <DialogContent className="sm:max-w-[500px] w-full">
           <DialogHeader>
@@ -1565,6 +1696,35 @@ export function ProjectPlaygroundPage({
                 Open Base URL
               </Button>
             </a>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showProgress} onOpenChange={setShowProgress}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#F2C94C]" />
+              Setting up Project...
+            </DialogTitle>
+            <DialogDescription>
+              Relax while Kap set up your project playground
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-6">
+            <p className="capitalize pb-1 italic text-sm">{progressText}...</p>
+            <Progress value={progressValue} />
+          </div>
+
+          {progressValue >= 100 && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowProgress(false)}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Close
+            </Button>
           )}
         </DialogContent>
       </Dialog>

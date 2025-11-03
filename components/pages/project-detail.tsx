@@ -495,11 +495,13 @@ export function ProjectDetailPage({
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
-                        {languages.map((l) => (
-                          <SelectItem key={l.code} value={l.code}>
-                            {l.name}
-                          </SelectItem>
-                        ))}
+                        {languages
+                          .filter((l) => l.supported)
+                          .map((l) => (
+                            <SelectItem key={l.code} value={l.code}>
+                              {l.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     {!language && (
