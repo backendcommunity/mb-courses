@@ -392,7 +392,7 @@ export function ProjectPlaygroundPage({
       setShowProgress(true);
       setProgressText(data.message);
       setProgressValue(100);
-
+      setRestart(false);
       setCelebration(true);
       toast.success("You have successfully enrolled");
 
