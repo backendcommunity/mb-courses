@@ -393,8 +393,6 @@ export function ProjectPlaygroundPage({
       setProgressText(data.message);
       setProgressValue(100);
       setRestart(false);
-      setCelebration(true);
-      toast.success("You have successfully enrolled");
 
       // Read file again
       socket.emit("folder:read", {
@@ -566,6 +564,7 @@ export function ProjectPlaygroundPage({
     socket.on("file:error", (data) => {
       setLoadingFiles(true);
       toast.error(data);
+      console.log(data);
       setLoadingFiles(false);
     });
 
