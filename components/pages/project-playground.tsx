@@ -407,7 +407,7 @@ export function ProjectPlaygroundPage({
 
   const handleEnrollNow = async () => {
     try {
-      if (!user.isPremium) {
+      if (!user.isPremium && project.isPremium) {
         setShowPayment(!showPayment);
         return;
       }
