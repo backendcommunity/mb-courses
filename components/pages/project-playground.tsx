@@ -195,20 +195,20 @@ export function ProjectPlaygroundPage({
       setProject(project);
       setLoading(false);
     }
-    setConnected(!!user.githubInstallationId);
+    setConnected(!!user.githubInstallationId || !!user.github);
     findProject(slug);
-  }, [slug]);
+  }, [slug, user.github, user.githubInstallationId]);
 
   useEffect(() => {
     const load = async () => {
       const { data } = await fetchUser();
-      setConnected(!!data.githubInstallationId);
+      setConnected(!!data.githubInstallationId || !!data.github);
       updateUser(data);
     };
 
     const searchTerm = searchParams.get("ref");
     if (searchTerm?.includes("githubapp")) load();
-  });
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
