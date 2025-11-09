@@ -162,8 +162,7 @@ export function CoursePreviewPage({
 
   const freeVideos =
     previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
-
-  console.log(course);
+  setSelectedPreview(freeVideos[0]);
 
   return (
     <div className="flex-1 space-y-6">
@@ -204,7 +203,7 @@ export function CoursePreviewPage({
 
               {freeVideos?.length ? (
                 <div className="text-center text-white aspect-video bg-black relative">
-                  <VimeoPlayer video={selectedPreview ?? freeVideos[0]} />
+                  <VimeoPlayer video={selectedPreview!} />
 
                   {/* Preview watermark */}
                   <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-sm">
