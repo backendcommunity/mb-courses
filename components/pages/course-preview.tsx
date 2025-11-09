@@ -49,6 +49,8 @@ export function CoursePreviewPage({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration] = useState(300); // 5 minutes preview
   const [selectedPreview, setSelectedPreview] = useState<Partial<Video>>();
+  const [previewChapters, setPreviewChapters] = useState<Chapter[]>([]);
+  const [freeVideos, setFreeVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -64,6 +66,29 @@ export function CoursePreviewPage({
 
     findCourse(slug);
   }, [slug]);
+
+  useEffect(() => {
+    if (!course) return;
+
+    const previewChapters = course.chapters
+      ?.map((chapter) => ({
+        ...chapter,
+        videos: chapter.videos?.filter((video) => !video.isPremium) ?? [],
+      }))
+      .filter((chapter) => chapter.videos.length > 0);
+
+    setPreviewChapters(previewChapters);
+
+    const freeVideos =
+      previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
+
+    setFreeVideos(freeVideos);
+
+    // Set the first free video as selected preview
+    if (freeVideos.length) {
+      setSelectedPreview(freeVideos[0]);
+    }
+  }, [course]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -152,17 +177,6 @@ export function CoursePreviewPage({
   const handleEnrollment = async (courseId: string) => {
     return await store.handleCourseEnrollment(courseId);
   };
-
-  const previewChapters = course?.chapters
-    ?.map((chapter) => ({
-      ...chapter,
-      videos: chapter.videos?.filter((video) => !video.isPremium) ?? [],
-    }))
-    .filter((chapter) => chapter.videos.length > 0); // First 3 chapters as preview
-
-  const freeVideos =
-    previewChapters?.flatMap((chapter) => chapter.videos) ?? [];
-  setSelectedPreview(freeVideos[0]);
 
   return (
     <div className="flex-1 space-y-6">
