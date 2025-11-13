@@ -427,8 +427,8 @@ export function RoadmapDetailPage({
             const isCompleted = milestone?.userTopic?.completed;
             // const isCurrent =
             //   milestone.id === roadmap?.userRoadmap?.currentUserTopic?.topicId;
-            const isUpcoming = !isCompleted;
             const isEnrolled = milestone?.enrolled;
+            const isUpcoming = !isCompleted && !isEnrolled;
 
             return (
               <Card
