@@ -128,32 +128,6 @@ export function RoadmapDetailPage({
     }
   };
 
-  // const firstStartableMilestoneId = (() => {
-  //   if (milestones?.length === 1) return milestones[0].id;
-  //   const notC = milestones.filter((m: Milestone) => !m.userTopic?.completed);
-  //   return notC[0]?.id;
-
-  //   // for (let i = 0; i < milestones?.length - 1; i++) {
-  //   //   const current = milestones[i];
-  //   //   const next = milestones[i + 1];
-
-  //   //   let currentCompleted = false;
-  //   //   if (current?.userTopic?.topicId === current.id)
-  //   //     currentCompleted = current?.userTopic?.completed;
-
-  //   //   const nextStarted = next?.userTopic?.topicId === next.id;
-
-  //   //   if (currentCompleted && !nextStarted) {
-  //   //     return next.id;
-  //   //   }
-
-  //   //   // If things break. Check here
-  //   //   return current.id;
-  //   // }
-
-  //   // return null;
-  // })();
-
   function reviewOrComplete(milestone: any, isCompleted: boolean) {
     return (
       <Button
@@ -167,28 +141,6 @@ export function RoadmapDetailPage({
       </Button>
     );
   }
-
-  // function firstStartableMilestone(milestone: any) {
-  //   return (
-  //     <Button
-  //       disabled={starting}
-  //       size="sm"
-  //       onClick={(e) => {
-  //         e.preventDefault();
-  //         startMilestone(milestone.id);
-  //       }}
-  //     >
-  //       {starting ? (
-  //         <>
-  //           <Loader2 className="w-5 h-5 animate-spin" />
-  //           <span>Start...</span>
-  //         </>
-  //       ) : (
-  //         <span>Start Milestone</span>
-  //       )}
-  //     </Button>
-  //   );
-  // }
 
   const handleBackToCourse = () => {};
   const handleDownload = () => {};
@@ -684,7 +636,7 @@ export function RoadmapDetailPage({
                     </div>
 
                     {roadmap?.enrolled ? (
-                      isCurrent ? (
+                      isCurrent || isCompleted ? (
                         reviewOrComplete(milestone, isCompleted)
                       ) : (
                         <Button
