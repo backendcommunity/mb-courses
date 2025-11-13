@@ -47,6 +47,7 @@ export function RoadmapWatchPage({
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
   const [completedItems, setCompletedItems] = useState<any[]>([]);
+  const [currentItem, setCurrentItem] = useState<string>();
 
   useMemo(() => {
     const l = async () => {
@@ -114,9 +115,10 @@ export function RoadmapWatchPage({
   };
 
   const markCourseAsCompleted = async (courseId: string) => {
-    console.log(courseId);
     try {
+      setCurrentItem(courseId);
       setMarking(true);
+
       const completed = await store.markRoadmapItemCompleted(
         slug,
         topicId,
@@ -404,7 +406,7 @@ export function RoadmapWatchPage({
                           className="w-full"
                           size="sm"
                         >
-                          {marking ? (
+                          {marking && course?.slug === currentItem ? (
                             <>
                               <Loader2 className="w-5 h-5 animate-spin" />
                               <span>Marking...</span>
