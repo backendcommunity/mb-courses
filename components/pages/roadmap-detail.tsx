@@ -431,6 +431,8 @@ export function RoadmapDetailPage({
 
             const isUpcoming = !isCurrent && !isCompleted;
 
+            const isFound = (id: string) => milestone?.userTopic.topicId === id;
+
             return (
               <Card
                 key={milestone.id}
@@ -449,7 +451,7 @@ export function RoadmapDetailPage({
                         className={`flex h-8 w-8 items-center justify-center rounded-full ${
                           isCompleted
                             ? "bg-green-600 text-white"
-                            : isCurrent
+                            : isCurrent || isFound(milestone.id)
                             ? "bg-blue-600 text-white"
                             : "bg-gray-200 text-gray-600"
                         }`}
@@ -479,21 +481,21 @@ export function RoadmapDetailPage({
                         variant={
                           isCompleted
                             ? "default"
-                            : isCurrent
+                            : isCurrent || isFound(milestone.id)
                             ? "secondary"
                             : "outline"
                         }
                         className={
                           isCompleted
                             ? "bg-green-100 text-green-800 border-green-200"
-                            : isCurrent
+                            : isCurrent || isFound(milestone.id)
                             ? "bg-blue-100 text-blue-800 border-blue-200"
                             : ""
                         }
                       >
                         {isCompleted
                           ? "Completed"
-                          : isCurrent
+                          : isCurrent || isFound(milestone.id)
                           ? "In Progress"
                           : "Upcoming"}
                       </Badge>
