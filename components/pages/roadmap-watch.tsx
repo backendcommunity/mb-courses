@@ -55,6 +55,7 @@ export function RoadmapWatchPage({
       setRoadmap(milestone.roadmap);
       setMilestone(milestone);
       setCompletedItems(milestone?.completedItems);
+      console.log(milestone?.completedItems);
       setLoading(false);
     };
     l();
