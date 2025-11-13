@@ -115,85 +115,76 @@ export function RoadmapWatchPage({
   };
 
   const markCourseAsCompleted = async (item: any) => {
-    try {
-      setCurrentItem(item.slug);
-      setMarking(true);
-      setCompletedItems((prev: any) => [
-        ...prev,
-        {
-          completed: true,
-          itemId: item.id,
-          userTopicId: milestone?.userTopic?.id,
-        },
-      ]);
-      if (item?.type === "QUIZ")
-        store
-          .markRoadmapVideoCompleted(slug, topicId, {
-            itemId: item.id!,
-            type: "QUIZ",
-            isChapterCompleted: false,
-            courseId: item?.quizId!,
-          })
-          .then((completed: any) => {
-            setCompletedItems((prev: any) => [...prev, completed]);
-          })
-          .catch((e: Error) => {
-            const completed = completedItems.filter(
-              (item) =>
-                item.itemId !== item.id &&
-                item.userTopicId !== milestone?.userTopic?.id
-            );
-            setCompletedItems(completed);
-          });
+    setCurrentItem(item.slug);
+    setMarking(true);
+    setCompletedItems((prev: any) => [
+      ...prev,
+      {
+        completed: true,
+        itemId: item.id,
+        userTopicId: milestone?.userTopic?.id,
+      },
+    ]);
+    if (item?.type === "QUIZ")
+      store
+        .markRoadmapVideoCompleted(slug, topicId, {
+          itemId: item.id!,
+          type: "QUIZ",
+          isChapterCompleted: false,
+          courseId: item?.quizId!,
+        })
+        .then((completed: any) => {
+          setCompletedItems((prev: any) => [...prev, completed]);
+        })
+        .catch((e: Error) => {
+          const completed = completedItems.filter(
+            (item) =>
+              item.itemId !== item.id &&
+              item.userTopicId !== milestone?.userTopic?.id
+          );
+          setCompletedItems(completed);
+        });
 
-      if (item?.type === "VIDEO")
-        store
-          .markRoadmapItemCompleted(slug, topicId, item.slug, {
-            type: "COURSE",
-            courseId: item.slug,
-          })
-          .then((completed: any) => {
-            setCompletedItems((prev: any) => [...prev, completed]);
-          })
-          .catch((e: Error) => {
-            const completed = completedItems.filter(
-              (item) =>
-                item.itemId !== item.id &&
-                item.userTopicId !== milestone?.userTopic?.id
-            );
-            setCompletedItems(completed);
-          });
+    if (item?.type === "VIDEO")
+      store
+        .markRoadmapItemCompleted(slug, topicId, item.slug, {
+          type: "COURSE",
+          courseId: item.slug,
+        })
+        .then((completed: any) => {
+          setCompletedItems((prev: any) => [...prev, completed]);
+        })
+        .catch((e: Error) => {
+          const completed = completedItems.filter(
+            (item) =>
+              item.itemId !== item.id &&
+              item.userTopicId !== milestone?.userTopic?.id
+          );
+          setCompletedItems(completed);
+        });
 
-      // setCelebration(true);
-      setCompleted(true);
-      toast.success(`Task completed successfully`);
-      setMarking(false);
-    } catch (error: any) {
-      toast.error("Something went wrong. Try again");
-      setCompleted(false);
-    }
+    // setCelebration(true);
+    setCompleted(true);
+    toast.success(`Task completed successfully`);
+    setMarking(false);
   };
 
   const handleCompleted = async () => {
-    try {
-      setLoading(true);
-      if (!milestone?.userTopic) return;
-      const completed = await store.startMilestone(
-        slug,
-        milestone?.userTopic?.id,
-        {
-          completed: true,
-        }
-      );
+    setLoading(true);
+    if (!milestone?.userTopic) return;
 
-      setMilestone(Object.assign(milestone, { userTopic: completed }));
-      // setCelebration(true)
-      toast.success("Milestone completed successfully");
-      setCompleted(true);
-    } catch (error: any) {
-      toast.error(error?.message ?? "An error occurred");
-      setLoading(false);
-    }
+    store
+      .startMilestone(slug, milestone?.userTopic?.id, {
+        completed: true,
+      })
+      .then((completed: any) => {
+        setMilestone(Object.assign(milestone, { userTopic: completed }));
+      });
+
+    // setCelebration(true)
+    toast.success("Milestone completed successfully");
+    setCompleted(true);
+    setLoading(false);
   };
 
   function nextUp() {
