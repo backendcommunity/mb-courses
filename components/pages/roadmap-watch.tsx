@@ -449,6 +449,13 @@ export function RoadmapWatchPage({
                           <Button
                             onClick={() => handleStart(course)}
                             size="sm"
+                            variant={
+                              completed
+                                ? "outline"
+                                : isActive
+                                ? "secondary"
+                                : "default"
+                            }
                             className="capitalize"
                           >
                             <Play className="mr-2 h-4 w-4" />
