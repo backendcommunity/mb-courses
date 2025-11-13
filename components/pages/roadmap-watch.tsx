@@ -25,7 +25,7 @@ import {
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
 import { useEffect, useMemo, useState } from "react";
-import { Course, Milestone, Roadmap } from "@/lib/data";
+import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import { Loader } from "../ui/loader";
 
@@ -205,6 +205,41 @@ export function RoadmapWatchPage({
     setCompleted(true);
     toast.success(`Task completed successfully`);
     setMarking(false);
+  };
+
+  const handleContinueLearning = (course: Course) => {
+    // Navigate to first incomplete chapter or continue from current
+
+    const videos = course?.chapters?.flatMap((ch: Chapter) =>
+      ch.videos.flatMap((v) => ({
+        ...v,
+      }))
+    );
+
+    const videoIds = videos?.map((v) => v.id);
+
+    const completedIds = completedItems?.map((ci: any) => ci.itemId);
+    const remainingVideoIds = videoIds?.filter(
+      (vi) => !completedIds?.includes(vi)
+    );
+
+    const video =
+      videos?.find((v: Video | any) => {
+        return remainingVideoIds?.includes(v.id);
+      }) || course?.chapters[0]?.videos[0];
+
+    const nextChapter =
+      course?.chapters.find((c) => c.id === video?.chapterId) ||
+      course?.chapters[0];
+
+    const watchPath = routes.roadmapVideoWatch(
+      roadmap?.slug!,
+      milestone.id,
+      course?.slug!,
+      nextChapter?.slug!,
+      video?.slug!
+    );
+    onNavigate?.(watchPath);
   };
 
   function nextUp() {
@@ -454,7 +489,12 @@ export function RoadmapWatchPage({
                           </Badge>
                         ) : (
                           <Button
-                            onClick={() => handleStart(course)}
+                            onClick={() => {
+                              if (completed || isActive)
+                                return handleContinueLearning(course);
+
+                              handleStart(course);
+                            }}
                             size="sm"
                             variant={
                               completed
