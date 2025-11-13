@@ -449,8 +449,8 @@ export function RoadmapDetailPage({
                           isCompleted
                             ? "bg-green-600 text-white"
                             : isEnrolled
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-200 text-gray-600"
+                            ? "bg-gray-200 text-white"
+                            : "bg-blue-600 text-gray-600"
                         }`}
                       >
                         {isCompleted ? (
