@@ -728,9 +728,11 @@ export function RoadmapDetailPage({
                         </h4>
                         <div className="space-y-2">
                           {milestone?.courses?.map((course: any) => {
-                            console.log(course);
                             return (
-                              <Card key={course.id} className="overflow-hidden">
+                              <Card
+                                key={course.id}
+                                className="overflow-hidden border-b"
+                              >
                                 <div className="flex flex-col md:flex-row">
                                   <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
                                     <img

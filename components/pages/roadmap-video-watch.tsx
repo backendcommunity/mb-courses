@@ -409,7 +409,7 @@ export function RoadmapVideoWatchPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Video Player */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           {/* Video Player */}
           <Card className="overflow-hidden">
             {currentVideo?.type === "VIDEO" && (
