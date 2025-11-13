@@ -155,7 +155,11 @@ export function CourseDetailPage({
   };
 
   const handleEnrollment = async (courseId: string) => {
-    return await store.handleRoadmapCourseEnrollment(roadmapId, courseId);
+    return await store.handleRoadmapCourseEnrollment(
+      roadmapId,
+      topicId,
+      courseId
+    );
   };
 
   const handlePreviewCourse = () => {

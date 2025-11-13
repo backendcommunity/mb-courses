@@ -105,7 +105,7 @@ export function RoadmapWatchPage({
 
       setCurrentItem(course.slug);
       setStarting(true);
-      await store.handleRoadmapCourseEnrollment(slug, course.slug);
+      await store.handleRoadmapCourseEnrollment(slug, topicId, course.slug);
       setCompletedItems((prev) => [
         ...prev,
         {

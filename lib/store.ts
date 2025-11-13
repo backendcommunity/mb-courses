@@ -140,6 +140,7 @@ interface AppState {
   handleCourseEnrollment: (courseId: string) => UserCourse | any;
   handleRoadmapCourseEnrollment: (
     slug: string,
+    topicId: string,
     courseId: string
   ) => UserCourse | any;
   startQuiz: (id: string) => any;
@@ -591,8 +592,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     return res.data;
   },
 
-  handleRoadmapCourseEnrollment: async (slug: string, courseId: string) => {
-    const { data } = await api.post(`/roadmaps/${slug}/courses/${courseId}`);
+  handleRoadmapCourseEnrollment: async (
+    slug: string,
+    topicId: string,
+    courseId: string
+  ) => {
+    const { data } = await api.post(
+      `/roadmaps/${slug}/topics/${topicId}/courses/${courseId}`
+    );
 
     return data;
   },
