@@ -114,21 +114,33 @@ export function RoadmapWatchPage({
       );
   };
 
-  const markCourseAsCompleted = async (courseId: string) => {
+  const markCourseAsCompleted = async (item: any) => {
     try {
-      setCurrentItem(courseId);
+      setCurrentItem(item.slug);
       setMarking(true);
+      let completed = null;
+      if (item?.type === "QUIZ")
+        completed = await store.markRoadmapVideoCompleted(slug, topicId, {
+          itemId: item.id!,
+          type: "QUIZ",
+          isChapterCompleted: false,
+          courseId: item?.quizId!,
+        });
 
-      const completed = await store.markRoadmapItemCompleted(
-        slug,
-        topicId,
-        courseId,
-        {
-          type: "COURSE",
-          courseId: courseId,
-        }
-      );
-
+      if (item?.type === "VIDEO")
+        completed = await store.markRoadmapItemCompleted(
+          slug,
+          topicId,
+          item.slug,
+          {
+            type: "COURSE",
+            courseId: item.slug,
+          }
+        );
+      if (!completed) {
+        setMarking(false);
+        return;
+      }
       // setCelebration(true);
       setCompleted(true);
       setCompletedItems((prev: any) =>
@@ -402,7 +414,7 @@ export function RoadmapWatchPage({
                         {!completed && (
                           <Button
                             variant={"outline"}
-                            onClick={() => markCourseAsCompleted(course?.slug)}
+                            onClick={() => markCourseAsCompleted(course)}
                             className="w-full"
                             size="sm"
                           >
