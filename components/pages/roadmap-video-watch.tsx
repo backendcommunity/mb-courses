@@ -219,6 +219,7 @@ export function RoadmapVideoWatchPage({
     }
 
     setCurrentVideo(currentVideo);
+    console.log(currentVideo);
     window.history.pushState(
       {},
       "",
