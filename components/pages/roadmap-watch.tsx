@@ -114,6 +114,42 @@ export function RoadmapWatchPage({
       );
   };
 
+  const handleCompleted = async () => {
+    setLoading(true);
+    if (!milestone?.userTopic) return;
+
+    store
+      .startMilestone(slug, milestone?.userTopic?.id, {
+        completed: true,
+      })
+      .then((completed: any) => {
+        setMilestone(Object.assign(milestone, { userTopic: completed }));
+      });
+
+    // setCelebration(true)
+    toast.success("Milestone completed successfully");
+    setCompleted(true);
+    setLoading(false);
+  };
+
+  const hasNext = () => {
+    const next = [
+      ...(milestone?.courses ?? []),
+      ...(getAssessments(milestone) ?? []),
+    ]
+      ?.filter((c) => {
+        const completedTask = getCompletedTasks(
+          c?.id,
+          milestone?.userTopic?.id
+        );
+        if (!completedTask?.completed) return c;
+      })
+
+      ?.at(0);
+
+    return next;
+  };
+
   const markCourseAsCompleted = async (item: any) => {
     setCurrentItem(item.slug);
     setMarking(true);
@@ -163,46 +199,17 @@ export function RoadmapWatchPage({
           setCompletedItems(completed);
         });
 
+    if (!hasNext()) handleCompleted();
+
     // setCelebration(true);
     setCompleted(true);
     toast.success(`Task completed successfully`);
     setMarking(false);
   };
 
-  const handleCompleted = async () => {
-    setLoading(true);
-    if (!milestone?.userTopic) return;
-
-    store
-      .startMilestone(slug, milestone?.userTopic?.id, {
-        completed: true,
-      })
-      .then((completed: any) => {
-        setMilestone(Object.assign(milestone, { userTopic: completed }));
-      });
-
-    // setCelebration(true)
-    toast.success("Milestone completed successfully");
-    setCompleted(true);
-    setLoading(false);
-  };
-
   function nextUp() {
+    const next = hasNext();
     {
-      const next = [
-        ...(milestone?.courses ?? []),
-        ...(getAssessments(milestone) ?? []),
-      ]
-        ?.filter((c) => {
-          const completedTask = getCompletedTasks(
-            c?.id,
-            milestone?.userTopic?.id
-          );
-          if (!completedTask?.completed) return c;
-        })
-
-        ?.at(0);
-
       if (!next)
         return (
           <div>
