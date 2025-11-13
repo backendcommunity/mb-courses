@@ -130,25 +130,28 @@ export function RoadmapDetailPage({
 
   const firstStartableMilestoneId = (() => {
     if (milestones?.length === 1) return milestones[0].id;
-    for (let i = 0; i < milestones?.length - 1; i++) {
-      const current = milestones[i];
-      const next = milestones[i + 1];
+    const notC = milestones.filter((m: Milestone) => !m.userTopic?.completed);
+    return notC[0]?.id;
 
-      let currentCompleted = false;
-      if (current?.userTopic?.topicId === current.id)
-        currentCompleted = current?.userTopic?.completed;
+    // for (let i = 0; i < milestones?.length - 1; i++) {
+    //   const current = milestones[i];
+    //   const next = milestones[i + 1];
 
-      const nextStarted = next?.userTopic?.topicId === next.id;
+    //   let currentCompleted = false;
+    //   if (current?.userTopic?.topicId === current.id)
+    //     currentCompleted = current?.userTopic?.completed;
 
-      if (currentCompleted && !nextStarted) {
-        return next.id;
-      }
+    //   const nextStarted = next?.userTopic?.topicId === next.id;
 
-      // If things break. Check here
-      return current.id;
-    }
+    //   if (currentCompleted && !nextStarted) {
+    //     return next.id;
+    //   }
 
-    return null;
+    //   // If things break. Check here
+    //   return current.id;
+    // }
+
+    // return null;
   })();
 
   function reviewOrComplete(milestone: any, isCompleted: boolean) {
@@ -683,8 +686,7 @@ export function RoadmapDetailPage({
                     {roadmap?.enrolled
                       ? isCurrent
                         ? reviewOrComplete(milestone, isCompleted)
-                        : milestone.id === firstStartableMilestoneId &&
-                          !isCompleted
+                        : milestone.id === firstStartableMilestoneId
                         ? firstStartableMilestone(milestone)
                         : ""
                       : ""}
