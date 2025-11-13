@@ -218,8 +218,8 @@ export function RoadmapVideoWatchPage({
       }
     }
 
-    setCurrentVideo(currentVideo);
-    console.log(currentVideo);
+    setCurrentVideo(vid);
+    console.log(vid);
     window.history.pushState(
       {},
       "",
