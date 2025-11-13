@@ -45,7 +45,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
 
-    if (["playground", "videos"].includes(pathname)) setIsCollapsed(true);
+    if (pathname.includes("playground")) setIsCollapsed(true);
+    if (pathname.includes("videos")) setIsCollapsed(true);
   }, [pathname, isMobile]);
 
   // Update sidebar when screen size changes
