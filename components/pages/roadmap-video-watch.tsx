@@ -192,20 +192,14 @@ export function RoadmapVideoWatchPage({
   };
 
   const isChapterCompleted = (chapterId: string) => {
-    return userChapters?.find((ch: any) => ch.itemId === chapterId)?.completed;
+    return completedItems?.find((ch: any) => ch.itemId === chapterId)
+      ?.completed;
   };
 
   const isVideoCompleted = (videoId: string) => {
     return completedItems?.find((ci: any) => {
       return ci.itemId === videoId;
     })?.completed;
-  };
-
-  const isCourseCompleted = () => {
-    return (
-      milestone?.userTopic?.totalTaskCompleted ===
-      milestone?.userTopic?.totalTasks
-    );
   };
 
   const handleVideoClick = (vid: Video) => {
@@ -287,9 +281,8 @@ export function RoadmapVideoWatchPage({
       completedVideoIds.has(v.id)
     );
 
-    const hasOtherContent = chapter?.quizzes; //|| chapter?.exercises || chapter?.playgrounds;
-    const isChapterCompleted =
-      allVideosComplete && hasOtherContent?.length! < 1;
+    // const hasOtherContent = chapter?.quizzes|| chapter?.exercises || chapter?.playgrounds;
+    const isChapterCompleted = !!allVideosComplete; //&& hasOtherContent?.length! < 1;
 
     // Update Milestone locally
     const completedItem = [
@@ -300,6 +293,12 @@ export function RoadmapVideoWatchPage({
         itemType: "VIDEO",
       },
     ];
+    if (isChapterCompleted)
+      completedItem.push({
+        completed: true,
+        itemId: chapter.id,
+        itemType: "CHAPTER",
+      });
     setCompletedItems(completedItem);
 
     // Update UserChapter locally
@@ -331,31 +330,6 @@ export function RoadmapVideoWatchPage({
     toast.success("You just earned some points!");
     setCelebration(true);
     setIsMarking(false);
-  };
-
-  const markCourseAsCompleted = async () => {
-    try {
-      const completed = await store.markRoadmapItemCompleted(
-        slug,
-        topicId,
-        courseId,
-        {
-          type: "COURSE",
-          courseId: courseId,
-        }
-      );
-
-      setCelebration(true);
-      setCompleted(true);
-      toast.success(
-        `You've earned ${completed?.totalPoints} MB from the course`
-      );
-      onNavigate?.(routes.roadmapWatch(slug, topicId));
-    } catch (error: any) {
-      console.log(error?.message);
-      toast.error("An error occurred updating your points. Try again");
-      setCompleted(false);
-    }
   };
 
   const markQuizAsCompleted = async (isChapterCompleted?: boolean) => {
