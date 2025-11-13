@@ -103,8 +103,6 @@ export function RoadmapVideoWatchPage({
       setUserChapters(course?.userCourse?.userChapters);
       setUserVideos(userCourse?.userVideos);
 
-      console.log(course);
-
       const completed =
         completedItems.find((c: any) => c.itemId === course.id)?.completed ??
         false;
@@ -816,9 +814,7 @@ export function RoadmapVideoWatchPage({
                 <div
                   key={vid.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    vid.slug === currentVideo?.id
-                      ? "border border-blue-200"
-                      : ""
+                    vid.slug === videoId ? "border border-blue-200" : ""
                   }`}
                   onClick={() => handleVideoClick(vid)}
                 >
