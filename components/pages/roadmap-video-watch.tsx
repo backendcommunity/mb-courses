@@ -169,7 +169,7 @@ export function RoadmapVideoWatchPage({
     });
   };
 
-  const prev = () => {
+  const prev = (chapter: Chapter) => {
     return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
         (vid: Video) => vid.id === currentVideo?.id
@@ -179,7 +179,7 @@ export function RoadmapVideoWatchPage({
   };
 
   const nextVideo = next(chapter!);
-  const prevVideo = prev();
+  const prevVideo = prev(chapter!);
 
   const handleSaveNotes = async () => {
     if (!note) return;
@@ -192,8 +192,7 @@ export function RoadmapVideoWatchPage({
   };
 
   const isChapterCompleted = (chapterId: string) => {
-    return completedItems?.find((ch: any) => ch.itemId === chapterId)
-      ?.completed;
+    return userChapters?.find((ch: any) => ch.itemId === chapterId)?.completed;
   };
 
   const isVideoCompleted = (videoId: string) => {
@@ -993,20 +992,6 @@ export function RoadmapVideoWatchPage({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{ch.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {ch.videos.reduce((a: number, c: any) => {
-                          return (
-                            a +
-                            Number(
-                              c?.duration ??
-                                c?.quiz?.timeLimit ??
-                                c?.exercise?.duration
-                            )
-                          );
-                        }, 0)}{" "}
-                        mins
-                      </span>
                       <Badge variant="outline" className="text-xs">
                         {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
                         videos
