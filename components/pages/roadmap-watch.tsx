@@ -130,6 +130,9 @@ export function RoadmapWatchPage({
 
       // setCelebration(true);
       setCompleted(true);
+      setCompletedItems((prev: any) =>
+        prev.map((r: any) => (r.id === completed.id ? completed : r))
+      );
       toast.success(
         `You've earned ${completed?.totalPoints} MB from the course`
       );

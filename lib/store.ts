@@ -339,11 +339,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
   getMilestone: async (slug: string, topicId: string) => {
-    if (localDB.has(`milestone_${topicId}`))
-      return localDB.get(`milestone_${topicId}`, {});
+    // if (localDB.has(`milestone_${topicId}`))
+    //   return localDB.get(`milestone_${topicId}`, {});
 
     const { data } = await api.get(`/roadmaps/${slug}/topics/${topicId}`);
-    localDB.set(`milestone_${topicId}`, data?.data);
+    // localDB.set(`milestone_${topicId}`, data?.data);
     return data?.data;
   },
   getProjects: async (queries?: Project30Query) => {
