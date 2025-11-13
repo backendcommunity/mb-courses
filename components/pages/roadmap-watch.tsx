@@ -220,22 +220,6 @@ export function RoadmapWatchPage({
               ? "Course"
               : next?.type?.toLowerCase()}
           </Button>
-          <Button
-            variant={"outline"}
-            onClick={() => markCourseAsCompleted(next?.courseSlug)}
-            className="w-full"
-            size="sm"
-          >
-            {marking ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Marking...</span>
-              </>
-            ) : (
-              <span> Mark Complete</span>
-            )}
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-          </Button>
         </div>
       );
     }
@@ -422,12 +406,37 @@ export function RoadmapWatchPage({
                           >
                             <Play className="mr-2 h-4 w-4" />
                             {completed
-                              ? `Review ${course.type?.toLowerCase()}`
+                              ? `Review ${
+                                  course?.type?.toLowerCase() === "video"
+                                    ? "Course"
+                                    : course?.type?.toLowerCase()
+                                }`
                               : isActive
                               ? `Continue Learning`
-                              : `Start ${course.type?.toLowerCase()}`}
+                              : `Start ${
+                                  course?.type?.toLowerCase() === "video"
+                                    ? "Course"
+                                    : course?.type?.toLowerCase()
+                                }`}
                           </Button>
                         )}
+
+                        <Button
+                          variant={"outline"}
+                          onClick={() => markCourseAsCompleted(course?.slug)}
+                          className="w-full"
+                          size="sm"
+                        >
+                          {marking ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Marking...</span>
+                            </>
+                          ) : (
+                            <span> Mark Complete</span>
+                          )}
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
