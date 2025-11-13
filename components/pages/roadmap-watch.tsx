@@ -354,6 +354,8 @@ export function RoadmapWatchPage({
                 const completed = completedTask?.completed ?? false;
                 const isActive = !!completedTask;
 
+                console.log(completed, isActive);
+
                 return (
                   <div
                     key={course?.id}
