@@ -175,6 +175,7 @@ export function RoadmapWatchPage({
         ...(getAssessments(milestone) ?? []),
       ]
         ?.filter((c) => {
+          console.log(c);
           const completedTask = getCompletedTasks(
             c?.currentVideoId,
             milestone?.userTopic?.id
@@ -345,7 +346,7 @@ export function RoadmapWatchPage({
                 const found = course?.userCourses?.find(
                   (uc: any) => uc.courseId === course.id && uc.isRoadmap
                 );
-
+                console.log(found, course);
                 const completedTask = getCompletedTasks(
                   found?.currentVideoId,
                   milestone?.userTopic?.id
