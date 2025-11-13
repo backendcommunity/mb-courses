@@ -448,7 +448,9 @@ export function RoadmapDetailPage({
                         className={`flex h-8 w-8 items-center justify-center rounded-full ${
                           isCompleted
                             ? "bg-green-600 text-white"
-                            : isCurrent || isEnrolled
+                            : isCurrent
+                            ? "bg-blue-600 text-white"
+                            : isEnrolled
                             ? "bg-blue-600 text-white"
                             : "bg-gray-200 text-gray-600"
                         }`}
@@ -635,8 +637,8 @@ export function RoadmapDetailPage({
                     </div>
 
                     {roadmap?.enrolled ? (
-                      isCurrent || isCompleted ? (
-                        reviewOrComplete(milestone, isCompleted)
+                      isCurrent || isCompleted || isEnrolled ? (
+                        reviewOrComplete(milestone, isCompleted || isEnrolled)
                       ) : (
                         <Button
                           disabled={starting}
