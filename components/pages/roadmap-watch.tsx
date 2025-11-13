@@ -46,7 +46,7 @@ export function RoadmapWatchPage({
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
-  const [completedItems, setCompletedItems] = useState<any>([]);
+  const [completedItems, setCompletedItems] = useState<any[]>([]);
 
   useMemo(() => {
     const l = async () => {
@@ -131,7 +131,7 @@ export function RoadmapWatchPage({
       // setCelebration(true);
       setCompleted(true);
       setCompletedItems((prev: any) =>
-        prev.map((r: any) => (r.id === completed.id ? completed : r))
+        prev?.map((r: any) => (r.id === completed.id ? completed : r))
       );
       toast.success(
         `You've earned ${completed?.totalPoints} MB from the course`
