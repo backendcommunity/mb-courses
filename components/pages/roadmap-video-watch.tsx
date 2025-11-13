@@ -20,6 +20,9 @@ import {
   Brain,
   Crown,
   Loader2,
+  ChevronLeft,
+  Share2,
+  ChevronRight,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
@@ -427,7 +430,7 @@ export function RoadmapVideoWatchPage({
 
               <Card className="overflow-hidden group relative">
                 <div className="aspect-video bg-black relative">
-                  {/* Video Player */}
+                  {/* Vimeo Player */}
                   <VimeoPlayer
                     video={currentVideo}
                     onEnded={async () => handleVideoClick(nextVideo!)}
@@ -435,98 +438,49 @@ export function RoadmapVideoWatchPage({
                   />
 
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                     {/* Top Bar: Download + Share */}
                     <div className="flex justify-end p-3 space-x-2 bg-gradient-to-b from-black/60 to-transparent">
                       <Button
                         disabled={true}
-                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition"
+                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 8l3-3m-3 3l-3-3"
-                          />
-                        </svg>
+                        <Download className="w-5 h-5 text-white" />
                       </Button>
-
                       <Button
                         onClick={() => handleShare(currentVideo?.title!, path)}
-                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition"
+                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4m0 0L8 6m4-4v12"
-                          />
-                        </svg>
+                        <Share2 className="w-5 h-5 text-white" />
                       </Button>
                     </div>
 
-                    {/* Bottom Navigation: Prev / Next */}
-                    <div className="absolute inset-y-0 left-0 flex items-center">
-                      {prevVideo && (
-                        <button
-                          onClick={() => handleVideoClick(prevVideo)}
-                          className="ml-3 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-6 h-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 19l-7-7 7-7"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                    {/* Navigation Buttons */}
+                    {(prevVideo || prevChapter) && (
+                      <Button
+                        onClick={() => {
+                          if (prevVideo) handleVideoClick(prevVideo);
+                          if (!prevVideo && prevChapter)
+                            handleChapterClick(prevChapter);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition pointer-events-auto"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </Button>
+                    )}
 
-                    <div className="absolute inset-y-0 right-0 flex items-center">
-                      {nextVideo && (
-                        <button
-                          onClick={() => handleVideoClick(nextVideo)}
-                          className="mr-3 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-6 h-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                    {(nextVideo || nextChapter) && (
+                      <Button
+                        onClick={() => {
+                          if (nextVideo) handleVideoClick(nextVideo);
+                          if (!nextVideo && nextChapter)
+                            handleChapterClick(nextChapter);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition pointer-events-auto"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -575,7 +529,7 @@ export function RoadmapVideoWatchPage({
           </Card>
 
           {/* Video Actions */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => handleShare(currentVideo?.title!, path)}
@@ -631,7 +585,7 @@ export function RoadmapVideoWatchPage({
                 </Button>
               )}
 
-              {/* TODO: Add check for Everything task/video is completed */}
+
               {!nextVideo && !nextChapter && isCourseCompleted() && (
                 <div>
                   {!completed ? (
@@ -656,7 +610,7 @@ export function RoadmapVideoWatchPage({
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
           <Card></Card>
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
