@@ -175,7 +175,7 @@ export function RoadmapWatchPage({
         ?.filter((c) => {
           console.log(c, "NEXT");
           const completedTask = getCompletedTasks(
-            c?.currentVideoId,
+            c?.id,
             milestone?.userTopic?.id
           );
           if (!completedTask?.completed) return c;
@@ -341,12 +341,12 @@ export function RoadmapWatchPage({
                 ...(milestone?.courses ?? []),
                 ...(getAssessments(milestone) ?? []),
               ]?.map((course: any) => {
-                const found = course?.userCourses?.find(
-                  (uc: any) => uc.courseId === course.id && uc.isRoadmap
-                );
-                console.log(found, course);
+                // const found = course?.userCourses?.find(
+                //   (uc: any) => uc.courseId === course.id && uc.isRoadmap
+                // );
+                // console.log(found, course);
                 const completedTask = getCompletedTasks(
-                  found?.currentVideoId,
+                  course?.id,
                   milestone?.userTopic?.id
                 );
 
