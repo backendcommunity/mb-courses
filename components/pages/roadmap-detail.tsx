@@ -683,7 +683,8 @@ export function RoadmapDetailPage({
                     {roadmap?.enrolled
                       ? isCurrent
                         ? reviewOrComplete(milestone, isCompleted)
-                        : milestone.id === firstStartableMilestoneId
+                        : milestone.id === firstStartableMilestoneId &&
+                          !isCompleted
                         ? firstStartableMilestone(milestone)
                         : ""
                       : ""}
