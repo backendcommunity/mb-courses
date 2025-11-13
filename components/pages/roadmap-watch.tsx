@@ -55,8 +55,8 @@ export function RoadmapWatchPage({
       const milestone = await store.getMilestone(slug, topicId);
       setRoadmap(milestone.roadmap);
       setMilestone(milestone);
-      setCompletedItems(milestone?.completedItems);
-      console.log(milestone?.completedItems);
+      setCompletedItems(milestone?.userTopic?.completedItems);
+      console.log(milestone?.userTopic?.completedItems);
       setLoading(false);
     };
     l();
