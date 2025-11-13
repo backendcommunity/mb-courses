@@ -11,10 +11,18 @@ interface VimeoPlayerProps {
   onEnded?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
+  onComplete?: () => void;
 }
 
-const VimeoPlayer = ({ video, onEnded, onPlay, onPause }: VimeoPlayerProps) => {
+const VimeoPlayer = ({
+  video,
+  onEnded,
+  onPlay,
+  onPause,
+  onComplete,
+}: VimeoPlayerProps) => {
   const playerRef = useRef<HTMLDivElement | null>(null);
+  const completedRef = useRef(false);
   useEffect(() => {
     if (!playerRef.current) return;
 
@@ -34,7 +42,10 @@ const VimeoPlayer = ({ video, onEnded, onPlay, onPause }: VimeoPlayerProps) => {
 
     // Listen for events
     player.on("ended", () => {
-      console.log("Video has ended");
+      if (!completedRef.current) {
+        completedRef.current = true;
+        onComplete?.();
+      }
       onEnded?.();
     });
 
@@ -46,6 +57,14 @@ const VimeoPlayer = ({ video, onEnded, onPlay, onPause }: VimeoPlayerProps) => {
     player.on("pause", () => {
       console.log("Video is paused");
       onPause?.();
+    });
+
+    player.on("timeupdate", (data) => {
+      const progress = data.percent;
+      if (progress >= 0.9 && !completedRef.current) {
+        completedRef.current = true;
+        onComplete?.();
+      }
     });
 
     return () => {
