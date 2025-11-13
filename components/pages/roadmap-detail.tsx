@@ -425,9 +425,9 @@ export function RoadmapDetailPage({
         <TabsContent value="milestones" className="space-y-6">
           {milestones?.map((milestone: Milestone, index) => {
             const isCompleted = milestone?.userTopic?.completed;
-            const isCurrent =
-              milestone.id === roadmap?.userRoadmap?.currentUserTopic?.topicId;
-            const isUpcoming = !isCurrent && !isCompleted;
+            // const isCurrent =
+            //   milestone.id === roadmap?.userRoadmap?.currentUserTopic?.topicId;
+            const isUpcoming = !isCompleted;
             const isEnrolled = milestone?.enrolled;
 
             return (
@@ -448,8 +448,6 @@ export function RoadmapDetailPage({
                         className={`flex h-8 w-8 items-center justify-center rounded-full ${
                           isCompleted
                             ? "bg-green-600 text-white"
-                            : isCurrent
-                            ? "bg-blue-600 text-white"
                             : isEnrolled
                             ? "bg-blue-600 text-white"
                             : "bg-gray-200 text-gray-600"
@@ -480,21 +478,21 @@ export function RoadmapDetailPage({
                         variant={
                           isCompleted
                             ? "default"
-                            : isCurrent || isEnrolled
+                            : isEnrolled
                             ? "secondary"
                             : "outline"
                         }
                         className={
                           isCompleted
                             ? "bg-green-100 text-green-800 border-green-200"
-                            : isCurrent || isEnrolled
+                            : isEnrolled
                             ? "bg-blue-100 text-blue-800 border-blue-200"
                             : ""
                         }
                       >
                         {isCompleted
                           ? "Completed"
-                          : isCurrent || isEnrolled
+                          : isEnrolled
                           ? "In Progress"
                           : "Upcoming"}
                       </Badge>
@@ -504,7 +502,7 @@ export function RoadmapDetailPage({
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {isCurrent && (
+                  {isEnrolled && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
@@ -637,7 +635,7 @@ export function RoadmapDetailPage({
                     </div>
 
                     {roadmap?.enrolled ? (
-                      isCurrent || isCompleted || isEnrolled ? (
+                      isCompleted || isEnrolled ? (
                         reviewOrComplete(milestone, isCompleted || isEnrolled)
                       ) : (
                         <Button
