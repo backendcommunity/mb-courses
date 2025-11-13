@@ -345,9 +345,9 @@ export function RoadmapWatchPage({
                 const found = course?.userCourses?.find(
                   (uc: any) => uc.courseId === course.id && uc.isRoadmap
                 );
-
+                console.log(found);
                 const completedTask = getCompletedTasks(
-                  course.id,
+                  found.id,
                   milestone?.userTopic?.id
                 );
 
