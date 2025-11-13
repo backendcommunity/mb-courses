@@ -369,8 +369,9 @@ export function RoadmapVideoWatchPage({
     return;
   };
 
-  const progress =
-    (completedItems?.length / milestone?.userTopic?.totalTasks) * 100;
+  const progress = Math.round(
+    (completedItems?.length / milestone?.userTopic?.totalTasks) * 100
+  );
 
   return (
     <div className="flex-1 space-y-6">
