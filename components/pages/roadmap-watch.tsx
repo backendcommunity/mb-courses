@@ -118,41 +118,58 @@ export function RoadmapWatchPage({
     try {
       setCurrentItem(item.slug);
       setMarking(true);
-      let completed = null;
+      setCompletedItems((prev: any) => [
+        ...prev,
+        {
+          completed: true,
+          itemId: item.id,
+          userTopicId: milestone?.userTopic?.id,
+        },
+      ]);
       if (item?.type === "QUIZ")
-        completed = await store.markRoadmapVideoCompleted(slug, topicId, {
-          itemId: item.id!,
-          type: "QUIZ",
-          isChapterCompleted: false,
-          courseId: item?.quizId!,
-        });
+        store
+          .markRoadmapVideoCompleted(slug, topicId, {
+            itemId: item.id!,
+            type: "QUIZ",
+            isChapterCompleted: false,
+            courseId: item?.quizId!,
+          })
+          .then((completed: any) => {
+            setCompletedItems((prev: any) => [...prev, completed]);
+          })
+          .catch((e: Error) => {
+            const completed = completedItems.filter(
+              (item) =>
+                item.itemId !== item.id &&
+                item.userTopicId !== milestone?.userTopic?.id
+            );
+            setCompletedItems(completed);
+          });
 
       if (item?.type === "VIDEO")
-        completed = await store.markRoadmapItemCompleted(
-          slug,
-          topicId,
-          item.slug,
-          {
+        store
+          .markRoadmapItemCompleted(slug, topicId, item.slug, {
             type: "COURSE",
             courseId: item.slug,
-          }
-        );
-      if (!completed) {
-        setMarking(false);
-        return;
-      }
+          })
+          .then((completed: any) => {
+            setCompletedItems((prev: any) => [...prev, completed]);
+          })
+          .catch((e: Error) => {
+            const completed = completedItems.filter(
+              (item) =>
+                item.itemId !== item.id &&
+                item.userTopicId !== milestone?.userTopic?.id
+            );
+            setCompletedItems(completed);
+          });
+
       // setCelebration(true);
       setCompleted(true);
-      console.log(completed);
-      setCompletedItems((prev: any) =>
-        prev?.map((r: any) => (r.id === completed.id ? completed : r))
-      );
-      toast.success(
-        `You've earned ${completed?.totalPoints} MB from the course`
-      );
+      toast.success(`Task completed successfully`);
       setMarking(false);
     } catch (error: any) {
-      toast.error("An error occurred updating your points. Try again");
+      toast.error("Something went wrong. Try again");
       setCompleted(false);
     }
   };
