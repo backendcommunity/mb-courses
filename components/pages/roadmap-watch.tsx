@@ -57,7 +57,6 @@ export function RoadmapWatchPage({
       setRoadmap(milestone.roadmap);
       setMilestone(milestone);
       setCompletedItems(milestone?.userTopic?.completedItems);
-      console.log(milestone?.userTopic?.completedItems);
       setLoading(false);
     };
     l();
@@ -256,7 +255,9 @@ export function RoadmapWatchPage({
 
     const videoIds = videos?.map((v) => v.id);
 
-    const completedIds = completedItems?.map((ci: any) => ci.itemId);
+    const completedIds = completedItems?.map(
+      (ci: any) => ci.itemId && ci.completed
+    );
     const remainingVideoIds = videoIds?.filter(
       (vi) => !completedIds?.includes(vi)
     );
