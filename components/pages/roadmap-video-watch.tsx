@@ -302,13 +302,13 @@ export function RoadmapVideoWatchPage({
         },
       ];
       setCompletedItems(completedItem);
-      localDB.update(`milestone_${milestone.id}`, {
-        ...milestone,
-        userTopic: {
-          ...milestone.userTopic,
-          completedItems: completedItem,
-        },
-      });
+      // localDB.update(`milestone_${milestone.id}`, {
+      //   ...milestone,
+      //   userTopic: {
+      //     ...milestone.userTopic,
+      //     completedItems: completedItem,
+      //   },
+      // });
 
       // Update UserChapter locally
       const userChapter = [
@@ -320,33 +320,32 @@ export function RoadmapVideoWatchPage({
       ];
 
       setUserChapters(userChapter);
-      localDB.update(`course_${course.slug}`, {
-        ...course,
-        userCourse: {
-          ...course.userCourse,
-          userChapters: userChapter,
-        },
-      });
+      // localDB.update(`course_${course.slug}`, {
+      //   ...course,
+      //   userCourse: {
+      //     ...course.userCourse,
+      //     userChapters: userChapter,
+      //   },
+      // });
 
       if (currentVideo?.type === "QUIZ")
         return markQuizAsCompleted(isChapterCompleted);
 
       // Backend update with proper `isChapterCompleted`
 
-      store
-        .markRoadmapVideoCompleted(slug, topicId, {
-          itemId: currentVideo.id,
-          type: "VIDEO",
-          isChapterCompleted,
-          chapter: {
-            itemId: chapter.id,
-          },
-          courseId: course.slug,
-        })
-        .then(() => {
-          localDB.remove(`milestone_${milestone.id}`);
-          loadMilestone();
-        });
+      store.markRoadmapVideoCompleted(slug, topicId, {
+        itemId: currentVideo.id,
+        type: "VIDEO",
+        isChapterCompleted,
+        chapter: {
+          itemId: chapter.id,
+        },
+        courseId: course.slug,
+      });
+      // .then(() => {
+      //   // localDB.remove(`milestone_${milestone.id}`);
+      //   loadMilestone();
+      // });
 
       toast.success("You just earned some points!");
       setCelebration(true);
