@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import { Loader } from "../ui/loader";
@@ -46,6 +46,7 @@ export function RoadmapWatchPage({
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [completedItems, setCompletedItems] = useState<any[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
 
@@ -97,12 +98,35 @@ export function RoadmapWatchPage({
     });
   };
 
-  const handleStart = (course: any) => {
-    if (course?.type === "VIDEO")
-      onNavigate?.(
-        routes.roadmapCoursePreview(slug, milestone.id, course?.slug)
-      );
+  const handleEnrollNow = async (
+    course: Course & { courseSlug: string; quizId: string }
+  ) => {
+    try {
+      if (!course) return;
 
+      setCurrentItem(course.slug);
+      setStarting(true);
+      await store.handleRoadmapCourseEnrollment(slug, course.slug);
+      setCompletedItems((prev) => [
+        ...prev,
+        {
+          itemId: course.id,
+          completed: false,
+          userTopicId: milestone?.userTopic?.id,
+        },
+      ]);
+      setCurrentItem(course.slug);
+      setStarting(false);
+      toast.success("Task started successfully");
+    } catch (error) {
+      toast.error("An error occurred. Please try again");
+      setStarting(false);
+    }
+  };
+
+  const handleStart = async (
+    course: Course & { courseSlug: string; quizId: string }
+  ) => {
     if (course?.type === "QUIZ")
       onNavigate?.(
         routes.roadmapCourseQuiz(
@@ -112,6 +136,8 @@ export function RoadmapWatchPage({
           course?.quizId
         )
       );
+
+    if (course?.type === "VIDEO") return await handleEnrollNow(course);
   };
 
   const handleCompleted = async () => {
@@ -518,19 +544,26 @@ export function RoadmapWatchPage({
                             className="capitalize"
                           >
                             <Play className="mr-2 h-4 w-4" />
-                            {completed
-                              ? `Review ${
-                                  course?.type?.toLowerCase() === "video"
-                                    ? "Course"
-                                    : course?.type?.toLowerCase()
-                                }`
-                              : isActive
-                              ? `Continue Learning`
-                              : `Start ${
-                                  course?.type?.toLowerCase() === "video"
-                                    ? "Course"
-                                    : course?.type?.toLowerCase()
-                                }`}
+                            {completed ? (
+                              `Review ${
+                                course?.type?.toLowerCase() === "video"
+                                  ? "Course"
+                                  : course?.type?.toLowerCase()
+                              }`
+                            ) : isActive ? (
+                              `Continue Learning`
+                            ) : starting && course?.slug === currentItem ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>Starting...</span>
+                              </>
+                            ) : (
+                              `Start ${
+                                course?.type?.toLowerCase() === "video"
+                                  ? "Course"
+                                  : course?.type?.toLowerCase()
+                              }`
+                            )}
                           </Button>
                         )}
                       </div>

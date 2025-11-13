@@ -140,9 +140,7 @@ export function RoadmapCourseQuiz({
 
   const startQuiz = async () => {
     try {
-      const new_quiz = await store.startQuiz(quiz?.id, {
-        userQuizId: quiz?.userQuiz?.id,
-      });
+      const new_quiz = await store.startQuiz(quiz?.id);
 
       if (!new_quiz) return;
 
