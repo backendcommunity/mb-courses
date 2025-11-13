@@ -431,7 +431,8 @@ export function RoadmapDetailPage({
 
             const isUpcoming = !isCurrent && !isCompleted;
 
-            const isFound = (id: string) => milestone?.userTopic.topicId === id;
+            const isFound = (id: string) =>
+              milestone?.userTopic?.topicId === id;
 
             return (
               <Card
