@@ -274,87 +274,61 @@ export function RoadmapVideoWatchPage({
   const handleMarkComplete = async () => {
     if (!currentVideo || !course || !chapter || !userCourse) return;
 
-    try {
-      setIsMarking(true);
-      // Combine completed videos + the one being marked now
-      const completedVideoIds = new Set(
-        completedItems!
-          ?.filter((v: any) => v.completed)
-          .map((v: any) => v.itemId)
-      );
-      completedVideoIds.add(currentVideo.id); // include this one just marked
-      // Check if all chapter videos are now complete
-      const allVideosComplete = chapter.videos.every((v: Video) =>
-        completedVideoIds.has(v.id)
-      );
+    setIsMarking(true);
+    // Combine completed videos + the one being marked now
+    const completedVideoIds = new Set(
+      completedItems!?.filter((v: any) => v.completed).map((v: any) => v.itemId)
+    );
+    completedVideoIds.add(currentVideo.id); // include this one just marked
+    // Check if all chapter videos are now complete
+    const allVideosComplete = chapter.videos.every((v: Video) =>
+      completedVideoIds.has(v.id)
+    );
 
-      const hasOtherContent = chapter?.quizzes; //|| chapter?.exercises || chapter?.playgrounds;
-      const isChapterCompleted =
-        allVideosComplete && hasOtherContent?.length! < 1;
+    const hasOtherContent = chapter?.quizzes; //|| chapter?.exercises || chapter?.playgrounds;
+    const isChapterCompleted =
+      allVideosComplete && hasOtherContent?.length! < 1;
 
-      // Update Milestone locally
-      const completedItem = [
-        ...completedItems,
-        {
-          completed: true,
-          itemId: currentVideo.id,
-          itemType: "VIDEO",
-        },
-      ];
-      setCompletedItems(completedItem);
-      // localDB.update(`milestone_${milestone.id}`, {
-      //   ...milestone,
-      //   userTopic: {
-      //     ...milestone.userTopic,
-      //     completedItems: completedItem,
-      //   },
-      // });
-
-      // Update UserChapter locally
-      const userChapter = [
-        ...userChapters,
-        {
-          chapterId: chapter.id,
-          isCompleted: isChapterCompleted,
-        },
-      ];
-
-      setUserChapters(userChapter);
-      // localDB.update(`course_${course.slug}`, {
-      //   ...course,
-      //   userCourse: {
-      //     ...course.userCourse,
-      //     userChapters: userChapter,
-      //   },
-      // });
-
-      if (currentVideo?.type === "QUIZ")
-        return markQuizAsCompleted(isChapterCompleted);
-
-      // Backend update with proper `isChapterCompleted`
-
-      store.markRoadmapVideoCompleted(slug, topicId, {
+    // Update Milestone locally
+    const completedItem = [
+      ...completedItems,
+      {
+        completed: true,
         itemId: currentVideo.id,
-        type: "VIDEO",
-        isChapterCompleted,
-        chapter: {
-          itemId: chapter.id,
-        },
-        courseId: course.slug,
-      });
-      // .then(() => {
-      //   // localDB.remove(`milestone_${milestone.id}`);
-      //   loadMilestone();
-      // });
+        itemType: "VIDEO",
+      },
+    ];
+    setCompletedItems(completedItem);
 
-      toast.success("You just earned some points!");
-      setCelebration(true);
-    } catch (error: any) {
-      console.log(error);
-      toast.error("An error occurred. Please try again");
-    } finally {
-      setIsMarking(false);
-    }
+    // Update UserChapter locally
+    const userChapter = [
+      ...userChapters,
+      {
+        chapterId: chapter.id,
+        isCompleted: isChapterCompleted,
+      },
+    ];
+
+    setUserChapters(userChapter);
+
+    if (currentVideo?.type === "QUIZ")
+      return markQuizAsCompleted(isChapterCompleted);
+
+    // Backend update with proper `isChapterCompleted`
+
+    store.markRoadmapVideoCompleted(slug, topicId, {
+      itemId: currentVideo.id,
+      type: "VIDEO",
+      isChapterCompleted,
+      chapter: {
+        itemId: chapter.id,
+      },
+      courseId: course.slug,
+    });
+
+    toast.success("You just earned some points!");
+    setCelebration(true);
+    setIsMarking(false);
   };
 
   const markCourseAsCompleted = async () => {
@@ -394,6 +368,9 @@ export function RoadmapVideoWatchPage({
 
     return;
   };
+
+  const progress =
+    (completedItems?.length / milestone?.userTopic?.totalTasks) * 100;
 
   return (
     <div className="flex-1 space-y-6">
@@ -788,15 +765,12 @@ export function RoadmapVideoWatchPage({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>{milestone.title}</span>
-                  <span>{milestone?.userTopic?.progress ?? 0}%</span>
+                  <span>{progress ?? 0}%</span>
                 </div>
-                <Progress
-                  value={milestone?.userTopic?.progress ?? 0}
-                  className="h-2"
-                />
+                <Progress value={progress ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {milestone?.userTopic?.totalTaskCompleted ?? 0} of{" "}
+                {completedItems?.length ?? 0} of{" "}
                 {milestone?.userTopic?.totalTasks ?? 0} videos watched in this
                 milestone
               </div>
@@ -806,9 +780,7 @@ export function RoadmapVideoWatchPage({
           {/* Milestone Videos */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                Milestone Videos {videoId}
-              </CardTitle>
+              <CardTitle className="text-lg">Milestone Videos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {chapter?.videos.map((vid: Video) => (
