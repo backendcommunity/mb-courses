@@ -143,6 +143,7 @@ export function RoadmapWatchPage({
       }
       // setCelebration(true);
       setCompleted(true);
+      console.log(completed);
       setCompletedItems((prev: any) =>
         prev?.map((r: any) => (r.id === completed.id ? completed : r))
       );
@@ -185,7 +186,6 @@ export function RoadmapWatchPage({
         ...(getAssessments(milestone) ?? []),
       ]
         ?.filter((c) => {
-          console.log(c, "NEXT");
           const completedTask = getCompletedTasks(
             c?.id,
             milestone?.userTopic?.id
