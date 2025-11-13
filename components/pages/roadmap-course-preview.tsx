@@ -112,7 +112,9 @@ export function CourseDetailPage({
   }, [slug, roadmapId]);
 
   if (loading) return <Loader isLoader={false} />;
-  const completedIds = completedItems?.map((ci: any) => ci.itemId);
+  const completedIds = completedItems?.map(
+    (ci: any) => ci.itemId && ci.completed
+  );
 
   const isChapterCompleted = (chapterId: string) => {
     return course?.userCourse?.userChapters?.find(
@@ -173,7 +175,6 @@ export function CourseDetailPage({
 
     const videoIds = videos?.map((v) => v.id);
 
-    // const completedIds = completedItems?.map((ci: any) => ci.itemId);
     const remainingVideoIds = videoIds?.filter(
       (vi) => !completedIds?.includes(vi)
     );

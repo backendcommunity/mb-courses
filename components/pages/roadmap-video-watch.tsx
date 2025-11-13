@@ -372,10 +372,12 @@ export function RoadmapVideoWatchPage({
     return;
   };
 
-  const progress = Math.round(
-    (completedItems?.length / milestone?.userTopic?.totalTasks) * 100
-  );
+  const totalCompletedTasks =
+    completedItems?.filter((ci: any) => ci.type !== "COURSE")?.length ?? 0;
 
+  const progress = Math.round(
+    (totalCompletedTasks / milestone?.userTopic?.totalTasks) * 100
+  );
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -837,9 +839,8 @@ export function RoadmapVideoWatchPage({
                 <Progress value={progress ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {completedItems?.length ?? 0} of{" "}
-                {milestone?.userTopic?.totalTasks ?? 0} videos watched in this
-                milestone
+                {totalCompletedTasks} of {milestone?.userTopic?.totalTasks ?? 0}{" "}
+                videos watched in this milestone
               </div>
             </CardContent>
           </Card>
