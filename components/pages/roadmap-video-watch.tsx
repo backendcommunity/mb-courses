@@ -407,7 +407,7 @@ export function RoadmapVideoWatchPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Video Player */}
         <div className="lg:col-span-3 space-y-4">
           {/* Video Player */}
