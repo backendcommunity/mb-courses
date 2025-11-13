@@ -46,7 +46,6 @@ import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import ConfettiCelebration from "@/components/confetti-celebration";
 import { Loader } from "../ui/loader";
-import { localDB } from "@/lib/localDB";
 
 interface RoadmapCoursePreviewProps {
   roadmapId: string;

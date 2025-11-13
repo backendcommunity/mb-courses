@@ -46,7 +46,6 @@ import { VimeoPlayer } from "../ui/vimeo-player";
 import { CourseQuizPage } from "./course-quiz";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
-import { localDB } from "@/lib/localDB";
 import { SimpleEditor } from "./SimpleEditor";
 
 interface RoadmapVideoWatchPageProps {
@@ -153,15 +152,15 @@ export function RoadmapVideoWatchPage({
 
   const nextChapter =
     course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) + 1
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) + 1
     ];
 
   const prevChapter =
     course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapterId) - 1
+      course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) - 1
     ];
 
-  const next = () => {
+  const next = (chapter: Chapter) => {
     return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
         (vid: Video) => vid.id === currentVideo?.id
@@ -179,7 +178,7 @@ export function RoadmapVideoWatchPage({
     });
   };
 
-  const nextVideo = next();
+  const nextVideo = next(chapter!);
   const prevVideo = prev();
 
   const handleSaveNotes = async () => {
@@ -227,7 +226,7 @@ export function RoadmapVideoWatchPage({
         slug,
         topicId,
         course.slug,
-        chapterId,
+        chapter?.slug!,
         vid.slug
       )}?`
     );
@@ -240,9 +239,9 @@ export function RoadmapVideoWatchPage({
         return;
       }
     }
-
+    const nextVideo = next(chapter) ?? chapter.videos[0];
     setChapter(chapter);
-    setCurrentVideo(chapter?.videos[0]);
+    setCurrentVideo(nextVideo);
     window.history.pushState(
       {},
       "",
@@ -251,7 +250,8 @@ export function RoadmapVideoWatchPage({
         topicId,
         course.slug,
         chapter.slug,
-        chapter?.videos[chapter?.videos?.length - 1]?.slug
+        nextVideo?.slug!
+        //chapter?.videos[chapter?.videos?.length - 1]?.slug
       )}?`
     );
   };
@@ -435,7 +435,11 @@ export function RoadmapVideoWatchPage({
                   {/* Vimeo Player */}
                   <VimeoPlayer
                     video={currentVideo}
-                    onEnded={async () => handleVideoClick(nextVideo!)}
+                    onEnded={async () => {
+                      if (nextVideo) return handleVideoClick(nextVideo);
+                      if (!nextVideo && nextChapter)
+                        handleChapterClick(nextChapter);
+                    }}
                     onComplete={handleMarkComplete}
                   />
 
@@ -975,7 +979,7 @@ export function RoadmapVideoWatchPage({
                 <div
                   key={ch.slug}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.slug === chapterId ? "border border-blue-200" : ""
+                    ch.slug === chapter?.slug ? "border border-blue-200" : ""
                   }`}
                   onClick={() => handleChapterClick(ch)}
                 >
