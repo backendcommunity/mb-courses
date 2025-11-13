@@ -19,6 +19,8 @@ import {
   Calendar,
   Trophy,
   Users,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -43,6 +45,7 @@ export function RoadmapWatchPage({
   const [milestone, setMilestone] = useState<Milestone | any>();
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [marking, setMarking] = useState(false);
   const [completedItems, setCompletedItems] = useState<any>([]);
 
   useMemo(() => {
@@ -107,6 +110,32 @@ export function RoadmapWatchPage({
           course?.quizId
         )
       );
+  };
+
+  const markCourseAsCompleted = async (courseId: string) => {
+    console.log(courseId);
+    try {
+      setMarking(false);
+      const completed = await store.markRoadmapItemCompleted(
+        slug,
+        topicId,
+        courseId,
+        {
+          type: "COURSE",
+          courseId: courseId,
+        }
+      );
+
+      // setCelebration(true);
+      setCompleted(true);
+      toast.success(
+        `You've earned ${completed?.totalPoints} MB from the course`
+      );
+      setMarking(true);
+    } catch (error: any) {
+      toast.error("An error occurred updating your points. Try again");
+      setCompleted(false);
+    }
   };
 
   const handleCompleted = async () => {
@@ -186,7 +215,26 @@ export function RoadmapWatchPage({
             size="sm"
           >
             <Play className="mr-2 h-4 w-4" />
-            Start {next?.type?.toLowerCase()}
+            Start{" "}
+            {next?.type?.toLowerCase() === "video"
+              ? "Course"
+              : next?.type?.toLowerCase()}
+          </Button>
+          <Button
+            variant={"outline"}
+            onClick={() => markCourseAsCompleted(next?.courseSlug)}
+            className="w-full"
+            size="sm"
+          >
+            {marking ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Marking...</span>
+              </>
+            ) : (
+              <span> Mark Complete</span>
+            )}
+            <CheckCircle2 className="mr-2 h-4 w-4" />
           </Button>
         </div>
       );
