@@ -207,8 +207,20 @@ export function RoadmapWatchPage({
     setMarking(false);
   };
 
-  const handleContinueLearning = (course: Course) => {
+  const handleContinueLearning = (
+    course: Course & { courseSlug: string; quizId: string }
+  ) => {
     // Navigate to first incomplete chapter or continue from current
+
+    if (course?.type === "QUIZ")
+      onNavigate?.(
+        routes.roadmapCourseQuiz(
+          slug,
+          milestone.id,
+          course?.courseSlug,
+          course?.quizId
+        )
+      );
 
     const videos = course?.chapters?.flatMap((ch: Chapter) =>
       ch.videos.flatMap((v) => ({
