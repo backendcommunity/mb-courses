@@ -176,7 +176,7 @@ export function RoadmapWatchPage({
       ]
         ?.filter((c) => {
           const completedTask = getCompletedTasks(
-            c.id,
+            c?.currentVideoId,
             milestone?.userTopic?.id
           );
           if (!completedTask?.completed) return c;
@@ -354,8 +354,6 @@ export function RoadmapWatchPage({
                 const completed = completedTask?.completed ?? false;
                 const isActive = !!completedTask;
 
-                console.log(completed, isActive);
-
                 return (
                   <div
                     key={course?.id}
@@ -402,22 +400,24 @@ export function RoadmapWatchPage({
                           {course?.type ?? "Course"}
                         </Badge>
 
-                        <Button
-                          variant={"outline"}
-                          onClick={() => markCourseAsCompleted(course?.slug)}
-                          className="w-full"
-                          size="sm"
-                        >
-                          {marking && course?.slug === currentItem ? (
-                            <>
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                              <span>Marking...</span>
-                            </>
-                          ) : (
-                            <span> Mark Complete</span>
-                          )}
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                        </Button>
+                        {!completed && (
+                          <Button
+                            variant={"outline"}
+                            onClick={() => markCourseAsCompleted(course?.slug)}
+                            className="w-full"
+                            size="sm"
+                          >
+                            {marking && course?.slug === currentItem ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>Marking...</span>
+                              </>
+                            ) : (
+                              <span> Mark Complete</span>
+                            )}
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                          </Button>
+                        )}
 
                         {course?.isCompleted ? (
                           <Badge
