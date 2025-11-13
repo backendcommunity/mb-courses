@@ -129,8 +129,6 @@ export function RoadmapWatchPage({
         }
       );
 
-      console.log(completed);
-
       // setCelebration(true);
       setCompleted(true);
       setCompletedItems((prev: any) =>
@@ -175,7 +173,7 @@ export function RoadmapWatchPage({
         ...(getAssessments(milestone) ?? []),
       ]
         ?.filter((c) => {
-          console.log(c);
+          console.log(c, "NEXT");
           const completedTask = getCompletedTasks(
             c?.currentVideoId,
             milestone?.userTopic?.id
