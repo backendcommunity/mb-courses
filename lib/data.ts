@@ -712,11 +712,13 @@ export interface Milestone {
   description: string;
   courses: string[];
   projects?: string[];
+  level?: string;
   order: number;
   userTopic?: any;
   completed: boolean;
   progress: number;
   duration: string;
+  enrolled?: boolean;
 }
 
 export interface RoadmapCourse extends Course {

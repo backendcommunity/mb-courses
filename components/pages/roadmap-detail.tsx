@@ -423,16 +423,12 @@ export function RoadmapDetailPage({
 
         {/* Milestones Tab */}
         <TabsContent value="milestones" className="space-y-6">
-          {milestones?.map((milestone: any, index) => {
+          {milestones?.map((milestone: Milestone, index) => {
             const isCompleted = milestone?.userTopic?.completed;
-
             const isCurrent =
               milestone.id === roadmap?.userRoadmap?.currentUserTopic?.topicId;
-
             const isUpcoming = !isCurrent && !isCompleted;
-
-            const isFound = (id: string) =>
-              milestone?.userTopic?.topicId === id;
+            const isEnrolled = milestone?.enrolled;
 
             return (
               <Card
@@ -452,7 +448,7 @@ export function RoadmapDetailPage({
                         className={`flex h-8 w-8 items-center justify-center rounded-full ${
                           isCompleted
                             ? "bg-green-600 text-white"
-                            : isCurrent || isFound(milestone.id)
+                            : isCurrent || isEnrolled
                             ? "bg-blue-600 text-white"
                             : "bg-gray-200 text-gray-600"
                         }`}
@@ -482,21 +478,21 @@ export function RoadmapDetailPage({
                         variant={
                           isCompleted
                             ? "default"
-                            : isCurrent || isFound(milestone.id)
+                            : isCurrent || isEnrolled
                             ? "secondary"
                             : "outline"
                         }
                         className={
                           isCompleted
                             ? "bg-green-100 text-green-800 border-green-200"
-                            : isCurrent || isFound(milestone.id)
+                            : isCurrent || isEnrolled
                             ? "bg-blue-100 text-blue-800 border-blue-200"
                             : ""
                         }
                       >
                         {isCompleted
                           ? "Completed"
-                          : isCurrent || isFound(milestone.id)
+                          : isCurrent || isEnrolled
                           ? "In Progress"
                           : "Upcoming"}
                       </Badge>
