@@ -219,7 +219,6 @@ export function RoadmapVideoWatchPage({
     }
 
     setCurrentVideo(vid);
-    console.log(vid);
     window.history.pushState(
       {},
       "",
@@ -817,7 +816,9 @@ export function RoadmapVideoWatchPage({
                 <div
                   key={vid.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    vid.slug === videoId ? "border border-blue-200" : ""
+                    vid.slug === currentVideo?.id
+                      ? "border border-blue-200"
+                      : ""
                   }`}
                   onClick={() => handleVideoClick(vid)}
                 >
