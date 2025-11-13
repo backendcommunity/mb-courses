@@ -115,7 +115,7 @@ export function RoadmapWatchPage({
   const markCourseAsCompleted = async (courseId: string) => {
     console.log(courseId);
     try {
-      setMarking(false);
+      setMarking(true);
       const completed = await store.markRoadmapItemCompleted(
         slug,
         topicId,
@@ -126,12 +126,14 @@ export function RoadmapWatchPage({
         }
       );
 
+      console.log(completed);
+
       // setCelebration(true);
       setCompleted(true);
       toast.success(
         `You've earned ${completed?.totalPoints} MB from the course`
       );
-      setMarking(true);
+      setMarking(false);
     } catch (error: any) {
       toast.error("An error occurred updating your points. Try again");
       setCompleted(false);
@@ -391,6 +393,24 @@ export function RoadmapWatchPage({
                         >
                           {course?.type ?? "Course"}
                         </Badge>
+
+                        <Button
+                          variant={"outline"}
+                          onClick={() => markCourseAsCompleted(course?.slug)}
+                          className="w-full"
+                          size="sm"
+                        >
+                          {marking ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Marking...</span>
+                            </>
+                          ) : (
+                            <span> Mark Complete</span>
+                          )}
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                        </Button>
+
                         {course?.isCompleted ? (
                           <Badge
                             variant="outline"
@@ -420,23 +440,6 @@ export function RoadmapWatchPage({
                                 }`}
                           </Button>
                         )}
-
-                        <Button
-                          variant={"outline"}
-                          onClick={() => markCourseAsCompleted(course?.slug)}
-                          className="w-full"
-                          size="sm"
-                        >
-                          {marking ? (
-                            <>
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                              <span>Marking...</span>
-                            </>
-                          ) : (
-                            <span> Mark Complete</span>
-                          )}
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   </div>
