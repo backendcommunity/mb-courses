@@ -97,13 +97,15 @@ export function RoadmapDetailPage({
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
-      return;
-      setEnrolling(true);
-      const data = await enrollInRoadmap(slug);
-      // Force re-render
-      setRoadmap(data);
-      setActiveTab(activeTab);
-      setEnrolling(false);
+
+      if (user?.subscription?.name === "Enterprise") {
+        setEnrolling(true);
+        const data = await enrollInRoadmap(slug);
+        // Force re-render
+        setRoadmap(data);
+        setActiveTab(activeTab);
+        setEnrolling(false);
+      }
     } catch (error: any) {
       toast.error(error.message);
       setEnrolling(false);
