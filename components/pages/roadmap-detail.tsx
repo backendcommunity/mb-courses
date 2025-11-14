@@ -93,12 +93,15 @@ export function RoadmapDetailPage({
     try {
       console.log(user);
 
-      if (!user.premium || user?.subscription?.name !== "Enterprise") {
+      const isPremiumUser =
+        user?.isPremium && user?.subscription?.name === "Enterprise";
+
+      if (!isPremiumUser) {
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
 
-      if (user?.subscription?.name === "Enterprise") {
+      if (isPremiumUser) {
         setEnrolling(true);
         const data = await enrollInRoadmap(slug);
         // Force re-render
