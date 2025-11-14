@@ -90,16 +90,24 @@ export function RoadmapDetailPage({
   if (!roadmap) return <div className="p-6">Roadmap not found</div>;
 
   const handleEnroll = async () => {
-    if (user?.subscription && user.subscription.name !== "Enterprise") {
-      setShowPaymentDialog(!showPaymentDialog);
-      return;
+    try {
+      if (
+        !user.premium &&
+        user?.subscription &&
+        user.subscription.name !== "Enterprise"
+      ) {
+        setShowPaymentDialog(!showPaymentDialog);
+        return;
+      }
+      setEnrolling(true);
+      const data = await enrollInRoadmap(slug);
+      // Force re-render
+      setRoadmap(data);
+      setActiveTab(activeTab);
+      setEnrolling(false);
+    } catch (error: any) {
+      toast.error(error.message);
     }
-    setEnrolling(true);
-    const data = await enrollInRoadmap(slug);
-    // Force re-render
-    setRoadmap(data);
-    setActiveTab(activeTab);
-    setEnrolling(false);
   };
 
   const handleContinue = async () => {
