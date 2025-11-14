@@ -107,6 +107,7 @@ export function RoadmapDetailPage({
       setEnrolling(false);
     } catch (error: any) {
       toast.error(error.message);
+      setEnrolling(false);
     }
   };
 
