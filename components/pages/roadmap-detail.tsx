@@ -91,8 +91,6 @@ export function RoadmapDetailPage({
 
   const handleEnroll = async () => {
     try {
-      console.log(user);
-
       const isPremiumUser =
         user?.isPremium && user?.subscription?.name === "Enterprise";
 
