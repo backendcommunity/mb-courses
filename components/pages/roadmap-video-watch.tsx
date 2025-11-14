@@ -362,7 +362,10 @@ export function RoadmapVideoWatchPage({
   };
 
   const totalCompletedTasks =
-    completedItems?.filter((ci: any) => ci.type !== "COURSE")?.length ?? 0;
+    completedItems?.filter(
+      (ci: any) =>
+        ci.type !== "COURSE" && ci.type !== "CHAPTER" && !ci.completed
+    )?.length ?? 0;
 
   const progress = Math.round(
     (totalCompletedTasks / milestone?.userTopic?.totalTasks) * 100
