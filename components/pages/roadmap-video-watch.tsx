@@ -88,10 +88,26 @@ export function RoadmapVideoWatchPage({
   const [chapter, setChapter] = useState<Chapter>();
 
   async function loadMilestone() {
-    const milestone = await store.getMilestone(slug, topicId);
-    setMilestone(milestone);
-    setRoadmap(milestone.roadmap);
-    setCompletedItems(milestone?.userTopic?.completedItems ?? []);
+    try {
+      const milestone = await store.getMilestone(slug, topicId);
+      setMilestone(milestone);
+      setRoadmap(milestone.roadmap);
+      setCompletedItems(milestone?.userTopic?.completedItems ?? []);
+    } catch (error) {
+      setLoading(false);
+
+      return (
+        <div className="flex-1 p-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Milestone not found</h1>
+            <Button onClick={() => onNavigate?.("/roadmaps")} className="mt-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Roadmaps
+            </Button>
+          </div>
+        </div>
+      );
+    }
   }
 
   useEffect(() => {
