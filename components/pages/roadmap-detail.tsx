@@ -94,9 +94,8 @@ export function RoadmapDetailPage({
       console.log(user);
 
       if (
-        !user.premium &&
-        user?.subscription &&
-        user.subscription.name !== "Enterprise"
+        !user.premium ||
+        (user?.subscription && user.subscription.name !== "Enterprise")
       ) {
         setShowPaymentDialog(!showPaymentDialog);
         return;
