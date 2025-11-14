@@ -91,6 +91,8 @@ export function RoadmapDetailPage({
 
   const handleEnroll = async () => {
     try {
+      console.log(user);
+
       if (
         !user.premium &&
         user?.subscription &&
@@ -99,6 +101,7 @@ export function RoadmapDetailPage({
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
+      return;
       setEnrolling(true);
       const data = await enrollInRoadmap(slug);
       // Force re-render
