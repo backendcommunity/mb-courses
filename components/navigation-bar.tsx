@@ -72,7 +72,7 @@ export function NavigationBar({
     : {
         name: "Free",
       };
-
+  console.log(subscription, user);
   async function load() {
     try {
       setIsActivitiesLoading(true);
