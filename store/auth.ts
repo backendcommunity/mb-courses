@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth";
 import { NewUser, updateUser, User } from "@/lib/data";
 import { localDB } from "@/lib/localDB";
+import { setCookie } from "cookies-next/client";
 
 // interface User {
 //   id: string;
@@ -61,6 +62,13 @@ export const useAuth = create<AuthState>((set) => ({
   login: async (email, password) => {
     const { data } = await login(email, password);
     localDB.set("token", data.token);
+    setCookie("mb_token", data.token, {
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+    set({ user: data.user, token: data.token });
     updateUser(data.user);
     return data.user;
   },

@@ -45,24 +45,29 @@ export default function LoginPage() {
       e.preventDefault();
       setIsLoading(true);
 
-      // Simulate API call
       const { email, password } = formData;
       const user = await auth.login(email, password);
 
       if (!user) {
         toast.error("Login failed");
-        setIsLoading(false);
         return;
       }
-      // Handle login logic here
-      await router.push("/");
+
+      // Show success message
+      toast.success("Login successful! Redirecting...");
+      
+      // Handle redirect logic
+      const redirectPath = query.redirect || "/";
+      await router.push(redirectPath);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? error?.message;
 
-      if (message.includes("Confirm your email"))
+      if (message && message.includes("Confirm your email")) {
         router.push("/auth/email/verify?sent=true&email=" + formData.email);
+        return;
+      }
 
-      toast.error(message);
+      toast.error(message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
