@@ -170,8 +170,14 @@ export function NavigationBar({
   };
 
   const handleLogout = async () => {
-    await auth.logout();
-    onNavigate("/auth/login");
+    try {
+      await auth.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Always redirect to login after logout attempt
+      onNavigate("/auth/login");
+    }
   };
 
   const handleDeleteNotifications = async () => {

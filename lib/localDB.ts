@@ -57,7 +57,13 @@ export const localDB = {
         }
       }
 
-      keysToRemove.forEach((key) => this.remove(key));
+      keysToRemove.forEach((key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (err) {
+          console.error(`Error removing key ${key}`, err);
+        }
+      });
     } catch (err) {
       console.error("Error clearing localStorage", err);
     }

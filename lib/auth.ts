@@ -21,11 +21,13 @@ export const register = async (user: NewUser) => {
 export const logout = async () => {
   try {
     await api.post("/auth/logout");
-
+  } catch (error: any) {
+    console.log("Logout API error:", error.message);
+    // Don't throw error - let the calling function handle cleanup
+  } finally {
+    // Always clear local data regardless of API success/failure
     localDB.clear();
     deleteCookie("mb_token");
-  } catch (error: any) {
-    console.log("Trying to logout error:", error.message);
   }
 };
 

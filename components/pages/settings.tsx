@@ -211,7 +211,7 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
       if (name !== user?.name) return;
       await store.deleteAccount();
       toast.success("Account deleted successfully");
-      onNavigate(routes.logout);
+      onNavigate("/auth/login");
     } catch (error) {
       toast.error("Account not deleted. Try again");
     } finally {

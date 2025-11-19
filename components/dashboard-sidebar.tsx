@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
-import { logout } from "@/lib/auth";
+import { useAuth } from "@/store/auth";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -83,6 +83,7 @@ export function DashboardSidebar({
   const [collapsed, setCollapsed] = useState(false);
   const user = useUser();
   const level = useLevel();
+  const auth = useAuth();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => setCollapsed(isCollapsed), [isCollapsed]);
@@ -264,8 +265,13 @@ export function DashboardSidebar({
             variant="ghost"
             size="icon"
             onClick={async () => {
-              await logout();
-              onNavigate(routes.logout);
+              try {
+                await auth.logout();
+              } catch (error) {
+                console.error("Logout error:", error);
+              } finally {
+                onNavigate("/auth/login");
+              }
             }}
           >
             <LogOut className={`${collapsed ? "h-6 w-6" : "h-4 w-4"}`} />

@@ -12,7 +12,7 @@ import {
 } from "@/lib/auth";
 import { NewUser, updateUser, User } from "@/lib/data";
 import { localDB } from "@/lib/localDB";
-import { setCookie } from "cookies-next/client";
+import { setCookie, deleteCookie } from "cookies-next/client";
 
 // interface User {
 //   id: string;
@@ -104,9 +104,17 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await logout();
-    localDB.remove("token");
-    set({ user: null, token: null });
-    updateUser(null);
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with local cleanup even if API call fails
+    } finally {
+      // Always clear local data regardless of API success/failure
+      localDB.clear(); // Clear all local data, not just token
+      deleteCookie("mb_token"); // Ensure cookie is deleted
+      set({ user: null, token: null });
+      updateUser(null);
+    }
   },
 }));
