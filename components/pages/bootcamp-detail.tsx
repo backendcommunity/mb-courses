@@ -491,16 +491,6 @@ export function BootcampDetailPage({
                   {started &&
                     bootcamp?.userCohort?.cohort?.status === "CLOSED" && (
                       <div className="space-y-2">
-                        {bootcamp?.cohort?.status === "OPEN" && (
-                          <Button
-                            className="w-full"
-                            onClick={() =>
-                              enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
-                            }
-                          >
-                            Join {bootcamp?.cohort?.name} Now
-                          </Button>
-                        )}
                         <Button
                           className="w-full"
                           variant={"secondary"}
@@ -511,6 +501,18 @@ export function BootcampDetailPage({
                           Access Your Cohort
                         </Button>
                       </div>
+                      //   {bootcamp?.cohort?.status === "OPEN" && (
+                      //     <Button
+                      //       className="w-full"
+                      //       onClick={() =>
+                      //         enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
+                      //       }
+                      //     >
+                      //       Join {bootcamp?.cohort?.name} Now
+                      //     </Button>
+                      //   )}
+
+                      // </div>
                     )}
 
                   {started &&
