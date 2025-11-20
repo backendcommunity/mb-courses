@@ -130,6 +130,8 @@ export function BootcampDetailPage({
   const started =
     new Date(bootcamp?.userCohort?.cohort!?.startsAt) < new Date();
 
+  console.log(started);
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -516,7 +518,9 @@ export function BootcampDetailPage({
                     )}
 
                   {started &&
-                    bootcamp?.userCohort?.cohort?.status === "OPEN" && (
+                    ["OPEN", "STARTED"].includes(
+                      bootcamp?.userCohort?.cohort?.status
+                    ) && (
                       <div className="space-y-2">
                         <Badge
                           variant="outline"
