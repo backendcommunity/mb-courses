@@ -85,7 +85,7 @@ export function LandsPage({ onNavigate }: LandsPageProps) {
 
   return (
     <div className="flex-1 space-y-6 relative">
-      <WIP />
+      {/* <WIP /> */}
 
       {/* Header */}
       <div className="flex items-center justify-between">

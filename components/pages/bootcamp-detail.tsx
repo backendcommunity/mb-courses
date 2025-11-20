@@ -417,7 +417,7 @@ export function BootcampDetailPage({
                   <Badge
                     className="text-sm"
                     variant={
-                      bootcamp?.userCohort?.cohort?.status === "Open"
+                      bootcamp?.userCohort?.cohort?.status === "OPEN"
                         ? "outline"
                         : started
                         ? "default"
@@ -514,7 +514,7 @@ export function BootcampDetailPage({
                     )}
 
                   {started &&
-                    bootcamp?.userCohort?.cohort?.status === "Open" && (
+                    bootcamp?.userCohort?.cohort?.status === "OPEN" && (
                       <div className="space-y-2">
                         <Badge
                           variant="outline"

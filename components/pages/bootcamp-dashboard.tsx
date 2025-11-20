@@ -162,7 +162,7 @@ export function BootcampDashboardPage({
             <Badge variant={"secondary"}>{userCohort?.cohort?.name}</Badge>
             <Badge
               variant={
-                userCohort?.cohort?.status === "Open"
+                userCohort?.cohort?.status === "OPEN"
                   ? "default"
                   : "destructive"
               }
