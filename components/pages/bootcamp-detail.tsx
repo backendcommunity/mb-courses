@@ -489,9 +489,9 @@ export function BootcampDetailPage({
                     </div>
                   )}
                   {started &&
-                    bootcamp?.userCohort?.cohort?.status === "Closed" && (
+                    bootcamp?.userCohort?.cohort?.status === "CLOSED" && (
                       <div className="space-y-2">
-                        {bootcamp?.cohort?.status === "Open" && (
+                        {bootcamp?.cohort?.status === "OPEN" && (
                           <Button
                             className="w-full"
                             onClick={() =>
