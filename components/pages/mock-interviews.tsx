@@ -61,7 +61,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
   return (
     <div className="container mx-auto p- space-y-6 relative">
-      {/* <WIP /> */}
+      <WIP />
 
       {/* Header */}
       <div className="flex items-center justify-between">

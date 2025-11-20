@@ -229,7 +229,7 @@ export function InterviewsPage({ onNavigate }: InterviewsPageProps) {
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 relative">
-      {/* <WIP /> */}
+      <WIP />
 
       {/* Header */}
       <div className="flex items-center justify-between">
