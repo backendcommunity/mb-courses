@@ -174,7 +174,7 @@ export function BootcampDashboardPage({
             </Badge>
             <Badge
               variant={
-                (userCohort?.cohort?.status || bootcamp?.cohort?.status || bootcamp?.cohorts?.[0]?.status) === "Open"
+                userCohort?.cohort?.status === "Open"
                   ? "default"
                   : "destructive"
               }

@@ -131,6 +131,8 @@ export function BootcampDetailPage({
   const started =
     new Date(bootcamp?.userCohort?.cohort!?.startsAt) < new Date();
 
+  console.log(started);
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -425,7 +427,7 @@ export function BootcampDetailPage({
                   <Badge
                     className="text-sm"
                     variant={
-                      bootcamp?.userCohort?.cohort?.status === "Open"
+                      bootcamp?.userCohort?.cohort?.status === "OPEN"
                         ? "outline"
                         : started
                         ? "default"
@@ -497,18 +499,8 @@ export function BootcampDetailPage({
                     </div>
                   )}
                   {started &&
-                    bootcamp?.userCohort?.cohort?.status === "Closed" && (
+                    bootcamp?.userCohort?.cohort?.status === "CLOSED" && (
                       <div className="space-y-2">
-                        {bootcamp?.cohort?.status === "Open" && (
-                          <Button
-                            className="w-full"
-                            onClick={() =>
-                              enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
-                            }
-                          >
-                            Join {bootcamp?.cohort?.name} Now
-                          </Button>
-                        )}
                         <Button
                           className="w-full"
                           variant={"secondary"}
@@ -519,10 +511,24 @@ export function BootcampDetailPage({
                           Access Your Cohort
                         </Button>
                       </div>
+                      //   {bootcamp?.cohort?.status === "OPEN" && (
+                      //     <Button
+                      //       className="w-full"
+                      //       onClick={() =>
+                      //         enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
+                      //       }
+                      //     >
+                      //       Join {bootcamp?.cohort?.name} Now
+                      //     </Button>
+                      //   )}
+
+                      // </div>
                     )}
 
                   {started &&
-                    bootcamp?.userCohort?.cohort?.status === "Open" && (
+                    ["OPEN", "STARTED"].includes(
+                      bootcamp?.userCohort?.cohort?.status
+                    ) && (
                       <div className="space-y-2">
                         <Badge
                           variant="outline"
