@@ -408,21 +408,49 @@ export function BootcampVideoWatchPage({
             <div className="flex items-center gap-2">
               {currentLesson && (
                 <>
-                  {currentLesson.type === "VIDEO" &&
-                    !isVideoCompleted(currentLesson.id) && (
+                  {currentLesson.type === "VIDEO" && (
+                    isVideoCompleted(currentLesson.id) ? (
+                      <Button variant="outline" disabled>
+                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                        Completed
+                      </Button>
+                    ) : (
                       <Button onClick={handleMarkComplete}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Complete
                       </Button>
-                    )}
+                    )
+                  )}
 
-                  {(currentLesson.type === "QUIZ" && quizPassed) ||
-                    (currentLesson?.quiz && !currentLesson?.quiz?.required && (
+                  {currentLesson.type === "QUIZ" && (
+                    isVideoCompleted(currentLesson.id) ? (
+                      <Button variant="outline" disabled>
+                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                        Completed
+                      </Button>
+                    ) : (
+                      (quizPassed || !currentLesson?.quiz?.required) && (
+                        <Button onClick={handleMarkComplete}>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Mark Quiz Complete
+                        </Button>
+                      )
+                    )
+                  )}
+
+                  {(currentLesson.type === "ASSIGNMENT" || currentLesson.type === "EXERCISE") && (
+                    isVideoCompleted(currentLesson.id) ? (
+                      <Button variant="outline" disabled>
+                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                        Completed
+                      </Button>
+                    ) : (
                       <Button onClick={handleMarkComplete}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Mark Quiz Complete
+                        Mark Complete
                       </Button>
-                    ))}
+                    )
+                  )}
                 </>
               )}
 
@@ -464,7 +492,10 @@ export function BootcampVideoWatchPage({
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              {/* Only show transcript for VIDEO type, not for text-based content */}
+              {currentLesson?.type === "VIDEO" && (
+                <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              )}
               <TabsTrigger value="code">Code Editor</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="resources">Resources</TabsTrigger>
