@@ -57,16 +57,6 @@ export function BootcampDashboardPage({
           index = 1;
         }
 
-        // Sort lessons for "Orientation and Bootcamp Overview" week
-        if (week && week.title === "Orientation and Bootcamp Overview" && week.lessons?.length > 0) {
-          const sortedLessons = [...week.lessons].sort((a: any, b: any) => {
-            if (a.title === "Welcome and Introduction") return -1;
-            if (b.title === "Welcome and Introduction") return 1;
-            return 0;
-          });
-          week = { ...week, lessons: sortedLessons };
-        }
-
         setCurrentWeek(week ? { ...week, index } : null);
 
         const currentLessonId = bootcamp?.userCohort?.currentLessonId;
@@ -429,7 +419,7 @@ export function BootcampDashboardPage({
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium">Week{i + 1}</p>
+                      <p className="text-xs font-medium">Week {i + 1}</p>
                     </div>
                   </div>
                 ))
