@@ -23,7 +23,7 @@ import {
   BadgeIcon,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bootcamp, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ export function BootcampDetailPage({
   const [bootcamp, setBootcamp] = useState<Bootcamp | any>();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
@@ -63,7 +63,8 @@ export function BootcampDetailPage({
     };
 
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bootcampId]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -140,9 +141,16 @@ export function BootcampDetailPage({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {bootcamp?.title}
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {bootcamp?.title}
+            </h1>
+            {bootcamp?.cohort?.name && (
+              <Badge variant="destructive" className="text-sm">
+                {bootcamp.cohort.name}
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">{bootcamp?.description}</p>
         </div>
       </div>

@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bootcamp, Meta } from "@/lib/data";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Loader } from "../ui/loader";
@@ -59,11 +59,12 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
     setLoading(false);
   };
 
-  useMemo(() => {
+  useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useMemo(() => {
+  useEffect(() => {
     async function load() {
       if (
         selectedDuration.includes("all") &&
@@ -89,6 +90,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
     }
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, selectedType, selectedDuration, selectedLevel]);
 
   if (loading) return <Loader isLoader={false} />;
@@ -110,46 +112,52 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Active Bootcamps</CardTitle>
+            <Zap className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">94%</div>
-            <p className="text-xs text-muted-foreground">Job placement rate</p>
+            <div className="text-2xl font-bold">{bootcamps.length}</div>
+            <p className="text-xs text-muted-foreground">Currently available</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg Salary Increase
+              Total Enrolled
             </CardTitle>
-            <Star className="h-4 w-4 text-yellow-500" />
+            <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$35k</div>
-            <p className="text-xs text-muted-foreground">After completion</p>
+            <div className="text-2xl font-bold">
+              {bootcamps.reduce((sum: number, b: any) => sum + (b.totalEnrolled || 0), 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">Students enrolled</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Graduates</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Available Spots</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-muted-foreground">Total graduates</p>
+            <div className="text-2xl font-bold">
+              {bootcamps.reduce((sum: number, b: any) => sum + (b?.cohort?.spotsLeft || 0), 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">Spots remaining</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Latest Incoming Cohort
+              Upcoming Cohorts
             </CardTitle>
             <Calendar className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">July 1</div>
-            <p className="text-xs text-muted-foreground">2024</p>
+            <div className="text-2xl font-bold">
+              {bootcamps.filter((b: any) => new Date(b?.cohort?.startsAt) > new Date()).length}
+            </div>
+            <p className="text-xs text-muted-foreground">Starting soon</p>
           </CardContent>
         </Card>
       </div>

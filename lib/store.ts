@@ -188,8 +188,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await fetchUser();
       updateUserInStore(res.data);
       return res.data;
-    } catch (error) {
-      // throw error;
+    } catch (error: any) {
+      // Clear local storage on authentication errors
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        localDB.clear();
+      }
+      throw error;
     }
   },
   getProject30Leaderboard: async (slug: string, filters?: any) => {
