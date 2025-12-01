@@ -10,7 +10,6 @@ import { KapAIAssistant } from "./kap-ai-assistant";
 import { useAppStore } from "@/lib/store";
 import { updateUser, User } from "@/lib/data";
 import { Loader } from "./ui/loader";
-import { localDB } from "@/lib/localDB";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,41 +23,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [user, setUser] = useState<User>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleNavigate = (path: string) => router.push(path);
 
   async function load() {
-    try {
-      // Check if we have a token first
-      const token = localDB.get("token", "");
-      
-      if (!token || token === "null") {
-        // No token, redirect to login
-        router.push("/auth/login");
-        return;
-      }
-
-      setLoading(true);
-      const user = await store.getUser();
-      
-      if (user) {
-        setUser(user);
-        updateUser(user);
-      } else {
-        // No user found, redirect to login
-        router.push("/auth/login");
-        return;
-      }
-    } catch (error: any) {
-      console.error("Authentication error:", error);
-      // Clear local data and redirect to login on any auth error
-      localDB.clear();
-      router.push("/auth/login");
-      return;
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const user = await store.getUser();
+    if (user) {
+      setUser(user);
+      updateUser(user);
     }
+    setLoading(false);
   }
 
   useEffect(() => {
