@@ -12,7 +12,12 @@ export function middleware(request: NextRequest) {
 
   // 1. If NOT authenticated and trying to access protected route
   if (!isAuthenticated && isSecret) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    const loginUrl = new URL("/auth/login", request.url);
+    // Add redirect parameter to return to original page after login
+    if (pathname !== "/") {
+      loginUrl.searchParams.set("redirect", pathname);
+    }
+    return NextResponse.redirect(loginUrl);
   }
 
   // 2. If authenticated and trying to access auth pages
