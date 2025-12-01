@@ -12,12 +12,15 @@ import {
   Target,
   Trophy,
   Calendar,
+  VideoIcon,
+  AudioWaveform,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
 import Countdown from "../ui/count-down";
+import { formatRelativeDate } from "@/lib/utils";
 
 interface BootcampDashboardPageProps {
   bootcampId: string;
@@ -30,57 +33,78 @@ export function BootcampDashboardPage({
 }: BootcampDashboardPageProps) {
   const store = useAppStore();
   const [loading, setLoading] = useState(false);
+  const [eventLoading, setEventLoading] = useState(false);
+  const [events, setEvents] = useState<Array<any>>();
   const [bootcamp, setBootcamp] = useState<Bootcamp | any>();
   const [currentWeek, setCurrentWeek] = useState<Week & { index: number }>();
   const [currentLesson, setCurrentLesson] = useState<Lesson>();
   const [userCohort, setUserCohort] = useState<UserCohort>();
 
+  const load = async () => {
+    try {
+      setLoading(true);
+      const bootcamp = await store.getBootcamp(bootcampId);
+
+      // Handle case where userCohort might not exist (user not enrolled)
+      const currentWeekId = bootcamp?.userCohort?.currentWeekId || null;
+      const weeks = bootcamp?.cohort?.weeks || [];
+
+      let week = null;
+      let index = 1;
+
+      if (currentWeekId && weeks.length > 0) {
+        week = weeks.find((week: any) => week.id === currentWeekId);
+        index = weeks.findIndex((week: any) => week.id === currentWeekId) + 1;
+      } else if (weeks.length > 0) {
+        // Default to first week if no current week set
+        week = weeks[0];
+        index = 1;
+      }
+
+      setCurrentWeek(week ? { ...week, index } : null);
+
+      const currentLessonId = bootcamp?.userCohort?.currentLessonId;
+      let lesson = null;
+
+      if (currentLessonId && week?.lessons?.length > 0) {
+        lesson = week.lessons.find((l: any) => l.id === currentLessonId);
+      } else if (week?.lessons?.length > 0) {
+        // Default to first lesson if no current lesson set
+        lesson = week.lessons[0];
+      }
+
+      setCurrentLesson(lesson);
+      setUserCohort(bootcamp?.userCohort || null);
+      setBootcamp(bootcamp);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
+  useMemo(() => {
+    load();
+  }, [bootcampId]);
+
   useMemo(() => {
     const load = async () => {
+      if (!currentWeek) return;
       try {
-        setLoading(true);
-        const bootcamp = await store.getBootcamp(bootcampId);
+        setEventLoading(true);
+        const events = await store.getCurrentWeekEvents(
+          bootcampId,
+          currentWeek?.id!
+        );
 
-        // Handle case where userCohort might not exist (user not enrolled)
-        const currentWeekId = bootcamp?.userCohort?.currentWeekId || null;
-        const weeks = bootcamp?.cohort?.weeks || [];
-        
-        let week = null;
-        let index = 1;
-        
-        if (currentWeekId && weeks.length > 0) {
-          week = weeks.find((week: any) => week.id === currentWeekId);
-          index = weeks.findIndex((week: any) => week.id === currentWeekId) + 1;
-        } else if (weeks.length > 0) {
-          // Default to first week if no current week set
-          week = weeks[0];
-          index = 1;
-        }
-
-        setCurrentWeek(week ? { ...week, index } : null);
-
-        const currentLessonId = bootcamp?.userCohort?.currentLessonId;
-        let lesson = null;
-        
-        if (currentLessonId && week?.lessons?.length > 0) {
-          lesson = week.lessons.find((l: any) => l.id === currentLessonId);
-        } else if (week?.lessons?.length > 0) {
-          // Default to first lesson if no current lesson set
-          lesson = week.lessons[0];
-        }
-
-        setCurrentLesson(lesson);
-        setUserCohort(bootcamp?.userCohort || null);
-        setBootcamp(bootcamp);
-        setLoading(false);
+        setEvents(events);
+        setEventLoading(false);
       } catch (error) {
-        console.error('Error loading bootcamp:', error);
-        setLoading(false);
+        setEventLoading(false);
       }
     };
 
     load();
-  }, [bootcampId, store]);
+  }, [bootcampId, currentWeek]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -164,13 +188,19 @@ export function BootcampDashboardPage({
               {bootcamp.title} Dashboard
             </h1>
             <p className="text-muted-foreground">
-              Week {currentWeek?.index || 1} of {bootcamp?.cohort?.duration || bootcamp?.cohorts?.[0]?.duration || 'N/A'} •{" "}
-              {bootcamp?.userCohort?.progress ?? 0}% Complete
+              Week {currentWeek?.index || 1} of{" "}
+              {bootcamp?.cohort?.duration ||
+                bootcamp?.cohorts?.[0]?.duration ||
+                "N/A"}{" "}
+              • {bootcamp?.userCohort?.progress ?? 0}% Complete
             </p>
           </div>
           <div className="flex gap-2">
             <Badge variant={"secondary"}>
-              {userCohort?.cohort?.name || bootcamp?.cohort?.name || bootcamp?.cohorts?.[0]?.name || 'Cohort 1'}
+              {userCohort?.cohort?.name ||
+                bootcamp?.cohort?.name ||
+                bootcamp?.cohorts?.[0]?.name ||
+                "Cohort 1"}
             </Badge>
             <Badge
               variant={
@@ -179,9 +209,15 @@ export function BootcampDashboardPage({
                   : "destructive"
               }
             >
-              {new Date(userCohort?.cohort?.startsAt || bootcamp?.cohort?.startsAt || bootcamp?.cohorts?.[0]?.startsAt) < new Date()
+              {new Date(
+                userCohort?.cohort?.startsAt ||
+                  bootcamp?.cohort?.startsAt ||
+                  bootcamp?.cohorts?.[0]?.startsAt
+              ) < new Date()
                 ? "In Progress"
-                : (userCohort?.cohort?.status || bootcamp?.cohort?.status || bootcamp?.cohorts?.[0]?.status)}
+                : userCohort?.cohort?.status ||
+                  bootcamp?.cohort?.status ||
+                  bootcamp?.cohorts?.[0]?.status}
             </Badge>
           </div>
         </div>
@@ -207,7 +243,9 @@ export function BootcampDashboardPage({
             />
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">{currentWeek?.index || 1}</div>
+                <div className="text-2xl font-bold">
+                  {currentWeek?.index || 1}
+                </div>
                 <div className="text-xs text-blue-100">Current Week</div>
               </div>
               <div className="text-center">
@@ -241,13 +279,17 @@ export function BootcampDashboardPage({
           {/* Current Week */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Week: {currentWeek?.title || 'Week 1'}</CardTitle>
+              <CardTitle>
+                Current Week: {currentWeek?.title || "Week 1"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {!currentWeek?.lessons?.length ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No lessons available for this week yet.</p>
-                  <p className="text-sm mt-2">Check back later or contact support if this seems incorrect.</p>
+                  <p className="text-sm mt-2">
+                    Check back later or contact support if this seems incorrect.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -268,9 +310,11 @@ export function BootcampDashboardPage({
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{lesson.title || `Lesson ${index + 1}`}</h4>
+                        <h4 className="font-medium">
+                          {lesson.title || `Lesson ${index + 1}`}
+                        </h4>
                         <Badge variant="outline" className="text-xs capitalize">
-                          {lesson.type || 'lesson'}
+                          {lesson.type || "lesson"}
                         </Badge>
                       </div>
                       {lesson.id === currentLesson?.id ? (
@@ -315,23 +359,7 @@ export function BootcampDashboardPage({
               <CardTitle>Upcoming Events</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
-                {
-                  title: "Live Q&A Session",
-                  date: "Tomorrow, 2:00 PM EST",
-                  type: "Live Session",
-                },
-                {
-                  title: "Project Review",
-                  date: "Friday, 10:00 AM EST",
-                  type: "Review",
-                },
-                {
-                  title: "Career Workshop",
-                  date: "Next Monday, 1:00 PM EST",
-                  type: "Workshop",
-                },
-              ].map((event, index) => (
+              {events?.map((event, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -341,11 +369,38 @@ export function BootcampDashboardPage({
                     <div>
                       <h4 className="font-medium">{event.title}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {event.date}
+                        {formatRelativeDate(event.startTime, event.timezone)}
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline">{event.type}</Badge>
+
+                  <div className="flex gap-5">
+                    <Button
+                      title="Click here to join meeting"
+                      disabled={!event.meetingUrl}
+                      variant="outline"
+                      onClick={() => window.open(event.meetingUrl)}
+                    >
+                      <VideoIcon className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      title="Click here for previous recording"
+                      disabled={!event.recordingUrl}
+                      variant={"outline"}
+                      onClick={() => window.open(event.recordingUrl)}
+                    >
+                      <AudioWaveform className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex">
+                    <Badge variant="outline" className="capitalize">
+                      {event?.eventType?.split("_")?.join(" ")?.toLowerCase()}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {event?.status?.split("_")?.join(" ")?.toLowerCase()}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </CardContent>
@@ -365,26 +420,35 @@ export function BootcampDashboardPage({
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Attendance Rate</span>
                   <span className="font-medium">
-                    {bootcamp?.userCohort?.attendanceRate ?? 'N/A'}
+                    {bootcamp?.userCohort?.attendanceRate ?? "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Assignment Score</span>
                   <span className="font-medium">
-                    {bootcamp?.userCohort?.assigmentScore ?? 'N/A'}
+                    {bootcamp?.userCohort?.assigmentScore ?? "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Peer Ranking</span>
                   <span className="font-medium">
-                    #{bootcamp?.userCohort?.peerRanking ?? 'N/A'} of{" "}
-                    {bootcamp?.totalEnrolled ?? bootcamp?.cohort?.maxStudent ?? bootcamp?.cohorts?.[0]?.maxStudent ?? 'N/A'}
+                    #{bootcamp?.userCohort?.peerRanking ?? "N/A"} of{" "}
+                    {bootcamp?.totalEnrolled ??
+                      bootcamp?.cohort?.maxStudent ??
+                      bootcamp?.cohorts?.[0]?.maxStudent ??
+                      "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Weeks Until Graduation</span>
                   <span className="font-medium">
-                    {Math.max(0, (bootcamp?.cohort?.duration || bootcamp?.cohorts?.[0]?.duration || 0) - (currentWeek?.index || 1))} weeks
+                    {Math.max(
+                      0,
+                      (bootcamp?.cohort?.duration ||
+                        bootcamp?.cohorts?.[0]?.duration ||
+                        0) - (currentWeek?.index || 1)
+                    )}{" "}
+                    weeks
                   </span>
                 </div>
               </div>
@@ -407,7 +471,11 @@ export function BootcampDashboardPage({
                     }`}
                     onClick={() =>
                       onNavigate?.(
-                        `/bootcamps/${bootcampId}/${userCohort?.cohortId || bootcamp?.cohort?.id || bootcamp?.cohorts?.[0]?.id}/weeks/${week.id}`
+                        `/bootcamps/${bootcampId}/${
+                          userCohort?.cohortId ||
+                          bootcamp?.cohort?.id ||
+                          bootcamp?.cohorts?.[0]?.id
+                        }/weeks/${week.id}`
                       )
                     }
                   >
@@ -450,7 +518,9 @@ export function BootcampDashboardPage({
               </div>
               <div className="text-center p-4 border rounded-lg">
                 <div className="text-2xl font-bold">
-                  {bootcamp?.userCohort?.activeStudents ?? bootcamp?.totalEnrolled ?? 0}
+                  {bootcamp?.userCohort?.activeStudents ??
+                    bootcamp?.totalEnrolled ??
+                    0}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Still Active

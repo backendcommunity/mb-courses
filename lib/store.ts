@@ -81,6 +81,7 @@ interface AppState {
     };
   }) => Bootcamp[] | any;
   getBootcamp: (id: string) => Bootcamp | any;
+  getCurrentWeekEvents: (id: string, weekId: string) => any;
   getLesson: (id: string, week: string, lesson: string) => Lesson | any;
   getWeek: (id: string, cohort: string, week: string) => Week | any;
   getLearningPaths: () => LearningPath[];
@@ -368,6 +369,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(`/bootcamps`, { params: filters });
     return data?.data;
   },
+
+  getCurrentWeekEvents: async (id: string, weekId: string) => {
+    console.log(`/bootcamps/${id}/weeks/${weekId}/events`);
+    const { data } = await api.get(`/bootcamps/${id}/weeks/${weekId}/events`);
+    return data?.data;
+  },
+
   getBootcamp: async (id: string) => {
     const { data } = await api.get(`/bootcamps/${id}`);
     return data?.data;

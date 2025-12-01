@@ -212,3 +212,79 @@ export function preprocessTerminalOutput(raw: string) {
     return spans;
   });
 }
+
+export function formatRelativeDate(
+  dateString: string,
+  targetTimezone: string
+): string {
+  const now = new Date();
+  const inputDate = new Date(dateString);
+
+  // Converts to timezone-correct date object
+  const convertToTZ = (d: Date) =>
+    new Date(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: targetTimezone,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+      }).format(d)
+    );
+
+  const tzNow = convertToTZ(now);
+  const tzDate = convertToTZ(inputDate);
+
+  // Helpers
+  const diffDays = Math.floor(
+    (tzDate.getTime() - new Date(tzNow.toDateString()).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    timeZone: targetTimezone,
+  }).format(inputDate);
+
+  const time = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: targetTimezone,
+  }).format(inputDate);
+
+  const tzAbbrev = inputDate
+    .toLocaleDateString("en-US", {
+      timeZone: targetTimezone,
+      timeZoneName: "short",
+    })
+    .split(" ")
+    .pop()!;
+
+  // Natural language rules
+  let prefix = "";
+
+  if (diffDays === 0) {
+    prefix = "Today";
+  } else if (diffDays === 1) {
+    prefix = "Tomorrow";
+  } else if (diffDays >= 2 && diffDays <= 6) {
+    prefix = weekday; // e.g., "Friday"
+  } else if (diffDays >= 7 && diffDays < 14) {
+    prefix = `Next ${weekday}`;
+  } else {
+    // Long future → use full date
+    const longDate = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: targetTimezone,
+    }).format(inputDate);
+
+    return `${longDate}, ${time} ${tzAbbrev}`;
+  }
+
+  return `${prefix}, ${time} ${tzAbbrev}`;
+}
