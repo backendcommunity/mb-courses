@@ -227,8 +227,8 @@ export function NavigationBar({
 
           {/* Explore Dropdown */}
           {/* isExploreOpen */}
-          {/* <Popover open={false} onOpenChange={setIsExploreOpen}>
-            <PopoverTrigger asChild>
+          <Popover open={false} onOpenChange={setIsExploreOpen}>
+            {/* <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item"
@@ -243,7 +243,6 @@ export function NavigationBar({
               side="bottom"
             >
               <div className="p-8 space-y-8">
-
                 <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
                   <Card className="relative overflow-hidden border-border card-hover">
                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
@@ -317,7 +316,6 @@ export function NavigationBar({
                   </Card>
                 </div>
 
-
                 <div>
                   <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
                   <p className="text-muted-foreground mb-6">
@@ -352,7 +350,6 @@ export function NavigationBar({
                   </div>
                 </div>
 
-
                 <div>
                   <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
                   <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
@@ -385,13 +382,13 @@ export function NavigationBar({
                   </div>
                 </div>
               </div>
-            </PopoverContent>
-          </Popover> */}
+            </PopoverContent> */}
+          </Popover>
 
           {/* Desktop Search Bar */}
-          {/* {!isMobile && (
+          {!isMobile && (
             <div className="flex-1 max-w-md mx-4">
-              <form onSubmit={handleSearch} className="relative">
+              {/* <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
@@ -400,14 +397,14 @@ export function NavigationBar({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 h-9 bg-muted/50"
                 />
-              </form>
+              </form> */}
             </div>
-          )} */}
+          )}
 
           {/* Right Section */}
           <div
             className={`${
-              isMobile ? "" : "ml-auto gap-4"
+              isMobile ? "justify-end w-full" : "ml-auto gap-4"
             } flex items-center space-x-1`}
           >
             {!isMobile && <ThemeToggle />}
