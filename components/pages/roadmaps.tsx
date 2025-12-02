@@ -49,7 +49,7 @@ export function RoadmapsPage({ onNavigate }: RoadmapsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Career Roadmaps</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Roadmaps</h1>
           <p className="text-muted-foreground">
             Strategic career progression guides to help you reach your
             professional goals

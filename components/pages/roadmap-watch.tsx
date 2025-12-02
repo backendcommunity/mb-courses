@@ -463,39 +463,49 @@ export function RoadmapWatchPage({
                         : "bg-blue-50 dark:bg-gray-800"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={completed}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {course?.type === "VIDEO" && (
-                            <BookOpen className="h-4 w-4 text-blue-600" />
-                          )}
-                          {(course?.type === "PROJECT" ||
-                            course?.type === "PLAYGROUND") && (
-                            <Code2 className="h-4 w-4 text-green-600" />
-                          )}
-                          {(course?.type === "QUIZ" ||
-                            course?.type === "EXERCISE") && (
-                            <Target className="h-4 w-4 text-purple-600" />
-                          )}
-                          <span
-                            className={`font-medium ${
-                              completed
-                                ? "line-through text-muted-foreground"
-                                : ""
-                            }`}
-                          >
-                            {course?.title}
-                          </span>
+                    <div className="flex items-center justify-between flex-col md:flex-row gap-3">
+                      <div className="flex gap-3 items-center">
+                        <Checkbox
+                          checked={completed}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {course?.type === "VIDEO" && (
+                              <BookOpen className="h-4 w-4 text-blue-600" />
+                            )}
+                            {(course?.type === "PROJECT" ||
+                              course?.type === "PLAYGROUND") && (
+                              <Code2 className="h-4 w-4 text-green-600" />
+                            )}
+                            {(course?.type === "QUIZ" ||
+                              course?.type === "EXERCISE") && (
+                              <Target className="h-4 w-4 text-purple-600" />
+                            )}
+                            <span
+                              className={`font-medium ${
+                                completed
+                                  ? "line-through text-muted-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {course?.title}
+                            </span>
+                          </div>
                         </div>
+
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200 md:hidden inline-flex"
+                        >
+                          {course?.type ?? "Course"}
+                        </Badge>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200"
+                          className="bg-green-50 text-green-700 border-green-200 hidden md:inline-flex"
                         >
                           {course?.type ?? "Course"}
                         </Badge>
