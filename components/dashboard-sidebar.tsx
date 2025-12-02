@@ -15,7 +15,6 @@ import {
   Crown,
   Gift,
   Award,
-  LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -28,6 +27,8 @@ import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
 import { useAuth } from "@/store/auth";
+import { BrandLogo } from "./brand-logo";
+import { useTheme } from "next-themes";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -82,8 +83,8 @@ export function DashboardSidebar({
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const user = useUser();
+  const { theme } = useTheme();
   const level = useLevel();
-  const auth = useAuth();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => setCollapsed(isCollapsed), [isCollapsed]);
@@ -101,17 +102,18 @@ export function DashboardSidebar({
           onClick={() => onNavigate(routes.dashboard)}
           className="flex items-center gap-2"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-            <span className="text-sm font-bold">MB</span>
-          </div>
+          {collapsed && (
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg ">
+              <BrandLogo size="md" showText={true} variant="default" />
+            </div>
+          )}
           {!collapsed && (
             <div className="grid text-left text-sm leading-tight">
-              <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Masteringbackend
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                Career Platform
-              </span>
+              {theme === "light" ? (
+                <img src="/blue-logo-trimed.png" alt="logo" />
+              ) : (
+                <img src="/logo-trimed.png" alt="logo" />
+              )}
             </div>
           )}
         </button>
@@ -261,21 +263,6 @@ export function DashboardSidebar({
               </div>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              try {
-                await auth.logout();
-              } catch (error) {
-                console.error("Logout error:", error);
-              } finally {
-                onNavigate("/auth/login");
-              }
-            }}
-          >
-            <LogOut className={`${collapsed ? "h-6 w-6" : "h-4 w-4"}`} />
-          </Button>
         </div>
       </div>
     </div>

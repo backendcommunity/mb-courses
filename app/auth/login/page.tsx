@@ -55,7 +55,7 @@ export default function LoginPage() {
 
       // Show success message
       toast.success("Login successful! Redirecting...");
-      
+
       // Handle redirect logic
       const redirectPath = query.redirect || "/";
       await router.push(redirectPath);
@@ -79,16 +79,6 @@ export default function LoginPage() {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-[#13AECE]/10 dark:bg-[#0EA5E9]/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[10%] right-[5%] w-80 h-80 bg-[#97C3CC]/10 dark:bg-[#475569]/20 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="absolute top-6 left-6 z-10">
-        <Link
-          href="https://v3.masteringbackend.com"
-          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Home</span>
-        </Link>
       </div>
 
       <div className="relative w-full max-w-md">

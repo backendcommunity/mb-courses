@@ -29,6 +29,9 @@ import {
   Code,
   Gamepad2,
   Crown,
+  Share2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -52,6 +55,8 @@ import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
+import Link from "next/link";
+import { Separator } from "../ui/separator";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -311,41 +316,94 @@ export function CourseWatchPage({
 
   return (
     <div className="flex-1 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => onNavigate?.(routes.courseDetail(slug))}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {currentVideo ? currentVideo.title : chapter.title}
-          </h1>
-          <p className="text-muted-foreground">
-            {course.title} • {chapter.title}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">{chapter.type}</Badge>
-          {currentVideo?.duration && chapter?.duration && (
-            <Badge variant="outline">
-              {currentVideo?.duration ?? chapter?.duration ?? 0} hours
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Video Player */}
-        <div className="lg:col-span-2 space-y-4 flex flex-col">
+        <div className="lg:col-span-3 space-y-4 fle flex-col">
           <Card className="overflow-hidden">
             {/* Video Player */}
             {currentVideo?.type === "VIDEO" && (
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden group relative">
                 <div className="aspect-video bg-black relative">
-                  <VimeoPlayer video={currentVideo} />
+                  {/* Vimeo Player */}
+                  <VimeoPlayer
+                    video={currentVideo}
+                    onEnded={async () => {
+                      if (nextVideo) return handleVideoClick(nextVideo);
+                      if (!nextVideo && nextChapter)
+                        handleChapterClick(nextChapter);
+                    }}
+                    onComplete={handleMarkComplete}
+                  />
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    <div className="flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                      <div className="flex items-center justify-between pointer-events-auto">
+                        <Button
+                          variant="link"
+                          onClick={() =>
+                            onNavigate?.(routes.courseDetail(slug))
+                          }
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 pointer-events-auto">
+                          <a
+                            onClick={() =>
+                              onNavigate?.(routes.courseDetail(slug))
+                            }
+                            href={"#"}
+                            className="text-muted-foreground"
+                          >
+                            {course.title}
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end p-3 space-x-2 bg-gradient-to-b from-black/60 to-transparent">
+                        <Button
+                          disabled={true}
+                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
+                        >
+                          <Download className="w-5 h-5 text-white" />
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            handleShare(currentVideo?.title!, path)
+                          }
+                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
+                        >
+                          <Share2 className="w-5 h-5 text-white" />
+                        </Button>
+                      </div>
+                    </div>
+                    {/* Navigation Buttons */}
+                    {(prevVideo || prevChapter) && (
+                      <Button
+                        onClick={() => {
+                          if (prevVideo) handleVideoClick(prevVideo);
+                          if (!prevVideo && prevChapter)
+                            handleChapterClick(prevChapter);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition pointer-events-auto"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </Button>
+                    )}
+
+                    {(nextVideo || nextChapter) && (
+                      <Button
+                        onClick={() => {
+                          if (nextVideo) handleVideoClick(nextVideo);
+                          if (!nextVideo && nextChapter)
+                            handleChapterClick(nextChapter);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition pointer-events-auto"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             )}
@@ -374,25 +432,7 @@ export function CourseWatchPage({
             )}
           </Card>
           {/* Video Actions */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => handleShare(currentVideo?.title!, path)}
-                variant="outline"
-                size="sm"
-              >
-                <Share className="mr-2 h-4 w-4" />
-                Share
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={userCourse?.enrollmentType?.includes("SUBSCRIPTION")}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download
-              </Button>
-            </div>
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {currentVideo && (
                 <>
@@ -431,7 +471,7 @@ export function CourseWatchPage({
                 </Button>
               )}
 
-              {/* TODO: Add check for Everything task/video is completed */}
+
               {!nextVideo && !nextChapter && (
                 <div>
                   {!completed ? (
@@ -456,466 +496,517 @@ export function CourseWatchPage({
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
-          <Card></Card>
+          <Separator />
 
           {/* Content Tabs */}
-          <Tabs
-            defaultValue="overview"
-            className="w-full"
-            value={activeTab}
-            onValueChange={setActiveTab}
-          >
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
-              <TabsTrigger value="code">Code Editor</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="discussion">Discussion</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="capitalize">
-                    {currentVideo
-                      ? currentVideo?.type?.toLowerCase()
-                      : "Chapter"}{" "}
-                    Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <article
-                      className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
-                      dangerouslySetInnerHTML={{
-                        __html: currentVideo?.summary!,
-                      }}
-                    ></article>
-                  </div>
-                </CardContent>
-                <CardContent>
-                  {currentVideo?.description && (
-                    <CardContent>
-                      <div className="space-y-4  pt-4">
-                        <div className="flex w-full justify-center items-center">
-                          <span className="border-t flex-1"></span>
-                          <div className="px-2 text-xs">description</div>
-                          <span className="border-t flex-1"></span>
-                        </div>
-                        <p
-                          className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
-                          dangerouslySetInnerHTML={{
-                            __html: currentVideo?.description!,
-                          }}
-                        ></p>
-                      </div>
-                    </CardContent>
+          <div className="w-full">
+            <Tabs
+              defaultValue="overview"
+              value={activeTab}
+              onValueChange={setActiveTab}
+            >
+              <TabsList className="block">
+                <div className="md:w-full w-[350px] flex overflow-y-auto no-scrollbar">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  {currentVideo?.type === "VIDEO" && (
+                    <>
+                      <TabsTrigger value="code">Code Editor</TabsTrigger>
+                      <TabsTrigger value="transcript">Transcript</TabsTrigger>
+                    </>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
 
-            <TabsContent value="code">
-              <SimpleEditor playground={currentVideo?.playground!} />
-            </TabsContent>
+                  <TabsTrigger value="resources">Resources</TabsTrigger>
+                  <TabsTrigger value="discussion">Discussion</TabsTrigger>
+                </div>
+              </TabsList>
 
-            <TabsContent value="notes" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Take notes while watching the video..."
-                    className="min-h-[200px]"
-                  />
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() => handleSaveNotes()}
-                      className="mt-2"
-                      disabled={!note}
-                    >
-                      Save Notes
-                    </Button>
-                  </div>
-                  <div className="border-t mt-5">
-                    {loadingNotes ? (
-                      <Loader isLoader={true} isFull={false} />
-                    ) : (
-                      <div className="space-y-3  pt-5">
-                        {notes?.map((note: Note) => (
-                          <div className="border rounded-lg p-3" key={note.id}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                                {user.name
-                                  .split(" ")
-                                  .map((n: any) => n[0])
-                                  .join("")}
-                              </div>
-                              <span className="font-medium text-sm">
-                                {user.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {format(note?.createdAt)}
-                              </span>
-                            </div>
-                            <p className="text-sm">{note.content}</p>
+              <TabsContent value="overview" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="capitalize">
+                      {currentVideo
+                        ? currentVideo?.type?.toLowerCase()
+                        : "Chapter"}{" "}
+                      Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <article
+                        className="text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                        dangerouslySetInnerHTML={{
+                          __html: currentVideo?.summary!,
+                        }}
+                      ></article>
+                    </div>
+                  </CardContent>
+                  <CardContent>
+                    {currentVideo?.description && (
+                      <CardContent>
+                        <div className="space-y-4  pt-4">
+                          <div className="flex w-full justify-center items-center">
+                            <span className="border-t flex-1"></span>
+                            <div className="px-2 text-xs">description</div>
+                            <span className="border-t flex-1"></span>
                           </div>
-                        ))}
-                        {!notes.length && <div>No notes added yet</div>}
-                      </div>
+                          <p
+                            className="text-muted-foreground leading-relaxed [&>*>table]:p-3 [&>*>table]:border [&>*>code]:rounded-xl [&>*>code]:bg-zinc-800 [&>*>code]:p-1 [&>*>code]:text-sm [&>*>code]:font-medium [&>*>code]:text-zinc-100 [&>*>code]:overflow-x-auto w-full [&>*>li>pre]:mt-5 [&>*>li>pre]:rounded-xl [&>*>li>pre]:bg-zinc-800 [&>*>li>pre]:p-4 [&>*>li>pre]:text-sm [&>*>li>pre]:font-medium [&>*>li>pre]:text-zinc-100 [&>*>li>pre]:overflow-x-auto [&>*>li>a]:text-amber-300 [&>p>a]:text-amber-300 mx-auto w-full text-zinc-700 dark:text-zinc-300 [&>pre]:overflow-x-auto [&>h2]:text-2xl [&>h2]:font-bold [&>h3]:text-xl [&>h3]:font-bold [&>p]:mt-2 [&>p]:leading-relaxed [&>pre]:mt-5 [&>pre]:rounded-xl [&>pre]:bg-zinc-800 [&>pre]:p-4 [&>pre]:text-sm [&>pre]:font-medium [&>pre]:text-zinc-100 [&>ul]:mt-5 [&>ul]:flex [&>ul]:list-disc [&>ul]:flex-col [&>ul]:gap-2 [&>ul]:pl-6 [&>ol]:mt-5 [&>ol]:flex [&>ol]:list-decimal [&>ol]:flex-col [&>ol]:gap-2 [&>ol]:pl-6 [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                            dangerouslySetInnerHTML={{
+                              __html: currentVideo?.description!,
+                            }}
+                          ></p>
+                        </div>
+                      </CardContent>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="resources" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Additional Resources</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {currentVideo?.resources?.map(
-                      (resource: any, index: number) => (
+              <TabsContent value="code">
+                <SimpleEditor playground={currentVideo?.playground!} />
+              </TabsContent>
+
+              <TabsContent value="notes" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Take notes while watching the video..."
+                      className="min-h-[200px]"
+                    />
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => handleSaveNotes()}
+                        className="mt-2"
+                        disabled={!note}
+                      >
+                        Save Notes
+                      </Button>
+                    </div>
+                    <div className="border-t mt-5">
+                      {loadingNotes ? (
+                        <Loader isLoader={true} isFull={false} />
+                      ) : (
+                        <div className="space-y-3  pt-5">
+                          {notes?.map((note: Note) => (
+                            <div
+                              className="border rounded-lg p-3"
+                              key={note.id}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+                                  {user.name
+                                    .split(" ")
+                                    .map((n: any) => n[0])
+                                    .join("")}
+                                </div>
+                                <span className="font-medium text-sm">
+                                  {user.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(note?.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-sm">{note.content}</p>
+                            </div>
+                          ))}
+                          {!notes.length && <div>No notes added yet</div>}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="resources" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Resources</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {currentVideo?.resources?.map(
+                        (resource: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <BookOpen className="h-4 w-4 text-blue-600" />
+                              <div>
+                                <h4 className="font-medium">
+                                  {resource.title}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {resource.type}
+                                </p>
+                              </div>
+                            </div>
+                            <Button asChild={true} variant="link">
+                              <a target="_blank" href={resource?.link}>
+                                View
+                              </a>
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="discussion" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Discussion</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <DisqusCommentBlock
+                      config={{
+                        identifier: currentVideo?.slug,
+                        title: currentVideo?.title,
+                        url: `/courses/${slug}`,
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="transcript" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Video Transcript</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Auto-generated transcript with timestamps
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {[
+                        {
+                          time: "00:00",
+                          text: `Welcome to ${
+                            currentVideo?.title || chapter.title
+                          }.`,
+                        },
+                        {
+                          time: "00:15",
+                          text: "In this section, we'll explore the key concepts and practical applications.",
+                        },
+                        {
+                          time: "00:30",
+                          text: "Let's start by understanding the fundamental principles.",
+                        },
+                        {
+                          time: "01:00",
+                          text: "Now let's look at a practical example of implementing this concept.",
+                        },
+                      ].map((item, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-3 border rounded-lg"
+                          className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                          onClick={() =>
+                            setCurrentTime(
+                              Number.parseInt(item.time.split(":")[0]) * 60 +
+                                Number.parseInt(item.time.split(":")[1])
+                            )
+                          }
                         >
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="h-4 w-4 text-blue-600" />
-                            <div>
-                              <h4 className="font-medium">{resource.title}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {resource.type}
-                              </p>
-                            </div>
-                          </div>
-                          <Button asChild={true} variant="link">
-                            <a target="_blank" href={resource?.link}>
-                              View
-                            </a>
-                          </Button>
+                          <span className="text-sm font-mono text-blue-600 min-w-[50px]">
+                            {item.time}
+                          </span>
+                          <span className="text-sm">{item.text}</span>
                         </div>
-                      )
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="discussion" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Discussion</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DisqusCommentBlock
-                    config={{
-                      identifier: currentVideo?.slug,
-                      title: currentVideo?.title,
-                      url: `/courses/${slug}`,
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="transcript" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Video Transcript</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Auto-generated transcript with timestamps
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {[
-                      {
-                        time: "00:00",
-                        text: `Welcome to ${
-                          currentVideo?.title || chapter.title
-                        }.`,
-                      },
-                      {
-                        time: "00:15",
-                        text: "In this section, we'll explore the key concepts and practical applications.",
-                      },
-                      {
-                        time: "00:30",
-                        text: "Let's start by understanding the fundamental principles.",
-                      },
-                      {
-                        time: "01:00",
-                        text: "Now let's look at a practical example of implementing this concept.",
-                      },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
-                        onClick={() =>
-                          setCurrentTime(
-                            Number.parseInt(item.time.split(":")[0]) * 60 +
-                              Number.parseInt(item.time.split(":")[1])
-                          )
-                        }
-                      >
-                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">
-                          {item.time}
-                        </span>
-                        <span className="text-sm">{item.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Course Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Course Progress</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Overall Progress</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress value={progress ?? 0} className="h-2" />
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {userVideos?.filter((ch: UserVideo) => ch?.isCompleted).length}{" "}
-                of {course.totalContent} videos completed
-              </div>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="course-content" className="w-full">
+            <TabsList className="w-full flex justify-between">
+              <TabsTrigger value="course-content">Course Content</TabsTrigger>
+              <TabsTrigger value="code-editor">Code Editor</TabsTrigger>
+              <TabsTrigger value="ask-kap">Talk to Kap</TabsTrigger>
+            </TabsList>
 
-          {/* Chapter Content */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Chapter Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {/* Videos */}
-              {chapter.videos.map((video: Video) => (
-                <div
-                  key={video.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    video.id === currentVideo?.id
-                      ? "border border-blue-200"
-                      : ""
-                  }`}
-                  onClick={() => handleVideoClick(video)}
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isVideoCompleted(video.id) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
+            <TabsContent value="course-content" className="space-y-4">
+              {/* Course Progress */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Course Progress</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Overall Progress</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress ?? 0} className="h-2" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{video.title}</p>
+                  <div className="text-sm text-muted-foreground">
+                    {
+                      userVideos?.filter((ch: UserVideo) => ch?.isCompleted)
+                        .length
+                    }{" "}
+                    of {course.totalContent} videos completed
+                  </div>
+                </CardContent>
+              </Card>
 
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {(!video?.duration?.includes("0") ||
-                        video?.quizCourse?.quiz?.timeLimit! > 0) && (
-                        <>
+              {/* Chapter Content */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Chapter Content</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {/* Videos */}
+                  {chapter.videos.map((video: Video) => (
+                    <div
+                      key={video.id}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                        video.id === currentVideo?.id
+                          ? "border border-blue-200"
+                          : ""
+                      }`}
+                      onClick={() => handleVideoClick(video)}
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        {isVideoCompleted(video.id) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{video.title}</p>
+
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {(!video?.duration?.includes("0") ||
+                            video?.quizCourse?.quiz?.timeLimit! > 0) && (
+                            <>
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {video?.duration ??
+                                  video?.quizCourse?.quiz?.timeLimit}{" "}
+                                mins
+                              </span>
+                            </>
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            {video?.type}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Chapter Features */}
+                  {chapter.quiz && (
+                    <div
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                      onClick={() =>
+                        handleChapterFeatureClick("quiz", chapter.quiz!.id)
+                      }
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        <Brain className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {chapter.quiz.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          <span>
-                            {video?.duration ??
-                              video?.quizCourse?.quiz?.timeLimit}{" "}
-                            mins
-                          </span>
-                        </>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {video?.type}
-                      </Badge>
+                          <span>{chapter.quiz.timeLimit} min</span>
+                          <Badge variant="outline" className="text-xs">
+                            QUIZ
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  )}
 
-              {/* Chapter Features */}
-              {chapter.quiz && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick("quiz", chapter.quiz!.id)
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Brain className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{chapter.quiz.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{chapter.quiz.timeLimit} min</span>
-                      <Badge variant="outline" className="text-xs">
-                        QUIZ
-                      </Badge>
+                  {chapter.exercise && (
+                    <div
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                      onClick={() =>
+                        handleChapterFeatureClick(
+                          "exercise",
+                          chapter.exercise!.id
+                        )
+                      }
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        <Code className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {chapter?.exercise?.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {chapter?.exercise?.difficulty}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            EXERCISE
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {chapter.exercise && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick("exercise", chapter.exercise!.id)
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Code className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {chapter?.exercise?.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {chapter?.exercise?.difficulty}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        EXERCISE
-                      </Badge>
+                  {chapter.playground && (
+                    <div
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                      onClick={() =>
+                        handleChapterFeatureClick(
+                          "playground",
+                          chapter.playground!.id
+                        )
+                      }
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        <Gamepad2 className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {chapter.playground.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {chapter.playground.language.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            PLAYGROUND
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
+                </CardContent>
+              </Card>
 
-              {chapter.playground && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick(
-                      "playground",
-                      chapter.playground!.id
-                    )
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Gamepad2 className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {chapter.playground.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {chapter.playground.language.toUpperCase()}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        PLAYGROUND
-                      </Badge>
+              {/* Chapter Navigation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">All Chapters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {course.chapters.map((ch: Chapter, index: number) => (
+                    <div
+                      key={ch.slug}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                        ch.slug === chapter?.slug
+                          ? "border border-blue-200"
+                          : ""
+                      }`}
+                      onClick={() => handleChapterClick(ch)}
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        {isChapterCompleted(ch?.id!) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <span>{index + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{ch.title}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                            videos
+                          </Badge>
+
+                          {ch.videos.filter((v) => v.type === "QUIZ").length >
+                            0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "QUIZ")
+                                  .length
+                              }{" "}
+                              quizzes
+                            </Badge>
+                          )}
+                          {ch.videos.filter((v) => v.type === "EXERCISE")
+                            .length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "EXERCISE")
+                                  .length
+                              }{" "}
+                              exercises
+                            </Badge>
+                          )}
+
+                          {ch.videos.filter((v) => v.type === "PLAYGROUND")
+                            .length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "PLAYGROUND")
+                                  .length
+                              }{" "}
+                              playgrounds
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  ))}
+                </CardContent>
+              </Card>
 
-          {/* Chapter Navigation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">All Chapters</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {course.chapters.map((ch: Chapter, index: number) => (
-                <div
-                  key={ch.slug}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.slug === chapter?.slug ? "border border-blue-200" : ""
-                  }`}
-                  onClick={() => handleChapterClick(ch)}
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isChapterCompleted(ch?.id!) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <span>{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{ch.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
-                        videos
-                      </Badge>
+              {/* Navigation */}
+              <div className="space-y-2">
+                {prevChapter && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => handleChapterClick(prevChapter)}
+                  >
+                    <SkipBack className="mr-2 h-4 w-4" />
+                    Previous: {prevChapter.title}
+                  </Button>
+                )}
+                {nextChapter && (
+                  <Button
+                    className="w-full justify-start"
+                    onClick={() => handleChapterClick(nextChapter)}
+                  >
+                    Next: {nextChapter.title}
+                    <SkipForward className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </TabsContent>
 
-                      {ch.videos.filter((v) => v.type === "QUIZ").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
-                          quizzes
-                        </Badge>
-                      )}
-                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "EXERCISE")
-                              .length
-                          }{" "}
-                          exercises
-                        </Badge>
-                      )}
+            <TabsContent value="code-editor">
+              <SimpleEditor
+                full={false}
+                playground={currentVideo?.playground!}
+              />
+            </TabsContent>
 
-                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "PLAYGROUND")
-                              .length
-                          }{" "}
-                          playgrounds
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            <TabsContent value="ask-kap">
+              <Card>
+                <CardHeader></CardHeader>
 
-          {/* Navigation */}
-          <div className="space-y-2">
-            {prevChapter && (
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => handleChapterClick(prevChapter)}
-              >
-                <SkipBack className="mr-2 h-4 w-4" />
-                Previous: {prevChapter.title}
-              </Button>
-            )}
-            {nextChapter && (
-              <Button
-                className="w-full justify-start"
-                onClick={() => handleChapterClick(nextChapter)}
-              >
-                Next: {nextChapter.title}
-                <SkipForward className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-          </div>
+                <CardContent> Coming soon!</CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
       <ConfettiCelebration

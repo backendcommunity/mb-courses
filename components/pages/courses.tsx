@@ -250,12 +250,16 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           <div className="flex-1">
             <TabsList>
-              <TabsTrigger value="all-courses">
-                All Courses ({meta?.total})
-              </TabsTrigger>
-              <TabsTrigger value="my-courses">My Courses</TabsTrigger>
-              <TabsTrigger value="popular">Popular</TabsTrigger>
-              <TabsTrigger value="new">New Releases</TabsTrigger>
+              <div>
+                <TabsTrigger value="all-courses">
+                  All Courses ({meta?.total})
+                </TabsTrigger>
+                <TabsTrigger value="my-courses">My Courses</TabsTrigger>
+                <TabsTrigger value="popular">Popular</TabsTrigger>
+              </div>
+              <div>
+                <TabsTrigger value="new">New Releases</TabsTrigger>
+              </div>
             </TabsList>
           </div>
           <div className="relative ">

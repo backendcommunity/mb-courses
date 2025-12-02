@@ -148,16 +148,6 @@ export default function RegisterPage() {
         <div className="absolute bottom-[10%] right-[5%] w-80 h-80 bg-[#97C3CC]/10 dark:bg-[#475569]/20 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="absolute top-6 left-6 z-10">
-        <Link
-          href="https://v3.masteringbackend.com"
-          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Home</span>
-        </Link>
-      </div>
-
       <div className="relative w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">

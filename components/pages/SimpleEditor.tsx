@@ -28,9 +28,10 @@ import { Label } from "../ui/label";
 
 interface EditorProps {
   playground?: Playground;
+  full?: boolean;
 }
 
-export function SimpleEditor({ playground }: EditorProps) {
+export function SimpleEditor({ playground, full = true }: EditorProps) {
   const { theme } = useTheme();
   const store = useAppStore();
   const editorRef = useRef<any>(null);
@@ -134,7 +135,11 @@ export function SimpleEditor({ playground }: EditorProps) {
 
   return (
     <Card className="relative">
-      <CardHeader className="flex justify-between lg:flex-row flex-col">
+      <CardHeader
+        className={`flex justify-between  ${
+          full ? "lg:flex-row flex-col" : "flex-col"
+        }`}
+      >
         <span>
           <CardTitle className="flex items-center gap-2">
             <Play className="h-5 w-5" />
@@ -190,7 +195,7 @@ export function SimpleEditor({ playground }: EditorProps) {
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="relative flex h-[600px] border rounded-md overflow-hidden flex-col">
+        <div className="relative flex h-[600px] border overflow-hidden flex-col">
           {/* Code box */}
 
           <div
@@ -292,66 +297,131 @@ export function SimpleEditor({ playground }: EditorProps) {
         </div>
       </CardContent>
 
-      <div className="flex justify-between items-center p-4 gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex w-1/2 gap-2 items-center">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              required
-              name="Title"
-              id="title"
-              value={title}
-              onChange={(e) => {
-                setIsTextRequired(false);
-                setTitle(e.target.value);
-              }}
-              type="text"
-              className={`${
-                isTextRequired ? "border-red-300 focus:ring-red-500" : ""
-              }`}
-            ></Input>
-          </div>
-          <Button
-            disabled={isLoading}
-            onClick={() => saveCode()}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Save
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
+      {full ? (
+        <div className="flex justify-between items-center p-4 gap-4">
           <div className="flex items-center gap-2">
-            <Checkbox
+            <div className="flex w-1/2 gap-2 items-center">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                required
+                name="Title"
+                id="title"
+                value={title}
+                onChange={(e) => {
+                  setIsTextRequired(false);
+                  setTitle(e.target.value);
+                }}
+                type="text"
+                className={`${
+                  isTextRequired ? "border-red-300 focus:ring-red-500" : ""
+                }`}
+              ></Input>
+            </div>
+            <Button
               disabled={isLoading}
-              id="toggle-input"
-              checked={userInputOpen}
-              onCheckedChange={(checked) =>
-                setUserInputOpen(checked as boolean)
-              }
-            />
-            <label htmlFor="toggle-input" className="text-sm">
-              Add Input
-            </label>
+              onClick={() => saveCode()}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save
+            </Button>
           </div>
-          <Button
-            disabled={isLoading}
-            onClick={runCode}
-            className="flex items-center gap-2"
-          >
-            {isLoading ? (
-              <i>Compiling</i>
-            ) : (
-              <>
-                <Play className="h-4 w-4" />
-                Run
-              </>
-            )}
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                disabled={isLoading}
+                id="toggle-input"
+                checked={userInputOpen}
+                onCheckedChange={(checked) =>
+                  setUserInputOpen(checked as boolean)
+                }
+              />
+              <label htmlFor="toggle-input" className="text-sm">
+                Add Input
+              </label>
+            </div>
+            <Button
+              disabled={isLoading}
+              onClick={runCode}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <i>Compiling</i>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Run
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className={`flex justify-between items-center p-4 gap-4 flex-col`}>
+          <div className=" w-full">
+            <div className="flex-1">
+              <Button
+                disabled={isLoading}
+                onClick={runCode}
+                className="flex items-center gap-2 w-full"
+              >
+                {isLoading ? (
+                  <i>Compiling</i>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Run
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex justify-end w-full gap-5">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                disabled={isLoading}
+                id="toggle-input"
+                checked={userInputOpen}
+                onCheckedChange={(checked) =>
+                  setUserInputOpen(checked as boolean)
+                }
+              />
+              <label htmlFor="toggle-input" className="text-sm">
+                Input
+              </label>
+            </div>
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                required
+                name="Title"
+                id="title"
+                value={title}
+                onChange={(e) => {
+                  setIsTextRequired(false);
+                  setTitle(e.target.value);
+                }}
+                type="text"
+                className={`${
+                  isTextRequired ? "border-red-300 focus:ring-red-500" : ""
+                }`}
+              ></Input>
+            </div>
+            <Button
+              disabled={isLoading}
+              onClick={() => saveCode()}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
