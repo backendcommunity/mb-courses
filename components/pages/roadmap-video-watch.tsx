@@ -759,96 +759,96 @@ export function RoadmapVideoWatchPage({
               <TabsTrigger value="code-editor">Code Editor</TabsTrigger>
               <TabsTrigger value="ask-kap">Talk to Kap</TabsTrigger>
             </TabsList>
-          </Tabs>
-          <TabsContent value="course-content" className="space-y-4">
-            {/* Milestone Progress */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Milestone Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>{milestone.title}</span>
-                    <span>{progress ?? 0}%</span>
-                  </div>
-                  <Progress value={progress ?? 0} className="h-2" />
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {totalCompletedTasks} of{" "}
-                  {milestone?.userTopic?.totalTasks ?? 0} videos watched in this
-                  milestone
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Milestone Videos */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Milestone Videos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {chapter?.videos.map((vid: Video) => (
-                  <div
-                    key={vid.id}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                      vid.slug === currentVideo?.slug
-                        ? "border border-blue-200"
-                        : ""
-                    }`}
-                    onClick={() => handleVideoClick(vid)}
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                      {isVideoCompleted(vid.id) ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Play className="h-3 w-3" />
-                      )}
+            <TabsContent value="course-content" className="space-y-4">
+              {/* Milestone Progress */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Milestone Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{milestone.title}</span>
+                      <span>{progress ?? 0}%</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{vid.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>{vid.duration} mins</span>
+                    <Progress value={progress ?? 0} className="h-2" />
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {totalCompletedTasks} of{" "}
+                    {milestone?.userTopic?.totalTasks ?? 0} videos watched in
+                    this milestone
+                  </div>
+                </CardContent>
+              </Card>
 
-                        <Badge variant="outline" className="text-xs">
-                          {vid?.type}
-                        </Badge>
+              {/* Milestone Videos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Milestone Videos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {chapter?.videos.map((vid: Video) => (
+                    <div
+                      key={vid.id}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                        vid.slug === currentVideo?.slug
+                          ? "border border-blue-200"
+                          : ""
+                      }`}
+                      onClick={() => handleVideoClick(vid)}
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        {isVideoCompleted(vid.id) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Play className="h-3 w-3" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{vid.title}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{vid.duration} mins</span>
+
+                          <Badge variant="outline" className="text-xs">
+                            {vid?.type}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
 
-                {/* Chapter Features */}
-                {chapter?.quiz && (
-                  <div
-                    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                    onClick={() =>
-                      handleChapterFeatureClick("quiz", chapter?.quiz!.id)
-                    }
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                      <Brain className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {chapter?.quiz?.title}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>{chapter?.quiz?.timeLimit} min</span>
-                        <Badge variant="outline" className="text-xs">
-                          QUIZ
-                        </Badge>
+                  {/* Chapter Features */}
+                  {chapter?.quiz && (
+                    <div
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                      onClick={() =>
+                        handleChapterFeatureClick("quiz", chapter?.quiz!.id)
+                      }
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        <Brain className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {chapter?.quiz?.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{chapter?.quiz?.timeLimit} min</span>
+                          <Badge variant="outline" className="text-xs">
+                            QUIZ
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* {chapter.exercise && (
+                  {/* {chapter.exercise && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -874,7 +874,7 @@ export function RoadmapVideoWatchPage({
                 </div>
               )} */}
 
-                {/* {chapter.playground && (
+                  {/* {chapter.playground && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -902,85 +902,94 @@ export function RoadmapVideoWatchPage({
                   </div>
                 </div>
               )} */}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Chapter Navigation */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">All Chapters</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {course.chapters.map((ch: Chapter, index: number) => (
-                  <div
-                    key={ch.slug}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                      ch.slug === chapter?.slug ? "border border-blue-200" : ""
-                    }`}
-                    onClick={() => handleChapterClick(ch)}
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                      {isChapterCompleted(ch?.id!) ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <span>{index + 1}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{ch.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="text-xs">
-                          {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
-                          videos
-                        </Badge>
-
-                        {ch.videos.filter((v) => v.type === "QUIZ").length >
-                          0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
-                            quizzes
-                          </Badge>
-                        )}
-                        {ch.videos.filter((v) => v.type === "EXERCISE").length >
-                          0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {
-                              ch.videos.filter((v) => v.type === "EXERCISE")
-                                .length
-                            }{" "}
-                            exercises
-                          </Badge>
-                        )}
-
-                        {ch.videos.filter((v) => v.type === "PLAYGROUND")
-                          .length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {
-                              ch.videos.filter((v) => v.type === "PLAYGROUND")
-                                .length
-                            }{" "}
-                            playgrounds
-                          </Badge>
+              {/* Chapter Navigation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">All Chapters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {course.chapters.map((ch: Chapter, index: number) => (
+                    <div
+                      key={ch.slug}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                        ch.slug === chapter?.slug
+                          ? "border border-blue-200"
+                          : ""
+                      }`}
+                      onClick={() => handleChapterClick(ch)}
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                        {isChapterCompleted(ch?.id!) ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <span>{index + 1}</span>
                         )}
                       </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{ch.title}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                            videos
+                          </Badge>
+
+                          {ch.videos.filter((v) => v.type === "QUIZ").length >
+                            0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "QUIZ")
+                                  .length
+                              }{" "}
+                              quizzes
+                            </Badge>
+                          )}
+                          {ch.videos.filter((v) => v.type === "EXERCISE")
+                            .length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "EXERCISE")
+                                  .length
+                              }{" "}
+                              exercises
+                            </Badge>
+                          )}
+
+                          {ch.videos.filter((v) => v.type === "PLAYGROUND")
+                            .length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {
+                                ch.videos.filter((v) => v.type === "PLAYGROUND")
+                                  .length
+                              }{" "}
+                              playgrounds
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <TabsContent value="code-editor">
-            <SimpleEditor full={false} playground={currentVideo?.playground!} />
-          </TabsContent>
+            <TabsContent value="code-editor">
+              <SimpleEditor
+                full={false}
+                playground={currentVideo?.playground!}
+              />
+            </TabsContent>
 
-          <TabsContent value="ask-kap">
-            <Card>
-              <CardHeader></CardHeader>
+            <TabsContent value="ask-kap">
+              <Card>
+                <CardHeader></CardHeader>
 
-              <CardContent> Coming soon!</CardContent>
-            </Card>
-          </TabsContent>
+                <CardContent> Coming soon!</CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
       <ConfettiCelebration
