@@ -154,6 +154,11 @@
     background-color: hsl(var(--mb-sidebar));
   }
 
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
   .bg-card-light {
     background-color: hsl(var(--mb-card));
   }

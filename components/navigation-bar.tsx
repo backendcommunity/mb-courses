@@ -227,7 +227,7 @@ export function NavigationBar({
 
           {/* Explore Dropdown */}
           {/* isExploreOpen */}
-          <Popover open={false} onOpenChange={setIsExploreOpen}>
+          {/* <Popover open={false} onOpenChange={setIsExploreOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -243,7 +243,7 @@ export function NavigationBar({
               side="bottom"
             >
               <div className="p-8 space-y-8">
-                {/* Level Sections */}
+
                 <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
                   <Card className="relative overflow-hidden border-border card-hover">
                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
@@ -317,7 +317,7 @@ export function NavigationBar({
                   </Card>
                 </div>
 
-                {/* Skill Guides */}
+
                 <div>
                   <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
                   <p className="text-muted-foreground mb-6">
@@ -352,7 +352,7 @@ export function NavigationBar({
                   </div>
                 </div>
 
-                {/* Roadmaps */}
+
                 <div>
                   <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
                   <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
@@ -386,10 +386,10 @@ export function NavigationBar({
                 </div>
               </div>
             </PopoverContent>
-          </Popover>
+          </Popover> */}
 
           {/* Desktop Search Bar */}
-          {!isMobile && (
+          {/* {!isMobile && (
             <div className="flex-1 max-w-md mx-4">
               <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -402,7 +402,7 @@ export function NavigationBar({
                 />
               </form>
             </div>
-          )}
+          )} */}
 
           {/* Right Section */}
           <div

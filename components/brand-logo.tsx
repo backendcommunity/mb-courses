@@ -1,3 +1,5 @@
+import { useTheme } from "next-themes";
+
 interface BrandLogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
@@ -9,6 +11,8 @@ export function BrandLogo({
   showText = true,
   variant = "default",
 }: BrandLogoProps) {
+  const { theme } = useTheme();
+
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",
@@ -50,7 +54,11 @@ export function BrandLogo({
             variant === "white" ? "text-[#0E1F33]" : "text-white"
           } font-bold ${size === "sm" ? "text-xs" : "text-sm"}`}
         >
-          <img src="/logo.png" alt="logo" />
+          {theme === "light" ? (
+            <img src="/blue-icon-logo.png" alt="logo" />
+          ) : (
+            <img src="/logo.png" alt="logo" />
+          )}
         </span>
       </div>
     </div>

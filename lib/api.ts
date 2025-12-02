@@ -8,18 +8,18 @@ export const api = axios.create({
 });
 
 // Request interceptor to add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localDB.get("token", "");
-    if (token && token !== "null") {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localDB.get("token", "");
+//     if (token && token !== "null") {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
 
 // Response interceptor to handle authentication errors
 api.interceptors.response.use(
@@ -29,9 +29,12 @@ api.interceptors.response.use(
       // Clear all local data on authentication errors
       localDB.clear();
       deleteCookie("mb_token");
-      
+
       // Only redirect if we're in the browser and not already on login page
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/auth/")) {
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.includes("/auth/")
+      ) {
         window.location.href = "/auth/login";
       }
     }

@@ -10,16 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Play,
-  SkipForward,
   CheckCircle2,
   BookOpen,
   Download,
-  Share,
   Clock,
   Target,
   Brain,
-  Crown,
-  Loader2,
   ChevronLeft,
   Share2,
   ChevronRight,
@@ -47,6 +43,7 @@ import { CourseQuizPage } from "./course-quiz";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
+import { Separator } from "../ui/separator";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -373,7 +370,7 @@ export function RoadmapVideoWatchPage({
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      {/* <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           onClick={() =>
@@ -402,7 +399,7 @@ export function RoadmapVideoWatchPage({
           </Badge>
           <Badge className="bg-blue-600">Milestone Content</Badge>
         </div>
-      </div>
+      </div> */}
 
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Video Player */}
@@ -410,18 +407,6 @@ export function RoadmapVideoWatchPage({
           {/* Video Player */}
           <Card className="overflow-hidden">
             {currentVideo?.type === "VIDEO" && (
-              // <Card className="overflow-hidden">
-              //   <div className="aspect-video bg-black relative">
-              //     <VimeoPlayer
-              //       video={currentVideo}
-              //       onEnded={async () => {
-              //         handleVideoClick(nextVideo!);
-              //       }}
-              //       onComplete={handleMarkComplete}
-              //     />
-              //   </div>
-              // </Card>
-
               <Card className="overflow-hidden group relative">
                 <div className="aspect-video bg-black relative">
                   {/* Vimeo Player */}
@@ -438,19 +423,49 @@ export function RoadmapVideoWatchPage({
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                     {/* Top Bar: Download + Share */}
-                    <div className="flex justify-end p-3 space-x-2 bg-gradient-to-b from-black/60 to-transparent">
-                      <Button
-                        disabled={true}
-                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
-                      >
-                        <Download className="w-5 h-5 text-white" />
-                      </Button>
-                      <Button
-                        onClick={() => handleShare(currentVideo?.title!, path)}
-                        className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
-                      >
-                        <Share2 className="w-5 h-5 text-white" />
-                      </Button>
+                    <div className="flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                      <div className="flex items-center justify-between pointer-events-auto">
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            onNavigate?.(
+                              `/roadmaps/${slug}/topics/${milestone.id}/courses/${course.slug}`
+                            )
+                          }
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 pointer-events-auto">
+                          <a
+                            onClick={() =>
+                              onNavigate?.(
+                                `/roadmaps/${slug}/topics/${milestone.id}/courses/${course.slug}`
+                              )
+                            }
+                            href={"#"}
+                            className="text-muted-foreground"
+                          >
+                            {course.title}
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end p-3 space-x-2 bg-gradient-to-b from-black/60 to-transparent">
+                        <Button
+                          disabled={true}
+                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
+                        >
+                          <Download className="w-5 h-5 text-white" />
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            handleShare(currentVideo?.title!, path)
+                          }
+                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
+                        >
+                          <Share2 className="w-5 h-5 text-white" />
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Navigation Buttons */}
@@ -526,103 +541,23 @@ export function RoadmapVideoWatchPage({
             )}
           </Card>
 
-          {/* Video Actions */}
-          {/* <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => handleShare(currentVideo?.title!, path)}
-                variant="outline"
-                size="sm"
-              >
-                <Share className="mr-2 h-4 w-4" />
-                Share
-              </Button>
-              {currentVideo?.type === "VIDEO" && (
-                <Button disabled={true} variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {currentVideo &&
-                currentVideo?.type === "VIDEO" &&
-                !isVideoCompleted(currentVideo?.id) && (
-                  <Button disabled={isMarking} onClick={handleMarkComplete}>
-                    {isMarking ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Marking...</span>
-                      </>
-                    ) : (
-                      <span> Mark Complete</span>
-                    )}
-
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                  </Button>
-                )}
-
-              {nextVideo && (
-                <Button
-                  disabled={isMarking}
-                  onClick={() => handleVideoClick(nextVideo)}
-                  className="capitalize"
-                >
-                  Next {nextVideo?.type?.toLowerCase()}
-                  <SkipForward className="ml-2 h-4 w-4" />
-                </Button>
-              )}
-              {!nextVideo && nextChapter && (
-                <Button
-                  disabled={isMarking}
-                  onClick={() => handleChapterClick(nextChapter)}
-                >
-                  Next Chapter
-                  <SkipForward className="ml-2 h-4 w-4" />
-                </Button>
-              )}
-
-
-              {!nextVideo && !nextChapter && isCourseCompleted() && (
-                <div>
-                  {!completed ? (
-                    <Button
-                      variant={"destructive"}
-                      onClick={() => markCourseAsCompleted()}
-                    >
-                      Earn Your Rewards
-                      <Crown className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant={"outline"}
-                      onClick={() =>
-                        onNavigate?.(routes.courseCertificate(courseId))
-                      }
-                    >
-                      View Your Certificate
-                      <SkipForward className="ml-2 h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div> */}
-          <Card></Card>
+          <Separator />
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              {currentVideo?.type === "VIDEO" && (
-                <>
-                  <TabsTrigger value="code">Code Editor</TabsTrigger>
-                  <TabsTrigger value="transcript">Transcript</TabsTrigger>
-                </>
-              )}
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="discussion">Discussion</TabsTrigger>
+            <TabsList className="block">
+              <div className="md:w-full w-[350px] flex overflow-y-auto no-scrollbar">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                {currentVideo?.type === "VIDEO" && (
+                  <>
+                    <TabsTrigger value="code">Code Editor</TabsTrigger>
+                    {/* <TabsTrigger value="transcript">Transcript</TabsTrigger> */}
+                  </>
+                )}
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+
+                <TabsTrigger value="resources">Resources</TabsTrigger>
+                <TabsTrigger value="discussion">Discussion</TabsTrigger>
+              </div>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -818,93 +753,102 @@ export function RoadmapVideoWatchPage({
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Milestone Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Milestone Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{milestone.title}</span>
-                  <span>{progress ?? 0}%</span>
-                </div>
-                <Progress value={progress ?? 0} className="h-2" />
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {totalCompletedTasks} of {milestone?.userTopic?.totalTasks ?? 0}{" "}
-                videos watched in this milestone
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Milestone Videos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Milestone Videos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {chapter?.videos.map((vid: Video) => (
-                <div
-                  key={vid.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    vid.slug === currentVideo?.slug
-                      ? "border border-blue-200"
-                      : ""
-                  }`}
-                  onClick={() => handleVideoClick(vid)}
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isVideoCompleted(vid.id) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Play className="h-3 w-3" />
-                    )}
+          <Tabs defaultValue="course-content" className="w-full">
+            <TabsList className="w-full flex justify-between">
+              <TabsTrigger value="course-content">Course Content</TabsTrigger>
+              <TabsTrigger value="code-editor">Code Editor</TabsTrigger>
+              <TabsTrigger value="ask-kap">Talk to Kap</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <TabsContent value="course-content" className="space-y-4">
+            {/* Milestone Progress */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Milestone Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{milestone.title}</span>
+                    <span>{progress ?? 0}%</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{vid.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{vid.duration} mins</span>
+                  <Progress value={progress ?? 0} className="h-2" />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {totalCompletedTasks} of{" "}
+                  {milestone?.userTopic?.totalTasks ?? 0} videos watched in this
+                  milestone
+                </div>
+              </CardContent>
+            </Card>
 
-                      <Badge variant="outline" className="text-xs">
-                        {vid?.type}
-                      </Badge>
+            {/* Milestone Videos */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Milestone Videos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {chapter?.videos.map((vid: Video) => (
+                  <div
+                    key={vid.id}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                      vid.slug === currentVideo?.slug
+                        ? "border border-blue-200"
+                        : ""
+                    }`}
+                    onClick={() => handleVideoClick(vid)}
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                      {isVideoCompleted(vid.id) ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Play className="h-3 w-3" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{vid.title}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{vid.duration} mins</span>
+
+                        <Badge variant="outline" className="text-xs">
+                          {vid?.type}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {/* Chapter Features */}
-              {chapter?.quiz && (
-                <div
-                  className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                  onClick={() =>
-                    handleChapterFeatureClick("quiz", chapter?.quiz!.id)
-                  }
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    <Brain className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {chapter?.quiz?.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{chapter?.quiz?.timeLimit} min</span>
-                      <Badge variant="outline" className="text-xs">
-                        QUIZ
-                      </Badge>
+                {/* Chapter Features */}
+                {chapter?.quiz && (
+                  <div
+                    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                    onClick={() =>
+                      handleChapterFeatureClick("quiz", chapter?.quiz!.id)
+                    }
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                      <Brain className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {chapter?.quiz?.title}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{chapter?.quiz?.timeLimit} min</span>
+                        <Badge variant="outline" className="text-xs">
+                          QUIZ
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* {chapter.exercise && (
+                {/* {chapter.exercise && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -930,7 +874,7 @@ export function RoadmapVideoWatchPage({
                 </div>
               )} */}
 
-              {/* {chapter.playground && (
+                {/* {chapter.playground && (
                 <div
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted"
                   onClick={() =>
@@ -958,72 +902,85 @@ export function RoadmapVideoWatchPage({
                   </div>
                 </div>
               )} */}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Chapter Navigation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">All Chapters</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {course.chapters.map((ch: Chapter, index: number) => (
-                <div
-                  key={ch.slug}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    ch.slug === chapter?.slug ? "border border-blue-200" : ""
-                  }`}
-                  onClick={() => handleChapterClick(ch)}
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                    {isChapterCompleted(ch?.id!) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <span>{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{ch.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
-                        videos
-                      </Badge>
-
-                      {ch.videos.filter((v) => v.type === "QUIZ").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
-                          quizzes
-                        </Badge>
-                      )}
-                      {ch.videos.filter((v) => v.type === "EXERCISE").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "EXERCISE")
-                              .length
-                          }{" "}
-                          exercises
-                        </Badge>
-                      )}
-
-                      {ch.videos.filter((v) => v.type === "PLAYGROUND").length >
-                        0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {
-                            ch.videos.filter((v) => v.type === "PLAYGROUND")
-                              .length
-                          }{" "}
-                          playgrounds
-                        </Badge>
+            {/* Chapter Navigation */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">All Chapters</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {course.chapters.map((ch: Chapter, index: number) => (
+                  <div
+                    key={ch.slug}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
+                      ch.slug === chapter?.slug ? "border border-blue-200" : ""
+                    }`}
+                    onClick={() => handleChapterClick(ch)}
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                      {isChapterCompleted(ch?.id!) ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <span>{index + 1}</span>
                       )}
                     </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{ch.title}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="text-xs">
+                          {ch.videos.filter((v) => v.type === "VIDEO").length}{" "}
+                          videos
+                        </Badge>
+
+                        {ch.videos.filter((v) => v.type === "QUIZ").length >
+                          0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {ch.videos.filter((v) => v.type === "QUIZ").length}{" "}
+                            quizzes
+                          </Badge>
+                        )}
+                        {ch.videos.filter((v) => v.type === "EXERCISE").length >
+                          0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {
+                              ch.videos.filter((v) => v.type === "EXERCISE")
+                                .length
+                            }{" "}
+                            exercises
+                          </Badge>
+                        )}
+
+                        {ch.videos.filter((v) => v.type === "PLAYGROUND")
+                          .length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {
+                              ch.videos.filter((v) => v.type === "PLAYGROUND")
+                                .length
+                            }{" "}
+                            playgrounds
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="code-editor">
+            <SimpleEditor full={false} playground={currentVideo?.playground!} />
+          </TabsContent>
+
+          <TabsContent value="ask-kap">
+            <Card>
+              <CardHeader></CardHeader>
+
+              <CardContent> Coming soon!</CardContent>
+            </Card>
+          </TabsContent>
         </div>
       </div>
       <ConfettiCelebration
