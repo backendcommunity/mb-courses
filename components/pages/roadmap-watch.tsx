@@ -463,8 +463,8 @@ export function RoadmapWatchPage({
                         : "bg-blue-50 dark:bg-gray-800"
                     }`}
                   >
-                    <div className="flex items-center flex-col md:flex-row gap-3">
-                      <div>
+                    <div className="flex items-center justify-between flex-col md:flex-row gap-3">
+                      <div className="flex gap-3 items-center">
                         <Checkbox
                           checked={completed}
                           className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
@@ -493,11 +493,19 @@ export function RoadmapWatchPage({
                             </span>
                           </div>
                         </div>
+
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200 md:hidden inline-flex"
+                        >
+                          {course?.type ?? "Course"}
+                        </Badge>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200"
+                          className="bg-green-50 text-green-700 border-green-200 hidden md:inline-flex"
                         >
                           {course?.type ?? "Course"}
                         </Badge>
