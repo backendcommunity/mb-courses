@@ -120,7 +120,7 @@ export function ProjectDetailPage({
       (completedCount! / projectTasks?.length!) * 100
     );
 
-    updateProject(slug, {
+    updateProject(project?.id!, {
       projectTasks: projectTasks,
       progress: newProgress,
     });
@@ -175,7 +175,7 @@ export function ProjectDetailPage({
         setShowPaymentDialog(!showPaymentDialog);
         return;
       }
-
+      console.log(slug);
       // add from here inside dialog
       const userProject = await handleEnrollment(slug);
       if (!userProject) {
@@ -185,50 +185,52 @@ export function ProjectDetailPage({
       updateProject(project?.id!, { enrolled: true });
       Object.assign(project!, { enrolled: true });
 
-      handleProjectSetup();
+      // await handleProjectSetup(userProject); //TODO: Activate this to handle clone
     } catch (error: any) {
       const e = error?.response?.message ?? error?.message;
       toast.error(e ?? "An error occurred");
     }
   };
 
-  const handleProjectSetup = () => {
-    socket.emit("project:start", {
-      userId: user.id,
-      template: language,
-      projectName: slug,
-      installationId: user?.githubInstallationId,
-      github: user?.github,
+  const handleProjectSetup = async (userproject: any = null) => {
+    // socket.emit("project:start", {
+    //   userId: user.id,
+    //   template: language,
+    //   projectName: slug,
+    //   installationId: user?.githubInstallationId,
+    //   github: user?.github,
+    // });
+
+    // socket.on("clone:progress", (data) => {
+    //   setShowProgress(true);
+    //   setProgressText(data.message);
+    //   setProgressValue(Math.min(Math.max(data.percent, 0), 100));
+    // });
+
+    // socket.on("project:error", (data) => {
+    //   console.log(data);
+    // });
+
+    // socket.on("clone:done", (data) => {
+    // Update userproject if cloned successfully
+    await store.updateUserProject(userproject?.id! ?? userProject?.id, {
+      cloned: true,
     });
+    // setShowProgress(true);
+    // setProgressText(data.message);
+    // setProgressValue(100);
 
-    socket.on("clone:progress", (data) => {
-      setShowProgress(true);
-      setProgressText(data.message);
-      setProgressValue(Math.min(Math.max(data.percent, 0), 100));
-    });
+    setProject((prev) => ({
+      ...prev!,
+      userProject: {
+        ...(prev?.userProject || {}),
+        cloned: true,
+      },
+    }));
 
-    socket.on("project:error", (data) => {
-      console.log(data);
-    });
-
-    socket.on("clone:done", (data) => {
-      // Update userproject if cloned successfully
-      store.updateUserProject(userProject?.id, { cloned: true });
-      setShowProgress(true);
-      setProgressText(data.message);
-      setProgressValue(100);
-
-      setProject((prev) => ({
-        ...prev!,
-        userProject: {
-          ...(prev?.userProject || {}),
-          cloned: true,
-        },
-      }));
-
-      setCelebration(true);
-      toast.success("You have successfully enrolled");
-    });
+    setCelebration(true);
+    toast.success("You have successfully enrolled");
+    // });
   };
 
   const handleEnrollment = async (slug: string) => {
@@ -236,8 +238,8 @@ export function ProjectDetailPage({
   };
 
   const handleContinueLearning = (slug: string) => {
-    const watchPath = routes.projectPlayground(slug);
-    // const watchPath = `/projects/${slug}/tasks`;
+    // const watchPath = routes.projectPlayground(slug);
+    const watchPath = `/projects/${slug}/tasks`;
     onNavigate(watchPath);
   };
 
@@ -449,7 +451,7 @@ export function ProjectDetailPage({
                   </div>
                   <Progress value={project?.progress ?? 0} className="h-2" />
 
-                  {!userProject?.cloned && (
+                  {/* {!userProject?.cloned && (
                     <div className="pt-3">
                       <Label>Choose your preferred language</Label>
                       <Select value={language} onValueChange={setLanguage}>
@@ -472,12 +474,13 @@ export function ProjectDetailPage({
                         </p>
                       )}
                     </div>
-                  )}
+                  )} */}
                   <Button
-                    disabled={!language && !userProject?.cloned}
+                    // disabled={!language && !userProject?.cloned}
                     className="w-full"
                     onClick={() => {
-                      if (userProject?.cloned)
+                      if (project?.enrolled)
+                        // userProject.cloned
                         return handleContinueLearning(project.slug);
                       return handleProjectSetup();
                     }}
@@ -488,7 +491,7 @@ export function ProjectDetailPage({
                 </div>
               ) : user.isPremium ? (
                 <div className="space-y-3">
-                  <div className="pt-3">
+                  {/* <div className="pt-3">
                     <Label>Choose your preferred language</Label>
                     <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger>
@@ -509,9 +512,9 @@ export function ProjectDetailPage({
                         This field is required
                       </p>
                     )}
-                  </div>
+                  </div> */}
                   <Button
-                    disabled={!language}
+                    // disabled={!language}
                     className="w-full"
                     onClick={handleEnrollNow}
                   >
