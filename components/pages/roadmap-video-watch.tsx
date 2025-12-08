@@ -281,7 +281,8 @@ export function RoadmapVideoWatchPage({
   };
 
   const handleMarkComplete = async () => {
-    if (!currentVideo || !course || !chapter || !userCourse) return;
+    console.log("Completed Triggered", currentVideo, course, chapter);
+    if (!currentVideo || !course || !chapter) return;
 
     setIsMarking(true);
     // Combine completed videos + the one being marked now
@@ -370,36 +371,6 @@ export function RoadmapVideoWatchPage({
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
-      {/* <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() =>
-            onNavigate?.(
-              `/roadmaps/${slug}/topics/${milestone.id}/courses/${course.slug}`
-            )
-          }
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {currentVideo?.title}
-          </h1>
-          <p className="text-muted-foreground">
-            {roadmap.title} • {course.title} • {chapter?.title}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            {
-              currentVideo?.duration ?? currentVideo?.quiz?.timeLimit //??
-              //currentVideo?.exercise?.duration
-            }{" "}
-            mins
-          </Badge>
-          <Badge className="bg-blue-600">Milestone Content</Badge>
-        </div>
-      </div> */}
 
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Video Player */}

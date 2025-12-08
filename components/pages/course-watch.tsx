@@ -147,7 +147,7 @@ export function CourseWatchPage({
   }
 
   const handleMarkComplete = async () => {
-    if (!currentVideo || !course || !chapter || !userCourse) return;
+    if (!currentVideo || !course || !chapter) return;
 
     try {
       // Combine completed videos + the one being marked now
