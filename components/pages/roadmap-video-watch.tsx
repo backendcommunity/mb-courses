@@ -76,7 +76,7 @@ export function RoadmapVideoWatchPage({
   const [completed, setCompleted] = useState(false);
   const [milestone, setMilestone] = useState<Milestone | any>();
   const [completedItems, setCompletedItems] = useState<any>([]);
-  const [userChapters, setUserChapters] = useState<any>([]);
+  const [userChapters, setUserChapters] = useState<any[]>([]);
   const [showRequiredQuiz, setShowRequiredQuiz] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
@@ -281,7 +281,7 @@ export function RoadmapVideoWatchPage({
   };
 
   const handleMarkComplete = async () => {
-    console.log("Completed Triggered", currentVideo, course, chapter);
+    console.log("Completed Triggered");
     if (!currentVideo || !course || !chapter) return;
 
     setIsMarking(true);
@@ -317,7 +317,7 @@ export function RoadmapVideoWatchPage({
 
     // Update UserChapter locally
     const userChapter = [
-      ...userChapters,
+      ...(userChapters ?? []),
       {
         chapterId: chapter.id,
         isCompleted: isChapterCompleted,
