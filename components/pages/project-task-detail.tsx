@@ -239,7 +239,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
             </CardContent>
           </Card>
           {/* Video Actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center md:flex-row flex-col gap-3 md:gap-1 justify-between">
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => handleShare(task?.title!, path)}
