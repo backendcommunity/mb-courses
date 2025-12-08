@@ -281,14 +281,8 @@ export function RoadmapVideoWatchPage({
   };
 
   const handleMarkComplete = async () => {
-    console.log(
-      "Completed Triggered",
-      currentVideo,
-      course,
-      chapter,
-      userCourse
-    );
-    if (!currentVideo || !course || !chapter || !userCourse) return;
+    console.log("Completed Triggered", currentVideo, course, chapter);
+    if (!currentVideo || !course || !chapter) return;
 
     setIsMarking(true);
     // Combine completed videos + the one being marked now
