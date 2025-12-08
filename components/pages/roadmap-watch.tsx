@@ -283,6 +283,10 @@ export function RoadmapWatchPage({
 
   function nextUp() {
     const next = hasNext();
+
+    const completedTask = getCompletedTasks(next?.id, milestone?.userTopic?.id);
+    const completed = completedTask?.completed ?? false;
+    const isActive = !!completedTask;
     {
       if (!next)
         return (
@@ -317,7 +321,7 @@ export function RoadmapWatchPage({
               </span>
             </div>
           </div>
-          <Button
+          {/* <Button
             onClick={() => handleStart(next)}
             className="w-full capitalize"
             size="sm"
@@ -327,6 +331,39 @@ export function RoadmapWatchPage({
             {next?.type?.toLowerCase() === "video"
               ? "Course"
               : next?.type?.toLowerCase()}
+          </Button> */}
+
+          <Button
+            onClick={() => {
+              if (completed || isActive) return handleContinueLearning(next);
+
+              handleStart(next);
+            }}
+            size="sm"
+            variant={completed ? "outline" : isActive ? "secondary" : "default"}
+            className="capitalize"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            {completed ? (
+              `Review ${
+                next?.type?.toLowerCase() === "video"
+                  ? "Course"
+                  : next?.type?.toLowerCase()
+              }`
+            ) : isActive ? (
+              `Continue Learning`
+            ) : starting && next?.slug === currentItem ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Starting...</span>
+              </>
+            ) : (
+              `Start ${
+                next?.type?.toLowerCase() === "video"
+                  ? "Course"
+                  : next?.type?.toLowerCase()
+              }`
+            )}
           </Button>
         </div>
       );
