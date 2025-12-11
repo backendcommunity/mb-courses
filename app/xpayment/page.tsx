@@ -1,22 +1,11 @@
-import { CreditCard, Crown, Gift } from "lucide-react";
+"use client";
 
 import { useUser } from "@/hooks/use-user";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useTheme } from "next-themes";
-import countries from "@/lib/countries.json";
-import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
-import Link from "next/link";
-import { PaymentChannel, Plan } from "@/lib/data";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+import { PaymentChannel } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 
 interface PaymentDialogProps {
@@ -36,16 +25,7 @@ const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
 
 const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
-export function PaymentDialog({
-  data,
-  open,
-  disableMB,
-  disableOnetime,
-  disableSubscription,
-  onHandlePreview,
-  onHandlePurchase,
-  onClose,
-}: PaymentDialogProps) {
+export default function XPayment({}) {
   const user = useUser();
   const store = useAppStore();
   const { theme } = useTheme();
@@ -61,7 +41,6 @@ export function PaymentDialog({
         switch (data.name) {
           case "checkout.loaded":
             console.log("Checkout loaded", data);
-            onClose();
             break;
           case "checkout.closed":
             console.log("Checkout closed");
@@ -69,7 +48,6 @@ export function PaymentDialog({
           case "checkout.completed":
             const c_data = data?.custom_data;
             // Track payment (GA or Google)
-            onHandlePurchase(c_data.id, c_data.method, true);
             break;
         }
       },
