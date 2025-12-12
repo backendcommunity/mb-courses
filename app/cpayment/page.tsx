@@ -19,6 +19,11 @@ export default function XPayment({}) {
     null
   );
 
+  const [package1, setPackage1] = useState("");
+  const [team, setTeam] = useState("");
+  const [slug, setSlug] = useState("");
+  const [ref, setRef] = useState("");
+
   useEffect(() => {
     initializePaddle({
       token: PADDLE_TOKEN,
@@ -66,15 +71,33 @@ export default function XPayment({}) {
         ],
         theme: theme?.includes("dark") ? "dark" : "light",
       },
+      discountCode: package1 === "single" ? "PRESALE" : "",
       items: [{ priceId }],
-      customData: data,
+      customData: {
+        type: "roadmap", // Change this to be dynamic
+        slug: slug,
+        isExternal: true,
+        package: package1,
+        team: team,
+        ref: ref ?? "payment_unknown",
+      },
     });
   };
 
   useEffect(() => {
     if (!searchParams) return;
+
     const price = searchParams.get("id");
+    const package1 = searchParams.get("package1");
+    const team = searchParams.get("team");
+    const slug = searchParams.get("slug");
+    const ref = searchParams.get("ref");
+
     setPrice(price || "");
+    setPackage1(package1 || "");
+    setTeam(team || "");
+    setSlug(slug || "");
+    setRef(ref || "");
   }, [searchParams]);
 
   if (price) {
