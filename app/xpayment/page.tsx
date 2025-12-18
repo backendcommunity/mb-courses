@@ -85,6 +85,7 @@ export default function XPayment({}) {
         ],
         theme: theme?.includes("dark") ? "dark" : "light",
       },
+      discountCode: "AIEARLYBIRD",
       items: [{ priceId }],
       customData: data,
     });
