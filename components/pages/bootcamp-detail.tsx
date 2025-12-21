@@ -21,9 +21,11 @@ import {
   Play,
   CheckCircle2,
   BadgeIcon,
+  BookOpen,
+  PlayCircle,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bootcamp, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
 import { toast } from "sonner";
@@ -32,6 +34,7 @@ import DisqusCommentBlock from "../ui/comment";
 import { routes } from "@/lib/routes";
 import { PaymentDialog } from "../payment-dialog";
 import { useUser } from "@/hooks/use-user";
+import { Accordion } from "../ui/accordion";
 
 interface BootcampDetailPageProps {
   bootcampId: string;
@@ -45,8 +48,10 @@ export function BootcampDetailPage({
   const store = useAppStore();
   const user = useUser();
   const [loading, setLoading] = useState(false);
+  const [active, setActive] = useState("overview");
   const [bootcamp, setBootcamp] = useState<Bootcamp | any>();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [bonusCourses, setBonusCourses] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -65,6 +70,20 @@ export function BootcampDetailPage({
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bootcampId]);
+
+  useMemo(() => {
+    if (active !== "bonus") return;
+
+    const load = async () => {
+      try {
+        const id = bootcamp?.cohort?.id;
+        const bonuses = await store.getBootcampBonuses(bootcampId, id);
+        setBonusCourses(bonuses);
+      } catch (error) {}
+    };
+
+    load();
+  }, [active]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -130,8 +149,6 @@ export function BootcampDetailPage({
 
   const started =
     new Date(bootcamp?.userCohort?.cohort!?.startsAt) < new Date();
-
-  console.log(started);
 
   return (
     <div className="flex-1 space-y-6">
@@ -233,11 +250,11 @@ export function BootcampDetailPage({
           </Card>
 
           {/* Tabs */}
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={active} onValueChange={setActive} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-              {/* <TabsTrigger value="outcomes">Outcomes</TabsTrigger> */}
+              <TabsTrigger value="bonus">Bonuses</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
 
@@ -342,50 +359,250 @@ export function BootcampDetailPage({
               </Card>
             </TabsContent>
 
-            {/* <TabsContent value="outcomes" className="space-y-4">
+            <TabsContent value="bonus" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Career Outcomes</CardTitle>
-                  <CardDescription>What our graduates achieve</CardDescription>
+                  <CardTitle className="text-base md:text-lg">
+                    Bonus Resources
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Find all the bonus courses, resources and more information
+                    here.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-3xl font-bold text-green-600">
-                        94%
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Job placement rate
-                      </div>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-3xl font-bold text-blue-600">
-                        $85k
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Average starting salary
-                      </div>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-3xl font-bold text-purple-600">
-                        6 weeks
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Average time to job
-                      </div>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-3xl font-bold text-orange-600">
-                        $35k
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Average salary increase
-                      </div>
-                    </div>
-                  </div>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {bonusCourses.map(({ id, course, video, resource }) => {
+                      if (course)
+                        return (
+                          <div key={id} className="space-y-4  pb-4">
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                                Course
+                                {/* TODO: show videos and resources */}
+                              </h4>
+                              <Card key={course.id} className="overflow-hidden">
+                                <div className="flex flex-col md:flex-row">
+                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                    <img
+                                      src={course?.banner || "/placeholder.svg"}
+                                      alt={course?.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 p-4">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                      <div>
+                                        <h5 className="font-medium">
+                                          {course?.title}
+                                        </h5>
+                                        <article
+                                          dangerouslySetInnerHTML={{
+                                            __html: course?.summary,
+                                          }}
+                                          className="text-sm text-muted-foreground [&>*>span]:!text-black [&>p]:text-black dark:[&>*>span]:!text-muted-foreground dark:[&>p]:text-muted-foreground"
+                                        ></article>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline">
+                                          {course.type}
+                                        </Badge>
+                                        <Badge variant="outline">
+                                          {course?.totalDuration ?? 0} mins
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <PlayCircle className="h-4 w-4 text-blue-600" />
+                                        <span className="text-sm">
+                                          {course.chapters?.length} chapters
+                                        </span>
+                                      </div>
+
+                                      {bootcamp?.enrolled ? (
+                                        <a
+                                          target="_blank"
+                                          href={routes.courseDetail(
+                                            course?.slug
+                                          )}
+                                        >
+                                          <Button
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                            }}
+                                          >
+                                            View Course
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <Button
+                                          className="w-full"
+                                          onClick={() =>
+                                            enrollInBootcamp(
+                                              bootcampId,
+                                              bootcamp?.cohort?.id
+                                            )
+                                          }
+                                        >
+                                          Apply Now
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            </div>
+                          </div>
+                        );
+                      if (video)
+                        return (
+                          <div key={id} className="space-y-4  pb-4">
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                                Video
+                              </h4>
+                              <Card key={video.id} className="overflow-hidden">
+                                <div className="flex flex-col md:flex-row">
+                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                    <img
+                                      src={video?.banner || "/placeholder.svg"}
+                                      alt={video?.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 p-4">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                      <div>
+                                        <h5 className="font-medium">
+                                          {video?.title}
+                                        </h5>
+
+                                        <article
+                                          dangerouslySetInnerHTML={{
+                                            __html: video?.summary,
+                                          }}
+                                          className="text-xs text-muted-foreground"
+                                        ></article>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline">
+                                          {video.type}
+                                        </Badge>
+                                        <Badge variant="outline">
+                                          {video?.duration ?? 0}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
+                                      {bootcamp?.enrolled ? (
+                                        <a target="_blank" href={"#"}>
+                                          <Button
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                            }}
+                                          >
+                                            Watch Video
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <Button
+                                          className="w-full"
+                                          onClick={() =>
+                                            enrollInBootcamp(
+                                              bootcampId,
+                                              bootcamp?.cohort?.id
+                                            )
+                                          }
+                                        >
+                                          Apply Now
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            </div>
+                          </div>
+                        );
+                      if (resource)
+                        return (
+                          <div key={id} className="space-y-4  pb-4">
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                                Resource
+                              </h4>
+                              <Card
+                                key={resource.id}
+                                className="overflow-hidden"
+                              >
+                                <div className="flex flex-col md:flex-row">
+                                  <div className="w-full md:w-1/4 h-40 md:h-auto bg-muted">
+                                    <img
+                                      src={
+                                        resource.banner || "/placeholder.svg"
+                                      }
+                                      alt={resource.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 p-4">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                      <div>
+                                        <h5 className="font-medium">
+                                          {resource.title}
+                                        </h5>
+
+                                        <article
+                                          dangerouslySetInnerHTML={{
+                                            __html: resource?.summary,
+                                          }}
+                                          className="text-xs text-muted-foreground"
+                                        ></article>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
+                                      {bootcamp?.enrolled ? (
+                                        <a target="_blank" href={resource.link}>
+                                          <Button
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                            }}
+                                          >
+                                            View Resource
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <Button
+                                          className="w-full"
+                                          onClick={() =>
+                                            enrollInBootcamp(
+                                              bootcampId,
+                                              bootcamp?.cohort?.id
+                                            )
+                                          }
+                                        >
+                                          Apply Now
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            </div>
+                          </div>
+                        );
+                    })}
+                  </Accordion>
                 </CardContent>
               </Card>
-            </TabsContent> */}
+            </TabsContent>
 
             <TabsContent value="reviews" className="space-y-4">
               <div className="space-y-4">
