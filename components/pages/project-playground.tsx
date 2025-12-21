@@ -75,6 +75,7 @@ import { Terminal } from "../atoms/Terminal";
 import { usePathname, useSearchParams } from "next/navigation";
 import { fetchUser } from "@/lib/auth";
 import { Label } from "../ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectPlaygroundPageProps {
   slug: string;
@@ -102,6 +103,7 @@ export function ProjectPlaygroundPage({
   const idleTimer = useRef(null);
   const store = useAppStore();
   const user = useUser();
+  const mobile = useIsMobile();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { theme } = useTheme();
