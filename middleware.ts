@@ -11,6 +11,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/auth/") || pathname.startsWith("/xpayment");
   const isSecret = !isAuthPage;
 
+  if (pathname.startsWith("/xpayment")) return NextResponse.next();
+
   // 1. If NOT authenticated and trying to access protected route
   if (!isAuthenticated && isSecret) {
     const loginUrl = new URL("/auth/login", request.url);
