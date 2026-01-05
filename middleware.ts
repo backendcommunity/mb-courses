@@ -11,8 +11,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/auth/") || pathname.startsWith("/xpayment");
   const isSecret = !isAuthPage;
 
-  if (pathname.startsWith("/xpayment"))
-    return NextResponse.redirect("/xpayment");
+  // if (pathname.startsWith("/xpayment"))
+  //   return NextResponse.redirect("/xpayment");
 
   // 1. If NOT authenticated and trying to access protected route
   if (!isAuthenticated && isSecret) {
