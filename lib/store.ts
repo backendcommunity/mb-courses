@@ -69,6 +69,7 @@ interface AppState {
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
   getInterviews: () => Interview[];
+  getMockInterviewTemplates: () => any;
   getTransactions: (payload: { size?: number }) => any;
   getBootcamps: (filters: {
     skip?: number;
@@ -121,6 +122,11 @@ interface AppState {
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  createCustomMockInterview: (interview: any) => any;
+  startMockInterview: (
+    id: string,
+    data: { scheduledTime?: string; interviewConfig?: any }
+  ) => any;
   handleProjectEnrollment: (slug: string) => Project | any;
   updateUserProject: (slug: string, payload: any) => Project | any;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
@@ -434,6 +440,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  getMockInterviewTemplates: async () => {
+    const { data } = await api.get("/mock-interviews");
+    return data?.data;
+  },
+
   getRoadmapBySlug: async (slug: string) => {
     const { data } = await api.get("/roadmaps/" + slug);
     return data?.data;
@@ -505,6 +516,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  startMockInterview: async (
+    id: string,
+    payload: { scheduledTime?: Date; interviewConfig: any }
+  ) => {
+    const { data } = await api.post("/mock-interviews/" + id, payload);
+    return data?.data;
+  },
+
   markDayComplete: async (slug: string, videoId: string, payload: any) => {
     const { data } = await api.post(
       `/project30s/${slug}/days/${videoId}`,
@@ -544,6 +563,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   markCourseCompleted: async (userCourseId: string) => {
     const { data } = await api.post(`/courses/${userCourseId}/completed`);
+    return data?.data;
+  },
+
+  createCustomMockInterview: async (interview: any) => {
+    const { data } = await api.post(`/mock-interviews`, interview);
     return data?.data;
   },
 

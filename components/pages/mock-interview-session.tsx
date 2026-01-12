@@ -1,10 +1,22 @@
-"use client";
+// "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  LiveKitRoom,
+  ParticipantTile,
+  RoomAudioRenderer,
+  StartAudio,
+  useAgent,
+  useSession,
+  VideoConference,
+  useTranscriptions,
+  VideoTrack,
+} from "@livekit/components-react";
+import "@livekit/components-styles";
 import { Input } from "@/components/ui/input";
 import {
   Video,
@@ -22,6 +34,11 @@ import {
   getMockInterviewById,
   getInterviewQuestions,
 } from "@/lib/mock-interview-data";
+import { useUser } from "@/hooks/use-user";
+import { Room, RoomEvent, TokenSource } from "livekit-client";
+import { TranscriptCollector } from "./transcriptCollector";
+import { InterviewStage } from "./mock-interviews/interview-stage";
+import { MediaControls } from "./mock-interviews/media-controls";
 
 interface MockInterviewSessionProps {
   interviewId: string;
@@ -32,6 +49,7 @@ export function MockInterviewSessionPage({
   interviewId,
   onNavigate,
 }: MockInterviewSessionProps) {
+  const user = useUser();
   const [interview] = useState(() => getMockInterviewById(interviewId));
   const [questions] = useState(() => getInterviewQuestions());
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -39,6 +57,7 @@ export function MockInterviewSessionPage({
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [chatMessage, setChatMessage] = useState("");
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
       sender: "interviewer",
@@ -47,29 +66,76 @@ export function MockInterviewSessionPage({
       timestamp: new Date().toISOString(),
     },
   ]);
+  const [token, setToken] = useState<string>("");
+  const [url, setUrl] = useState<string>(
+    "wss://mock-interview-up2y2ttf.livekit.cloud"
+  );
+  const [participantName, setParticipantName] = useState<string>("");
+  const [connected, setConnected] = useState(false);
+  // const [session, setSession] = useState<any>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    if (!interview) {
-      onNavigate("/mock-interviews");
-      return;
-    }
+    console.log("Live Transcript:", liveTranscript);
+  }, [liveTranscript]);
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleEndInterview();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/get-token?participant=${encodeURIComponent(
+            user.name || "Candidate"
+          )}`
+        );
+        const data = await response.json();
+        setToken(data.token);
+        setUrl(data.url);
+      } catch (e) {
+        console.error(e);
+        alert("Failed to get token. Please check console for details.");
+      }
+    };
+    fetchToken();
+  }, []);
 
-    return () => clearInterval(timer);
-  }, [interview, onNavigate]);
+  // useEffect(() => {
+  //   if (!interview) {
+  //     onNavigate("/mock-interviews");
+  //     return;
+  //   }
+
+  //   const timer = setInterval(() => {
+  //     setTimeRemaining((prev) => {
+  //       if (prev <= 1) {
+  //         handleEndInterview();
+  //         return 0;
+  //       }
+  //       return prev - 1;
+  //     });
+  //   }, 1000);
+
+  //   return () => clearInterval(timer);
+  // }, [interview, onNavigate]);
+
+  const onConnected = () => {
+    setConnected(true);
+    console.log("Connected to room");
+  };
+
+  const onDisconnected = (e: any) => {
+    console.log("Disconnected from room", e);
+
+    setConnected(false);
+    setToken("");
+    console.log("Disconnected from room");
+  };
+
+  const onError = (error: Error) => {
+    console.error("Error:", error);
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -144,11 +210,9 @@ export function MockInterviewSessionPage({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">{interview.type.icon}</span>
+              {/* <span className="text-2xl">{interview.type.icon}</span> */}
               <div>
-                <h1 className="text-lg font-semibold">
-                  {interview.type.title}
-                </h1>
+                {/* <h1 className="text-lg font-semibold">{interview?.title}</h1> */}
                 <p className="text-sm text-muted-foreground">
                   Mock Interview Session
                 </p>
@@ -172,59 +236,26 @@ export function MockInterviewSessionPage({
       </div>
 
       <div className="flex-1 flex">
-        {/* Main Interview Area */}
         <div className="flex-1 flex flex-col">
-          {/* Video Area */}
-          <div className="flex-1 bg-black relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-gray-800 rounded-lg p-8 text-white text-center">
-                <User className="h-16 w-16 mx-auto mb-4" />
-                <p className="text-lg">Kap AI Interviewer</p>
-                <p className="text-sm text-gray-400">Video call in progress</p>
-              </div>
-            </div>
-
-            {/* User video (small overlay) */}
-            <div className="absolute bottom-4 right-4 w-48 h-36 bg-gray-900 rounded-lg border-2 border-white">
-              <div className="flex items-center justify-center h-full text-white">
-                <div className="text-center">
-                  <User className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">You</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Video Controls */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={isVideoOn ? "default" : "destructive"}
-                onClick={() => setIsVideoOn(!isVideoOn)}
-              >
-                {isVideoOn ? (
-                  <Video className="h-4 w-4" />
-                ) : (
-                  <VideoOff className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant={isAudioOn ? "default" : "destructive"}
-                onClick={() => setIsAudioOn(!isAudioOn)}
-              >
-                {isAudioOn ? (
-                  <Mic className="h-4 w-4" />
-                ) : (
-                  <MicOff className="h-4 w-4" />
-                )}
-              </Button>
-              <Button size="sm" variant="outline">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
+          {/* Main Interview Area */}
+          <div className="w-full p-2">
+            <LiveKitRoom
+              className="bg-black text-primary"
+              color="blue"
+              serverUrl={url}
+              token={token}
+              connect={true}
+              onConnected={onConnected}
+              onDisconnected={onDisconnected}
+              onError={onError}
+              audio={true}
+              video={true}
+            >
+              <InterviewStage />
+              <MediaControls />
+              <TranscriptCollector onUpdate={setLiveTranscript} />
+            </LiveKitRoom>
           </div>
-
-          {/* Question Area */}
           <div className="border-t bg-card p-6">
             <Card>
               <CardHeader>

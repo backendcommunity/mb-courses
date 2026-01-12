@@ -11,6 +11,8 @@
   "dependencies": {
     "@asyncpay/checkout": "^0.0.37",
     "@hookform/resolvers": "^3.9.1",
+    "@livekit/components-react": "^2.9.17",
+    "@livekit/components-styles": "^1.2.0",
     "@monaco-editor/react": "latest",
     "@next/bundle-analyzer": "^15.5.4",
     "@paddle/paddle-js": "^1.4.2",
@@ -60,6 +62,7 @@
     "immer": "latest",
     "input-otp": "1.4.1",
     "jspdf": "^3.0.1",
+    "livekit-client": "^2.16.1",
     "lucide-react": "^0.454.0",
     "monaco-editor": "latest",
     "next": "15.2.6",
