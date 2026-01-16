@@ -69,7 +69,17 @@ interface AppState {
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
   getInterviews: () => Interview[];
-  getMockInterviewTemplates: () => any;
+  getMockInterviewTemplates: (params?: {
+    size?: number;
+    skip?: number;
+    filters?: any;
+  }) => any;
+  getUserBookedInterviews: () => any;
+  getUserCompletedInterviews: () => any;
+  getMockInterviewTemplate: (id: string) => any;
+  getUserInterviewStats: () => any;
+  getInterviewSession: (id: string) => any;
+  createInterviewRoom: (sessionId: string, withAgent?: boolean) => any;
   getTransactions: (payload: { size?: number }) => any;
   getBootcamps: (filters: {
     skip?: number;
@@ -128,6 +138,22 @@ interface AppState {
     id: string,
     data: { scheduledTime?: Date | string; interviewConfig?: any }
   ) => any;
+  scheduleInterviewFromTemplate: (
+    id: string,
+    data: { scheduledTime: string; interviewConfig?: any }
+  ) => any;
+  scheduleInterviewFromJD: (data: {
+    company: string;
+    position: string;
+    seniority: string;
+    difficulty: string;
+    format: string;
+    description: string;
+    style: string;
+    duration: number;
+    scheduledTime: string;
+    interviewConfig?: string;
+  }) => any;
   handleProjectEnrollment: (slug: string) => Project | any;
   updateUserProject: (slug: string, payload: any) => Project | any;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
@@ -447,8 +473,44 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
-  getMockInterviewTemplates: async () => {
-    const { data } = await api.get("/mock-interviews");
+  getMockInterviewTemplates: async (params?: {
+    size?: number;
+    skip?: number;
+    filters?: any;
+  }) => {
+    const { data } = await api.get("/mock-interviews", { params });
+    return data?.data;
+  },
+
+  getUserBookedInterviews: async () => {
+    const { data } = await api.get("/mock-interviews/user/booked");
+    return data?.data;
+  },
+
+  getUserCompletedInterviews: async () => {
+    const { data } = await api.get("/mock-interviews/user/completed");
+    return data?.data;
+  },
+
+  getMockInterviewTemplate: async (id: string) => {
+    const { data } = await api.get(`/mock-interviews/${id}`);
+    return data?.data;
+  },
+
+  getUserInterviewStats: async () => {
+    const { data } = await api.get("/mock-interviews/user/stats");
+    return data?.data;
+  },
+
+  getInterviewSession: async (id: string) => {
+    const { data } = await api.get(`/mock-interviews/sessions/${id}`);
+    return data?.data;
+  },
+
+  createInterviewRoom: async (sessionId: string, withAgent: boolean = true) => {
+    const { data } = await api.post(
+      `/mock-interviews/sessions/${sessionId}/room?agent=${withAgent}`
+    );
     return data?.data;
   },
 
@@ -535,6 +597,34 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post(
       "/mock-interviews/" + userInterviewId + "/sessions/" + id + "/room"
     );
+
+    return data?.data;
+  },
+
+  scheduleInterviewFromTemplate: async (
+    id: string,
+    payload: { scheduledTime: string; interviewConfig?: any }
+  ) => {
+    const { data } = await api.post(
+      `/mock-interviews/schedules/${id}`,
+      payload
+    );
+    return data?.data;
+  },
+
+  scheduleInterviewFromJD: async (payload: {
+    company: string;
+    position: string;
+    seniority: string;
+    difficulty: string;
+    format: string;
+    description: string;
+    style: string;
+    duration: number;
+    scheduledTime: string;
+    interviewConfig?: string;
+  }) => {
+    const { data } = await api.post("/mock-interviews/schedules/jd", payload);
     return data?.data;
   },
 
