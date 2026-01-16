@@ -28,6 +28,38 @@ body {
   background-color: #094771;
 }
 
+/* livekit-theme.css */
+:root,
+[data-lk-theme="default"] {
+  /* Main branding colors */
+  --lk-bg: #0f172a; /* deep slate background */
+  --lk-bg2: #1e293b;
+  --lk-primary: #6366f1; /* your brand primary (indigo) */
+  --lk-primary-hover: #4f46e5;
+  --lk-secondary: #ec4899;
+  --lk-fg: #f1f5f9; /* text */
+  --lk-fg2: #94a3b8;
+
+  /* Control bar & buttons */
+  --lk-control-bar-bg: rgba(15, 23, 42, 0.85);
+  --lk-control-bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+
+  /* Participant tiles */
+  --lk-participant-tile-bg: #1e293b;
+  --lk-participant-tile-border: 2px solid #334155;
+
+  /* Accent / active states */
+  --lk-accent: #a78bfa;
+  --lk-danger: #ef4444;
+}
+
+/* Optional: Dark mode variant or your own theme name */
+[data-lk-theme="kap-interview"] {
+  --lk-primary: #8b5cf6;
+  --lk-bg: #020617;
+  /* ... */
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

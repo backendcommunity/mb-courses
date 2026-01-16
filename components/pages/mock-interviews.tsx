@@ -164,8 +164,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
-  const handleStartInterview = (interviewId: string) => {
+  const handleStartInterview = async (interviewId: string) => {
     try {
+      await store.createMockInterviewRoom(interviewId, interviewId);
     } catch (error) {}
 
     onNavigate(`/mock-interviews/${interviewId}`);
@@ -665,7 +666,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                         onClick={() => handleStartInterview(interview.id)}
                       >
                         <Video className="h-4 w-4 mr-2" />
-                        Start Interview
+                        Start Interview {interview.id}
                       </Button>
                     </div>
                   </CardHeader>

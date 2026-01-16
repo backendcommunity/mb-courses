@@ -104,6 +104,7 @@ interface AppState {
   getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
   getProjectAchievements: (slug: string) => any;
+  getMockInterviewSessionToken: (id: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -125,7 +126,7 @@ interface AppState {
   createCustomMockInterview: (interview: any) => any;
   startMockInterview: (
     id: string,
-    data: { scheduledTime?: string; interviewConfig?: any }
+    data: { scheduledTime?: Date | string; interviewConfig?: any }
   ) => any;
   handleProjectEnrollment: (slug: string) => Project | any;
   updateUserProject: (slug: string, payload: any) => Project | any;
@@ -176,6 +177,7 @@ interface AppState {
     }
   ) => any;
   executeCode: (payload: { language: string; code: string }) => any;
+  createMockInterviewRoom: (userInterviewId: string, id: string) => any;
 
   // Force re-render trigger
   version: number;
@@ -390,6 +392,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  async getMockInterviewSessionToken(id) {
+    const { data } = await api.get(`/mock-interviews/sessions/${id}/token`);
+    return data?.data;
+  },
+
   getBootcamp: async (id: string) => {
     const { data } = await api.get(`/bootcamps/${id}`);
     return data?.data;
@@ -518,9 +525,16 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   startMockInterview: async (
     id: string,
-    payload: { scheduledTime?: Date; interviewConfig: any }
+    payload: { scheduledTime?: Date | string; interviewConfig?: any }
   ) => {
     const { data } = await api.post("/mock-interviews/" + id, payload);
+    return data?.data;
+  },
+
+  createMockInterviewRoom: async (userInterviewId: string, id: string) => {
+    const { data } = await api.post(
+      "/mock-interviews/" + userInterviewId + "/sessions/" + id + "/room"
+    );
     return data?.data;
   },
 
