@@ -79,6 +79,7 @@ interface AppState {
   getMockInterviewTemplate: (id: string) => any;
   getUserInterviewStats: () => any;
   getInterviewSession: (id: string) => any;
+  createInterviewRoom: (sessionId: string, withAgent?: boolean) => any;
   getTransactions: (payload: { size?: number }) => any;
   getBootcamps: (filters: {
     skip?: number;
@@ -499,6 +500,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  createInterviewRoom: async (sessionId: string, withAgent: boolean = true) => {
+    const { data } = await api.post(
+      `/mock-interviews/sessions/${sessionId}/room?agent=${withAgent}`
+    );
+    return data?.data;
+  },
+
   getRoadmapBySlug: async (slug: string) => {
     const { data } = await api.get("/roadmaps/" + slug);
     return data?.data;
@@ -572,7 +580,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   startMockInterview: async (
     id: string,
-    payload: { scheduledTime: string; interviewConfig: any }
+    payload: { scheduledTime?: string; interviewConfig?: any }
   ) => {
     const { data } = await api.post("/mock-interviews/" + id, payload);
     return data?.data;

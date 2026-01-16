@@ -167,6 +167,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   useEffect(() => {
     loadTemplates();
     loadStats();
+    loadBookedInterviews();
+    loadCompletedInterviews();
   }, [pagination, filters]);
 
   useEffect(() => {
@@ -321,8 +323,30 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
-  const handleJoinInterview = (interviewId: string) => {
-    onNavigate(`/mock-interviews/${interviewId}`);
+  const handleJoinInterview = async (interview: UserInterview) => {
+    try {
+      setCreating(true);
+      
+      // Start the interview by scheduling it with immediate time
+      // This should create and return a session
+      const result = await store.scheduleInterviewFromTemplate(interview.templateId, {
+        scheduledTime: new Date().toISOString(),
+        interviewConfig: interview.interviewConfig ? JSON.parse(interview.interviewConfig) : undefined,
+      });
+
+      if (result?.session?.id) {
+        // Navigate to the session page
+        onNavigate(`/mock-interviews/sessions/${result.session.id}`);
+      } else {
+        toast.error("Failed to start interview session. Please try again.");
+        console.error("No session returned from API:", result);
+      }
+    } catch (error) {
+      console.error("Failed to join interview:", error);
+      toast.error("Failed to join interview");
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleViewResults = (interviewId: string) => {
@@ -1087,7 +1111,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                           <Badge variant="outline">{interview.status}</Badge>
                         </div>
                       </div>
-                      <Button onClick={() => handleJoinInterview(interview.id)}>
+                      <Button onClick={() => handleJoinInterview(interview)}>
                         <Video className="h-4 w-4 mr-2" />
                         Join Interview
                       </Button>

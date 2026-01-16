@@ -39,6 +39,8 @@ import { Room, RoomEvent, TokenSource } from "livekit-client";
 import { TranscriptCollector } from "./transcriptCollector";
 import { InterviewStage } from "./mock-interviews/interview-stage";
 import { MediaControls } from "./mock-interviews/media-controls";
+import { useAppStore } from "@/lib/store";
+import { toast } from "sonner";
 
 interface MockInterviewSessionProps {
   interviewId: string;
@@ -50,6 +52,7 @@ export function MockInterviewSessionPage({
   onNavigate,
 }: MockInterviewSessionProps) {
   const user = useUser();
+  const store = useAppStore();
   const [interview] = useState(() => getMockInterviewById(interviewId));
   const [questions] = useState(() => getInterviewQuestions());
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -72,9 +75,10 @@ export function MockInterviewSessionPage({
   );
   const [participantName, setParticipantName] = useState<string>("");
   const [connected, setConnected] = useState(false);
-  // const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -83,23 +87,47 @@ export function MockInterviewSessionPage({
   }, [liveTranscript]);
 
   useEffect(() => {
-    const fetchToken = async () => {
+    const fetchSession = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/get-token?participant=${encodeURIComponent(
-            user.name || "Candidate"
-          )}`
-        );
-        const data = await response.json();
-        setToken(data.token);
-        setUrl(data.url);
-      } catch (e) {
-        console.error(e);
-        alert("Failed to get token. Please check console for details.");
+        setLoading(true);
+        const sessionData = await store.getInterviewSession(interviewId);
+        
+        if (sessionData) {
+          setSession(sessionData);
+          
+          // Create LiveKit room with agent
+          try {
+            const roomData = await store.createInterviewRoom(interviewId, true);
+            
+            if (roomData?.token) {
+              setToken(roomData.token);
+            }
+            if (roomData?.url) {
+              setUrl(roomData.url);
+            }
+            
+            console.log("LiveKit room created:", roomData);
+          } catch (roomError) {
+            console.error("Failed to create LiveKit room:", roomError);
+            toast.error("Failed to initialize video session");
+          }
+          
+          console.log("Session data loaded:", sessionData);
+        } else {
+          toast.error("Session not found");
+          onNavigate("/mock-interviews");
+        }
+      } catch (error) {
+        console.error("Failed to fetch session:", error);
+        toast.error("Failed to load interview session");
+        onNavigate("/mock-interviews");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchToken();
-  }, []);
+    
+    fetchSession();
+  }, [interviewId]);
 
   // useEffect(() => {
   //   if (!interview) {
