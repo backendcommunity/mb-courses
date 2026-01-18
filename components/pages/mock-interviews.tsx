@@ -157,7 +157,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       style: "",
       difficulty: "",
       duration: 15,
-      format: "",
+      format: "audio",
     });
 
   const [templateFormData, setTemplateFormData] = useState<TemplateFormData>({
@@ -277,9 +277,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
     try {
       setCreating(true);
-      const result = await store.scheduleInterviewFromTemplate(templateId, {
-        scheduledTime: new Date().toISOString(),
-      });
+      const result = await store.scheduleInterviewFromTemplate(templateId, {});
 
       if (!result) {
         toast.error("Failed to start interview");
@@ -289,8 +287,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       toast.success("Interview started successfully!");
       setIsBookingDialogOpen(false);
 
-      if (result.interview?.id) {
-        onNavigate(`/mock-interviews/${result.interview.id}`);
+      if (result.session?.id) {
+        onNavigate(`/mock-interviews/${result.session.id}`);
       }
     } catch (error) {
       toast.error("Failed to start interview");
@@ -337,19 +335,13 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
       // Start the interview by scheduling it with immediate time
       // This should create and return a session
-      const result = await store.scheduleInterviewFromTemplate(
-        interview.templateId,
-        {
-          scheduledTime: new Date().toISOString(),
-          interviewConfig: interview.interviewConfig
-            ? JSON.parse(interview.interviewConfig)
-            : undefined,
-        }
-      );
+      const result = await store.createMockInterviewRoom(interview.id);
+
+      console.log("Join Interview - Room Creation Result:", result);
 
       if (result?.session?.id) {
         // Navigate to the session page
-        onNavigate(`/mock-interviews/sessions/${result.session.id}`);
+        onNavigate(`/mock-interviews/${result.session.id}`);
       } else {
         toast.error("Failed to start interview session. Please try again.");
         console.error("No session returned from API:", result);
@@ -414,32 +406,34 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
         scheduledTime: new Date().toISOString(),
       });
 
-      if (result) {
-        toast.success("Interview created and scheduled!");
-        setIsCreateInterviewDialogOpen(false);
-        setCustomInterviewData({
-          company: "",
-          position: "",
-          seniority: "",
-          description: "",
-          style: "",
-          difficulty: "",
-          duration: 15,
-          format: "",
-        });
-
-        // Reload data
-        await loadTemplates();
-        await loadBookedInterviews();
-        await loadStats();
-
-        // Switch to booked tab to show the new interview
-        setActiveTab("booked");
-
-        if (result.interview?.id) {
-          onNavigate(`/mock-interviews/${result.interview.id}`);
-        }
+      if (!result) {
+        toast.error("Failed to create interview");
+        return;
       }
+      toast.success("Interview created and scheduled!");
+      setIsCreateInterviewDialogOpen(false);
+      setCustomInterviewData({
+        company: "",
+        position: "",
+        seniority: "",
+        description: "",
+        style: "",
+        difficulty: "",
+        duration: 15,
+        format: "",
+      });
+
+      // Reload data
+      await loadTemplates();
+      await loadBookedInterviews();
+      await loadStats();
+
+      // Switch to booked tab to show the new interview
+      setActiveTab("booked");
+
+      // onNavigate(`/mock-interviews/${result.interview.id}`);
+      setSelectedTemplate(result.template);
+      setIsBookingDialogOpen(true);
     } catch (error) {
       toast.error("Failed to create interview");
     } finally {
@@ -637,7 +631,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
+                {/* <div className="grid gap-2">
                   <Label htmlFor="format" className="flex items-center gap-2">
                     <Layout className="h-4 w-4 text-muted-foreground" />
                     Format
@@ -655,6 +649,28 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                       <SelectItem value="video">Video</SelectItem>
                       <SelectItem value="audio">Audio</SelectItem>
                       <SelectItem value="text">Text</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div> */}
+
+                <div className="grid gap-2">
+                  <Label htmlFor="duration" className="flex items-center gap-2">
+                    <Layout className="h-4 w-4 text-muted-foreground" />
+                    Duration
+                  </Label>
+                  <Select
+                    value={customInterviewData.duration + ""}
+                    onValueChange={(value) =>
+                      handleCustomInterviewChange("duration", value)
+                    }
+                  >
+                    <SelectTrigger id="duration">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="60">60</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -705,7 +721,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             </DialogContent>
           </Dialog>
 
-          <Dialog
+          {/* <Dialog
             open={isCreateTemplateDialogOpen}
             onOpenChange={setIsCreateTemplateDialogOpen}
           >
@@ -828,7 +844,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
 
           <div className="flex items-center gap-2">
             <Video className="h-5 w-5 text-primary" />
@@ -1186,10 +1202,26 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                           <Badge variant="outline">{interview.status}</Badge>
                         </div>
                       </div>
-                      <Button onClick={() => handleJoinInterview(interview)}>
-                        <Video className="h-4 w-4 mr-2" />
-                        Join Interview
-                      </Button>
+
+                      {!interview.scheduledTime ? (
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setSelectedTemplate(interview.template);
+                            setIsBookingDialogOpen(true);
+                          }}
+                        >
+                          <Video className="h-4 w-4 mr-2" />
+                          Schedule Interview
+                        </Button>
+                      ) : new Date(interview.scheduledTime) > new Date() ? (
+                        <Badge variant={"destructive"}>Upcoming</Badge>
+                      ) : (
+                        <Button onClick={() => handleJoinInterview(interview)}>
+                          <Video className="h-4 w-4 mr-2" />
+                          Join Interview
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                 </Card>

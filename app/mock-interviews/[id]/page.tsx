@@ -18,7 +18,7 @@ export default function MockInterviewSessionPageRoute({}) {
 
   return (
     <DashboardLayout>
-      <MockInterviewSessionPage interviewId={id} onNavigate={handleNavigate} />
+      <MockInterviewSessionPage sessionId={id} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }

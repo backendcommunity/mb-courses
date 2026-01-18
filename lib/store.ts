@@ -140,7 +140,7 @@ interface AppState {
   ) => any;
   scheduleInterviewFromTemplate: (
     id: string,
-    data: { scheduledTime: string; interviewConfig?: any }
+    data: { scheduledTime?: string; interviewConfig?: any }
   ) => any;
   scheduleInterviewFromJD: (data: {
     company: string;
@@ -203,7 +203,7 @@ interface AppState {
     }
   ) => any;
   executeCode: (payload: { language: string; code: string }) => any;
-  createMockInterviewRoom: (userInterviewId: string, id: string) => any;
+  createMockInterviewRoom: (userInterviewId: string) => any;
 
   // Force re-render trigger
   version: number;
@@ -509,7 +509,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   createInterviewRoom: async (sessionId: string, withAgent: boolean = true) => {
     const { data } = await api.post(
-      `/mock-interviews/sessions/${sessionId}/room?agent=${withAgent}`
+      `/mock-interviews/${sessionId}/room?agent=${withAgent}`
     );
     return data?.data;
   },
@@ -593,9 +593,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
-  createMockInterviewRoom: async (userInterviewId: string, id: string) => {
+  createMockInterviewRoom: async (userInterviewId: string) => {
     const { data } = await api.post(
-      "/mock-interviews/" + userInterviewId + "/sessions/" + id + "/room"
+      "/mock-interviews/" + userInterviewId + "/room"
     );
 
     return data?.data;
@@ -603,7 +603,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   scheduleInterviewFromTemplate: async (
     id: string,
-    payload: { scheduledTime: string; interviewConfig?: any }
+    payload: { scheduledTime?: string; interviewConfig?: any }
   ) => {
     const { data } = await api.post(
       `/mock-interviews/schedules/${id}`,

@@ -18,6 +18,7 @@ export function InterviewStage() {
           key={track.publication.trackSid}
           className="rounded-lg overflow-hidden"
         >
+          <div>{track.publication.kind} asjkasjka</div>
           {track.publication.kind === "video" && (
             <div className="relative">
               {track.participant.identity ===
@@ -29,6 +30,7 @@ export function InterviewStage() {
               <VideoTrack trackRef={track} />
             </div>
           )}
+
           {track.publication.kind === "audio" && (
             <AudioTrack trackRef={track} />
           )}

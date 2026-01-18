@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRoomContext, useLocalParticipant } from "@livekit/components-react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,7 +43,7 @@ export function CustomMediaControls({
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } =
     useLocalParticipant();
 
-  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
 
   const toggleMicrophone = useCallback(async () => {
     if (localParticipant) {
@@ -57,10 +57,47 @@ export function CustomMediaControls({
     }
   }, [localParticipant, isCameraEnabled]);
 
+  // Mute/unmute all remote audio tracks
   const toggleSpeaker = useCallback(() => {
-    setIsMuted(!isMuted);
-    // In a real implementation, you would mute/unmute the audio output
-  }, [isMuted]);
+    const newMutedState = !isSpeakerMuted;
+    setIsSpeakerMuted(newMutedState);
+
+    // Iterate through all remote participants and mute/unmute their audio tracks
+    room.remoteParticipants.forEach((participant) => {
+      participant.audioTrackPublications.forEach((publication) => {
+        if (publication.track) {
+          // Set the track's volume (0 = muted, 1 = full volume)
+          publication.track.setVolume(newMutedState ? 0 : 1);
+        }
+      });
+    });
+
+    // Also control any audio elements rendered by RoomAudioRenderer
+    const audioElements = document.querySelectorAll("audio");
+    audioElements.forEach((audio) => {
+      audio.muted = newMutedState;
+    });
+  }, [isSpeakerMuted, room]);
+
+  // Apply mute state when new participants join
+  useEffect(() => {
+    if (!isSpeakerMuted) return;
+
+    const handleTrackSubscribed = () => {
+      room.remoteParticipants.forEach((participant) => {
+        participant.audioTrackPublications.forEach((publication) => {
+          if (publication.track) {
+            publication.track.setVolume(0);
+          }
+        });
+      });
+    };
+
+    room.on("trackSubscribed", handleTrackSubscribed);
+    return () => {
+      room.off("trackSubscribed", handleTrackSubscribed);
+    };
+  }, [isSpeakerMuted, room]);
 
   const handleDisconnect = useCallback(() => {
     room.disconnect();
@@ -97,7 +134,9 @@ export function CustomMediaControls({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-card border-border">
-            <p>{isMicrophoneEnabled ? "Mute microphone" : "Unmute microphone"}</p>
+            <p>
+              {isMicrophoneEnabled ? "Mute microphone" : "Unmute microphone"}
+            </p>
           </TooltipContent>
         </Tooltip>
 
@@ -136,12 +175,12 @@ export function CustomMediaControls({
               onClick={toggleSpeaker}
               className={cn(
                 "w-12 h-12 rounded-xl transition-all duration-200",
-                !isMuted
+                !isSpeakerMuted
                   ? "bg-secondary hover:bg-secondary/80 text-foreground"
                   : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
               )}
             >
-              {!isMuted ? (
+              {!isSpeakerMuted ? (
                 <Volume2 className="w-5 h-5" />
               ) : (
                 <VolumeX className="w-5 h-5" />
@@ -149,7 +188,7 @@ export function CustomMediaControls({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-card border-border">
-            <p>{!isMuted ? "Mute speaker" : "Unmute speaker"}</p>
+            <p>{!isSpeakerMuted ? "Mute speaker" : "Unmute speaker"}</p>
           </TooltipContent>
         </Tooltip>
 

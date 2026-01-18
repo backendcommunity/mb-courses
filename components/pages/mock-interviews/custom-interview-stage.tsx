@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
   useParticipants,
   useTracks,
   useLocalParticipant,
   VideoTrack,
-  AudioTrack,
   useConnectionState,
-  useRoomContext,
+  AudioTrack,
 } from "@livekit/components-react";
 import { ConnectionState, Track } from "livekit-client";
 import { cn } from "@/lib/utils";
@@ -47,29 +45,34 @@ export function CustomInterviewStage({ className }: CustomInterviewStageProps) {
       t.source === Track.Source.Camera
   );
 
+  // Get remote audio track for playback
   const remoteAudioTrack = tracks.find(
     (t) =>
       t.participant.identity !== localParticipant?.identity &&
       t.source === Track.Source.Microphone
   );
 
+  const hasRemoteAudio = !!remoteAudioTrack;
+
   return (
     <div className={cn("relative w-full h-full min-h-[400px]", className)}>
       {/* Main Video Area - AI Interviewer */}
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,12%)] to-[hsl(222,25%,8%)] rounded-2xl overflow-hidden">
+        {/* Remote Audio - Always render when available (AI agent may be audio-only) */}
+        {remoteAudioTrack && <AudioTrack trackRef={remoteAudioTrack} />}
+
         {remoteVideoTrack ? (
           <div className="w-full h-full">
             <VideoTrack
               trackRef={remoteVideoTrack}
               className="w-full h-full object-cover"
             />
-            {/* Remote Audio */}
-            {remoteAudioTrack && <AudioTrack trackRef={remoteAudioTrack} />}
           </div>
         ) : (
           <AIInterviewerPlaceholder
             isConnected={isConnected}
             participantName={remoteParticipant?.identity}
+            hasAudio={hasRemoteAudio}
           />
         )}
 
@@ -136,9 +139,11 @@ export function CustomInterviewStage({ className }: CustomInterviewStageProps) {
 function AIInterviewerPlaceholder({
   isConnected,
   participantName,
+  hasAudio,
 }: {
   isConnected: boolean;
   participantName?: string;
+  hasAudio?: boolean;
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -192,7 +197,11 @@ function AIInterviewerPlaceholder({
           {participantName || "Kap AI Interviewer"}
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {isConnected ? "Ready to interview" : "Connecting to session..."}
+          {!isConnected
+            ? "Connecting to session..."
+            : hasAudio
+            ? "Speaking..."
+            : "Ready to interview"}
         </p>
       </div>
 
@@ -202,11 +211,15 @@ function AIInterviewerPlaceholder({
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="w-1 bg-primary rounded-full animate-pulse"
+              className={cn(
+                "w-1 rounded-full transition-all",
+                hasAudio
+                  ? "bg-green-500 animate-[audioWave_0.5s_ease-in-out_infinite]"
+                  : "bg-primary/50 animate-pulse"
+              )}
               style={{
-                height: `${Math.random() * 20 + 8}px`,
+                height: hasAudio ? `${12 + i * 4}px` : "8px",
                 animationDelay: `${i * 0.1}s`,
-                animationDuration: "0.8s",
               }}
             />
           ))}

@@ -3,24 +3,22 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   LiveKitRoom,
+  useVoiceAssistant,
+  BarVisualizer,
   RoomAudioRenderer,
+  VoiceAssistantControlBar,
   useConnectionState,
+  useTracks,
+  useParticipants,
+  useLocalParticipant,
+  VideoTrack,
+  AudioTrack,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
-import { ConnectionState } from "livekit-client";
-import {
-  getMockInterviewById,
-  getInterviewQuestions,
-} from "@/lib/mock-interview-data";
+import { ConnectionState, Track, RoomEvent } from "livekit-client";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
-
-// Custom Components
-import { CustomInterviewStage } from "./mock-interviews/custom-interview-stage";
-import { CustomMediaControls } from "./mock-interviews/custom-media-controls";
-import { InterviewTranscriptPanel } from "./mock-interviews/interview-transcript-panel";
-import { InterviewHeader } from "./mock-interviews/interview-header";
-import { InterviewQuestionCard } from "./mock-interviews/interview-question-card";
+import { cn } from "@/lib/utils";
 
 // UI Components
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,31 +26,448 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   AlertCircle,
   Loader2,
   MessageSquare,
   HelpCircle,
   FileText,
+  Bot,
+  User,
+  Wifi,
+  WifiOff,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  PhoneOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
+// Custom Components
+import { InterviewTranscriptPanel } from "./mock-interviews/interview-transcript-panel";
+import { InterviewHeader } from "./mock-interviews/interview-header";
+import { InterviewQuestionCard } from "./mock-interviews/interview-question-card";
+
+// Types
+interface InterviewSession {
+  id: string;
+  title?: string;
+  status: string;
+  scheduledTime?: string;
+  duration?: number;
+  template?: {
+    id: string;
+    name: string;
+    difficulty: string;
+    duration: string;
+    topics?: string[];
+    description?: string;
+  };
+  questions?: InterviewQuestion[];
+  interviewConfig?: {
+    difficulty?: string;
+    topics?: string[];
+    duration?: number;
+  };
+}
+
+interface InterviewQuestion {
+  id: string;
+  question: string;
+  type: string;
+  difficulty: string;
+  timeLimit: number;
+}
+
 interface MockInterviewSessionProps {
-  interviewId: string;
+  sessionId: string;
   onNavigate: (path: string) => void;
 }
 
-// Inner component that uses LiveKit hooks
+// =============================================================================
+// VOICE ASSISTANT STAGE - Handles AI Agent Audio/Video
+// =============================================================================
+function VoiceAssistantStage() {
+  const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full">
+      {/* AI Avatar with Audio Visualizer */}
+      <div className="relative">
+        {/* Outer glow rings */}
+        <div className="absolute inset-0 -m-12">
+          <div
+            className={cn(
+              "w-48 h-48 rounded-full border-2 border-primary/20",
+              state === "speaking" && "animate-ping"
+            )}
+            style={{ animationDuration: "2s" }}
+          />
+        </div>
+        <div className="absolute inset-0 -m-6">
+          <div
+            className={cn(
+              "w-36 h-36 rounded-full border border-primary/30",
+              state !== "disconnected" && "animate-pulse"
+            )}
+          />
+        </div>
+
+        {/* Main avatar with visualizer */}
+        <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-[hsl(190,83%,34%)] p-[3px]">
+          <div className="w-full h-full rounded-full bg-[hsl(222,25%,16%)] flex items-center justify-center overflow-hidden">
+            {audioTrack ? (
+              <BarVisualizer
+                state={state}
+                trackRef={audioTrack}
+                barCount={5}
+                className="w-16 h-16"
+              />
+            ) : (
+              <Bot className="w-12 h-12 text-primary" />
+            )}
+          </div>
+        </div>
+
+        {/* Status indicator */}
+        <div
+          className={cn(
+            "absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-[hsl(222,25%,16%)] flex items-center justify-center",
+            state === "speaking"
+              ? "bg-green-500"
+              : state === "listening"
+              ? "bg-blue-500"
+              : state === "connecting"
+              ? "bg-yellow-500"
+              : "bg-gray-500"
+          )}
+        >
+          <div
+            className={cn(
+              "w-2 h-2 rounded-full bg-white",
+              state !== "disconnected" && "animate-pulse"
+            )}
+          />
+        </div>
+      </div>
+
+      {/* Status Text */}
+      <div className="mt-6 text-center">
+        <h3 className="text-xl font-semibold text-white">Kap AI Interviewer</h3>
+        <p className="text-sm text-muted-foreground mt-1 capitalize">
+          {state === "speaking"
+            ? "Speaking..."
+            : state === "listening"
+            ? "Listening to you..."
+            : state === "thinking"
+            ? "Processing..."
+            : state === "connecting"
+            ? "Connecting..."
+            : "Ready"}
+        </p>
+      </div>
+
+      {/* Voice Activity Bars */}
+      <div className="flex items-center gap-1 mt-4">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "w-1 rounded-full transition-all duration-150",
+              state === "speaking"
+                ? "bg-green-500 animate-[audioWave_0.5s_ease-in-out_infinite]"
+                : state === "listening"
+                ? "bg-blue-500 animate-pulse"
+                : "bg-primary/30"
+            )}
+            style={{
+              height: state === "speaking" ? `${12 + i * 4}px` : "8px",
+              animationDelay: `${i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// INTERVIEW STAGE - Main Video/Audio Stage
+// =============================================================================
+function InterviewStage({ className }: { className?: string }) {
+  const participants = useParticipants();
+  const { localParticipant } = useLocalParticipant();
+  const connectionState = useConnectionState();
+  const isConnected = connectionState === ConnectionState.Connected;
+
+  // Get all tracks
+  const tracks = useTracks(
+    [Track.Source.Camera, Track.Source.Microphone, Track.Source.ScreenShare],
+    { onlySubscribed: true }
+  );
+
+  // Find local video track
+  const localVideoTrack = tracks.find(
+    (t) =>
+      t.participant.identity === localParticipant?.identity &&
+      t.source === Track.Source.Camera
+  );
+
+  // Find remote participant (AI agent)
+  const remoteParticipant = participants.find(
+    (p) => p.identity !== localParticipant?.identity
+  );
+
+  // Find remote tracks
+  const remoteVideoTrack = tracks.find(
+    (t) =>
+      t.participant.identity !== localParticipant?.identity &&
+      t.source === Track.Source.Camera
+  );
+
+  const remoteAudioTrack = tracks.find(
+    (t) =>
+      t.participant.identity !== localParticipant?.identity &&
+      t.source === Track.Source.Microphone
+  );
+
+  return (
+    <div className={cn("relative w-full h-full min-h-[400px]", className)}>
+      {/* Main Area - AI Interviewer */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,12%)] to-[hsl(222,25%,8%)] rounded-2xl overflow-hidden">
+        {/* CRITICAL: Render AudioTrack for remote audio playback */}
+        {remoteAudioTrack && (
+          <AudioTrack trackRef={remoteAudioTrack} volume={1} />
+        )}
+
+        {/* Video or Avatar Placeholder */}
+        {remoteVideoTrack ? (
+          <VideoTrack
+            trackRef={remoteVideoTrack}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <VoiceAssistantStage />
+        )}
+
+        {/* AI Label */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/10">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-medium text-white">
+              {remoteParticipant?.identity || "Kap AI"}
+            </span>
+            <Bot className="w-4 h-4 text-primary" />
+          </div>
+        </div>
+
+        {/* Connection Status */}
+        <div className="absolute top-4 right-4 z-10">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm border",
+              isConnected
+                ? "bg-green-500/20 border-green-500/30"
+                : "bg-yellow-500/20 border-yellow-500/30"
+            )}
+          >
+            {isConnected ? (
+              <>
+                <Wifi className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-medium text-green-400">Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-medium text-yellow-400">
+                  Connecting...
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Local Video - Picture in Picture */}
+      <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 bg-[hsl(222,25%,16%)] z-10">
+        {localVideoTrack ? (
+          <div className="relative w-full h-full">
+            <VideoTrack
+              trackRef={localVideoTrack}
+              className="w-full h-full object-cover"
+              style={{ transform: "scaleX(-1)" }}
+            />
+            <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/60 backdrop-blur-sm">
+              <User className="w-3 h-3 text-primary" />
+              <span className="text-xs font-medium text-white">You</span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <User className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-xs text-muted-foreground mt-2">
+              Camera off
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// MEDIA CONTROLS - Mic, Camera, Speaker, End Call
+// =============================================================================
+function MediaControls({ onEndInterview }: { onEndInterview: () => void }) {
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled } =
+    useLocalParticipant();
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+
+  const toggleMicrophone = useCallback(async () => {
+    await localParticipant?.setMicrophoneEnabled(!isMicrophoneEnabled);
+  }, [localParticipant, isMicrophoneEnabled]);
+
+  const toggleCamera = useCallback(async () => {
+    await localParticipant?.setCameraEnabled(!isCameraEnabled);
+  }, [localParticipant, isCameraEnabled]);
+
+  const toggleSpeaker = useCallback(() => {
+    const newMuted = !isSpeakerMuted;
+    setIsSpeakerMuted(newMuted);
+
+    // Mute all audio elements on the page
+    document.querySelectorAll("audio").forEach((audio) => {
+      audio.muted = newMuted;
+      if (!newMuted) audio.volume = 1;
+    });
+  }, [isSpeakerMuted]);
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <div className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl">
+        {/* Microphone */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMicrophone}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                isMicrophoneEnabled
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+              )}
+            >
+              {isMicrophoneEnabled ? (
+                <Mic className="w-5 h-5" />
+              ) : (
+                <MicOff className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isMicrophoneEnabled ? "Mute" : "Unmute"}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Camera */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleCamera}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                isCameraEnabled
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+              )}
+            >
+              {isCameraEnabled ? (
+                <Video className="w-5 h-5" />
+              ) : (
+                <VideoOff className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isCameraEnabled ? "Stop Video" : "Start Video"}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Speaker */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSpeaker}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                !isSpeakerMuted
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+              )}
+            >
+              {!isSpeakerMuted ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {!isSpeakerMuted ? "Mute Speaker" : "Unmute Speaker"}
+          </TooltipContent>
+        </Tooltip>
+
+        <div className="w-px h-8 bg-border/50 mx-1" />
+
+        {/* End Interview */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={onEndInterview}
+              className="w-12 h-12 rounded-xl shadow-lg shadow-destructive/20"
+            >
+              <PhoneOff className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>End Interview</TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+// =============================================================================
+// INTERVIEW ROOM - Main Room Component Inside LiveKitRoom
+// =============================================================================
 function InterviewRoom({
-  interviewId,
-  interview,
+  sessionId,
+  session,
   questions,
   currentQuestionIndex,
   setCurrentQuestionIndex,
   timeRemaining,
   onNavigate,
 }: {
-  interviewId: string;
-  interview: any;
-  questions: any[];
+  sessionId: string;
+  session: InterviewSession;
+  questions: InterviewQuestion[];
   currentQuestionIndex: number;
   setCurrentQuestionIndex: (index: number | ((prev: number) => number)) => void;
   timeRemaining: number;
@@ -71,19 +486,26 @@ function InterviewRoom({
   };
 
   const handleEndInterview = () => {
-    onNavigate(`/mock-interviews/${interviewId}/results`);
+    onNavigate(`/mock-interviews/${sessionId}/results`);
   };
 
   const handleBack = () => {
     onNavigate("/mock-interviews");
   };
 
+  const interviewTitle =
+    session?.template?.name || session?.title || "Mock Interview";
+  const interviewType =
+    session?.template?.difficulty ||
+    session?.interviewConfig?.difficulty ||
+    "Technical Interview";
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <InterviewHeader
-        interviewTitle={interview?.type?.name || "Mock Interview"}
-        interviewType={interview?.type?.difficulty || "Technical Interview"}
+        interviewTitle={interviewTitle}
+        interviewType={interviewType}
         currentQuestion={currentQuestionIndex + 1}
         totalQuestions={questions.length}
         timeRemaining={timeRemaining}
@@ -95,26 +517,27 @@ function InterviewRoom({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Video Stage */}
         <div className="flex-1 flex flex-col p-4 gap-4 min-w-0">
-          {/* Video Area */}
           <div className="flex-1 relative min-h-0">
-            <CustomInterviewStage className="w-full h-full" />
+            <InterviewStage className="w-full h-full" />
 
-            {/* Media Controls - Floating at bottom */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
-              <CustomMediaControls onEndInterview={handleEndInterview} />
+            {/* Media Controls */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <MediaControls onEndInterview={handleEndInterview} />
             </div>
           </div>
 
-          {/* Question Card - Below Video */}
-          <div className="flex-shrink-0">
-            <InterviewQuestionCard
-              question={currentQuestion}
-              questionNumber={currentQuestionIndex + 1}
-              totalQuestions={questions.length}
-              onNextQuestion={handleNextQuestion}
-              isLastQuestion={currentQuestionIndex === questions.length - 1}
-            />
-          </div>
+          {/* Question Card */}
+          {currentQuestion && (
+            <div className="flex-shrink-0">
+              <InterviewQuestionCard
+                question={currentQuestion}
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
+                onNextQuestion={handleNextQuestion}
+                isLastQuestion={currentQuestionIndex === questions.length - 1}
+              />
+            </div>
+          )}
         </div>
 
         {/* Right Panel - Sidebar */}
@@ -167,49 +590,91 @@ function InterviewRoom({
         </div>
       </div>
 
-      {/* Audio Renderer */}
+      {/* CRITICAL: RoomAudioRenderer handles all remote audio playback */}
       <RoomAudioRenderer />
     </div>
   );
 }
 
+// =============================================================================
+// MAIN PAGE COMPONENT
+// =============================================================================
 export function MockInterviewSessionPage({
-  interviewId,
+  sessionId,
   onNavigate,
 }: MockInterviewSessionProps) {
   const user = useUser();
   const store = useAppStore();
-  const [interview] = useState(() => getMockInterviewById(interviewId));
-  const [questions] = useState(() => getInterviewQuestions());
+
+  // Session state
+  const [session, setSession] = useState<InterviewSession | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(2700); // 45 minutes
+  const [timeRemaining, setTimeRemaining] = useState(2700);
+
+  // LiveKit state
   const [token, setToken] = useState<string>("");
-  const [url, setUrl] = useState<string>("");
+  const [serverUrl, setServerUrl] = useState<string>("");
+
+  // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize session - get token from backend
+  // Initialize session
   const initializeSession = useCallback(async () => {
-    if (!interviewId || !user?.id) return;
+    if (!sessionId || !user?.id) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      const { data } = await store.getMockInterviewSessionToken(interviewId);
+      // Fetch session details
+      const sessionData = await store.getInterviewSession(sessionId);
+      if (!sessionData) throw new Error("Interview session not found");
 
-      setToken(data.token);
-      setUrl(data.wsUrl || "wss://mock-interview-up2y2ttf.livekit.cloud");
+      setSession(sessionData);
+
+      // Set questions
+      if (sessionData.questions?.length > 0) {
+        setQuestions(sessionData.questions);
+      } else {
+        setQuestions([
+          {
+            id: "dynamic-1",
+            question: "The AI interviewer will guide you through the questions.",
+            type: sessionData.template?.topics?.[0] || "Technical",
+            difficulty: sessionData.template?.difficulty || "Intermediate",
+            timeLimit: 10,
+          },
+        ]);
+      }
+
+      // Set duration
+      const durationMinutes =
+        sessionData.duration ||
+        sessionData.interviewConfig?.duration ||
+        parseInt(sessionData.template?.duration || "45");
+      setTimeRemaining(durationMinutes * 60);
+
+      // Get LiveKit token
+      const tokenData = await store.getMockInterviewSessionToken(sessionId);
+      if (!tokenData?.token) throw new Error("Failed to get session token");
+
+      setToken(tokenData.token);
+      setServerUrl(
+        tokenData.wsUrl || "wss://mock-interview-up2y2ttf.livekit.cloud"
+      );
     } catch (err: any) {
       console.error("Failed to initialize session:", err);
       setError(
         err?.response?.data?.message ||
-          "Failed to initialize interview session. Please try again."
+          err?.message ||
+          "Failed to initialize interview session."
       );
     } finally {
       setIsLoading(false);
     }
-  }, [interviewId, user?.id, store]);
+  }, [sessionId, user?.id, store]);
 
   useEffect(() => {
     initializeSession();
@@ -217,12 +682,12 @@ export function MockInterviewSessionPage({
 
   // Timer countdown
   useEffect(() => {
-    if (!token) return;
+    if (!token || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          onNavigate(`/mock-interviews/${interviewId}/results`);
+          onNavigate(`/mock-interviews/${sessionId}/results`);
           return 0;
         }
         return prev - 1;
@@ -230,7 +695,7 @@ export function MockInterviewSessionPage({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [token, interviewId, onNavigate]);
+  }, [token, timeRemaining, sessionId, onNavigate]);
 
   // Loading state
   if (isLoading) {
@@ -242,9 +707,7 @@ export function MockInterviewSessionPage({
             <Loader2 className="w-8 h-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
           </div>
           <div className="text-center">
-            <h2 className="text-lg font-semibold">
-              Preparing your interview...
-            </h2>
+            <h2 className="text-lg font-semibold">Preparing your interview...</h2>
             <p className="text-sm text-muted-foreground mt-1">
               Connecting to Kap AI Interviewer
             </p>
@@ -256,7 +719,6 @@ export function MockInterviewSessionPage({
 
   // Error state
   if (error) {
-    console.error("Interview session error:", error);
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
@@ -285,8 +747,8 @@ export function MockInterviewSessionPage({
     );
   }
 
-  // Interview not found
-  if (!interview) {
+  // Session not found
+  if (!session) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
@@ -298,8 +760,7 @@ export function MockInterviewSessionPage({
               <div>
                 <h2 className="text-lg font-semibold">Interview Not Found</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  The interview session you're looking for doesn't exist or has
-                  expired.
+                  The interview session doesn't exist or has expired.
                 </p>
               </div>
               <Button onClick={() => onNavigate("/mock-interviews")}>
@@ -312,23 +773,31 @@ export function MockInterviewSessionPage({
     );
   }
 
-  // Main interview room
+  // Main interview room with LiveKit
   return (
     <LiveKitRoom
       token={token}
-      serverUrl={url}
-      connect={!!token && !!url}
+      serverUrl={serverUrl}
+      connect={!!token && !!serverUrl}
       audio={true}
       video={true}
+      options={{
+        adaptiveStream: true,
+        dynacast: true,
+        publishDefaults: {
+          simulcast: false,
+          audioPreset: { maxBitrate: 48000 },
+        },
+      }}
       data-lk-theme="default"
       className="h-screen"
-      onConnected={() => console.log("Connected to LiveKit room")}
-      onDisconnected={() => console.log("Disconnected from LiveKit room")}
+      onConnected={() => console.log("✅ Connected to LiveKit room")}
+      onDisconnected={() => console.log("❌ Disconnected from LiveKit room")}
       onError={(error) => console.error("LiveKit error:", error)}
     >
       <InterviewRoom
-        interviewId={interviewId}
-        interview={interview}
+        sessionId={sessionId}
+        session={session}
         questions={questions}
         currentQuestionIndex={currentQuestionIndex}
         setCurrentQuestionIndex={setCurrentQuestionIndex}
@@ -339,7 +808,9 @@ export function MockInterviewSessionPage({
   );
 }
 
-// Tips component for the sidebar
+// =============================================================================
+// HELPER COMPONENTS
+// =============================================================================
 function InterviewTips({ questionType }: { questionType?: string }) {
   const tips: Record<string, { title: string; tips: string[] }> = {
     Conceptual: {
@@ -407,7 +878,6 @@ function InterviewTips({ questionType }: { questionType?: string }) {
           </li>
         ))}
       </ul>
-
       <div className="pt-4 border-t border-border">
         <h4 className="font-medium text-sm mb-2">General Tips</h4>
         <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -421,7 +891,6 @@ function InterviewTips({ questionType }: { questionType?: string }) {
   );
 }
 
-// Notes component for the sidebar
 function InterviewNotes() {
   const [notes, setNotes] = useState("");
 

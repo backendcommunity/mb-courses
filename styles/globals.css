@@ -144,3 +144,15 @@ body {
 .disqus_thread {
   background-color: black !important;
 }
+
+/* Audio wave animation for voice activity */
+@keyframes audioWave {
+  0%, 100% {
+    transform: scaleY(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
