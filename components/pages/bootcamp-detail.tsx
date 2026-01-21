@@ -479,74 +479,40 @@ export function BootcampDetailPage({
                 </div>
               </div>
 
+              {bootcamp?.enrolled && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs text-blue-900 dark:text-blue-100">
+                    <strong>Recording Availability:</strong> Session recordings will be available 24-48 hours after each live class.
+                  </p>
+                </div>
+              )}
+
               {bootcamp?.enrolled ? (
-                <>
-                  {!started && (
-                    <div className="space-y-2">
-                      <Badge
-                        variant="outline"
-                        className="w-full justify-center bg-green-50 text-green-700 border-green-200"
-                      >
-                        Enrolled
-                      </Badge>
-
-                      {/* TODO: Add timer to add bootcamp pages */}
-                      <Button variant={"secondary"} className="w-full">
-                        <Countdown
-                          startDate={bootcamp?.userCohort?.cohort!?.startsAt}
-                        ></Countdown>
-                      </Button>
-                    </div>
+                <div className="space-y-2">
+                  <Badge
+                    variant="outline"
+                    className="w-full justify-center bg-green-50 text-green-700 border-green-200"
+                  >
+                    Enrolled
+                  </Badge>
+                  
+                  {!started ? (
+                    <Button variant={"secondary"} className="w-full">
+                      <Countdown
+                        startDate={bootcamp?.userCohort?.cohort!?.startsAt}
+                      ></Countdown>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
+                      }
+                    >
+                      Access Bootcamp
+                    </Button>
                   )}
-                  {started &&
-                    bootcamp?.userCohort?.cohort?.status === "CLOSED" && (
-                      <div className="space-y-2">
-                        <Button
-                          className="w-full"
-                          variant={"secondary"}
-                          onClick={() =>
-                            onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
-                          }
-                        >
-                          Access Your Cohort
-                        </Button>
-                      </div>
-                      //   {bootcamp?.cohort?.status === "OPEN" && (
-                      //     <Button
-                      //       className="w-full"
-                      //       onClick={() =>
-                      //         enrollInBootcamp(bootcampId, bootcamp?.cohort?.id)
-                      //       }
-                      //     >
-                      //       Join {bootcamp?.cohort?.name} Now
-                      //     </Button>
-                      //   )}
-
-                      // </div>
-                    )}
-
-                  {started &&
-                    ["OPEN", "STARTED"].includes(
-                      bootcamp?.userCohort?.cohort?.status
-                    ) && (
-                      <div className="space-y-2">
-                        <Badge
-                          variant="outline"
-                          className="w-full justify-center bg-green-50 text-green-700 border-green-200"
-                        >
-                          Enrolled
-                        </Badge>
-                        <Button
-                          className="w-full"
-                          onClick={() =>
-                            onNavigate?.(`/bootcamps/${bootcampId}/dashboard`)
-                          }
-                        >
-                          Access Bootcamp
-                        </Button>
-                      </div>
-                    )}
-                </>
+                </div>
               ) : (
                 <Button
                   className="w-full"
@@ -631,7 +597,7 @@ export function BootcampDetailPage({
                 </div>
               </div>
 
-              {bootcamp?.userCohort?.progress >= 100 ? (
+              {bootcamp?.enrolled && bootcamp?.userCohort?.progress >= 100 ? (
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700"
                   onClick={() =>
@@ -644,7 +610,7 @@ export function BootcampDetailPage({
               ) : bootcamp?.enrolled ? (
                 <Button variant="outline" className="w-full" disabled>
                   <BadgeIcon className="mr-2 h-4 w-4" />
-                  Complete Course to Earn
+                  Complete Bootcamp to Earn
                 </Button>
               ) : (
                 <Button
