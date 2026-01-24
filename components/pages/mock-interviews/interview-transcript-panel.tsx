@@ -95,8 +95,8 @@ export function InterviewTranscriptPanel({
         speakerName: isAI
           ? "Kap AI"
           : isLocal
-          ? "You"
-          : identity || "Participant",
+            ? "You"
+            : identity || "Participant",
         text: segment.text,
         timestamp: segment.streamInfo?.timestamp || Date.now(),
         isFinal,
@@ -114,7 +114,7 @@ export function InterviewTranscriptPanel({
     // Only update state if we have changes
     if (hasNewEntries) {
       const sortedEntries = Array.from(currentMap.values()).sort(
-        (a, b) => a.timestamp - b.timestamp
+        (a, b) => a.timestamp - b.timestamp,
       );
       setEntries(sortedEntries);
 
@@ -185,7 +185,7 @@ export function InterviewTranscriptPanel({
       className={cn(
         "flex flex-col bg-card rounded-xl border border-border relative",
         "h-full max-h-full overflow-hidden",
-        className
+        className,
       )}
       style={{ minHeight: 0 }}
     >
@@ -277,7 +277,9 @@ function Message({
         <div
           className={cn(
             "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-            isAI ? "bg-primary/20 text-primary" : "bg-secondary text-foreground"
+            isAI
+              ? "bg-primary/20 text-primary"
+              : "bg-secondary text-foreground",
           )}
         >
           {isAI ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
@@ -288,14 +290,14 @@ function Message({
         className={cn(
           "flex flex-col max-w-[80%]",
           isAI ? "items-start" : "items-end",
-          !showHeader && (isAI ? "ml-11" : "mr-11")
+          !showHeader && (isAI ? "ml-11" : "mr-11"),
         )}
       >
         {showHeader && (
           <div
             className={cn(
               "flex items-center gap-2 mb-1",
-              !isAI && "flex-row-reverse"
+              !isAI && "flex-row-reverse",
             )}
           >
             <span className="text-xs font-medium">{entry.speakerName}</span>
@@ -308,7 +310,7 @@ function Message({
             isAI
               ? "bg-secondary text-foreground rounded-tl-none"
               : "bg-primary text-primary-foreground rounded-tr-none",
-            !entry.isFinal && "opacity-70"
+            !entry.isFinal && "opacity-70",
           )}
         >
           <p className="leading-relaxed">
