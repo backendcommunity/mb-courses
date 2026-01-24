@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   LiveKitRoom,
   useVoiceAssistant,
@@ -51,7 +51,10 @@ import {
 } from "lucide-react";
 
 // Custom Components
-import { InterviewTranscriptPanel } from "./mock-interviews/interview-transcript-panel";
+import {
+  InterviewTranscriptPanel,
+  TranscriptEntry,
+} from "./mock-interviews/interview-transcript-panel";
 import { InterviewHeader } from "./mock-interviews/interview-header";
 import { InterviewQuestionCard } from "./mock-interviews/interview-question-card";
 
@@ -327,7 +330,13 @@ function InterviewStage({ className }: { className?: string }) {
 // =============================================================================
 // MEDIA CONTROLS - Mic, Camera, Speaker, End Call
 // =============================================================================
-function MediaControls({ onEndInterview }: { onEndInterview: () => void }) {
+function MediaControls({
+  onEndInterview,
+  isEnding,
+}: {
+  onEndInterview: () => void;
+  isEnding?: boolean;
+}) {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } =
     useLocalParticipant();
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
@@ -441,12 +450,19 @@ function MediaControls({ onEndInterview }: { onEndInterview: () => void }) {
               variant="destructive"
               size="icon"
               onClick={onEndInterview}
+              disabled={isEnding}
               className="w-12 h-12 rounded-xl shadow-lg shadow-destructive/20"
             >
-              <PhoneOff className="w-5 h-5" />
+              {isEnding ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <PhoneOff className="w-5 h-5" />
+              )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>End Interview</TooltipContent>
+          <TooltipContent>
+            {isEnding ? "Ending..." : "End Interview"}
+          </TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>
@@ -473,9 +489,14 @@ function InterviewRoom({
   timeRemaining: number;
   onNavigate: (path: string) => void;
 }) {
+  const store = useAppStore();
   const connectionState = useConnectionState();
   const isConnected = connectionState === ConnectionState.Connected;
   const currentQuestion = questions[currentQuestionIndex];
+
+  // Ref that the transcript panel will update directly
+  const transcriptRef = useRef<TranscriptEntry[]>([]);
+  const [isEnding, setIsEnding] = useState(false);
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -485,9 +506,38 @@ function InterviewRoom({
     }
   };
 
-  const handleEndInterview = () => {
-    onNavigate(`/mock-interviews/${sessionId}/results`);
-  };
+  const handleEndInterview = useCallback(async () => {
+    if (isEnding) return;
+    setIsEnding(true);
+
+    // Read directly from ref - the panel updates this ref whenever transcript changes
+    const allTranscript = transcriptRef.current || [];
+    const finalTranscript = allTranscript.filter((t) => t.isFinal);
+
+    console.log("=== END INTERVIEW ===");
+    console.log("Total transcript entries:", allTranscript.length);
+    console.log("Final transcript entries:", finalTranscript.length);
+    console.log("Transcript data:", JSON.stringify(finalTranscript, null, 2));
+
+    try {
+      // End session and submit transcript
+      await store.endInterviewSession(
+        sessionId,
+        finalTranscript.map((t) => ({
+          speaker: t.speaker,
+          text: t.text,
+          timestamp: t.timestamp,
+        }))
+      );
+
+      // Navigate to results
+      onNavigate(`/mock-interviews/${sessionId}/results`);
+    } catch (error) {
+      console.error("Failed to end interview:", error);
+      // Navigate anyway - transcript may already be saved incrementally
+      onNavigate(`/mock-interviews/${sessionId}/results`);
+    }
+  }, [isEnding, store, sessionId, onNavigate]);
 
   const handleBack = () => {
     onNavigate("/mock-interviews");
@@ -522,7 +572,10 @@ function InterviewRoom({
 
             {/* Media Controls */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-              <MediaControls onEndInterview={handleEndInterview} />
+              <MediaControls
+                onEndInterview={handleEndInterview}
+                isEnding={isEnding}
+              />
             </div>
           </div>
 
@@ -542,7 +595,10 @@ function InterviewRoom({
 
         {/* Right Panel - Sidebar */}
         <div className="w-[380px] flex-shrink-0 border-l border-border bg-card/50 hidden lg:flex flex-col">
-          <Tabs defaultValue="transcript" className="flex-1 flex flex-col">
+          <Tabs
+            defaultValue="transcript"
+            className="flex-1 flex flex-col min-h-0"
+          >
             <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-4 pt-2">
               <TabsTrigger
                 value="transcript"
@@ -567,11 +623,20 @@ function InterviewRoom({
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="transcript" className="flex-1 m-0 p-0">
-              <InterviewTranscriptPanel className="h-full border-0 rounded-none" />
+            <TabsContent
+              value="transcript"
+              className="flex-1 m-0 p-0 min-h-0 overflow-hidden"
+            >
+              <InterviewTranscriptPanel
+                className="h-full border-0 rounded-none"
+                transcriptRef={transcriptRef}
+              />
             </TabsContent>
 
-            <TabsContent value="tips" className="flex-1 m-0 overflow-hidden">
+            <TabsContent
+              value="tips"
+              className="flex-1 m-0 min-h-0 overflow-hidden"
+            >
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
                   <InterviewTips questionType={currentQuestion?.type} />
@@ -579,7 +644,10 @@ function InterviewRoom({
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="notes" className="flex-1 m-0 overflow-hidden">
+            <TabsContent
+              value="notes"
+              className="flex-1 m-0 min-h-0 overflow-hidden"
+            >
               <ScrollArea className="h-full">
                 <div className="p-4">
                   <InterviewNotes />
@@ -641,7 +709,8 @@ export function MockInterviewSessionPage({
         setQuestions([
           {
             id: "dynamic-1",
-            question: "The AI interviewer will guide you through the questions.",
+            question:
+              "The AI interviewer will guide you through the questions.",
             type: sessionData.template?.topics?.[0] || "Technical",
             difficulty: sessionData.template?.difficulty || "Intermediate",
             timeLimit: 10,
@@ -707,7 +776,9 @@ export function MockInterviewSessionPage({
             <Loader2 className="w-8 h-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
           </div>
           <div className="text-center">
-            <h2 className="text-lg font-semibold">Preparing your interview...</h2>
+            <h2 className="text-lg font-semibold">
+              Preparing your interview...
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Connecting to Kap AI Interviewer
             </p>

@@ -115,6 +115,17 @@ interface AppState {
   getProject30Achievements: (slug: string) => any;
   getProjectAchievements: (slug: string) => any;
   getMockInterviewSessionToken: (id: string) => any;
+  getSessionReport: (sessionId: string) => any;
+  getSessionTranscript: (sessionId: string) => any;
+  endInterviewSession: (
+    sessionId: string,
+    transcript?: Array<{
+      speaker: "interviewer" | "candidate";
+      text: string;
+      timestamp: number;
+    }>
+  ) => any;
+  retryReportGeneration: (sessionId: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -420,6 +431,55 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   async getMockInterviewSessionToken(id) {
     const { data } = await api.get(`/mock-interviews/sessions/${id}/token`);
+    return data?.data;
+  },
+
+  getSessionReport: async (sessionId: string) => {
+    const { data } = await api.get(
+      `/mock-interviews/sessions/${sessionId}/report`
+    );
+    return data?.data;
+  },
+
+  getSessionTranscript: async (sessionId: string) => {
+    const { data } = await api.get(
+      `/mock-interviews/sessions/${sessionId}/transcript`
+    );
+    return data?.data;
+  },
+
+  endInterviewSession: async (
+    sessionId: string,
+    transcript?: Array<{
+      speaker: "interviewer" | "candidate";
+      text: string;
+      timestamp: number;
+    }>
+  ) => {
+    // If transcript provided, batch append it first
+    if (transcript && transcript.length > 0) {
+      await api.post(
+        `/mock-interviews/sessions/${sessionId}/transcript/batch`,
+        {
+          entries: transcript.map((t) => ({
+            role: t.speaker,
+            content: t.text,
+            timestamp: new Date(t.timestamp).toISOString(),
+          })),
+        }
+      );
+    }
+    // End the session room
+    const { data } = await api.delete(
+      `/mock-interviews/sessions/${sessionId}/room`
+    );
+    return data?.data;
+  },
+
+  retryReportGeneration: async (sessionId: string) => {
+    const { data } = await api.post(
+      `/mock-interviews/sessions/${sessionId}/report/retry`
+    );
     return data?.data;
   },
 

@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import {
   useTranscriptions,
   useLocalParticipant,
@@ -9,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Bot, User, ChevronDown, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface TranscriptEntry {
+export interface TranscriptEntry {
   id: string;
   speaker: "interviewer" | "candidate";
   speakerName: string;
@@ -20,16 +26,18 @@ interface TranscriptEntry {
 
 interface InterviewTranscriptPanelProps {
   className?: string;
-  onTranscriptUpdate?: (transcript: TranscriptEntry[]) => void;
+  transcriptRef: React.RefObject<TranscriptEntry[] | null>;
 }
 
 export function InterviewTranscriptPanel({
   className,
-  onTranscriptUpdate,
+  transcriptRef,
 }: InterviewTranscriptPanelProps) {
   const [entries, setEntries] = useState<TranscriptEntry[]>([]);
-  const [autoScroll, setAutoScroll] = useState(true);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const isScrollingProgrammaticallyRef = useRef(false);
 
   // Use refs to track processed data without causing re-renders
   const processedIdsRef = useRef<Set<string>>(new Set());
@@ -39,11 +47,13 @@ export function InterviewTranscriptPanel({
   const { localParticipant } = useLocalParticipant();
 
   // Store local participant identity in a ref to avoid dependency issues
-  const localIdentityRef = useRef<string | undefined>();
+  const localIdentityRef = useRef<string | undefined>(undefined);
   localIdentityRef.current = localParticipant?.identity;
 
   // Process transcriptions
   useEffect(() => {
+    console.log(transcriptions, "Transcriptions received in Transcript Panel");
+
     if (!transcriptions || transcriptions.length === 0) return;
 
     let hasNewEntries = false;
@@ -51,39 +61,52 @@ export function InterviewTranscriptPanel({
 
     for (const segment of transcriptions) {
       // Generate stable ID
-      const segmentId = segment.id || `${segment.participant?.identity}-${segment.firstReceivedTime}`;
+      const segmentId =
+        segment.streamInfo?.id ||
+        `${segment.participantInfo?.identity}-${Date.now()}`;
 
       // Skip if already processed as final
       if (processedIdsRef.current.has(segmentId)) {
         continue;
       }
 
+      const isFinal =
+        segment.streamInfo?.attributes?.["lk.transcription_final"] === "true";
+
       const existing = currentMap.get(segmentId);
 
       // Skip if text hasn't changed and already exists
-      if (existing && existing.text === segment.text && existing.isFinal === segment.final) {
+      if (
+        existing &&
+        existing.text === segment.text &&
+        existing.isFinal === isFinal
+      ) {
         continue;
       }
 
       // Determine speaker type
-      const identity = segment.participant?.identity || "";
+      const identity = segment.participantInfo?.identity || "";
       const isAI = /agent|kap|ai|interviewer/i.test(identity);
       const isLocal = identity === localIdentityRef.current;
 
       const entry: TranscriptEntry = {
         id: segmentId,
         speaker: isAI ? "interviewer" : "candidate",
-        speakerName: isAI ? "Kap AI" : isLocal ? "You" : identity || "Participant",
+        speakerName: isAI
+          ? "Kap AI"
+          : isLocal
+          ? "You"
+          : identity || "Participant",
         text: segment.text,
-        timestamp: segment.firstReceivedTime,
-        isFinal: segment.final,
+        timestamp: segment.streamInfo?.timestamp || Date.now(),
+        isFinal,
       };
 
       currentMap.set(segmentId, entry);
       hasNewEntries = true;
 
       // Mark as fully processed if final
-      if (segment.final) {
+      if (isFinal) {
         processedIdsRef.current.add(segmentId);
       }
     }
@@ -94,62 +117,100 @@ export function InterviewTranscriptPanel({
         (a, b) => a.timestamp - b.timestamp
       );
       setEntries(sortedEntries);
+
+      // Update the external ref that parent can access
+      if (transcriptRef && "current" in transcriptRef) {
+        (transcriptRef as React.MutableRefObject<TranscriptEntry[]>).current =
+          sortedEntries;
+      }
     }
-  }, [transcriptions]);
+  }, [transcriptions, transcriptRef]);
 
-  // Notify parent (debounced)
-  const notifyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  useEffect(() => {
-    if (!onTranscriptUpdate || entries.length === 0) return;
+  // Scroll to bottom function
+  const scrollToBottom = useCallback((smooth = true) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-    clearTimeout(notifyTimeoutRef.current);
-    notifyTimeoutRef.current = setTimeout(() => {
-      onTranscriptUpdate(entries);
-    }, 200);
+    isScrollingProgrammaticallyRef.current = true;
 
-    return () => clearTimeout(notifyTimeoutRef.current);
-  }, [entries, onTranscriptUpdate]);
+    const targetScroll = container.scrollHeight - container.clientHeight;
 
-  // Auto-scroll
-  useEffect(() => {
-    if (autoScroll && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (smooth) {
+      container.scrollTo({
+        top: targetScroll,
+        behavior: "smooth",
+      });
+      setTimeout(() => {
+        isScrollingProgrammaticallyRef.current = false;
+      }, 500);
+    } else {
+      container.scrollTop = targetScroll;
+      isScrollingProgrammaticallyRef.current = false;
     }
-  }, [entries.length, autoScroll]);
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-    setAutoScroll(isAtBottom);
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    setAutoScroll(true);
+  // Auto-scroll when entries change
+  useLayoutEffect(() => {
+    if (!shouldAutoScroll || entries.length === 0) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    queueMicrotask(() => {
+      scrollToBottom(false);
+    });
+  }, [entries, shouldAutoScroll, scrollToBottom]);
+
+  // Handle manual scroll - detect if user scrolled away from bottom
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (isScrollingProgrammaticallyRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const isAtBottom = distanceFromBottom < 50;
+
+    setShouldAutoScroll(isAtBottom);
   }, []);
+
+  const handleScrollToBottomClick = useCallback(() => {
+    setShouldAutoScroll(true);
+    scrollToBottom(true);
+  }, [scrollToBottom]);
 
   return (
     <div
       className={cn(
-        "flex flex-col h-full bg-card rounded-xl border border-border overflow-hidden relative",
+        "flex flex-col bg-card rounded-xl border border-border relative",
+        "h-full max-h-full overflow-hidden",
         className
       )}
+      style={{ minHeight: 0 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/30">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/30">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-sm">Live Transcript</h3>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs text-muted-foreground">Recording</span>
+          <span className="text-xs text-muted-foreground">
+            {entries.length > 0 ? `${entries.length} messages` : "Recording"}
+          </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4" onScroll={handleScroll}>
-        <div className="py-4 space-y-4">
+      {/* Scrollable content area */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ minHeight: 0 }}
+        onScroll={handleScroll}
+      >
+        <div ref={contentRef} className="px-4 py-4 space-y-4">
           {entries.length === 0 ? (
             <EmptyState />
           ) : (
@@ -157,18 +218,24 @@ export function InterviewTranscriptPanel({
               <Message
                 key={entry.id}
                 entry={entry}
-                showHeader={idx === 0 || entry.speaker !== entries[idx - 1]?.speaker}
+                showHeader={
+                  idx === 0 || entry.speaker !== entries[idx - 1]?.speaker
+                }
               />
             ))
           )}
-          <div ref={bottomRef} />
         </div>
       </div>
 
-      {/* Scroll button */}
-      {!autoScroll && entries.length > 0 && (
+      {/* Scroll to bottom button */}
+      {!shouldAutoScroll && entries.length > 0 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
-          <Button size="sm" variant="secondary" onClick={scrollToBottom} className="shadow-lg">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleScrollToBottomClick}
+            className="shadow-lg"
+          >
             <ChevronDown className="w-4 h-4 mr-1" />
             New messages
           </Button>
@@ -191,7 +258,13 @@ function EmptyState() {
   );
 }
 
-function Message({ entry, showHeader }: { entry: TranscriptEntry; showHeader: boolean }) {
+function Message({
+  entry,
+  showHeader,
+}: {
+  entry: TranscriptEntry;
+  showHeader: boolean;
+}) {
   const isAI = entry.speaker === "interviewer";
   const time = new Date(entry.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
@@ -219,7 +292,12 @@ function Message({ entry, showHeader }: { entry: TranscriptEntry; showHeader: bo
         )}
       >
         {showHeader && (
-          <div className={cn("flex items-center gap-2 mb-1", !isAI && "flex-row-reverse")}>
+          <div
+            className={cn(
+              "flex items-center gap-2 mb-1",
+              !isAI && "flex-row-reverse"
+            )}
+          >
             <span className="text-xs font-medium">{entry.speakerName}</span>
             <span className="text-xs text-muted-foreground">{time}</span>
           </div>

@@ -22,7 +22,7 @@ export default function MockInterviewResultsPageRoute({
   return (
     <DashboardLayout>
       <MockInterviewResultsPage
-        interviewId={params.id}
+        sessionId={params.id}
         onNavigate={handleNavigate}
       />
     </DashboardLayout>
