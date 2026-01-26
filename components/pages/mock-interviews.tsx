@@ -91,6 +91,7 @@ interface UserInterview {
   status: string;
   createdAt: string;
   template: InterviewTemplate;
+  completedSessionId?: string;
 }
 
 interface CustomInterviewFormData {
@@ -251,6 +252,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       setLoading(true);
       const data = await store.getUserCompletedInterviews();
       setCompletedInterviews(data || []);
+
+      console.log("Completed Interviews:", data);
     } catch (error) {
       toast.error("Failed to load completed interviews");
     } finally {
@@ -306,7 +309,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
       setCreating(true);
       const isoDate = new Date(
-        `${scheduledDate}T${scheduledTime}:00`
+        `${scheduledDate}T${scheduledTime}:00`,
       ).toISOString();
 
       const result = await store.scheduleInterviewFromTemplate(templateId, {
@@ -354,20 +357,20 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
-  const handleViewResults = (interviewId: string) => {
-    onNavigate(`/mock-interviews/${interviewId}/results`);
+  const handleViewResults = (sessionId: string) => {
+    onNavigate(`/mock-interviews/${sessionId}/results`);
   };
 
   const handleCustomInterviewChange = (
     field: keyof CustomInterviewFormData,
-    value: string | number
+    value: string | number,
   ) => {
     setCustomInterviewData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTemplateFormChange = (
     field: keyof TemplateFormData,
-    value: string | number | string[]
+    value: string | number | string[],
   ) => {
     setTemplateFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -948,7 +951,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     onValueChange={(value) =>
                       handleFilterChange(
                         "difficulty",
-                        value === "all" ? "" : value
+                        value === "all" ? "" : value,
                       )
                     }
                   >
@@ -1184,13 +1187,13 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(
-                                  interview.scheduledTime
+                                  interview.scheduledTime,
                                 ).toLocaleDateString()}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {new Date(
-                                  interview.scheduledTime
+                                  interview.scheduledTime,
                                 ).toLocaleTimeString()}
                               </div>
                             </>
@@ -1280,7 +1283,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => handleViewResults(interview.id)}
+                        onClick={() =>
+                          handleViewResults(interview.completedSessionId!)
+                        }
                       >
                         <BookOpen className="h-4 w-4 mr-2" />
                         View Results

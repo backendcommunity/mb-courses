@@ -143,7 +143,7 @@ export function BootcampVideoWatchPage({
   const next = () => {
     return week?.lessons?.find((v: Lesson, index: number) => {
       const currentIndex = week.lessons.findIndex(
-        (video: Lesson) => video.id === currentLesson?.id
+        (video: Lesson) => video.id === currentLesson?.id,
       );
       return index === currentIndex + 1;
     });
@@ -152,7 +152,7 @@ export function BootcampVideoWatchPage({
   const prev = () => {
     return week?.lessons?.find((v: Lesson, index: number) => {
       const currentIndex = week.lessons.findIndex(
-        (video: Lesson) => video.id === currentLesson?.id
+        (video: Lesson) => video.id === currentLesson?.id,
       );
       return index === currentIndex - 1;
     });
@@ -181,7 +181,7 @@ export function BootcampVideoWatchPage({
       const saveNote = await store.saveNote(
         note,
         lesson.id,
-        currentLesson?.id!
+        currentLesson?.id!,
       );
       setNotes([...notes, saveNote]);
     } catch (error) {
@@ -195,7 +195,7 @@ export function BootcampVideoWatchPage({
     const _lessons = lessons || userLessons;
 
     const completed = _lessons.filter(
-      (ul) => ul.completed && ul.weekId === week?.id
+      (ul) => ul.completed && ul.weekId === week?.id,
     );
 
     return week?.lessons?.length === completed?.length;
@@ -230,7 +230,7 @@ export function BootcampVideoWatchPage({
     try {
       const completedLessons = [
         ...(userLessons?.filter(
-          (lesson) => lesson.lessonId !== currentLesson.id
+          (lesson) => lesson.lessonId !== currentLesson.id,
         ) ?? []),
         {
           ...currentLesson,
@@ -242,9 +242,11 @@ export function BootcampVideoWatchPage({
 
       setUserLessons(completedLessons);
 
-      store.markLessonCompleted(id, cohort, week?.id, currentLesson.id, {
+      console.log(weekId, week.id, week?.nextWeek?.id);
+
+      store.markLessonCompleted(id, cohort, weekId, currentLesson.id, {
         isWeekCompleted: isWeekCompleted(completedLessons),
-        nextWeekId: week?.id,
+        nextWeekId: week?.nextWeek?.id,
         nextLessonId: nextVideo?.id,
       });
 
@@ -408,8 +410,8 @@ export function BootcampVideoWatchPage({
             <div className="flex items-center gap-2">
               {currentLesson && (
                 <>
-                  {currentLesson.type === "VIDEO" && (
-                    isVideoCompleted(currentLesson.id) ? (
+                  {currentLesson.type === "VIDEO" &&
+                    (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
                         Completed
@@ -419,11 +421,10 @@ export function BootcampVideoWatchPage({
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Complete
                       </Button>
-                    )
-                  )}
+                    ))}
 
-                  {currentLesson.type === "QUIZ" && (
-                    isVideoCompleted(currentLesson.id) ? (
+                  {currentLesson.type === "QUIZ" &&
+                    (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
                         Completed
@@ -435,13 +436,12 @@ export function BootcampVideoWatchPage({
                           Mark Quiz Complete
                         </Button>
                       )
-                    )
-                  )}
+                    ))}
 
-                  {(currentLesson.type === "ASSIGNMENT" || 
-                    currentLesson.type === "EXERCISE" || 
-                    currentLesson.type === "ARTICLE") && (
-                    isVideoCompleted(currentLesson.id) ? (
+                  {(currentLesson.type === "ASSIGNMENT" ||
+                    currentLesson.type === "EXERCISE" ||
+                    currentLesson.type === "ARTICLE") &&
+                    (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
                         Completed
@@ -451,8 +451,7 @@ export function BootcampVideoWatchPage({
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Complete
                       </Button>
-                    )
-                  )}
+                    ))}
                 </>
               )}
 
@@ -649,7 +648,7 @@ export function BootcampVideoWatchPage({
                             </a>
                           </Button>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </CardContent>
@@ -709,7 +708,7 @@ export function BootcampVideoWatchPage({
                         onClick={() =>
                           setCurrentTime(
                             Number.parseInt(item.time.split(":")[0]) * 60 +
-                              Number.parseInt(item.time.split(":")[1])
+                              Number.parseInt(item.time.split(":")[1]),
                           )
                         }
                       >
@@ -744,7 +743,7 @@ export function BootcampVideoWatchPage({
               <div className="text-sm text-muted-foreground">
                 {
                   userLessons?.filter(
-                    (ul: UserLesson) => ul?.completed && ul.weekId === weekId
+                    (ul: UserLesson) => ul?.completed && ul.weekId === weekId,
                   ).length
                 }{" "}
                 of {week?.lessons?.length} videos completed

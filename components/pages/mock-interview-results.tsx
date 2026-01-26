@@ -109,7 +109,7 @@ function getGradeColor(grade: string): string {
 
 function getPerformanceMessage(
   score: number,
-  result: string
+  result: string,
 ): { title: string; description: string } {
   if (result === "PASS" || score >= 80) {
     return {
@@ -219,7 +219,10 @@ function FailedState({
               "We encountered an issue while generating your report. Please try again."}
           </p>
           <div className="flex items-center gap-3 mt-6">
-            <Button variant="outline" onClick={() => onNavigate("/mock-interviews")}>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate("/mock-interviews")}
+            >
               Back to Interviews
             </Button>
             <Button onClick={onRetry} disabled={isRetrying}>
@@ -264,7 +267,10 @@ function SkippedState({
             {reason ||
               "The interview session didn't have enough conversation data to generate a meaningful report. Please complete a full interview session."}
           </p>
-          <Button className="mt-6" onClick={() => onNavigate("/mock-interviews")}>
+          <Button
+            className="mt-6"
+            onClick={() => onNavigate("/mock-interviews")}
+          >
             <Trophy className="w-4 h-4 mr-2" />
             Start New Interview
           </Button>
@@ -293,7 +299,7 @@ export function MockInterviewResultsPage({
   const fetchReport = useCallback(async () => {
     try {
       const data = await store.getSessionReport(sessionId);
-
+      console.log(data);
       if (!data) {
         setStatus("failed");
         setError("Session not found");
@@ -343,14 +349,18 @@ export function MockInterviewResultsPage({
       // If 202, it's still processing
       if (err?.response?.status === 202) {
         const data = err.response.data?.data;
-        setStatus((data?.status?.toLowerCase() || "processing") as ReportStatus);
+        setStatus(
+          (data?.status?.toLowerCase() || "processing") as ReportStatus,
+        );
         setAttempts(data?.attempts || 0);
         return true; // Continue polling
       }
 
       setStatus("failed");
       setError(
-        err?.response?.data?.message || err?.message || "Failed to fetch report"
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to fetch report",
       );
       return false;
     }
@@ -358,26 +368,11 @@ export function MockInterviewResultsPage({
 
   // Initial fetch and polling
   useEffect(() => {
-    let pollTimeout: NodeJS.Timeout;
-    let isMounted = true;
-
     const poll = async () => {
-      if (!isMounted) return;
-
-      const shouldContinue = await fetchReport();
-
-      if (shouldContinue && isMounted) {
-        // Poll every 5 seconds
-        pollTimeout = setTimeout(poll, 5000);
-      }
+      await fetchReport();
     };
 
     poll();
-
-    return () => {
-      isMounted = false;
-      clearTimeout(pollTimeout);
-    };
   }, [fetchReport]);
 
   // Handle retry
@@ -491,8 +486,8 @@ export function MockInterviewResultsPage({
                   report.result === "PASS"
                     ? "default"
                     : report.result === "BORDERLINE"
-                    ? "secondary"
-                    : "destructive"
+                      ? "secondary"
+                      : "destructive"
                 }
                 className="text-lg px-4 py-1"
               >
@@ -627,8 +622,8 @@ export function MockInterviewResultsPage({
                             topic.score >= 80
                               ? "default"
                               : topic.score >= 60
-                              ? "secondary"
-                              : "destructive"
+                                ? "secondary"
+                                : "destructive"
                           }
                         >
                           {topic.score}%
@@ -727,7 +722,9 @@ export function MockInterviewResultsPage({
                     recommendation.resources.length > 0 && (
                       <CardContent>
                         <div className="space-y-2">
-                          <h4 className="font-medium">Recommended Resources:</h4>
+                          <h4 className="font-medium">
+                            Recommended Resources:
+                          </h4>
                           <ul className="space-y-1">
                             {recommendation.resources.map(
                               (resource, resourceIndex) => (
@@ -738,7 +735,7 @@ export function MockInterviewResultsPage({
                                   <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                                   <span className="text-sm">{resource}</span>
                                 </li>
-                              )
+                              ),
                             )}
                           </ul>
                         </div>

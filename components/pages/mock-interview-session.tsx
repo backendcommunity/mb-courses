@@ -109,7 +109,7 @@ function VoiceAssistantStage() {
           <div
             className={cn(
               "w-48 h-48 rounded-full border-2 border-primary/20",
-              state === "speaking" && "animate-ping"
+              state === "speaking" && "animate-ping",
             )}
             style={{ animationDuration: "2s" }}
           />
@@ -118,7 +118,7 @@ function VoiceAssistantStage() {
           <div
             className={cn(
               "w-36 h-36 rounded-full border border-primary/30",
-              state !== "disconnected" && "animate-pulse"
+              state !== "disconnected" && "animate-pulse",
             )}
           />
         </div>
@@ -146,16 +146,16 @@ function VoiceAssistantStage() {
             state === "speaking"
               ? "bg-green-500"
               : state === "listening"
-              ? "bg-blue-500"
-              : state === "connecting"
-              ? "bg-yellow-500"
-              : "bg-gray-500"
+                ? "bg-blue-500"
+                : state === "connecting"
+                  ? "bg-yellow-500"
+                  : "bg-gray-500",
           )}
         >
           <div
             className={cn(
               "w-2 h-2 rounded-full bg-white",
-              state !== "disconnected" && "animate-pulse"
+              state !== "disconnected" && "animate-pulse",
             )}
           />
         </div>
@@ -168,12 +168,12 @@ function VoiceAssistantStage() {
           {state === "speaking"
             ? "Speaking..."
             : state === "listening"
-            ? "Listening to you..."
-            : state === "thinking"
-            ? "Processing..."
-            : state === "connecting"
-            ? "Connecting..."
-            : "Ready"}
+              ? "Listening to you..."
+              : state === "thinking"
+                ? "Processing..."
+                : state === "connecting"
+                  ? "Connecting..."
+                  : "Ready"}
         </p>
       </div>
 
@@ -187,8 +187,8 @@ function VoiceAssistantStage() {
               state === "speaking"
                 ? "bg-green-500 animate-[audioWave_0.5s_ease-in-out_infinite]"
                 : state === "listening"
-                ? "bg-blue-500 animate-pulse"
-                : "bg-primary/30"
+                  ? "bg-blue-500 animate-pulse"
+                  : "bg-primary/30",
             )}
             style={{
               height: state === "speaking" ? `${12 + i * 4}px` : "8px",
@@ -213,32 +213,32 @@ function InterviewStage({ className }: { className?: string }) {
   // Get all tracks
   const tracks = useTracks(
     [Track.Source.Camera, Track.Source.Microphone, Track.Source.ScreenShare],
-    { onlySubscribed: true }
+    { onlySubscribed: true },
   );
 
   // Find local video track
   const localVideoTrack = tracks.find(
     (t) =>
       t.participant.identity === localParticipant?.identity &&
-      t.source === Track.Source.Camera
+      t.source === Track.Source.Camera,
   );
 
   // Find remote participant (AI agent)
   const remoteParticipant = participants.find(
-    (p) => p.identity !== localParticipant?.identity
+    (p) => p.identity !== localParticipant?.identity,
   );
 
   // Find remote tracks
   const remoteVideoTrack = tracks.find(
     (t) =>
       t.participant.identity !== localParticipant?.identity &&
-      t.source === Track.Source.Camera
+      t.source === Track.Source.Camera,
   );
 
   const remoteAudioTrack = tracks.find(
     (t) =>
       t.participant.identity !== localParticipant?.identity &&
-      t.source === Track.Source.Microphone
+      t.source === Track.Source.Microphone,
   );
 
   return (
@@ -278,7 +278,7 @@ function InterviewStage({ className }: { className?: string }) {
               "flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm border",
               isConnected
                 ? "bg-green-500/20 border-green-500/30"
-                : "bg-yellow-500/20 border-yellow-500/30"
+                : "bg-yellow-500/20 border-yellow-500/30",
             )}
           >
             {isConnected ? (
@@ -374,7 +374,7 @@ function MediaControls({
                 "w-12 h-12 rounded-xl transition-all",
                 isMicrophoneEnabled
                   ? "bg-secondary hover:bg-secondary/80"
-                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
               )}
             >
               {isMicrophoneEnabled ? (
@@ -400,7 +400,7 @@ function MediaControls({
                 "w-12 h-12 rounded-xl transition-all",
                 isCameraEnabled
                   ? "bg-secondary hover:bg-secondary/80"
-                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
               )}
             >
               {isCameraEnabled ? (
@@ -426,7 +426,7 @@ function MediaControls({
                 "w-12 h-12 rounded-xl transition-all",
                 !isSpeakerMuted
                   ? "bg-secondary hover:bg-secondary/80"
-                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
               )}
             >
               {!isSpeakerMuted ? (
@@ -478,16 +478,18 @@ function InterviewRoom({
   questions,
   currentQuestionIndex,
   setCurrentQuestionIndex,
-  timeRemaining,
+  initialTimeRemaining,
   onNavigate,
+  onTimeUpdate,
 }: {
   sessionId: string;
   session: InterviewSession;
   questions: InterviewQuestion[];
   currentQuestionIndex: number;
   setCurrentQuestionIndex: (index: number | ((prev: number) => number)) => void;
-  timeRemaining: number;
+  initialTimeRemaining: number;
   onNavigate: (path: string) => void;
+  onTimeUpdate?: (time: number) => void;
 }) {
   const store = useAppStore();
   const connectionState = useConnectionState();
@@ -497,6 +499,8 @@ function InterviewRoom({
   // Ref that the transcript panel will update directly
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const [isEnding, setIsEnding] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
+  const hasEndedRef = useRef(false);
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -507,7 +511,9 @@ function InterviewRoom({
   };
 
   const handleEndInterview = useCallback(async () => {
-    if (isEnding) return;
+    // Prevent multiple end calls
+    if (isEnding || hasEndedRef.current) return;
+    hasEndedRef.current = true;
     setIsEnding(true);
 
     // Read directly from ref - the panel updates this ref whenever transcript changes
@@ -516,18 +522,18 @@ function InterviewRoom({
 
     console.log("=== END INTERVIEW ===");
     console.log("Total transcript entries:", allTranscript.length);
-    console.log("Final transcript entries:", finalTranscript.length);
-    console.log("Transcript data:", JSON.stringify(finalTranscript, null, 2));
+    console.log("Final transcript entries:", allTranscript);
+    console.log("Transcript data:", JSON.stringify(allTranscript, null, 2));
 
     try {
       // End session and submit transcript
       await store.endInterviewSession(
         sessionId,
-        finalTranscript.map((t) => ({
+        allTranscript.map((t) => ({
           speaker: t.speaker,
           text: t.text,
           timestamp: t.timestamp,
-        }))
+        })),
       );
 
       // Navigate to results
@@ -538,6 +544,28 @@ function InterviewRoom({
       onNavigate(`/mock-interviews/${sessionId}/results`);
     }
   }, [isEnding, store, sessionId, onNavigate]);
+
+  // Timer countdown - ends interview when time expires
+  useEffect(() => {
+    if (timeRemaining <= 0 || hasEndedRef.current) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        // Notify parent of time updates for header display
+        onTimeUpdate?.(newTime);
+
+        if (newTime <= 0) {
+          // Timer expired - end interview properly with transcript submission
+          handleEndInterview();
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, handleEndInterview, onTimeUpdate]);
 
   const handleBack = () => {
     onNavigate("/mock-interviews");
@@ -731,14 +759,14 @@ export function MockInterviewSessionPage({
 
       setToken(tokenData.token);
       setServerUrl(
-        tokenData.wsUrl || "wss://mock-interview-up2y2ttf.livekit.cloud"
+        tokenData.wsUrl || "wss://mock-interview-up2y2ttf.livekit.cloud",
       );
     } catch (err: any) {
       console.error("Failed to initialize session:", err);
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to initialize interview session."
+          "Failed to initialize interview session.",
       );
     } finally {
       setIsLoading(false);
@@ -749,22 +777,10 @@ export function MockInterviewSessionPage({
     initializeSession();
   }, [initializeSession]);
 
-  // Timer countdown
-  useEffect(() => {
-    if (!token || timeRemaining <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          onNavigate(`/mock-interviews/${sessionId}/results`);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [token, timeRemaining, sessionId, onNavigate]);
+  // Time update handler - receives updates from InterviewRoom timer
+  const handleTimeUpdate = useCallback((newTime: number) => {
+    setTimeRemaining(newTime);
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -872,8 +888,9 @@ export function MockInterviewSessionPage({
         questions={questions}
         currentQuestionIndex={currentQuestionIndex}
         setCurrentQuestionIndex={setCurrentQuestionIndex}
-        timeRemaining={timeRemaining}
+        initialTimeRemaining={timeRemaining}
         onNavigate={onNavigate}
+        onTimeUpdate={handleTimeUpdate}
       />
     </LiveKitRoom>
   );
