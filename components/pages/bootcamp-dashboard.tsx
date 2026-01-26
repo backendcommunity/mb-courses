@@ -93,7 +93,7 @@ export function BootcampDashboardPage({
         setEventLoading(true);
         const events = await store.getCurrentWeekEvents(
           bootcampId,
-          currentWeek?.id!
+          currentWeek?.id!,
         );
 
         setEvents(events);
@@ -146,7 +146,7 @@ export function BootcampDashboardPage({
     if (lesson.type?.toLowerCase() === "project")
       return onNavigate?.(`/projects/${lesson?.project?.slug}`);
     return onNavigate?.(
-      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${lesson.weekId}/${lesson?.id}`
+      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${lesson.weekId}/${lesson?.id}`,
     );
   };
 
@@ -155,7 +155,7 @@ export function BootcampDashboardPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === week?.id
+      (ul) => ul.completed && ul.weekId === week?.id,
     );
     return week?.lessons?.length === completed?.length;
   };
@@ -165,7 +165,7 @@ export function BootcampDashboardPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.find(
-      (ul) => ul.lessonId === lesson.id && ul.completed
+      (ul) => ul.lessonId === lesson.id && ul.completed,
     );
 
     return !!completed;
@@ -212,7 +212,7 @@ export function BootcampDashboardPage({
               {new Date(
                 userCohort?.cohort?.startsAt ||
                   bootcamp?.cohort?.startsAt ||
-                  bootcamp?.cohorts?.[0]?.startsAt
+                  bootcamp?.cohorts?.[0]?.startsAt,
               ) < new Date()
                 ? "In Progress"
                 : userCohort?.cohort?.status ||
@@ -340,10 +340,10 @@ export function BootcampDashboardPage({
                           {lesson.type === "VIDEO"
                             ? "Watch"
                             : lesson.type === "QUIZ"
-                            ? "Solve"
-                            : lesson.type === "PROJECT"
-                            ? "Build"
-                            : "Start"}
+                              ? "Solve"
+                              : lesson.type === "PROJECT"
+                                ? "Build"
+                                : "Start"}
                         </Button>
                       )}
                     </div>
@@ -446,7 +446,7 @@ export function BootcampDashboardPage({
                       0,
                       (bootcamp?.cohort?.duration ||
                         bootcamp?.cohorts?.[0]?.duration ||
-                        0) - (currentWeek?.index || 1)
+                        0) - (currentWeek?.index || 1),
                     )}{" "}
                     weeks
                   </span>
@@ -475,7 +475,7 @@ export function BootcampDashboardPage({
                           userCohort?.cohortId ||
                           bootcamp?.cohort?.id ||
                           bootcamp?.cohorts?.[0]?.id
-                        }/weeks/${week.id}`
+                        }/weeks/${week.id}`,
                       )
                     }
                   >
@@ -534,7 +534,7 @@ export function BootcampDashboardPage({
           </Card>
 
           {/* Achievements */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
@@ -558,7 +558,7 @@ export function BootcampDashboardPage({
                 </div>
               ))}
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>
