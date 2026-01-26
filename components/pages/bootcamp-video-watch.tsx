@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Play,
   SkipForward,
+  SkipBack,
   CheckCircle2,
   BookOpen,
   Download,
@@ -173,6 +174,16 @@ export function BootcampVideoWatchPage({
       ? week?.lessons.find((v: Lesson) => v.id === lesson.id)
       : week?.lessons[0];
     setCurrentLesson(_lesson);
+  };
+
+  const handleWeekClick = (week: {
+    id: string;
+    title: string;
+    lessons?: Lesson[];
+  }) => {
+    onNavigate?.(
+      `/bootcamps/${id}/${cohort}/weeks/${week.id}/${week.lessons?.[0].id}`,
+    );
   };
 
   const handleSaveNotes = async () => {
@@ -400,7 +411,7 @@ export function BootcampVideoWatchPage({
                 <Share className="mr-2 h-4 w-4" />
                 Share
               </Button>
-              <Button variant="outline" size="sm">
+              <Button disabled={true} variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
@@ -458,7 +469,7 @@ export function BootcampVideoWatchPage({
                   onClick={() => handleVideoClick(nextVideo)}
                   className="capitalize"
                 >
-                  Next {nextVideo?.type?.toLowerCase()}
+                  Next Lesson
                   <SkipForward className="ml-2 h-4 w-4" />
                 </Button>
               )}
@@ -794,6 +805,29 @@ export function BootcampVideoWatchPage({
               ))}
             </CardContent>
           </Card>
+
+          {/* Week Navigation */}
+          <div className="space-y-2">
+            {week?.prevWeek && (
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleWeekClick(week.prevWeek!)}
+              >
+                <SkipBack className="mr-2 h-4 w-4" />
+                Previous Week: {week.prevWeek.title}
+              </Button>
+            )}
+            {week?.nextWeek && (
+              <Button
+                className="w-full justify-start"
+                onClick={() => handleWeekClick(week.nextWeek!)}
+              >
+                Next Week: {week.nextWeek.title}
+                <SkipForward className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       <ConfettiCelebration

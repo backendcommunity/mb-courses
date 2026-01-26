@@ -629,7 +629,8 @@ export interface Week {
   bootcampId: string;
   bootcamp: Bootcamp;
   cohort?: Cohort;
-  nextWeek: { id: string; title?: string };
+  prevWeek?: { id: string; title: string; lessons?: Lesson[] };
+  nextWeek?: { id: string; title: string; lessons?: Lesson[] };
   createdAt: Date;
   updatedAt: Date;
 }
