@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
+import { useUser } from "@/hooks/use-user";
 
 interface MockInterviewsPageProps {
   onNavigate: (path: string) => void;
@@ -61,6 +62,7 @@ interface InterviewTemplate {
   position: string;
   seniority: string | null;
   description: string | null;
+  summary?: string;
   jobDescription: string;
   style: string;
   level: string | null;
@@ -99,18 +101,20 @@ interface CustomInterviewFormData {
   format: string;
 }
 
-// interface TemplateFormData {
-//   name: string;
-//   summary: string;
-//   category: string;
-//   difficulty: string;
-//   duration: number;
-//   topics: string[];
-// }
+interface TemplateFormData {
+  name: string;
+  summary: string;
+  category: string;
+  difficulty: string;
+  duration: number;
+  topics: string[];
+  seniority: string;
+  style: string;
+}
 
 export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const store = useAppStore();
-
+  const user = useUser();
   const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
   const [bookedInterviews, setBookedInterviews] = useState<UserInterview[]>([]);
   const [completedInterviews, setCompletedInterviews] = useState<
@@ -123,8 +127,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const [selectedTemplate, setSelectedTemplate] =
     useState<InterviewTemplate | null>(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
-  // const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] =
-  //   useState(false);
+  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] =
+    useState(false);
   const [isCreateInterviewDialogOpen, setIsCreateInterviewDialogOpen] =
     useState(false);
 
@@ -155,15 +159,17 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       format: "audio",
     });
 
-  // const [templateFormData, setTemplateFormData] = useState<TemplateFormData>({
-  //   name: "",
-  //   summary: "",
-  //   category: "",
-  //   difficulty: "",
-  //   duration: 15,
-  //   topics: [],
-  // });
-  // const [topicInput, setTopicInput] = useState("");
+  const [templateFormData, setTemplateFormData] = useState<TemplateFormData>({
+    name: "",
+    summary: "",
+    category: "",
+    difficulty: "",
+    duration: 15,
+    topics: [],
+    seniority: "junior",
+    style: "technical",
+  });
+  const [topicInput, setTopicInput] = useState("");
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load templates when pagination or filters change
@@ -365,29 +371,29 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     setCustomInterviewData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // const handleTemplateFormChange = (
-  //   field: keyof TemplateFormData,
-  //   value: string | number | string[],
-  // ) => {
-  //   setTemplateFormData((prev) => ({ ...prev, [field]: value }));
-  // };
+  const handleTemplateFormChange = (
+    field: keyof TemplateFormData,
+    value: string | number | string[],
+  ) => {
+    setTemplateFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  // const handleAddTopic = () => {
-  //   if (topicInput.trim()) {
-  //     setTemplateFormData((prev) => ({
-  //       ...prev,
-  //       topics: [...prev.topics, topicInput.trim()],
-  //     }));
-  //     setTopicInput("");
-  //   }
-  // };
+  const handleAddTopic = () => {
+    if (topicInput.trim()) {
+      setTemplateFormData((prev) => ({
+        ...prev,
+        topics: [...prev.topics, topicInput.trim()],
+      }));
+      setTopicInput("");
+    }
+  };
 
-  // const handleRemoveTopic = (index: number) => {
-  //   setTemplateFormData((prev) => ({
-  //     ...prev,
-  //     topics: prev.topics.filter((_, i) => i !== index),
-  //   }));
-  // };
+  const handleRemoveTopic = (index: number) => {
+    setTemplateFormData((prev) => ({
+      ...prev,
+      topics: prev.topics.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleCreateCustomInterview = async () => {
     try {
@@ -441,41 +447,43 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
-  // const handleCreateTemplate = async () => {
-  //   try {
-  //     if (!templateFormData.name || !templateFormData.summary) {
-  //       toast.error("Please fill in all required fields");
-  //       return;
-  //     }
+  const handleCreateTemplate = async () => {
+    try {
+      if (!templateFormData.name || !templateFormData.summary) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
 
-  //     setCreating(true);
-  //     const result = await store.createCustomMockInterview(templateFormData);
+      setCreating(true);
+      const result = await store.createCustomMockInterview(templateFormData);
 
-  //     if (result) {
-  //       toast.success("Template created successfully!");
-  //       setIsCreateTemplateDialogOpen(false);
-  //       setTemplateFormData({
-  //         name: "",
-  //         summary: "",
-  //         category: "",
-  //         difficulty: "",
-  //         duration: 15,
-  //         topics: [],
-  //       });
+      if (result) {
+        toast.success("Template created successfully!");
+        setIsCreateTemplateDialogOpen(false);
+        setTemplateFormData({
+          name: "",
+          summary: "",
+          category: "",
+          difficulty: "",
+          duration: 15,
+          topics: [],
+          seniority: "junior",
+          style: "technical",
+        });
 
-  //       // Reload templates and stats
-  //       await loadTemplates();
-  //       await loadStats();
+        // Reload templates and stats
+        await loadTemplates();
+        await loadStats();
 
-  //       // Stay on templates tab to show the new template
-  //       setActiveTab("templates");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Failed to create template");
-  //   } finally {
-  //     setCreating(false);
-  //   }
-  // };
+        // Stay on templates tab to show the new template
+        setActiveTab("templates");
+      }
+    } catch (error) {
+      toast.error("Failed to create template");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleFilterChange = useCallback((key: string, value: string) => {
     // For search, use debouncing to avoid too many API calls
@@ -737,16 +745,18 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             </DialogContent>
           </Dialog>
 
-          {/* <Dialog
+          <Dialog
             open={isCreateTemplateDialogOpen}
             onOpenChange={setIsCreateTemplateDialogOpen}
           >
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Template
-              </Button>
-            </DialogTrigger>
+            {user?.role === "ADMIN" && (
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Template
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create Interview Template</DialogTitle>
@@ -813,6 +823,78 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label
+                      htmlFor="seniority"
+                      className="flex items-center gap-2"
+                    >
+                      Seniority Level
+                    </Label>
+                    <Select
+                      value={templateFormData.seniority}
+                      onValueChange={(value) =>
+                        handleTemplateFormChange("seniority", value)
+                      }
+                    >
+                      <SelectTrigger id="seniority">
+                        <SelectValue placeholder="Select seniority level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="junior">Junior</SelectItem>
+                        <SelectItem value="mid">Mid-Level</SelectItem>
+                        <SelectItem value="senior">Senior</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="style" className="flex items-center gap-2">
+                      Interview Style
+                    </Label>
+                    <Select
+                      value={templateFormData.style}
+                      onValueChange={(value) =>
+                        handleTemplateFormChange("style", value)
+                      }
+                    >
+                      <SelectTrigger id="style">
+                        <SelectValue placeholder="Select interview style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technical">Technical</SelectItem>
+                        <SelectItem value="behavioral">Behavioral</SelectItem>
+                        <SelectItem value="coding">Coding</SelectItem>
+                        <SelectItem value="system-design">
+                          System Design
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="duration" className="flex items-center gap-2">
+                    Duration
+                  </Label>
+                  <Select
+                    value={templateFormData.duration + ""}
+                    onValueChange={(value) =>
+                      handleTemplateFormChange("duration", value)
+                    }
+                  >
+                    <SelectTrigger id="duration">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="60">60</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="topics">Topics</Label>
                   <div className="flex gap-2">
@@ -860,7 +942,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog> */}
+          </Dialog>
 
           <div className="flex items-center gap-2">
             <Video className="h-5 w-5 text-primary" />
@@ -1058,7 +1140,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
                 {templates.map((template) => (
                   <Card
                     key={template.id}
@@ -1091,6 +1173,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
+                        <div className="text-sm text-muted-foreground">
+                          <p>{template.summary}</p>
+                        </div>
                         {template.topics && template.topics.length > 0 && (
                           <div>
                             <h4 className="text-sm font-medium mb-2">
