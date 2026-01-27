@@ -600,3 +600,250 @@ article ul {
 article ul li {
   @apply px-1 py-0.5 rounded text-muted-foreground;
 }
+
+/* ============================================
+   LiveKit Custom Theme - Interview Styles
+   ============================================ */
+
+/* Override LiveKit default styles for branding consistency */
+[data-lk-theme="default"] {
+  --lk-accent: hsl(190 83% 44%);
+  --lk-accent-fg: hsl(210 40% 98%);
+  --lk-bg: hsl(222 30% 12%);
+  --lk-bg2: hsl(222 25% 16%);
+  --lk-bg3: hsl(222 20% 20%);
+  --lk-fg: hsl(210 40% 98%);
+  --lk-fg2: hsl(215 20.2% 75%);
+  --lk-border: hsl(222 30% 22%);
+  --lk-control-bg: hsl(222 25% 16%);
+  --lk-control-hover-bg: hsl(222 20% 20%);
+  --lk-danger: hsl(0 84% 60%);
+  --lk-success: hsl(142 76% 36%);
+}
+
+/* Light theme overrides */
+.light [data-lk-theme="default"] {
+  --lk-bg: hsl(0 0% 100%);
+  --lk-bg2: hsl(210 40% 96%);
+  --lk-bg3: hsl(214.3 31.8% 91.4%);
+  --lk-fg: hsl(222.2 84% 4.9%);
+  --lk-fg2: hsl(215.4 16.3% 46.9%);
+  --lk-border: hsl(214.3 31.8% 91.4%);
+  --lk-control-bg: hsl(210 40% 96%);
+  --lk-control-hover-bg: hsl(214.3 31.8% 91.4%);
+}
+
+/* Interview video container */
+.interview-video-container {
+  @apply relative w-full h-full rounded-2xl overflow-hidden;
+  background: linear-gradient(
+    135deg,
+    hsl(222 30% 12%) 0%,
+    hsl(222 25% 8%) 100%
+  );
+}
+
+.light .interview-video-container {
+  background: linear-gradient(
+    135deg,
+    hsl(210 40% 98%) 0%,
+    hsl(210 40% 96%) 100%
+  );
+}
+
+/* AI Avatar pulse animation */
+@keyframes ai-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.ai-avatar-pulse {
+  animation: ai-pulse 2s ease-in-out infinite;
+}
+
+/* Voice activity indicator */
+@keyframes voice-bar {
+  0%, 100% {
+    height: 8px;
+  }
+  50% {
+    height: 24px;
+  }
+}
+
+.voice-activity-bar {
+  @apply w-1 bg-primary rounded-full;
+  animation: voice-bar 0.8s ease-in-out infinite;
+}
+
+/* Interview stage glow effect */
+.interview-stage-glow {
+  position: relative;
+}
+
+.interview-stage-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1rem;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    hsl(190 83% 44% / 0.3),
+    hsl(190 83% 54% / 0.1),
+    transparent
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Media control button styles */
+.media-control-btn {
+  @apply w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200;
+}
+
+.media-control-btn:hover {
+  transform: scale(1.05);
+}
+
+.media-control-btn:active {
+  transform: scale(0.95);
+}
+
+.media-control-btn.active {
+  @apply bg-secondary text-foreground;
+}
+
+.media-control-btn.muted {
+  @apply bg-destructive/20 text-destructive;
+}
+
+/* Transcript message animations */
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.transcript-message {
+  animation: message-in 0.3s ease-out;
+}
+
+/* Interview progress indicator */
+.interview-progress {
+  @apply relative h-2 w-full overflow-hidden rounded-full bg-secondary;
+}
+
+.interview-progress-fill {
+  @apply h-full rounded-full transition-all duration-500;
+  background: linear-gradient(
+    90deg,
+    hsl(190 83% 44%),
+    hsl(190 83% 54%)
+  );
+}
+
+/* Question card hover effect */
+.question-card {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+.question-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.question-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* Connection status indicator */
+.connection-status {
+  @apply flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium;
+}
+
+.connection-status.connected {
+  @apply bg-green-500/10 text-green-500;
+}
+
+.connection-status.connecting {
+  @apply bg-yellow-500/10 text-yellow-500;
+}
+
+.connection-status.disconnected {
+  @apply bg-red-500/10 text-red-500;
+}
+
+/* Timer warning states */
+.timer-warning {
+  @apply animate-pulse text-yellow-500;
+}
+
+.timer-critical {
+  @apply animate-pulse text-destructive;
+}
+
+/* Mirror effect for local video */
+.mirror {
+  transform: scaleX(-1);
+}
+
+/* Interview panel transitions */
+.interview-panel-enter {
+  animation: panel-in 0.3s ease-out;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Typing indicator animation */
+@keyframes typing-dot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+.typing-dot {
+  @apply w-1.5 h-1.5 rounded-full bg-current;
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
