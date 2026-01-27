@@ -40,15 +40,57 @@ interface DashboardSidebarProps {
 
 const navigationData = {
   learn: [
-    { title: "Courses", url: routes.courses, icon: BookOpen, active: true },
-    { title: "Bootcamps", url: routes.bootcamps, icon: Zap, active: true },
-    { title: "Learning Paths", url: routes.paths, icon: Target, active: false },
-    { title: "Roadmaps", url: routes.roadmaps, icon: TrendingUp, active: true },
+    {
+      title: "Courses",
+      url: routes.courses,
+      icon: BookOpen,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "Bootcamps",
+      url: routes.bootcamps,
+      icon: Zap,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "Learning Paths",
+      url: routes.paths,
+      icon: Target,
+      active: false,
+      beta: false,
+    },
+    {
+      title: "Roadmaps",
+      url: routes.roadmaps,
+      icon: TrendingUp,
+      active: true,
+      beta: false,
+    },
   ],
   build: [
-    { title: "MB Projects", url: routes.projects, icon: Code2, active: false },
-    { title: "Project30", url: routes.project30, icon: Sparkles, active: true },
-    { title: "MB Lands", url: routes.lands, icon: Trophy, active: false },
+    {
+      title: "MB Projects",
+      url: routes.projects,
+      icon: Code2,
+      active: false,
+      beta: false,
+    },
+    {
+      title: "Project30",
+      url: routes.project30,
+      icon: Sparkles,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "MB Lands",
+      url: routes.lands,
+      icon: Trophy,
+      active: false,
+      beta: false,
+    },
   ],
   grow: [
     {
@@ -56,20 +98,29 @@ const navigationData = {
       url: routes.interviews,
       icon: Briefcase,
       active: false,
+      beta: false,
     },
     {
       title: "Mock Interviews",
       url: routes.mockInterviews,
       icon: Users,
-      active: false,
+      active: true,
+      beta: true,
     },
     {
       title: "Certifications",
       url: "/certifications",
       icon: Award,
       active: false,
+      beta: false,
     },
-    { title: "Community", url: routes.community, icon: Users, active: false },
+    {
+      title: "Community",
+      url: routes.community,
+      icon: Users,
+      active: false,
+      beta: false,
+    },
   ],
 };
 
@@ -228,6 +279,9 @@ export function DashboardSidebar({
                     {!collapsed && <span>{item.title}</span>}
                     {!collapsed && !item.active && (
                       <Badge variant="secondary">WIP</Badge>
+                    )}
+                    {!collapsed && item.beta && (
+                      <Badge variant="destructive">beta</Badge>
                     )}
                   </div>
                 </button>
