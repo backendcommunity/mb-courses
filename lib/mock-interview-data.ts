@@ -107,7 +107,7 @@ const interviewTypes: MockInterviewType[] = [
 // Mock data for booked interviews
 const bookedInterviews: BookedInterview[] = [
   {
-    id: "interview1",
+    id: "ff78cfab-32c1-4ea3-9266-5afd2935fb80",
     type: interviewTypes[0], // Frontend Developer
     scheduledDate: "2023-06-15T14:00:00Z",
     duration: "45",
@@ -257,7 +257,7 @@ export function getInterviewQuestions(): InterviewQuestion[] {
 }
 
 export function getInterviewTypeById(
-  id: string
+  id: string,
 ): MockInterviewType | undefined {
   return interviewTypes.find((type) => type.id === id);
 }

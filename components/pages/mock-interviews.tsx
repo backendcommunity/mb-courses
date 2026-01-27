@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,14 +99,14 @@ interface CustomInterviewFormData {
   format: string;
 }
 
-interface TemplateFormData {
-  name: string;
-  summary: string;
-  category: string;
-  difficulty: string;
-  duration: number;
-  topics: string[];
-}
+// interface TemplateFormData {
+//   name: string;
+//   summary: string;
+//   category: string;
+//   difficulty: string;
+//   duration: number;
+//   topics: string[];
+// }
 
 export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const store = useAppStore();
@@ -129,8 +123,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const [selectedTemplate, setSelectedTemplate] =
     useState<InterviewTemplate | null>(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
-  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] =
-    useState(false);
+  // const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] =
+  //   useState(false);
   const [isCreateInterviewDialogOpen, setIsCreateInterviewDialogOpen] =
     useState(false);
 
@@ -161,30 +155,37 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       format: "audio",
     });
 
-  const [templateFormData, setTemplateFormData] = useState<TemplateFormData>({
-    name: "",
-    summary: "",
-    category: "",
-    difficulty: "",
-    duration: 15,
-    topics: [],
-  });
-  const [topicInput, setTopicInput] = useState("");
+  // const [templateFormData, setTemplateFormData] = useState<TemplateFormData>({
+  //   name: "",
+  //   summary: "",
+  //   category: "",
+  //   difficulty: "",
+  //   duration: 15,
+  //   topics: [],
+  // });
+  // const [topicInput, setTopicInput] = useState("");
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load templates when pagination or filters change
   useEffect(() => {
     loadTemplates();
+  }, [pagination, filters]);
+
+  // Load stats, booked, and completed interviews only on initial mount
+  useEffect(() => {
     loadStats();
     loadBookedInterviews();
     loadCompletedInterviews();
-  }, [pagination, filters]);
+  }, []);
 
+  // Cleanup debounce timeout on unmount
   useEffect(() => {
-    if (activeTab === "booked") {
-      loadBookedInterviews();
-    } else if (activeTab === "completed") {
-      loadCompletedInterviews();
-    }
-  }, [activeTab]);
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
 
   const loadTemplates = async () => {
     try {
@@ -198,14 +199,10 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       if (filters.difficulty) filterObj.difficulty = filters.difficulty;
       if (filters.style) filterObj.style = filters.style;
       if (filters.format) filterObj.format = filters.format;
+      if (filters.search) filterObj.search = filters.search;
 
-      // Send filters as an object, not stringified
-      if (Object.keys(filterObj).length > 0) {
-        params.filters = filterObj;
-      } else {
-        // Send empty object if no filters
-        params.filters = {};
-      }
+      // Send filters as an object
+      params.filters = filterObj;
 
       console.log("Fetching templates with params:", params);
       const data = await store.getMockInterviewTemplates(params);
@@ -368,29 +365,29 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     setCustomInterviewData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleTemplateFormChange = (
-    field: keyof TemplateFormData,
-    value: string | number | string[],
-  ) => {
-    setTemplateFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  // const handleTemplateFormChange = (
+  //   field: keyof TemplateFormData,
+  //   value: string | number | string[],
+  // ) => {
+  //   setTemplateFormData((prev) => ({ ...prev, [field]: value }));
+  // };
 
-  const handleAddTopic = () => {
-    if (topicInput.trim()) {
-      setTemplateFormData((prev) => ({
-        ...prev,
-        topics: [...prev.topics, topicInput.trim()],
-      }));
-      setTopicInput("");
-    }
-  };
+  // const handleAddTopic = () => {
+  //   if (topicInput.trim()) {
+  //     setTemplateFormData((prev) => ({
+  //       ...prev,
+  //       topics: [...prev.topics, topicInput.trim()],
+  //     }));
+  //     setTopicInput("");
+  //   }
+  // };
 
-  const handleRemoveTopic = (index: number) => {
-    setTemplateFormData((prev) => ({
-      ...prev,
-      topics: prev.topics.filter((_, i) => i !== index),
-    }));
-  };
+  // const handleRemoveTopic = (index: number) => {
+  //   setTemplateFormData((prev) => ({
+  //     ...prev,
+  //     topics: prev.topics.filter((_, i) => i !== index),
+  //   }));
+  // };
 
   const handleCreateCustomInterview = async () => {
     try {
@@ -444,46 +441,62 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
-  const handleCreateTemplate = async () => {
-    try {
-      if (!templateFormData.name || !templateFormData.summary) {
-        toast.error("Please fill in all required fields");
-        return;
+  // const handleCreateTemplate = async () => {
+  //   try {
+  //     if (!templateFormData.name || !templateFormData.summary) {
+  //       toast.error("Please fill in all required fields");
+  //       return;
+  //     }
+
+  //     setCreating(true);
+  //     const result = await store.createCustomMockInterview(templateFormData);
+
+  //     if (result) {
+  //       toast.success("Template created successfully!");
+  //       setIsCreateTemplateDialogOpen(false);
+  //       setTemplateFormData({
+  //         name: "",
+  //         summary: "",
+  //         category: "",
+  //         difficulty: "",
+  //         duration: 15,
+  //         topics: [],
+  //       });
+
+  //       // Reload templates and stats
+  //       await loadTemplates();
+  //       await loadStats();
+
+  //       // Stay on templates tab to show the new template
+  //       setActiveTab("templates");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to create template");
+  //   } finally {
+  //     setCreating(false);
+  //   }
+  // };
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    // For search, use debouncing to avoid too many API calls
+    if (key === "search") {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+
+      // Clear any existing timeout
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
       }
 
-      setCreating(true);
-      const result = await store.createCustomMockInterview(templateFormData);
-
-      if (result) {
-        toast.success("Template created successfully!");
-        setIsCreateTemplateDialogOpen(false);
-        setTemplateFormData({
-          name: "",
-          summary: "",
-          category: "",
-          difficulty: "",
-          duration: 15,
-          topics: [],
-        });
-
-        // Reload templates and stats
-        await loadTemplates();
-        await loadStats();
-
-        // Stay on templates tab to show the new template
-        setActiveTab("templates");
-      }
-    } catch (error) {
-      toast.error("Failed to create template");
-    } finally {
-      setCreating(false);
+      // Debounce the API call
+      searchDebounceRef.current = setTimeout(() => {
+        setPagination({ size: 10, skip: 0 });
+      }, 300);
+    } else {
+      // For other filters, update immediately
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      setPagination({ size: 10, skip: 0 });
     }
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setPagination({ size: 10, skip: 0 });
-  };
+  }, []);
 
   const handleNextPage = () => {
     if (hasMore) {
@@ -501,14 +514,14 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex md:item-center md:flex-row flex-col gap-3 justify-between">
         <div>
           <h1 className="text-3xl font-bold">Mock Interviews</h1>
           <p className="text-muted-foreground">
             Practice with AI-powered interviews to ace your next job interview
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex md:items-center md:flex-row flex-col gap-3">
           <Dialog
             open={isCreateInterviewDialogOpen}
             onOpenChange={setIsCreateInterviewDialogOpen}
@@ -697,7 +710,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   />
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setIsCreateInterviewDialogOpen(false)}
@@ -1300,8 +1313,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       </Tabs>
 
       {/* Booking Dialog */}
+
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Book{" "}

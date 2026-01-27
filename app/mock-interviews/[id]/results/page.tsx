@@ -2,18 +2,15 @@
 
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { MockInterviewResultsPage } from "@/components/pages/mock-interview-results";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-interface MockInterviewResultsPageRouteProps {
-  params: {
-    id: string;
-  };
-}
+type MockInterviewResultsPageRouteProps = {
+  id: string;
+};
 
-export default function MockInterviewResultsPageRoute({
-  params,
-}: MockInterviewResultsPageRouteProps) {
+export default function MockInterviewResultsPageRoute() {
   const router = useRouter();
+  const { id } = useParams<MockInterviewResultsPageRouteProps>();
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -21,10 +18,7 @@ export default function MockInterviewResultsPageRoute({
 
   return (
     <DashboardLayout>
-      <MockInterviewResultsPage
-        sessionId={params.id}
-        onNavigate={handleNavigate}
-      />
+      <MockInterviewResultsPage sessionId={id} onNavigate={handleNavigate} />
     </DashboardLayout>
   );
 }

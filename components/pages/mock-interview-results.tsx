@@ -1,6 +1,6 @@
-"use client";
-
+// Old page (adapted with API functionality):
 import { useState, useEffect, useCallback } from "react";
+import { downloadInterviewPDF } from "@/lib/generate-interview-pdf";
 import {
   Card,
   CardContent,
@@ -18,7 +18,6 @@ import {
   MessageSquare,
   BookOpen,
   Download,
-  Share2,
   Star,
   Target,
   CheckCircle,
@@ -43,18 +42,37 @@ interface TopicBreakdown {
   feedback?: string;
 }
 
+interface QuestionAnalysis {
+  questionId: string;
+  question: string;
+  userAnswer: string;
+  score: number;
+  feedback: string;
+}
+
 interface SessionReport {
   id: string;
   sessionId: string;
   overallScore: number;
   result: "PASS" | "FAIL" | "BORDERLINE";
+  grade: string;
+  technicalScore: number;
+  communicationScore: number;
+  problemSolvingScore: number;
   topicBreakdown: TopicBreakdown[];
+  questionAnalysis: QuestionAnalysis[];
   strengths: string[];
   weaknesses: string[];
+  improvements: string[];
   recommendations: Array<{
     title: string;
     description: string;
-    resources?: string[];
+    resources: string[];
+  }>;
+  transcript: Array<{
+    speaker: "interviewer" | "candidate";
+    message: string;
+    timestamp: string;
   }>;
   summary?: string;
   interview?: {
@@ -62,6 +80,8 @@ interface SessionReport {
     company?: string;
     difficulty?: string;
     duration?: number;
+    title?: string;
+    scheduledDate?: string;
   };
   status?: string;
 }
@@ -89,6 +109,10 @@ function getGradeFromScore(score: number): string {
   if (score >= 70) return "C";
   if (score >= 60) return "D";
   return "F";
+}
+
+function isStringArray(arr: Array<string | any>) {
+  return Array.isArray(arr) && arr.every((item) => typeof item === "string");
 }
 
 function getGradeColor(grade: string): string {
@@ -280,7 +304,7 @@ function SkippedState({
   );
 }
 
-// Main Results Page Component
+// Main component
 export function MockInterviewResultsPage({
   sessionId,
   onNavigate,
@@ -294,12 +318,14 @@ export function MockInterviewResultsPage({
   const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch report with polling
   const fetchReport = useCallback(async () => {
     try {
       const data = await store.getSessionReport(sessionId);
-      console.log(data);
+      console.log("Report data:", data);
+
       if (!data) {
         setStatus("failed");
         setError("Session not found");
@@ -368,11 +394,21 @@ export function MockInterviewResultsPage({
 
   // Initial fetch and polling
   useEffect(() => {
+    let pollInterval: NodeJS.Timeout | null = null;
+
     const poll = async () => {
-      await fetchReport();
+      const shouldContinue = await fetchReport();
+      if (shouldContinue) {
+        // Poll every 5 seconds if still processing
+        pollInterval = setTimeout(poll, 5000);
+      }
     };
 
     poll();
+
+    return () => {
+      if (pollInterval) clearTimeout(pollInterval);
+    };
   }, [fetchReport]);
 
   // Handle retry
@@ -389,6 +425,21 @@ export function MockInterviewResultsPage({
       setError(err?.response?.data?.message || "Failed to retry");
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  // Handle PDF download
+  const handleDownloadReport = async () => {
+    if (!report) return;
+
+    setIsDownloading(true);
+    try {
+      await downloadInterviewPDF(report);
+    } catch (err: any) {
+      console.error("Failed to download PDF:", err);
+      alert("Failed to download report. Please try again.");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -417,46 +468,63 @@ export function MockInterviewResultsPage({
   }
 
   // Extract data from report
-  const grade = getGradeFromScore(report.overallScore);
-  const performance = getPerformanceMessage(report.overallScore, report.result);
-
-  // Calculate category scores from topicBreakdown or use defaults
-  const topicScores = report.topicBreakdown || [];
-  const technicalScore =
-    topicScores.find((t) => t.topic?.toLowerCase().includes("technical"))
-      ?.score ||
-    topicScores[0]?.score ||
-    report.overallScore;
-  const communicationScore =
-    topicScores.find((t) => t.topic?.toLowerCase().includes("communication"))
-      ?.score ||
-    topicScores[1]?.score ||
-    Math.max(report.overallScore - 5, 0);
-  const problemSolvingScore =
-    topicScores.find((t) => t.topic?.toLowerCase().includes("problem"))
-      ?.score ||
-    topicScores[2]?.score ||
-    Math.max(report.overallScore - 3, 0);
+  const grade = report.grade || getGradeFromScore(report.overallScore);
+  // const performance = getPerformanceMessage(report.overallScore, report.result);
+  const feedback = {
+    grade,
+    summary: report.summary || "",
+    overallScore: report.overallScore,
+    technicalScore: report.technicalScore || report.overallScore,
+    communicationScore:
+      report.communicationScore || Math.max(report.overallScore - 5, 0),
+    problemSolvingScore:
+      report.problemSolvingScore || Math.max(report.overallScore - 3, 0),
+    questionAnalysis: report.questionAnalysis || [],
+    strengths: report.strengths || [],
+    improvements: report.weaknesses || report.improvements || [],
+    recommendations: report.recommendations || [],
+    transcript:
+      report.transcript ||
+      transcript.map((t) => ({
+        speaker: t.role,
+        message: t.content,
+        timestamp: t.timestamp,
+      })),
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Interview Results</h1>
           <p className="text-muted-foreground">
-            {report.interview?.position || "Mock Interview"} •{" "}
-            {report.interview?.company || "Practice Session"}
+            {report.interview?.title ||
+              report.interview?.position ||
+              "Mock Interview"}{" "}
+            •{" "}
+            {report.interview?.scheduledDate
+              ? new Date(report.interview.scheduledDate).toLocaleDateString()
+              : new Date().toLocaleDateString()}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" disabled>
-            <Download className="h-4 w-4 mr-2" />
-            Download Report
-          </Button>
-          <Button variant="outline" disabled>
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
+          <Button
+            variant="outline"
+            onClick={handleDownloadReport}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Download Report
+              </>
+            )}
           </Button>
           <Button onClick={() => onNavigate("/mock-interviews")}>
             Back to Interviews
@@ -467,42 +535,26 @@ export function MockInterviewResultsPage({
       {/* Overall Score Card */}
       <Card className="border-2">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-8 mb-4">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <div className="text-center">
-              <div className={`text-6xl font-bold ${getGradeColor(grade)}`}>
-                {grade}
+              <div
+                className={`text-6xl font-bold ${getGradeColor(
+                  feedback.grade,
+                )}`}
+              >
+                {feedback.grade}
               </div>
               <p className="text-sm text-muted-foreground">Overall Grade</p>
             </div>
             <div className="text-center">
               <div className="text-6xl font-bold text-primary">
-                {report.overallScore}
+                {feedback.overallScore}
               </div>
               <p className="text-sm text-muted-foreground">Score</p>
             </div>
-            <div className="text-center">
-              <Badge
-                variant={
-                  report.result === "PASS"
-                    ? "default"
-                    : report.result === "BORDERLINE"
-                      ? "secondary"
-                      : "destructive"
-                }
-                className="text-lg px-4 py-1"
-              >
-                {report.result}
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-1">Result</p>
-            </div>
           </div>
-          <CardTitle className="text-2xl">{performance.title}</CardTitle>
-          <CardDescription>{performance.description}</CardDescription>
-          {report.summary && (
-            <p className="text-sm text-muted-foreground mt-2 max-w-2xl mx-auto">
-              {report.summary}
-            </p>
-          )}
+          <CardTitle className="text-md">{feedback.summary}</CardTitle>
+          {/* <CardDescription>{feedback.summary}</CardDescription> */}
         </CardHeader>
       </Card>
 
@@ -516,8 +568,8 @@ export function MockInterviewResultsPage({
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{technicalScore}%</div>
-            <Progress value={technicalScore} className="mt-2" />
+            <div className="text-2xl font-bold">{feedback.technicalScore}%</div>
+            <Progress value={feedback.technicalScore} className="mt-2" />
           </CardContent>
         </Card>
         <Card>
@@ -526,8 +578,10 @@ export function MockInterviewResultsPage({
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{communicationScore}%</div>
-            <Progress value={communicationScore} className="mt-2" />
+            <div className="text-2xl font-bold">
+              {feedback.communicationScore}%
+            </div>
+            <Progress value={feedback.communicationScore} className="mt-2" />
           </CardContent>
         </Card>
         <Card>
@@ -538,21 +592,86 @@ export function MockInterviewResultsPage({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{problemSolvingScore}%</div>
-            <Progress value={problemSolvingScore} className="mt-2" />
+            <div className="text-2xl font-bold">
+              {feedback.problemSolvingScore}%
+            </div>
+            <Progress value={feedback.problemSolvingScore} className="mt-2" />
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="feedback" className="space-y-4">
+      <Tabs defaultValue="analysis" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="analysis">Question Analysis</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
-          <TabsTrigger value="topics">Topic Analysis</TabsTrigger>
           <TabsTrigger value="transcript">Transcript</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         </TabsList>
 
-        {/* Feedback Tab */}
+        <TabsContent value="analysis" className="space-y-4">
+          <div className="space-y-4">
+            {feedback?.questionAnalysis.length <= 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No Question Analysis Found
+                  </h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Try answering some questions in the interview to see
+                    detailed analysis and feedback here.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {feedback?.questionAnalysis?.map((analysis, index) => (
+                  <Card key={analysis.questionId}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">
+                          Question {index + 1}
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              analysis.score >= 80
+                                ? "default"
+                                : analysis.score >= 60
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                          >
+                            {analysis.score}%
+                          </Badge>
+                          {analysis.score >= 80 ? (
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <AlertCircle className="h-5 w-5 text-yellow-600" />
+                          )}
+                        </div>
+                      </div>
+                      <CardDescription>{analysis.question}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <h4 className="font-medium mb-2">Your Answer:</h4>
+                        <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                          {analysis.userAnswer}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-2">Feedback:</h4>
+                        <p className="text-sm">{analysis.feedback}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
+          </div>
+        </TabsContent>
+
         <TabsContent value="feedback" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -563,20 +682,25 @@ export function MockInterviewResultsPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {report.strengths && report.strengths.length > 0 ? (
-                  <ul className="space-y-2">
-                    {report.strengths.map((strength, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Star className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{strength}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No specific strengths identified yet.
-                  </p>
-                )}
+                <ul className="space-y-2">
+                  {feedback?.strengths?.length <= 0 ? (
+                    <li className="flex items-start gap-2">
+                      <Star className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">
+                        No transcript data available to evaluate performance.
+                      </span>
+                    </li>
+                  ) : (
+                    <>
+                      {feedback?.strengths?.map((strength, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <Star className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{strength}</span>
+                        </li>
+                      ))}
+                    </>
+                  )}
+                </ul>
               </CardContent>
             </Card>
 
@@ -588,76 +712,19 @@ export function MockInterviewResultsPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {report.weaknesses && report.weaknesses.length > 0 ? (
-                  <ul className="space-y-2">
-                    {report.weaknesses.map((weakness, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Target className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{weakness}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No specific areas for improvement identified.
-                  </p>
-                )}
+                <ul className="space-y-2">
+                  {feedback?.improvements?.map((improvement, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Target className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{improvement}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* Topic Analysis Tab */}
-        <TabsContent value="topics" className="space-y-4">
-          {topicScores.length > 0 ? (
-            <div className="space-y-4">
-              {topicScores.map((topic, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{topic.topic}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={
-                            topic.score >= 80
-                              ? "default"
-                              : topic.score >= 60
-                                ? "secondary"
-                                : "destructive"
-                          }
-                        >
-                          {topic.score}%
-                        </Badge>
-                        {topic.score >= 80 ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-yellow-600" />
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  {topic.feedback && (
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {topic.feedback}
-                      </p>
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">
-                  Detailed topic analysis is not available for this session.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Transcript Tab */}
         <TabsContent value="transcript" className="space-y-4">
           <Card>
             <CardHeader>
@@ -670,88 +737,132 @@ export function MockInterviewResultsPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {transcript.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {transcript.map((entry, index) => (
-                    <div key={index} className="flex gap-3">
-                      <div className="flex-shrink-0">
-                        <Badge
-                          variant={
-                            entry.role === "interviewer"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {entry.role === "interviewer" ? "AI" : "You"}
-                        </Badge>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {feedback.transcript.length <= 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">
+                        No transcript data available.
+                      </h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                        Try answering some questions in the interview to see the
+                        full transcript here.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {feedback.transcript.map((entry, index) => (
+                      <div key={index} className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <Badge
+                            variant={
+                              entry.speaker === "interviewer"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {entry.speaker === "interviewer" ? "AI" : "You"}
+                          </Badge>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm">{entry.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(entry.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm">{entry.content}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No transcript available for this session.
-                </p>
-              )}
+                    ))}
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Recommendations Tab */}
         <TabsContent value="recommendations" className="space-y-4">
-          {report.recommendations && report.recommendations.length > 0 ? (
+          {isStringArray(feedback?.recommendations) ? (
             <div className="space-y-4">
-              {report.recommendations.map((recommendation, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      {recommendation.title}
-                    </CardTitle>
-                    <CardDescription>
-                      {recommendation.description}
-                    </CardDescription>
-                  </CardHeader>
-                  {recommendation.resources &&
-                    recommendation.resources.length > 0 && (
-                      <CardContent>
-                        <div className="space-y-2">
-                          <h4 className="font-medium">
-                            Recommended Resources:
-                          </h4>
-                          <ul className="space-y-1">
-                            {recommendation.resources.map(
-                              (resource, resourceIndex) => (
-                                <li
-                                  key={resourceIndex}
-                                  className="flex items-center gap-2"
-                                >
-                                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                  <span className="text-sm">{resource}</span>
-                                </li>
-                              ),
-                            )}
-                          </ul>
-                        </div>
-                      </CardContent>
-                    )}
-                </Card>
-              ))}
+              {" "}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Recommendations
+                  </CardTitle>
+                </CardHeader>
+                {feedback?.recommendations?.map(
+                  (recommendation: any, index) => (
+                    <div key={index} className="space-y-2 px-4">
+                      <ul className="space-y-1 pb-3">
+                        <li className="flex items-center  gap-2 py-1">
+                          <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                          <span className="text-sm">{recommendation}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  ),
+                )}
+              </Card>
             </div>
           ) : (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">
-                  No specific recommendations available for this session.
-                </p>
-              </CardContent>
-            </Card>
+            <>
+              <div className="space-y-4">
+                {feedback?.recommendations?.length <= 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">
+                        No Question Analysis Found
+                      </h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                        Try answering some questions in the interview to see
+                        detailed analysis and feedback here.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {feedback?.recommendations?.map((recommendation, index) => (
+                      <Card key={index}>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <BookOpen className="h-5 w-5" />
+                            {recommendation.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {recommendation?.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">
+                              Recommended Resources:
+                            </h4>
+                            <ul className="space-y-1">
+                              {recommendation?.resources?.map(
+                                (resource, resourceIndex) => (
+                                  <li
+                                    key={resourceIndex}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                    <span className="text-sm">
+                                      {resource} ashjas
+                                    </span>
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </>
+                )}
+              </div>
+            </>
           )}
         </TabsContent>
       </Tabs>

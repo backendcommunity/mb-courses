@@ -6,7 +6,6 @@ import {
   useVoiceAssistant,
   BarVisualizer,
   RoomAudioRenderer,
-  VoiceAssistantControlBar,
   useConnectionState,
   useTracks,
   useParticipants,
@@ -15,7 +14,7 @@ import {
   AudioTrack,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
-import { ConnectionState, Track, RoomEvent } from "livekit-client";
+import { ConnectionState, Track } from "livekit-client";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -36,7 +35,6 @@ import {
   Loader2,
   MessageSquare,
   HelpCircle,
-  FileText,
   Bot,
   User,
   Wifi,
@@ -242,9 +240,9 @@ function InterviewStage({ className }: { className?: string }) {
   );
 
   return (
-    <div className={cn("relative w-full h-full min-h-[400px]", className)}>
+    <div className={cn("relative w-full h-full", className)}>
       {/* Main Area - AI Interviewer */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,12%)] to-[hsl(222,25%,8%)] rounded-2xl overflow-hidden">
+      <div className="block lg:absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,12%)] to-[hsl(222,25%,8%)] rounded-2xl overflow-hidden">
         {/* CRITICAL: Render AudioTrack for remote audio playback */}
         {remoteAudioTrack && (
           <AudioTrack trackRef={remoteAudioTrack} volume={1} />
@@ -272,7 +270,7 @@ function InterviewStage({ className }: { className?: string }) {
         </div>
 
         {/* Connection Status */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 hidden md:block">
           <div
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm border",
@@ -299,7 +297,7 @@ function InterviewStage({ className }: { className?: string }) {
       </div>
 
       {/* Local Video - Picture in Picture */}
-      <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 bg-[hsl(222,25%,16%)] z-10">
+      <div className="absolute top-5 md:top-12 lg:top-auto lg:bottom-4 right-4 lg:w-48 lg:h-36 w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 bg-[hsl(222,25%,16%)] z-10">
         {localVideoTrack ? (
           <div className="relative w-full h-full">
             <VideoTrack
@@ -362,7 +360,7 @@ function MediaControls({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl">
+      <div className="flex items-center justify-center  gap-2 p-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl">
         {/* Microphone */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -579,7 +577,7 @@ function InterviewRoom({
     "Technical Interview";
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen flex flex-col bg-background overflow-auto">
       {/* Header */}
       <InterviewHeader
         interviewTitle={interviewTitle}
@@ -592,10 +590,10 @@ function InterviewRoom({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Panel - Video Stage */}
         <div className="flex-1 flex flex-col p-4 gap-4 min-w-0">
-          <div className="flex-1 relative min-h-0">
+          <div className="flex-1 relative min-h-0  overflow-hidden">
             <InterviewStage className="w-full h-full" />
 
             {/* Media Controls */}
@@ -622,7 +620,7 @@ function InterviewRoom({
         </div>
 
         {/* Right Panel - Sidebar */}
-        <div className="w-[380px] flex-shrink-0 border-l border-border bg-card/50 hidden lg:flex flex-col">
+        <div className="w-[380px] flex-shrink-0 border-l border-border bg-card/50 lg:flex flex-col">
           <Tabs
             defaultValue="transcript"
             className="flex-1 flex flex-col min-h-0"
@@ -641,13 +639,6 @@ function InterviewRoom({
               >
                 <HelpCircle className="w-4 h-4" />
                 Tips
-              </TabsTrigger>
-              <TabsTrigger
-                value="notes"
-                className="data-[state=active]:bg-secondary rounded-lg gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Notes
               </TabsTrigger>
             </TabsList>
 
@@ -668,17 +659,6 @@ function InterviewRoom({
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
                   <InterviewTips questionType={currentQuestion?.type} />
-                </div>
-              </ScrollArea>
-            </TabsContent>
-
-            <TabsContent
-              value="notes"
-              className="flex-1 m-0 min-h-0 overflow-hidden"
-            >
-              <ScrollArea className="h-full">
-                <div className="p-4">
-                  <InterviewNotes />
                 </div>
               </ScrollArea>
             </TabsContent>
@@ -975,26 +955,6 @@ function InterviewTips({ questionType }: { questionType?: string }) {
           <li>• Stay calm and confident</li>
         </ul>
       </div>
-    </div>
-  );
-}
-
-function InterviewNotes() {
-  const [notes, setNotes] = useState("");
-
-  return (
-    <div className="space-y-3">
-      <h3 className="font-semibold text-sm">Your Notes</h3>
-      <p className="text-xs text-muted-foreground">
-        Jot down key points during the interview. These won't be shared with the
-        AI.
-      </p>
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Type your notes here..."
-        className="w-full h-[300px] p-3 text-sm bg-secondary/50 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
-      />
     </div>
   );
 }
