@@ -25,6 +25,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useMobile } from "@/hooks/use-mobile";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -468,6 +475,56 @@ function MediaControls({
 }
 
 // =============================================================================
+// INTERVIEW SIDEBAR CONTENT - Reusable content for desktop and mobile sidebar
+// =============================================================================
+function InterviewSidebarContent({
+  transcriptRef,
+  currentQuestion,
+}: {
+  transcriptRef: React.RefObject<TranscriptEntry[]>;
+  currentQuestion?: InterviewQuestion;
+}) {
+  return (
+    <Tabs defaultValue="transcript" className="flex-1 flex flex-col min-h-0">
+      <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-4 pt-2">
+        <TabsTrigger
+          value="transcript"
+          className="data-[state=active]:bg-secondary rounded-lg gap-2"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Transcript
+        </TabsTrigger>
+        <TabsTrigger
+          value="tips"
+          className="data-[state=active]:bg-secondary rounded-lg gap-2"
+        >
+          <HelpCircle className="w-4 h-4" />
+          Tips
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent
+        value="transcript"
+        className="flex-1 m-0 p-0 min-h-0 overflow-hidden"
+      >
+        <InterviewTranscriptPanel
+          className="h-full border-0 rounded-none"
+          transcriptRef={transcriptRef}
+        />
+      </TabsContent>
+
+      <TabsContent value="tips" className="flex-1 m-0 min-h-0 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-4">
+            <InterviewTips questionType={currentQuestion?.type} />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+// =============================================================================
 // INTERVIEW ROOM - Main Room Component Inside LiveKitRoom
 // =============================================================================
 function InterviewRoom({
@@ -499,6 +556,8 @@ function InterviewRoom({
   const [isEnding, setIsEnding] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
   const hasEndedRef = useRef(false);
+  const isMobile = useMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -619,52 +678,43 @@ function InterviewRoom({
           )}
         </div>
 
-        {/* Right Panel - Sidebar */}
-        <div className="w-[380px] flex-shrink-0 border-l border-border bg-card/50 lg:flex flex-col">
-          <Tabs
-            defaultValue="transcript"
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-4 pt-2">
-              <TabsTrigger
-                value="transcript"
-                className="data-[state=active]:bg-secondary rounded-lg gap-2"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Transcript
-              </TabsTrigger>
-              <TabsTrigger
-                value="tips"
-                className="data-[state=active]:bg-secondary rounded-lg gap-2"
-              >
-                <HelpCircle className="w-4 h-4" />
-                Tips
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent
-              value="transcript"
-              className="flex-1 m-0 p-0 min-h-0 overflow-hidden"
-            >
-              <InterviewTranscriptPanel
-                className="h-full border-0 rounded-none"
-                transcriptRef={transcriptRef}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="tips"
-              className="flex-1 m-0 min-h-0 overflow-hidden"
-            >
-              <ScrollArea className="h-full">
-                <div className="p-4 space-y-4">
-                  <InterviewTips questionType={currentQuestion?.type} />
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
+        {/* Desktop Sidebar - Hidden on mobile/tablet */}
+        <div className="hidden lg:flex w-[380px] flex-shrink-0 border-l border-border bg-card/50 flex-col">
+          <InterviewSidebarContent
+            transcriptRef={transcriptRef}
+            currentQuestion={currentQuestion}
+          />
         </div>
       </div>
+
+      {/* Mobile/Tablet Sidebar Trigger Button */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="fixed bottom-24 right-4 z-30 h-12 w-12 rounded-full shadow-lg lg:hidden"
+        onClick={() => setIsSidebarOpen(true)}
+      >
+        <MessageSquare className="h-5 w-5" />
+        <span className="sr-only">Open Transcript</span>
+      </Button>
+
+      {/* Mobile/Tablet Sidebar Sheet */}
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+        <SheetContent
+          side="right"
+          className="w-[85vw] sm:w-[380px] p-0 flex flex-col"
+        >
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle>Interview Panel</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 min-h-0">
+            <InterviewSidebarContent
+              transcriptRef={transcriptRef}
+              currentQuestion={currentQuestion}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* CRITICAL: RoomAudioRenderer handles all remote audio playback */}
       <RoomAudioRenderer />
