@@ -1400,7 +1400,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       {/* Booking Dialog */}
 
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
-        <DialogContent className="overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[85vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Book{" "}
@@ -1475,7 +1475,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="schedule-date">Date</Label>
                     <Input
@@ -1526,7 +1526,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
           {selectedTemplate && (
             <div className="rounded-lg bg-muted/50 p-4 space-y-2">
               <h4 className="text-sm font-medium">Interview Details</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   <span>Duration: {selectedTemplate.duration} min</span>
