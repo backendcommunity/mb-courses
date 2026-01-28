@@ -15,7 +15,6 @@ import {
   Crown,
   Gift,
   Award,
-  LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -28,6 +27,8 @@ import { routes } from "@/lib/routes";
 import { useUser } from "@/hooks/use-user";
 import { useLevel } from "@/hooks/use-level";
 import { useAuth } from "@/store/auth";
+import { BrandLogo } from "./brand-logo";
+import { useTheme } from "next-themes";
 
 interface DashboardSidebarProps {
   currentPath: string;
@@ -39,15 +40,57 @@ interface DashboardSidebarProps {
 
 const navigationData = {
   learn: [
-    { title: "Courses", url: routes.courses, icon: BookOpen, active: true },
-    { title: "Bootcamps", url: routes.bootcamps, icon: Zap, active: true },
-    { title: "Learning Paths", url: routes.paths, icon: Target, active: false },
-    { title: "Roadmaps", url: routes.roadmaps, icon: TrendingUp, active: true },
+    {
+      title: "Courses",
+      url: routes.courses,
+      icon: BookOpen,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "Bootcamps",
+      url: routes.bootcamps,
+      icon: Zap,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "Learning Paths",
+      url: routes.paths,
+      icon: Target,
+      active: false,
+      beta: false,
+    },
+    {
+      title: "Roadmaps",
+      url: routes.roadmaps,
+      icon: TrendingUp,
+      active: true,
+      beta: false,
+    },
   ],
   build: [
-    { title: "MB Projects", url: routes.projects, icon: Code2, active: false },
-    { title: "Project30", url: routes.project30, icon: Sparkles, active: true },
-    { title: "MB Lands", url: routes.lands, icon: Trophy, active: false },
+    {
+      title: "MB Projects",
+      url: routes.projects,
+      icon: Code2,
+      active: false,
+      beta: false,
+    },
+    {
+      title: "Project30",
+      url: routes.project30,
+      icon: Sparkles,
+      active: true,
+      beta: false,
+    },
+    {
+      title: "MB Lands",
+      url: routes.lands,
+      icon: Trophy,
+      active: false,
+      beta: false,
+    },
   ],
   grow: [
     {
@@ -55,20 +98,29 @@ const navigationData = {
       url: routes.interviews,
       icon: Briefcase,
       active: false,
+      beta: false,
     },
     {
       title: "Mock Interviews",
       url: routes.mockInterviews,
       icon: Users,
-      active: false,
+      active: true,
+      beta: true,
     },
     {
       title: "Certifications",
       url: "/certifications",
       icon: Award,
       active: false,
+      beta: false,
     },
-    { title: "Community", url: routes.community, icon: Users, active: false },
+    {
+      title: "Community",
+      url: routes.community,
+      icon: Users,
+      active: false,
+      beta: false,
+    },
   ],
 };
 
@@ -82,8 +134,8 @@ export function DashboardSidebar({
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const user = useUser();
+  const { theme } = useTheme();
   const level = useLevel();
-  const auth = useAuth();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => setCollapsed(isCollapsed), [isCollapsed]);
@@ -101,17 +153,18 @@ export function DashboardSidebar({
           onClick={() => onNavigate(routes.dashboard)}
           className="flex items-center gap-2"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-            <span className="text-sm font-bold">MB</span>
-          </div>
+          {collapsed && (
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg ">
+              <BrandLogo size="md" showText={true} variant="default" />
+            </div>
+          )}
           {!collapsed && (
             <div className="grid text-left text-sm leading-tight">
-              <span className="truncate font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Masteringbackend
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                Career Platform
-              </span>
+              {theme === "light" ? (
+                <img src="/blue-logo-trimed.png" alt="logo" />
+              ) : (
+                <img src="/logo-trimed.png" alt="logo" />
+              )}
             </div>
           )}
         </button>
@@ -227,6 +280,9 @@ export function DashboardSidebar({
                     {!collapsed && !item.active && (
                       <Badge variant="secondary">WIP</Badge>
                     )}
+                    {!collapsed && item.beta && (
+                      <Badge variant="destructive">beta</Badge>
+                    )}
                   </div>
                 </button>
               ))}
@@ -261,21 +317,6 @@ export function DashboardSidebar({
               </div>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              try {
-                await auth.logout();
-              } catch (error) {
-                console.error("Logout error:", error);
-              } finally {
-                onNavigate("/auth/login");
-              }
-            }}
-          >
-            <LogOut className={`${collapsed ? "h-6 w-6" : "h-4 w-4"}`} />
-          </Button>
         </div>
       </div>
     </div>

@@ -629,6 +629,8 @@ export interface Week {
   bootcampId: string;
   bootcamp: Bootcamp;
   cohort?: Cohort;
+  prevWeek?: { id: string; title: string; lessons?: Lesson[] };
+  nextWeek?: { id: string; title: string; lessons?: Lesson[] };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1755,7 +1757,7 @@ export const getRoadmapMilestones = (roadmapId: string) => {
 
 export const getRoadmapMilestoneById = (
   roadmapId: string,
-  milestoneId: string
+  milestoneId: string,
 ) => {
   const milestones = getRoadmapMilestones(roadmapId);
   return milestones.find((m) => m.id === milestoneId);
@@ -1763,12 +1765,12 @@ export const getRoadmapMilestoneById = (
 
 export const getRoadmapCoursesByMilestone = (milestoneId: string) => {
   const roadmapCourses = dataStore.roadmapCourses.filter(
-    (rc) => rc.milestoneId === milestoneId
+    (rc) => rc.milestoneId === milestoneId,
   );
   return roadmapCourses
     .map((rc) => {
       const course = dataStore.coursesResponse.courses.find(
-        (c) => c.id === rc.courseId
+        (c) => c.id === rc.courseId,
       );
       return {
         ...course,
@@ -1782,7 +1784,7 @@ export const getRoadmapCoursesByMilestone = (milestoneId: string) => {
 
 export const getRoadmapProjectsByMilestone = (milestoneId: string) => {
   const roadmapProjects = dataStore.roadmapProjects.filter(
-    (rp) => rp.milestoneId === milestoneId
+    (rp) => rp.milestoneId === milestoneId,
   );
   return roadmapProjects
     .map((rp) => {
@@ -1799,7 +1801,7 @@ export const getRoadmapProjectsByMilestone = (milestoneId: string) => {
 
 export const getRoadmapAssessmentsByMilestone = (milestoneId: string) => {
   return dataStore.roadmapAssessments.filter(
-    (a) => a.milestoneId === milestoneId
+    (a) => a.milestoneId === milestoneId,
   );
 };
 
@@ -1888,7 +1890,7 @@ export const markChapterComplete = (courseId: string, chapterId: string) => {
 export const markVideoComplete = (
   courseId: string,
   chapterId: string,
-  videoId: string
+  videoId: string,
 ) => {
   const chapter = getCourseChapterById(courseId, chapterId);
   if (chapter) {
@@ -1902,7 +1904,7 @@ export const markVideoComplete = (
 export const submitQuizAttempt = (
   courseId: string,
   quizId: string,
-  score: number
+  score: number,
 ) => {
   const quiz = getQuizById(courseId, quizId);
   if (quiz) {
@@ -1915,7 +1917,7 @@ export const submitQuizAttempt = (
 export const submitExerciseAttempt = (
   courseId: string,
   exerciseId: string,
-  success: boolean
+  success: boolean,
 ) => {
   const exercise = getExerciseById(courseId, exerciseId);
   if (exercise) {
@@ -1928,7 +1930,7 @@ export const submitExerciseAttempt = (
 
 export const markPlaygroundComplete = (
   courseId: string,
-  playgroundId: string
+  playgroundId: string,
 ) => {
   const playground = getPlaygroundById(courseId, playgroundId);
   if (playground) {
@@ -1939,7 +1941,7 @@ export const markPlaygroundComplete = (
 export const updateProjectProgress = (
   projectId: string,
   progress: number,
-  status?: Project["status"]
+  status?: Project["status"],
 ) => {
   const project = getProjectById(projectId);
   if (project) {
@@ -1980,7 +1982,7 @@ export const enrollInRoadmap = async (slug: string) => {
 export const updateRoadmapProgress = (
   roadmapId: string,
   progress: number,
-  currentMilestone?: number
+  currentMilestone?: number,
 ) => {
   const roadmap = getRoadmapById(roadmapId);
   if (roadmap) {
@@ -2013,7 +2015,7 @@ export const updateCourse = (slug: string, updates: Partial<Course>) => {
 };
 
 export const updatePopularCourses = (
-  updates: Partial<PopularCoursesResponse>
+  updates: Partial<PopularCoursesResponse>,
 ) => {
   const courses = [...(updates?.courses ?? [])];
   dataStore.popularCoursesResponse.courses = [...courses];

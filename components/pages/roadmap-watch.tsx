@@ -283,6 +283,10 @@ export function RoadmapWatchPage({
 
   function nextUp() {
     const next = hasNext();
+
+    const completedTask = getCompletedTasks(next?.id, milestone?.userTopic?.id);
+    const completed = completedTask?.completed ?? false;
+    const isActive = !!completedTask;
     {
       if (!next)
         return (
@@ -317,7 +321,7 @@ export function RoadmapWatchPage({
               </span>
             </div>
           </div>
-          <Button
+          {/* <Button
             onClick={() => handleStart(next)}
             className="w-full capitalize"
             size="sm"
@@ -327,6 +331,39 @@ export function RoadmapWatchPage({
             {next?.type?.toLowerCase() === "video"
               ? "Course"
               : next?.type?.toLowerCase()}
+          </Button> */}
+
+          <Button
+            onClick={() => {
+              if (completed || isActive) return handleContinueLearning(next);
+
+              handleStart(next);
+            }}
+            size="sm"
+            variant={completed ? "outline" : isActive ? "secondary" : "default"}
+            className="capitalize"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            {completed ? (
+              `Review ${
+                next?.type?.toLowerCase() === "video"
+                  ? "Course"
+                  : next?.type?.toLowerCase()
+              }`
+            ) : isActive ? (
+              `Continue Learning`
+            ) : starting && next?.slug === currentItem ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Starting...</span>
+              </>
+            ) : (
+              `Start ${
+                next?.type?.toLowerCase() === "video"
+                  ? "Course"
+                  : next?.type?.toLowerCase()
+              }`
+            )}
           </Button>
         </div>
       );
@@ -463,39 +500,49 @@ export function RoadmapWatchPage({
                         : "bg-blue-50 dark:bg-gray-800"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={completed}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {course?.type === "VIDEO" && (
-                            <BookOpen className="h-4 w-4 text-blue-600" />
-                          )}
-                          {(course?.type === "PROJECT" ||
-                            course?.type === "PLAYGROUND") && (
-                            <Code2 className="h-4 w-4 text-green-600" />
-                          )}
-                          {(course?.type === "QUIZ" ||
-                            course?.type === "EXERCISE") && (
-                            <Target className="h-4 w-4 text-purple-600" />
-                          )}
-                          <span
-                            className={`font-medium ${
-                              completed
-                                ? "line-through text-muted-foreground"
-                                : ""
-                            }`}
-                          >
-                            {course?.title}
-                          </span>
+                    <div className="flex items-center justify-between flex-col md:flex-row gap-3">
+                      <div className="flex gap-3 items-center">
+                        <Checkbox
+                          checked={completed}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {course?.type === "VIDEO" && (
+                              <BookOpen className="h-4 w-4 text-blue-600" />
+                            )}
+                            {(course?.type === "PROJECT" ||
+                              course?.type === "PLAYGROUND") && (
+                              <Code2 className="h-4 w-4 text-green-600" />
+                            )}
+                            {(course?.type === "QUIZ" ||
+                              course?.type === "EXERCISE") && (
+                              <Target className="h-4 w-4 text-purple-600" />
+                            )}
+                            <span
+                              className={`font-medium ${
+                                completed
+                                  ? "line-through text-muted-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {course?.title}
+                            </span>
+                          </div>
                         </div>
+
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200 md:hidden inline-flex"
+                        >
+                          {course?.type ?? "Course"}
+                        </Badge>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200"
+                          className="bg-green-50 text-green-700 border-green-200 hidden md:inline-flex"
                         >
                           {course?.type ?? "Course"}
                         </Badge>

@@ -119,7 +119,7 @@ export function DashboardContent({}: DashboardContentProps) {
             className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10"
           >
             <Flame className="h-3 w-3 mr-1 text-orange-500" />
-            {user?.streak} day streak
+            {user?.streak ?? 0} day streak
           </Badge>
         </div>
       </div>
@@ -135,13 +135,13 @@ export function DashboardContent({}: DashboardContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {user?.numberOfCoursesCompleted}/{user?.numberOfCoursesInProgress}
+              {user?.numberOfCoursesCompleted ?? 0}/
+              {user?.numberOfCoursesInProgress ?? 0}
             </div>
             <Progress
               value={
-                (user?.numberOfCoursesCompleted! /
-                  user?.numberOfCoursesInProgress!) *
-                100
+                (user?.numberOfCoursesCompleted ??
+                  0 / user?.numberOfCoursesInProgress!) * 100
               }
               className="mt-2"
             />
@@ -157,10 +157,10 @@ export function DashboardContent({}: DashboardContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {user?.numberOfProjectsBuilt}
+              {user?.numberOfProjectsBuilt ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              +{user?.numberOfProjectsBuiltThisMonth} this month
+              +{user?.numberOfProjectsBuiltThisMonth ?? 0} this month
             </p>
           </CardContent>
         </Card>
@@ -172,10 +172,10 @@ export function DashboardContent({}: DashboardContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {user?.points?.toLocaleString()}
+              {user?.points?.toLocaleString() ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Level {user?.level} Engineer
+              Level {user?.level ?? 0} Engineer
             </p>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export function DashboardContent({}: DashboardContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {user?.numberOfCertificateEarned}
+              {user?.numberOfCertificateEarned ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Industry recognized</p>
           </CardContent>

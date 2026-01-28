@@ -80,13 +80,13 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
     );
 
   const isTaskCompleted = (task: string) => {
-    return userTasks?.find((userTask: any) => userTask.taskId === task)
+    return userTasks?.find((userTask: any) => userTask?.taskId === task)
       ?.isCompleted;
   };
 
   const isProjectTaskCompleted = (tasks: any[]) => {
     return tasks?.every((task) => {
-      const userTask = userTasks.find((u: any) => u.taskId === task.id);
+      const userTask = userTasks.find((u: any) => u?.taskId === task.id);
       return userTask?.isCompleted === true;
     });
   };
@@ -94,8 +94,34 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
   const handleMarkAsCompleted = async (id: string) => {
     try {
       setMarking(true);
-      const completed = await store.markProjectTaskAsCompleted(slug, id);
 
+      setUserTasks((prev: any) => {
+        if (!prev) return prev;
+
+        const exists = prev.some((u: any) => u.taskId === id);
+
+        // If it exists, update it
+        if (exists) {
+          return prev.map((userTask: any) =>
+            userTask.taskId === id
+              ? {
+                  ...userTask,
+                  isCompleted: true,
+                }
+              : userTask
+          );
+        }
+
+        return [
+          ...prev,
+          {
+            taskId: id,
+            isCompleted: true,
+          },
+        ];
+      });
+
+      const completed = await store.markProjectTaskAsCompleted(slug, id);
       setProject((prev) => {
         if (!prev) return prev;
 
@@ -213,7 +239,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
             </CardContent>
           </Card>
           {/* Video Actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center md:flex-row flex-col gap-3 md:gap-1 justify-between">
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => handleShare(task?.title!, path)}

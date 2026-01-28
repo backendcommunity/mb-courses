@@ -1,333 +1,1009 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Video,
-  VideoOff,
+  LiveKitRoom,
+  useVoiceAssistant,
+  BarVisualizer,
+  RoomAudioRenderer,
+  useConnectionState,
+  useTracks,
+  useParticipants,
+  useLocalParticipant,
+  VideoTrack,
+  AudioTrack,
+} from "@livekit/components-react";
+import "@livekit/components-styles";
+import { ConnectionState, Track } from "livekit-client";
+import { useUser } from "@/hooks/use-user";
+import { useAppStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
+
+// UI Components
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useMobile } from "@/hooks/use-mobile";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  AlertCircle,
+  Loader2,
+  MessageSquare,
+  HelpCircle,
+  Bot,
+  User,
+  Wifi,
+  WifiOff,
   Mic,
   MicOff,
-  MessageSquare,
-  Clock,
-  Send,
-  Phone,
-  Settings,
-  User,
+  Video,
+  VideoOff,
+  PhoneOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
+
+// Custom Components
 import {
-  getMockInterviewById,
-  getInterviewQuestions,
-} from "@/lib/mock-interview-data";
+  InterviewTranscriptPanel,
+  TranscriptEntry,
+} from "./mock-interviews/interview-transcript-panel";
+import { InterviewHeader } from "./mock-interviews/interview-header";
+import { InterviewQuestionCard } from "./mock-interviews/interview-question-card";
+
+// Types
+interface InterviewSession {
+  id: string;
+  title?: string;
+  status: string;
+  scheduledTime?: string;
+  duration?: number;
+  template?: {
+    id: string;
+    name: string;
+    difficulty: string;
+    duration: string;
+    topics?: string[];
+    description?: string;
+  };
+  questions?: InterviewQuestion[];
+  interviewConfig?: {
+    difficulty?: string;
+    topics?: string[];
+    duration?: number;
+  };
+}
+
+interface InterviewQuestion {
+  id: string;
+  question: string;
+  type: string;
+  difficulty: string;
+  timeLimit: number;
+}
 
 interface MockInterviewSessionProps {
-  interviewId: string;
+  sessionId: string;
   onNavigate: (path: string) => void;
 }
 
-export function MockInterviewSessionPage({
-  interviewId,
-  onNavigate,
-}: MockInterviewSessionProps) {
-  const [interview] = useState(() => getMockInterviewById(interviewId));
-  const [questions] = useState(() => getInterviewQuestions());
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes for demo
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [isAudioOn, setIsAudioOn] = useState(true);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatHistory, setChatHistory] = useState([
-    {
-      sender: "interviewer",
-      message:
-        "Hello! Welcome to your mock interview. I'm Kap AI, and I'll be conducting your interview today. Are you ready to begin?",
-      timestamp: new Date().toISOString(),
-    },
-  ]);
-  const [userAnswer, setUserAnswer] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
+// =============================================================================
+// VOICE ASSISTANT STAGE - Handles AI Agent Audio/Video
+// =============================================================================
+function VoiceAssistantStage() {
+  const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
 
+  return (
+    <div className="flex flex-col items-center justify-center h-full">
+      {/* AI Avatar with Audio Visualizer */}
+      <div className="relative">
+        {/* Outer glow rings */}
+        <div className="absolute inset-0 -m-12">
+          <div
+            className={cn(
+              "w-48 h-48 rounded-full border-2 border-primary/20",
+              state === "speaking" && "animate-ping",
+            )}
+            style={{ animationDuration: "2s" }}
+          />
+        </div>
+        <div className="absolute inset-0 -m-6">
+          <div
+            className={cn(
+              "w-36 h-36 rounded-full border border-primary/30",
+              state !== "disconnected" && "animate-pulse",
+            )}
+          />
+        </div>
+
+        {/* Main avatar with visualizer */}
+        <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-[hsl(190,83%,34%)] p-[3px]">
+          <div className="w-full h-full rounded-full bg-[hsl(222,25%,16%)] flex items-center justify-center overflow-hidden">
+            {audioTrack ? (
+              <BarVisualizer
+                state={state}
+                trackRef={audioTrack}
+                barCount={5}
+                className="w-16 h-16"
+              />
+            ) : (
+              <Bot className="w-12 h-12 text-primary" />
+            )}
+          </div>
+        </div>
+
+        {/* Status indicator */}
+        <div
+          className={cn(
+            "absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-[hsl(222,25%,16%)] flex items-center justify-center",
+            state === "speaking"
+              ? "bg-green-500"
+              : state === "listening"
+                ? "bg-blue-500"
+                : state === "connecting"
+                  ? "bg-yellow-500"
+                  : "bg-gray-500",
+          )}
+        >
+          <div
+            className={cn(
+              "w-2 h-2 rounded-full bg-white",
+              state !== "disconnected" && "animate-pulse",
+            )}
+          />
+        </div>
+      </div>
+
+      {/* Status Text */}
+      <div className="mt-6 text-center">
+        <h3 className="text-xl font-semibold text-white">Kap AI Interviewer</h3>
+        <p className="text-sm text-muted-foreground mt-1 capitalize">
+          {state === "speaking"
+            ? "Speaking..."
+            : state === "listening"
+              ? "Listening to you..."
+              : state === "thinking"
+                ? "Processing..."
+                : state === "connecting"
+                  ? "Connecting..."
+                  : "Ready"}
+        </p>
+      </div>
+
+      {/* Voice Activity Bars */}
+      <div className="flex items-center gap-1 mt-4">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "w-1 rounded-full transition-all duration-150",
+              state === "speaking"
+                ? "bg-green-500 animate-[audioWave_0.5s_ease-in-out_infinite]"
+                : state === "listening"
+                  ? "bg-blue-500 animate-pulse"
+                  : "bg-primary/30",
+            )}
+            style={{
+              height: state === "speaking" ? `${12 + i * 4}px` : "8px",
+              animationDelay: `${i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// INTERVIEW STAGE - Main Video/Audio Stage
+// =============================================================================
+function InterviewStage({ className }: { className?: string }) {
+  const participants = useParticipants();
+  const { localParticipant } = useLocalParticipant();
+  const connectionState = useConnectionState();
+  const isConnected = connectionState === ConnectionState.Connected;
+
+  // Get all tracks
+  const tracks = useTracks(
+    [Track.Source.Camera, Track.Source.Microphone, Track.Source.ScreenShare],
+    { onlySubscribed: true },
+  );
+
+  // Find local video track
+  const localVideoTrack = tracks.find(
+    (t) =>
+      t.participant.identity === localParticipant?.identity &&
+      t.source === Track.Source.Camera,
+  );
+
+  // Find remote participant (AI agent)
+  const remoteParticipant = participants.find(
+    (p) => p.identity !== localParticipant?.identity,
+  );
+
+  // Find remote tracks
+  const remoteVideoTrack = tracks.find(
+    (t) =>
+      t.participant.identity !== localParticipant?.identity &&
+      t.source === Track.Source.Camera,
+  );
+
+  const remoteAudioTrack = tracks.find(
+    (t) =>
+      t.participant.identity !== localParticipant?.identity &&
+      t.source === Track.Source.Microphone,
+  );
+
+  return (
+    <div className={cn("relative w-full h-full", className)}>
+      {/* Main Area - AI Interviewer */}
+      <div className="block lg:absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,12%)] to-[hsl(222,25%,8%)] rounded-2xl overflow-hidden">
+        {/* CRITICAL: Render AudioTrack for remote audio playback */}
+        {remoteAudioTrack && (
+          <AudioTrack trackRef={remoteAudioTrack} volume={1} />
+        )}
+
+        {/* Video or Avatar Placeholder */}
+        {remoteVideoTrack ? (
+          <VideoTrack
+            trackRef={remoteVideoTrack}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <VoiceAssistantStage />
+        )}
+
+        {/* AI Label */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/10">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-medium text-white">
+              {remoteParticipant?.identity || "Kap AI"}
+            </span>
+            <Bot className="w-4 h-4 text-primary" />
+          </div>
+        </div>
+
+        {/* Connection Status */}
+        <div className="absolute top-4 right-4 z-10 hidden md:block">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm border",
+              isConnected
+                ? "bg-green-500/20 border-green-500/30"
+                : "bg-yellow-500/20 border-yellow-500/30",
+            )}
+          >
+            {isConnected ? (
+              <>
+                <Wifi className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-medium text-green-400">Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-medium text-yellow-400">
+                  Connecting...
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Local Video - Picture in Picture */}
+      <div className="absolute top-5 md:top-12 lg:top-auto lg:bottom-4 right-4 lg:w-48 lg:h-36 w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20 bg-[hsl(222,25%,16%)] z-10">
+        {localVideoTrack ? (
+          <div className="relative w-full h-full">
+            <VideoTrack
+              trackRef={localVideoTrack}
+              className="w-full h-full object-cover"
+              style={{ transform: "scaleX(-1)" }}
+            />
+            <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/60 backdrop-blur-sm">
+              <User className="w-3 h-3 text-primary" />
+              <span className="text-xs font-medium text-white">You</span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <User className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-xs text-muted-foreground mt-2">
+              Camera off
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// MEDIA CONTROLS - Mic, Camera, Speaker, End Call
+// =============================================================================
+function MediaControls({
+  onEndInterview,
+  isEnding,
+}: {
+  onEndInterview: () => void;
+  isEnding?: boolean;
+}) {
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled } =
+    useLocalParticipant();
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+
+  const toggleMicrophone = useCallback(async () => {
+    await localParticipant?.setMicrophoneEnabled(!isMicrophoneEnabled);
+  }, [localParticipant, isMicrophoneEnabled]);
+
+  const toggleCamera = useCallback(async () => {
+    await localParticipant?.setCameraEnabled(!isCameraEnabled);
+  }, [localParticipant, isCameraEnabled]);
+
+  const toggleSpeaker = useCallback(() => {
+    const newMuted = !isSpeakerMuted;
+    setIsSpeakerMuted(newMuted);
+
+    // Mute all audio elements on the page
+    document.querySelectorAll("audio").forEach((audio) => {
+      audio.muted = newMuted;
+      if (!newMuted) audio.volume = 1;
+    });
+  }, [isSpeakerMuted]);
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <div className="flex items-center justify-center  gap-2 p-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl">
+        {/* Microphone */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMicrophone}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                isMicrophoneEnabled
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
+              )}
+            >
+              {isMicrophoneEnabled ? (
+                <Mic className="w-5 h-5" />
+              ) : (
+                <MicOff className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isMicrophoneEnabled ? "Mute" : "Unmute"}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Camera */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleCamera}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                isCameraEnabled
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
+              )}
+            >
+              {isCameraEnabled ? (
+                <Video className="w-5 h-5" />
+              ) : (
+                <VideoOff className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isCameraEnabled ? "Stop Video" : "Start Video"}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Speaker */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSpeaker}
+              className={cn(
+                "w-12 h-12 rounded-xl transition-all",
+                !isSpeakerMuted
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive/20 hover:bg-destructive/30 text-destructive",
+              )}
+            >
+              {!isSpeakerMuted ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {!isSpeakerMuted ? "Mute Speaker" : "Unmute Speaker"}
+          </TooltipContent>
+        </Tooltip>
+
+        <div className="w-px h-8 bg-border/50 mx-1" />
+
+        {/* End Interview */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={onEndInterview}
+              disabled={isEnding}
+              className="w-12 h-12 rounded-xl shadow-lg shadow-destructive/20"
+            >
+              {isEnding ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <PhoneOff className="w-5 h-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isEnding ? "Ending..." : "End Interview"}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+// =============================================================================
+// INTERVIEW SIDEBAR CONTENT - Reusable content for desktop and mobile sidebar
+// =============================================================================
+function InterviewSidebarContent({
+  transcriptRef,
+  currentQuestion,
+}: {
+  transcriptRef: React.RefObject<TranscriptEntry[]>;
+  currentQuestion?: InterviewQuestion;
+}) {
+  return (
+    <Tabs defaultValue="transcript" className="flex-1 flex flex-col min-h-0">
+      <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-4 pt-2">
+        <TabsTrigger
+          value="transcript"
+          className="data-[state=active]:bg-secondary rounded-lg gap-2"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Transcript
+        </TabsTrigger>
+        <TabsTrigger
+          value="tips"
+          className="data-[state=active]:bg-secondary rounded-lg gap-2"
+        >
+          <HelpCircle className="w-4 h-4" />
+          Tips
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent
+        value="transcript"
+        className="flex-1 m-0 p-0 min-h-0 overflow-hidden"
+      >
+        <InterviewTranscriptPanel
+          className="h-full border-0 rounded-none"
+          transcriptRef={transcriptRef}
+        />
+      </TabsContent>
+
+      <TabsContent value="tips" className="flex-1 m-0 min-h-0 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-4">
+            <InterviewTips questionType={currentQuestion?.type} />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+// =============================================================================
+// INTERVIEW ROOM - Main Room Component Inside LiveKitRoom
+// =============================================================================
+function InterviewRoom({
+  sessionId,
+  session,
+  questions,
+  currentQuestionIndex,
+  setCurrentQuestionIndex,
+  initialTimeRemaining,
+  onNavigate,
+  onTimeUpdate,
+}: {
+  sessionId: string;
+  session: InterviewSession;
+  questions: InterviewQuestion[];
+  currentQuestionIndex: number;
+  setCurrentQuestionIndex: (index: number | ((prev: number) => number)) => void;
+  initialTimeRemaining: number;
+  onNavigate: (path: string) => void;
+  onTimeUpdate?: (time: number) => void;
+}) {
+  const store = useAppStore();
+  const connectionState = useConnectionState();
+  const isConnected = connectionState === ConnectionState.Connected;
   const currentQuestion = questions[currentQuestionIndex];
 
-  useEffect(() => {
-    if (!interview) {
-      onNavigate("/mock-interviews");
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleEndInterview();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [interview, onNavigate]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const handleSendMessage = () => {
-    if (!chatMessage.trim()) return;
-
-    const newMessage = {
-      sender: "candidate" as const,
-      message: chatMessage,
-      timestamp: new Date().toISOString(),
-    };
-
-    setChatHistory((prev) => [...prev, newMessage]);
-    setChatMessage("");
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        sender: "interviewer" as const,
-        message: "Thank you for your question. Let me help you with that...",
-        timestamp: new Date().toISOString(),
-      };
-      setChatHistory((prev) => [...prev, aiResponse]);
-    }, 1000);
-  };
+  // Ref that the transcript panel will update directly
+  const transcriptRef = useRef<TranscriptEntry[]>([]);
+  const [isEnding, setIsEnding] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
+  const hasEndedRef = useRef(false);
+  const isMobile = useMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions?.length - 1) {
+    if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
-      setUserAnswer("");
     } else {
       handleEndInterview();
     }
   };
 
-  const handleEndInterview = () => {
-    onNavigate(`/mock-interviews/${interviewId}/results`);
+  const handleEndInterview = useCallback(async () => {
+    // Prevent multiple end calls
+    if (isEnding || hasEndedRef.current) return;
+    hasEndedRef.current = true;
+    setIsEnding(true);
+
+    // Read directly from ref - the panel updates this ref whenever transcript changes
+    const allTranscript = transcriptRef.current || [];
+    const finalTranscript = allTranscript.filter((t) => t.isFinal);
+
+    console.log("=== END INTERVIEW ===");
+    console.log("Total transcript entries:", allTranscript.length);
+    console.log("Final transcript entries:", allTranscript);
+    console.log("Transcript data:", JSON.stringify(allTranscript, null, 2));
+
+    try {
+      // End session and submit transcript
+      await store.endInterviewSession(
+        sessionId,
+        allTranscript.map((t) => ({
+          speaker: t.speaker,
+          text: t.text,
+          timestamp: t.timestamp,
+        })),
+      );
+
+      // Navigate to results
+      onNavigate(`/mock-interviews/${sessionId}/results`);
+    } catch (error) {
+      console.error("Failed to end interview:", error);
+      // Navigate anyway - transcript may already be saved incrementally
+      onNavigate(`/mock-interviews/${sessionId}/results`);
+    }
+  }, [isEnding, store, sessionId, onNavigate]);
+
+  // Timer countdown - ends interview when time expires
+  useEffect(() => {
+    if (timeRemaining <= 0 || hasEndedRef.current) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        // Notify parent of time updates for header display
+        onTimeUpdate?.(newTime);
+
+        if (newTime <= 0) {
+          // Timer expired - end interview properly with transcript submission
+          handleEndInterview();
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, handleEndInterview, onTimeUpdate]);
+
+  const handleBack = () => {
+    onNavigate("/mock-interviews");
   };
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    // In a real app, this would start actual recording
-  };
+  const interviewTitle =
+    session?.template?.name || session?.title || "Mock Interview";
+  const interviewType =
+    session?.template?.difficulty ||
+    session?.interviewConfig?.difficulty ||
+    "Technical Interview";
 
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    // In a real app, this would stop recording and process the answer
-  };
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-auto">
+      {/* Header */}
+      <InterviewHeader
+        interviewTitle={interviewTitle}
+        interviewType={interviewType}
+        currentQuestion={currentQuestionIndex + 1}
+        totalQuestions={questions.length}
+        timeRemaining={timeRemaining}
+        isConnected={isConnected}
+        onBack={handleBack}
+      />
 
-  if (!interview) {
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Left Panel - Video Stage */}
+        <div className="flex-1 flex flex-col p-4 gap-4 min-w-0">
+          <div className="flex-1 relative min-h-0  overflow-hidden">
+            <InterviewStage className="w-full h-full" />
+
+            {/* Media Controls */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <MediaControls
+                onEndInterview={handleEndInterview}
+                isEnding={isEnding}
+              />
+            </div>
+          </div>
+
+          {/* Question Card */}
+          {currentQuestion && (
+            <div className="flex-shrink-0">
+              <InterviewQuestionCard
+                question={currentQuestion}
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
+                onNextQuestion={handleNextQuestion}
+                isLastQuestion={currentQuestionIndex === questions.length - 1}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Sidebar - Hidden on mobile/tablet */}
+        <div className="hidden lg:flex w-[380px] flex-shrink-0 border-l border-border bg-card/50 flex-col">
+          <InterviewSidebarContent
+            transcriptRef={transcriptRef}
+            currentQuestion={currentQuestion}
+          />
+        </div>
+      </div>
+
+      {/* Mobile/Tablet Sidebar Trigger Button */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="fixed bottom-24 right-4 z-30 h-12 w-12 rounded-full shadow-lg lg:hidden"
+        onClick={() => setIsSidebarOpen(true)}
+      >
+        <MessageSquare className="h-5 w-5" />
+        <span className="sr-only">Open Transcript</span>
+      </Button>
+
+      {/* Mobile/Tablet Sidebar Sheet */}
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+        <SheetContent
+          side="right"
+          className="w-[85vw] sm:w-[380px] p-0 flex flex-col"
+        >
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle>Interview Panel</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 min-h-0">
+            <InterviewSidebarContent
+              transcriptRef={transcriptRef}
+              currentQuestion={currentQuestion}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* CRITICAL: RoomAudioRenderer handles all remote audio playback */}
+      <RoomAudioRenderer />
+    </div>
+  );
+}
+
+// =============================================================================
+// MAIN PAGE COMPONENT
+// =============================================================================
+export function MockInterviewSessionPage({
+  sessionId,
+  onNavigate,
+}: MockInterviewSessionProps) {
+  const user = useUser();
+  const store = useAppStore();
+
+  // Session state
+  const [session, setSession] = useState<InterviewSession | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(2700);
+
+  // LiveKit state
+  const [token, setToken] = useState<string>("");
+  const [serverUrl, setServerUrl] = useState<string>("");
+
+  // UI state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Initialize session
+  const initializeSession = useCallback(async () => {
+    if (!sessionId || !user?.id) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch session details
+      const sessionData = await store.getInterviewSession(sessionId);
+      if (!sessionData) throw new Error("Interview session not found");
+
+      setSession(sessionData);
+
+      // Set questions
+      if (sessionData.questions?.length > 0) {
+        setQuestions(sessionData.questions);
+      } else {
+        setQuestions([
+          {
+            id: "dynamic-1",
+            question:
+              "The AI interviewer will guide you through the questions.",
+            type: sessionData.template?.topics?.[0] || "Technical",
+            difficulty: sessionData.template?.difficulty || "Intermediate",
+            timeLimit: 10,
+          },
+        ]);
+      }
+
+      // Set duration
+      const durationMinutes =
+        sessionData.duration ||
+        sessionData.interviewConfig?.duration ||
+        parseInt(sessionData.template?.duration || "45");
+      setTimeRemaining(durationMinutes * 60);
+
+      // Get LiveKit token
+      const tokenData = await store.getMockInterviewSessionToken(sessionId);
+      if (!tokenData?.token) throw new Error("Failed to get session token");
+
+      setToken(tokenData.token);
+      setServerUrl(
+        tokenData.wsUrl || "wss://mock-interview-up2y2ttf.livekit.cloud",
+      );
+    } catch (err: any) {
+      console.error("Failed to initialize session:", err);
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to initialize interview session.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionId, user?.id, store]);
+
+  useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
+
+  // Time update handler - receives updates from InterviewRoom timer
+  const handleTimeUpdate = useCallback((newTime: number) => {
+    setTimeRemaining(newTime);
+  }, []);
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="flex items-center justify-center py-8">
-            <p>Interview not found</p>
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">
+              Preparing your interview...
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Connecting to Kap AI Interviewer
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Connection Failed</h2>
+                <p className="text-sm text-muted-foreground mt-1">{error}</p>
+              </div>
+              <div className="flex gap-3 mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => onNavigate("/mock-interviews")}
+                >
+                  Go Back
+                </Button>
+                <Button onClick={initializeSession}>Try Again</Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <div className="border-b bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{interview.type.icon}</span>
+  // Session not found
+  if (!session) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-muted-foreground" />
+              </div>
               <div>
-                <h1 className="text-lg font-semibold">
-                  {interview.type.title}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Mock Interview Session
+                <h2 className="text-lg font-semibold">Interview Not Found</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The interview session doesn't exist or has expired.
                 </p>
               </div>
+              <Button onClick={() => onNavigate("/mock-interviews")}>
+                Back to Interviews
+              </Button>
             </div>
-            <Badge variant="outline">
-              Question {currentQuestionIndex + 1} of {questions.length}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" />
-              <span className="font-mono">{formatTime(timeRemaining)}</span>
-            </div>
-            <Button variant="destructive" onClick={handleEndInterview}>
-              <Phone className="h-4 w-4 mr-2" />
-              End Interview
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
 
-      <div className="flex-1 flex">
-        {/* Main Interview Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Video Area */}
-          <div className="flex-1 bg-black relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-gray-800 rounded-lg p-8 text-white text-center">
-                <User className="h-16 w-16 mx-auto mb-4" />
-                <p className="text-lg">Kap AI Interviewer</p>
-                <p className="text-sm text-gray-400">Video call in progress</p>
-              </div>
-            </div>
+  // Main interview room with LiveKit
+  return (
+    <LiveKitRoom
+      token={token}
+      serverUrl={serverUrl}
+      connect={!!token && !!serverUrl}
+      audio={true}
+      video={true}
+      options={{
+        adaptiveStream: true,
+        dynacast: true,
+        publishDefaults: {
+          simulcast: false,
+          audioPreset: { maxBitrate: 48000 },
+        },
+      }}
+      data-lk-theme="default"
+      className="h-screen"
+      onConnected={() => console.log("✅ Connected to LiveKit room")}
+      onDisconnected={() => console.log("❌ Disconnected from LiveKit room")}
+      onError={(error) => console.error("LiveKit error:", error)}
+    >
+      <InterviewRoom
+        sessionId={sessionId}
+        session={session}
+        questions={questions}
+        currentQuestionIndex={currentQuestionIndex}
+        setCurrentQuestionIndex={setCurrentQuestionIndex}
+        initialTimeRemaining={timeRemaining}
+        onNavigate={onNavigate}
+        onTimeUpdate={handleTimeUpdate}
+      />
+    </LiveKitRoom>
+  );
+}
 
-            {/* User video (small overlay) */}
-            <div className="absolute bottom-4 right-4 w-48 h-36 bg-gray-900 rounded-lg border-2 border-white">
-              <div className="flex items-center justify-center h-full text-white">
-                <div className="text-center">
-                  <User className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">You</p>
-                </div>
-              </div>
-            </div>
+// =============================================================================
+// HELPER COMPONENTS
+// =============================================================================
+function InterviewTips({ questionType }: { questionType?: string }) {
+  const tips: Record<string, { title: string; tips: string[] }> = {
+    Conceptual: {
+      title: "Conceptual Question Tips",
+      tips: [
+        "Start with a clear, concise definition",
+        "Use examples to illustrate your understanding",
+        "Mention real-world use cases",
+        "Compare and contrast with related concepts",
+      ],
+    },
+    Technical: {
+      title: "Technical Question Tips",
+      tips: [
+        "Think out loud as you work through the problem",
+        "Ask clarifying questions if needed",
+        "Discuss trade-offs of different approaches",
+        "Consider edge cases and error handling",
+      ],
+    },
+    "System Design": {
+      title: "System Design Tips",
+      tips: [
+        "Start by clarifying requirements and constraints",
+        "Begin with a high-level architecture",
+        "Discuss scalability and bottlenecks",
+        "Consider data storage and retrieval patterns",
+      ],
+    },
+    Coding: {
+      title: "Coding Question Tips",
+      tips: [
+        "Understand the problem before coding",
+        "Start with a brute force solution",
+        "Optimize step by step",
+        "Test with example inputs",
+      ],
+    },
+    Behavioral: {
+      title: "Behavioral Question Tips",
+      tips: [
+        "Use the STAR method (Situation, Task, Action, Result)",
+        "Be specific with examples",
+        "Focus on your contributions",
+        "Show what you learned from the experience",
+      ],
+    },
+  };
 
-            {/* Video Controls */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={isVideoOn ? "default" : "destructive"}
-                onClick={() => setIsVideoOn(!isVideoOn)}
-              >
-                {isVideoOn ? (
-                  <Video className="h-4 w-4" />
-                ) : (
-                  <VideoOff className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant={isAudioOn ? "default" : "destructive"}
-                onClick={() => setIsAudioOn(!isAudioOn)}
-              >
-                {isAudioOn ? (
-                  <Mic className="h-4 w-4" />
-                ) : (
-                  <MicOff className="h-4 w-4" />
-                )}
-              </Button>
-              <Button size="sm" variant="outline">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+  const currentTips = tips[questionType || "Technical"] || tips.Technical;
 
-          {/* Question Area */}
-          <div className="border-t bg-card p-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Current Question</CardTitle>
-                  <Badge variant="outline">{currentQuestion?.type}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-lg">{currentQuestion?.question}</p>
-                <div className="flex items-center gap-4">
-                  <Badge variant="secondary">
-                    {currentQuestion?.difficulty}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {currentQuestion?.timeLimit} min suggested
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Your Answer:</label>
-                  <Textarea
-                    placeholder="Type your answer here or use voice recording..."
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    rows={4}
-                  />
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={isRecording ? "destructive" : "outline"}
-                      size="sm"
-                      onClick={
-                        isRecording ? handleStopRecording : handleStartRecording
-                      }
-                    >
-                      <Mic className="h-4 w-4 mr-2" />
-                      {isRecording ? "Stop Recording" : "Start Recording"}
-                    </Button>
-                    <Button onClick={handleNextQuestion}>
-                      {currentQuestionIndex < questions?.length - 1
-                        ? "Next Question"
-                        : "Finish Interview"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Chat Sidebar */}
-        <div className="w-80 border-l bg-card flex flex-col">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Chat with Kap AI
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Ask questions anytime during the interview
-            </p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {chatHistory.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.sender === "candidate"
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 text-sm ${
-                    message.sender === "candidate"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  <p>{message.message}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Ask a question..."
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              />
-              <Button size="sm" onClick={handleSendMessage}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-sm">{currentTips.title}</h3>
+      <ul className="space-y-2">
+        {currentTips.tips.map((tip, index) => (
+          <li
+            key={index}
+            className="flex items-start gap-2 text-sm text-muted-foreground"
+          >
+            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 text-xs font-medium">
+              {index + 1}
+            </span>
+            {tip}
+          </li>
+        ))}
+      </ul>
+      <div className="pt-4 border-t border-border">
+        <h4 className="font-medium text-sm mb-2">General Tips</h4>
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
+          <li>• Speak clearly and at a moderate pace</li>
+          <li>• Take a moment to gather your thoughts</li>
+          <li>• It's okay to ask for clarification</li>
+          <li>• Stay calm and confident</li>
+        </ul>
       </div>
     </div>
   );

@@ -11,11 +11,15 @@ import {
   Clock,
   BookOpen,
   Code2,
+  VideoIcon,
+  AudioWaveform,
+  Calendar,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { Loader } from "../ui/loader";
 import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
+import { formatRelativeDate } from "@/lib/utils";
 
 interface BootcampWeekPageProps {
   bootcampId: string;
@@ -34,6 +38,8 @@ export function BootcampWeekPage({
   const [loading, setLoading] = useState(false);
   const [currentWeek, setCurrentWeek] = useState<Week & { index: number }>();
   const [weeks, setWeeks] = useState<Week[]>([]);
+  const [eventLoading, setEventLoading] = useState(false);
+  const [events, setEvents] = useState<Array<any>>();
 
   useMemo(() => {
     const load = async () => {
@@ -60,6 +66,25 @@ export function BootcampWeekPage({
 
     load();
   }, []);
+
+  useMemo(() => {
+    const load = async () => {
+      if (!currentWeek) return;
+      try {
+        setEventLoading(true);
+        const events = await store.getCurrentWeekEvents(
+          bootcampId,
+          currentWeek?.id!
+        );
+        setEvents(events);
+        setEventLoading(false);
+      } catch (error) {
+        setEventLoading(false);
+      }
+    };
+
+    load();
+  }, [bootcampId, currentWeek]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -307,6 +332,58 @@ export function BootcampWeekPage({
                         </Button>
                       )}
                     </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Events</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {events?.map((event, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <h4 className="font-medium">{event.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {formatRelativeDate(event.startTime, event.timezone)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-5">
+                    <Button
+                      title="Click here to join meeting"
+                      disabled={!event.meetingUrl}
+                      variant="outline"
+                      onClick={() => window.open(event.meetingUrl)}
+                    >
+                      <VideoIcon className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      title="Click here for previous recording"
+                      disabled={!event.recordingUrl}
+                      variant={"outline"}
+                      onClick={() => window.open(event.recordingUrl)}
+                    >
+                      <AudioWaveform className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex">
+                    <Badge variant="outline" className="capitalize">
+                      {event?.eventType?.split("_")?.join(" ")?.toLowerCase()}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {event?.status?.split("_")?.join(" ")?.toLowerCase()}
+                    </Badge>
                   </div>
                 </div>
               ))}

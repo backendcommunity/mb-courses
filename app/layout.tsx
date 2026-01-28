@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MasteringBackend - Learn Backend Development",
+  title: "Mastering Backend",
   description:
     "Master backend development with comprehensive courses, projects, and hands-on learning paths.",
 };

@@ -7,12 +7,12 @@ export function WIP({}) {
           This page is currently under construction. Please check back later.
         </p>
 
-        <p className="text-sm text-gray-700 py-2 text-primary">
+        {/* <p className="text-sm text-gray-700 py-2 text-primary">
           <a href="https://beta.masteringbackend.com/">
             {" "}
             Click here to visit the old platform.
           </a>
-        </p>
+        </p> */}
       </div>
     </div>
   );

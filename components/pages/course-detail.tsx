@@ -463,9 +463,9 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 />
               )}
 
-              <Separator />
+              {/* <Separator /> */}
 
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1">
                   <Heart className="mr-2 h-4 w-4" />
                   Wishlist
@@ -474,7 +474,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                   <Share className="mr-2 h-4 w-4" />
                   Share
                 </Button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 

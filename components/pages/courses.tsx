@@ -255,6 +255,7 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
               </TabsTrigger>
               <TabsTrigger value="my-courses">My Courses</TabsTrigger>
               <TabsTrigger value="popular">Popular</TabsTrigger>
+
               <TabsTrigger value="new">New Releases</TabsTrigger>
             </TabsList>
           </div>

@@ -10,7 +10,6 @@ import { KapAIAssistant } from "./kap-ai-assistant";
 import { useAppStore } from "@/lib/store";
 import { updateUser, User } from "@/lib/data";
 import { Loader } from "./ui/loader";
-import { localDB } from "@/lib/localDB";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,41 +23,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [user, setUser] = useState<User>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleNavigate = (path: string) => router.push(path);
 
   async function load() {
-    try {
-      // Check if we have a token first
-      const token = localDB.get("token", "");
-      
-      if (!token || token === "null") {
-        // No token, redirect to login
-        router.push("/auth/login");
-        return;
-      }
-
-      setLoading(true);
-      const user = await store.getUser();
-      
-      if (user) {
-        setUser(user);
-        updateUser(user);
-      } else {
-        // No user found, redirect to login
-        router.push("/auth/login");
-        return;
-      }
-    } catch (error: any) {
-      console.error("Authentication error:", error);
-      // Clear local data and redirect to login on any auth error
-      localDB.clear();
-      router.push("/auth/login");
-      return;
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const user = await store.getUser();
+    if (user) {
+      setUser(user);
+      updateUser(user);
     }
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -71,6 +47,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     if (pathname.includes("playground")) setIsCollapsed(true);
     if (pathname.includes("videos")) setIsCollapsed(true);
+    if (pathname.includes("watch")) setIsCollapsed(true);
   }, [pathname, isMobile]);
 
   // Update sidebar when screen size changes
@@ -90,7 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         isMobile={isMobile}
       />
 
-      <div className="flex min-h-screen bg-background overflow-hidden relative">
+      <div className="flex min-h-screen bg-background  overflow-hidden relative">
         {/* Sidebar */}
         <div
           className={`fixed inset-y-0 top-0 left-0 z-50 md:translate-x-0 h-full transition-transform duration-300 ease-in-out
@@ -123,7 +100,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Main content area */}
         <div
-          className={`flex-1 flex flex-col transition-all duration-300
+          className={`flex-1 flex w-full flex-col transition-all duration-300
           ${
             !isMobile
               ? sidebarOpen
@@ -135,8 +112,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }
           `}
         >
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-          <KapAIAssistant />
+          <main className="flex-1 overflow-y-auto w-full p-4 md:p-6">
+            {children}
+          </main>
+          {/* <KapAIAssistant /> */}
         </div>
       </div>
     </>
