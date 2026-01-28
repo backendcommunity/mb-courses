@@ -495,7 +495,7 @@ export function MockInterviewResultsPage({
   return (
     <div className="container mx-auto px-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center flex-col lg:flex-row gap-3 justify-between">
         <div>
           <h1 className="text-3xl font-bold">Interview Results</h1>
           <p className="text-muted-foreground">
@@ -869,7 +869,7 @@ export function MockInterviewResultsPage({
 
       {/* Action Buttons */}
       <Card>
-        <CardContent className="flex items-center justify-center gap-4 py-6">
+        <CardContent className="flex items-center flex-col lg:flex-row justify-center gap-4 py-6">
           <Button onClick={() => onNavigate("/mock-interviews")}>
             <Trophy className="h-4 w-4 mr-2" />
             Book Another Interview
