@@ -1273,7 +1273,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   className="hover:shadow-md transition-shadow"
                 >
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-col lg:flex-row gap-3 justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg">
                           {interview.template.name ||
@@ -1300,7 +1300,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                             <Timer className="h-3 w-3" />
                             {interview.template.duration} min
                           </div>
-                          <Badge variant="outline">{interview.status}</Badge>
+                          <Badge className="hidden lg:block" variant="outline">
+                            {interview.status}
+                          </Badge>
                         </div>
                       </div>
 
@@ -1359,7 +1361,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                   className="hover:shadow-md transition-shadow"
                 >
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-col lg:flex-row gap-3 justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg">
                           {interview.template.name ||
