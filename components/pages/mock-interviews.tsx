@@ -749,7 +749,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             open={isCreateTemplateDialogOpen}
             onOpenChange={setIsCreateTemplateDialogOpen}
           >
-            {user?.role === "ADMIN" && (
+            {user?.role !== "ADMIN" && (
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
@@ -1174,7 +1174,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="text-sm text-muted-foreground">
-                          <p>{template.summary}</p>
+                          <p>{template?.summary?.substring(0, 180) + "..."}</p>
                         </div>
                         {template.topics && template.topics.length > 0 && (
                           <div>
