@@ -103,7 +103,7 @@ export function ProjectDetailPage({
 
   const isChapterCompleted = (chapterId: string) => {
     return userProject?.userChapters?.find(
-      (ch: any) => ch.chapterId === chapterId
+      (ch: any) => ch.chapterId === chapterId,
     )?.isCompleted;
   };
 
@@ -111,13 +111,13 @@ export function ProjectDetailPage({
     const projectTasks = project?.projectTasks.map((projectTask: any) =>
       projectTask.id === chapterId
         ? { ...projectTask, completed: true }
-        : projectTask
+        : projectTask,
     );
     const completedCount = projectTasks?.filter(
-      (c: any) => c.isCompleted
+      (c: any) => c.isCompleted,
     ).length;
     const newProgress = Math.round(
-      (completedCount! / projectTasks?.length!) * 100
+      (completedCount! / projectTasks?.length!) * 100,
     );
 
     updateProject(project?.id!, {
@@ -144,7 +144,7 @@ export function ProjectDetailPage({
   const handlePurchase = (
     projectId: string,
     method: "subscription" | "individual" | "mb",
-    success: boolean
+    success: boolean,
   ) => {
     if (!project || !success) return;
 
@@ -295,8 +295,8 @@ export function ProjectDetailPage({
                 project?.level === "Advanced"
                   ? "destructive"
                   : project?.level === "Intermediate"
-                  ? "default"
-                  : "secondary"
+                    ? "default"
+                    : "secondary"
               }
             >
               {project?.level}
@@ -731,7 +731,7 @@ export function ProjectDetailPage({
                           <Badge variant="secondary" className="text-xs">
                             {projectTask.tasks.reduce(
                               (a: number, c: any) => (c?.mb ?? 0) + a,
-                              0
+                              0,
                             )}{" "}
                             MB
                           </Badge>
@@ -764,8 +764,8 @@ export function ProjectDetailPage({
                                   isCompleted(task.id)
                                     ? "completed"
                                     : task.id
-                                    ? "in-progress"
-                                    : "locked"
+                                      ? "in-progress"
+                                      : "locked",
                                 )}
                               </div>
                               <div className="flex-1 space-y-1 min-w-0">
