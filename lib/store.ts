@@ -78,6 +78,7 @@ interface AppState {
   getUserCompletedInterviews: () => any;
   getMockInterviewTemplate: (id: string) => any;
   getUserInterviewStats: () => any;
+  getInterviewAccess: () => any;
   getInterviewSession: (id: string) => any;
   createInterviewRoom: (sessionId: string, withAgent?: boolean) => any;
   getTransactions: (payload: { size?: number }) => any;
@@ -559,6 +560,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getUserInterviewStats: async () => {
     const { data } = await api.get("/mock-interviews/user/stats");
+    return data?.data;
+  },
+
+  getInterviewAccess: async () => {
+    const { data } = await api.get("/mock-interviews/access");
     return data?.data;
   },
 
