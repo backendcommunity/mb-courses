@@ -46,9 +46,9 @@ import {
   ChevronRight,
   Search,
   Loader2,
-  Lock,
   Crown,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
@@ -301,17 +301,11 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   };
 
   const handleBookInterview = (template: InterviewTemplate) => {
-    if (!interviewAccess?.hasAccess) {
-      setShowUpgradeDialog(true);
-      return;
-    }
     if (
-      interviewAccess?.tier === "pro" &&
-      interviewAccess.remainingSessions <= 0
+      interviewAccess?.remainingSessions! >= 1 &&
+      !interviewAccess?.hasAccess
     ) {
-      toast.error(
-        "You've reached your monthly limit of 4 mock interviews. Upgrade to Enterprise for unlimited access.",
-      );
+      setShowUpgradeDialog(true);
       return;
     }
     setSelectedTemplate(template);
@@ -325,7 +319,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       setCreating(true);
       const result = await store.scheduleInterviewFromTemplate(templateId, {});
 
-      if (!result) {
+      if (!result || !result.session?.id) {
         toast.error("Failed to start interview");
         return;
       }
@@ -333,11 +327,14 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       toast.success("Interview started successfully!");
       setIsBookingDialogOpen(false);
 
-      if (result.session?.id) {
-        onNavigate(`/mock-interviews/${result.session.id}`);
+      onNavigate(`/mock-interviews/${result.session.id}`);
+    } catch (error: any) {
+      if (error?.response?.status === 402) {
+        setIsBookingDialogOpen(false);
+        setShowUpgradeDialog(true);
+      } else {
+        toast.error("Failed to start interview");
       }
-    } catch (error) {
-      toast.error("Failed to start interview");
     } finally {
       setCreating(false);
     }
@@ -443,15 +440,6 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const handleCreateCustomInterview = async () => {
     if (!interviewAccess?.hasAccess) {
       setShowUpgradeDialog(true);
-      return;
-    }
-    if (
-      interviewAccess?.tier === "pro" &&
-      interviewAccess.remainingSessions <= 0
-    ) {
-      toast.error(
-        "You've reached your monthly limit of 4 mock interviews. Upgrade to Enterprise for unlimited access.",
-      );
       return;
     }
 
@@ -587,21 +575,26 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
           <p className="text-muted-foreground">
             Practice with AI-powered interviews to ace your next job interview
           </p>
-          {interviewAccess?.tier === "pro" && (
-            <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant={
-                  interviewAccess.remainingSessions === 0
-                    ? "destructive"
-                    : "secondary"
-                }
-                className="text-xs"
-              >
-                {interviewAccess.remainingSessions} of{" "}
-                {interviewAccess.maxSessions} sessions remaining this month
-              </Badge>
-            </div>
-          )}
+          {interviewAccess &&
+            (interviewAccess.tier === "free" ||
+              interviewAccess.tier === "pro") && (
+              <div className="flex items-center gap-2 mt-1">
+                <Badge
+                  variant={
+                    interviewAccess.remainingSessions === 0
+                      ? "destructive"
+                      : "secondary"
+                  }
+                  className="text-xs"
+                >
+                  {interviewAccess.tier === "free"
+                    ? interviewAccess.remainingSessions === 0
+                      ? "Free trial used"
+                      : "1 free trial interview available"
+                    : `${interviewAccess.remainingSessions} of ${interviewAccess.maxSessions} sessions remaining this month`}
+                </Badge>
+              </div>
+            )}
           {interviewAccess?.tier === "enterprise" && (
             <Badge variant="secondary" className="mt-1 text-xs">
               <Crown className="h-3 w-3 mr-1" />
@@ -848,7 +841,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             open={isCreateTemplateDialogOpen}
             onOpenChange={setIsCreateTemplateDialogOpen}
           >
-            {user?.role !== "ADMIN" && (
+            {user?.role === "ADMIN" && (
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
@@ -1062,48 +1055,34 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
         </div>
       </div>
 
-      {/* Free User Upgrade Banner */}
+      {/* Session Limit Reached Banner */}
       {interviewAccess && !interviewAccess.hasAccess && (
-        <Card className="border-yellow-500/50 bg-yellow-500/5">
+        <Card className="border-orange-500/50 bg-orange-500/5">
           <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-4">
-            <AlertTriangle className="h-8 w-8 text-yellow-500 shrink-0" />
+            <AlertTriangle className="h-8 w-8 text-orange-500 shrink-0" />
             <div className="flex-1 text-center sm:text-left">
               <h3 className="font-semibold">
-                Upgrade to Access Mock Interviews
+                {interviewAccess.tier === "free"
+                  ? interviewAccess.remainingSessions === 0
+                    ? "Free Trial Used"
+                    : "Access 1 Free Trial Interview"
+                  : "Monthly Limit Reached"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Practice with AI-powered interviews. Upgrade to Pro for 4
-                sessions/month or Enterprise for unlimited access.
+                {interviewAccess.tier === "free"
+                  ? interviewAccess.remainingSessions === 0
+                    ? "You've used your free trial interview. Upgrade to Pro for 4 sessions/month or Enterprise for unlimited access."
+                    : "You've 1 free trial interview. Upgrade to Pro for 4 sessions/month or Enterprise for unlimited access."
+                  : "You've used all your mock interviews this month. Upgrade to Enterprise for unlimited sessions."}
               </p>
             </div>
             <Button onClick={() => onNavigate("/subscription/plans")}>
               <Crown className="h-4 w-4 mr-2" />
-              View Plans
+              Upgrade
             </Button>
           </CardContent>
         </Card>
       )}
-
-      {/* Pro User Limit Reached Banner */}
-      {interviewAccess?.tier === "pro" &&
-        interviewAccess.remainingSessions === 0 && (
-          <Card className="border-orange-500/50 bg-orange-500/5">
-            <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-4">
-              <AlertTriangle className="h-8 w-8 text-orange-500 shrink-0" />
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="font-semibold">Monthly Limit Reached</h3>
-                <p className="text-sm text-muted-foreground">
-                  You&apos;ve used all 4 mock interviews this month. Upgrade to
-                  Enterprise for unlimited sessions.
-                </p>
-              </div>
-              <Button onClick={() => onNavigate("/subscription/plans")}>
-                <Crown className="h-4 w-4 mr-2" />
-                Upgrade
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1358,17 +1337,8 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                           className="w-full"
                           onClick={() => handleBookInterview(template)}
                         >
-                          {!interviewAccess?.hasAccess ? (
-                            <>
-                              <Lock className="h-4 w-4 mr-2" />
-                              Upgrade to Book
-                            </>
-                          ) : (
-                            <>
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Book Interview
-                            </>
-                          )}
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Book Interview
                         </Button>
                       </div>
                     </CardContent>
@@ -1580,12 +1550,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
           <div className="grid gap-6 py-4">
             {/* Start Now Option */}
-            <Card
-              className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-              onClick={() =>
-                selectedTemplate && handleStartNow(selectedTemplate.id)
-              }
-            >
+            <Card className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
               <CardContent className="flex items-center gap-4 p-6">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Play className="h-6 w-6 text-primary" />
@@ -1597,7 +1562,13 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     interviewer
                   </p>
                 </div>
-                <Button disabled={creating}>
+                <Button
+                  type="button"
+                  disabled={creating}
+                  onClick={() =>
+                    selectedTemplate && handleStartNow(selectedTemplate.id)
+                  }
+                >
                   {creating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1721,7 +1692,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Upgrade Dialog for Free Users */}
+      {/* Upgrade Dialog */}
       <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1730,8 +1701,9 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
               Upgrade Required
             </DialogTitle>
             <DialogDescription>
-              Mock interviews are available on Pro and Enterprise plans. Upgrade
-              your plan to start practicing with AI-powered interviews.
+              {interviewAccess?.tier === "free"
+                ? "You've used your free trial interview. Upgrade to unlock more sessions."
+                : "You've reached your monthly session limit. Upgrade for more access."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
