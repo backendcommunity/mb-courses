@@ -69,6 +69,18 @@ interface AppState {
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
   getInterviews: () => Interview[];
+  getMockInterviewTemplates: (params?: {
+    size?: number;
+    skip?: number;
+    filters?: any;
+  }) => any;
+  getUserBookedInterviews: () => any;
+  getUserCompletedInterviews: () => any;
+  getMockInterviewTemplate: (id: string) => any;
+  getUserInterviewStats: () => any;
+  getInterviewAccess: () => any;
+  getInterviewSession: (id: string) => any;
+  createInterviewRoom: (sessionId: string, withAgent?: boolean) => any;
   getTransactions: (payload: { size?: number }) => any;
   getBootcamps: (filters: {
     skip?: number;
@@ -103,6 +115,18 @@ interface AppState {
   getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
   getProjectAchievements: (slug: string) => any;
+  getMockInterviewSessionToken: (id: string) => any;
+  getSessionReport: (sessionId: string) => any;
+  getSessionTranscript: (sessionId: string) => any;
+  endInterviewSession: (
+    sessionId: string,
+    transcripts?: Array<{
+      speaker: "interviewer" | "candidate";
+      text: string;
+      timestamp: number;
+    }>,
+  ) => any;
+  retryReportGeneration: (sessionId: string) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -121,6 +145,27 @@ interface AppState {
   redeemReward: (id: string) => void;
   updateCourse: (id: string, updates: Partial<Course>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  createCustomMockInterview: (interview: any) => any;
+  startMockInterview: (
+    id: string,
+    data: { scheduledTime?: Date | string; interviewConfig?: any },
+  ) => any;
+  scheduleInterviewFromTemplate: (
+    id: string,
+    data: { scheduledTime?: string; interviewConfig?: any },
+  ) => any;
+  scheduleInterviewFromJD: (data: {
+    company: string;
+    position: string;
+    seniority: string;
+    difficulty: string;
+    format: string;
+    description: string;
+    style: string;
+    duration: number;
+    scheduledTime: string;
+    interviewConfig?: string;
+  }) => any;
   handleProjectEnrollment: (slug: string) => Project | any;
   updateUserProject: (slug: string, payload: any) => Project | any;
   updateChallenge: (id: string, updates: Partial<Challenge>) => void;
@@ -133,7 +178,7 @@ interface AppState {
     cohortId: string,
     weekId: string,
     lessonId: string,
-    payload: any
+    payload: any,
   ) => UserLesson | any;
   enrollInPath: (pathId: string) => void;
   handleMBPayment: (payload: MBPayload) => any;
@@ -143,7 +188,7 @@ interface AppState {
   handleRoadmapCourseEnrollment: (
     slug: string,
     topicId: string,
-    courseId: string
+    courseId: string,
   ) => UserCourse | any;
   startQuiz: (id: string) => any;
   submitQuiz: (id: string, questions: any) => any;
@@ -153,7 +198,7 @@ interface AppState {
     slug: string,
     topicId: string,
     itemId: string,
-    data: any
+    data: any,
   ) => any;
 
   markCourseCompleted: (id: string) => any;
@@ -167,9 +212,10 @@ interface AppState {
       isChapterCompleted?: boolean;
       courseId: string;
       chapter?: any;
-    }
+    },
   ) => any;
   executeCode: (payload: { language: string; code: string }) => any;
+  createMockInterviewRoom: (userInterviewId: string) => any;
 
   // Force re-render trigger
   version: number;
@@ -200,7 +246,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   getProject30Leaderboard: async (slug: string, filters?: any) => {
     const { data } = await api.get(
-      `/project30s/${slug}/leaderboard?filters=${JSON.stringify(filters)}`
+      `/project30s/${slug}/leaderboard?filters=${JSON.stringify(filters)}`,
     );
     return data?.data;
   },
@@ -373,7 +419,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getBootcampBonuses: async (id: string, cohort: string) => {
     const { data } = await api.get(
-      `/bootcamps/${id}/cohorts/${cohort}/bonuses`
+      `/bootcamps/${id}/cohorts/${cohort}/bonuses`,
     );
     return data?.data;
   },
@@ -384,20 +430,74 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  async getMockInterviewSessionToken(id) {
+    const { data } = await api.get(`/mock-interviews/sessions/${id}/token`);
+    return data?.data;
+  },
+
+  getSessionReport: async (sessionId: string) => {
+    const { data } = await api.get(
+      `/mock-interviews/sessions/${sessionId}/report`,
+    );
+    return data?.data;
+  },
+
+  getSessionTranscript: async (sessionId: string) => {
+    const { data } = await api.get(
+      `/mock-interviews/sessions/${sessionId}/transcript`,
+    );
+    return data?.data;
+  },
+
+  endInterviewSession: async (
+    sessionId: string,
+    transcripts?: Array<{
+      speaker: "interviewer" | "candidate";
+      text: string;
+      timestamp: number;
+    }>,
+  ) => {
+    // If transcript provided, batch append it first
+    if (transcripts && transcripts.length > 0) {
+      await api.post(
+        `/mock-interviews/sessions/${sessionId}/transcript/batch`,
+        {
+          entries: transcripts.map((t) => ({
+            role: t.speaker,
+            content: t.text,
+            timestamp: new Date(t.timestamp).toISOString(),
+          })),
+        },
+      );
+    }
+    // End the session room
+    const { data } = await api.delete(
+      `/mock-interviews/sessions/${sessionId}/room`,
+    );
+    return data?.data;
+  },
+
+  retryReportGeneration: async (sessionId: string) => {
+    const { data } = await api.post(
+      `/mock-interviews/sessions/${sessionId}/report/retry`,
+    );
+    return data?.data;
+  },
+
   getBootcamp: async (id: string) => {
     const { data } = await api.get(`/bootcamps/${id}`);
     return data?.data;
   },
   getLesson: async (id: string, week: string, lesson: string) => {
     const { data } = await api.get(
-      `/bootcamps/${id}/weeks/${week}/lessons/${lesson}`
+      `/bootcamps/${id}/weeks/${week}/lessons/${lesson}`,
     );
     return data?.data;
   },
 
   getWeek: async (id: string, cohort: string, week: string) => {
     const { data } = await api.get(
-      `/bootcamps/${id}/cohorts/${cohort}/weeks/${week}`
+      `/bootcamps/${id}/cohorts/${cohort}/weeks/${week}`,
     );
     return data?.data;
   },
@@ -405,7 +505,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   getLearningPaths: () => dataStore.learningPaths,
   getRoadmaps: async (filters?) => {
     const { data } = await api.get(
-      `/roadmaps?page=${filters?.skip}&size=${filters?.size}`
+      `/roadmaps?page=${filters?.skip}&size=${filters?.size}`,
     );
     return data?.data?.roadmaps;
   },
@@ -413,7 +513,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const {
       data: { data },
     } = await api.get(
-      `/users/roadmaps?skip=${skip}&size=${size}&filters=${filters}`
+      `/users/roadmaps?skip=${skip}&size=${size}&filters=${filters}`,
     );
     return data?.data;
   },
@@ -431,6 +531,52 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getBadges: async () => {
     const { data } = await api.get("/rewards/badges");
+    return data?.data;
+  },
+
+  getMockInterviewTemplates: async (params?: {
+    size?: number;
+    skip?: number;
+    filters?: any;
+  }) => {
+    const { data } = await api.get("/mock-interviews", { params });
+    return data?.data;
+  },
+
+  getUserBookedInterviews: async () => {
+    const { data } = await api.get("/mock-interviews/user/booked");
+    return data?.data;
+  },
+
+  getUserCompletedInterviews: async () => {
+    const { data } = await api.get("/mock-interviews/user/completed");
+    return data?.data;
+  },
+
+  getMockInterviewTemplate: async (id: string) => {
+    const { data } = await api.get(`/mock-interviews/${id}`);
+    return data?.data;
+  },
+
+  getUserInterviewStats: async () => {
+    const { data } = await api.get("/mock-interviews/user/stats");
+    return data?.data;
+  },
+
+  getInterviewAccess: async () => {
+    const { data } = await api.get("/mock-interviews/access");
+    return data?.data;
+  },
+
+  getInterviewSession: async (id: string) => {
+    const { data } = await api.get(`/mock-interviews/sessions/${id}`);
+    return data?.data;
+  },
+
+  createInterviewRoom: async (sessionId: string, withAgent: boolean = true) => {
+    const { data } = await api.post(
+      `/mock-interviews/${sessionId}/room?agent=${withAgent}`,
+    );
     return data?.data;
   },
 
@@ -505,10 +651,53 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  startMockInterview: async (
+    id: string,
+    payload: { scheduledTime?: Date | string; interviewConfig?: any },
+  ) => {
+    const { data } = await api.post("/mock-interviews/" + id, payload);
+    return data?.data;
+  },
+
+  createMockInterviewRoom: async (userInterviewId: string) => {
+    const { data } = await api.post(
+      "/mock-interviews/" + userInterviewId + "/room",
+    );
+
+    return data?.data;
+  },
+
+  scheduleInterviewFromTemplate: async (
+    id: string,
+    payload: { scheduledTime?: string; interviewConfig?: any },
+  ) => {
+    const { data } = await api.post(
+      `/mock-interviews/schedules/${id}`,
+      payload,
+    );
+    return data?.data;
+  },
+
+  scheduleInterviewFromJD: async (payload: {
+    company: string;
+    position: string;
+    seniority: string;
+    difficulty: string;
+    format: string;
+    description: string;
+    style: string;
+    duration: number;
+    scheduledTime: string;
+    interviewConfig?: string;
+  }) => {
+    const { data } = await api.post("/mock-interviews/schedules/jd", payload);
+    return data?.data;
+  },
+
   markDayComplete: async (slug: string, videoId: string, payload: any) => {
     const { data } = await api.post(
       `/project30s/${slug}/days/${videoId}`,
-      payload
+      payload,
     );
     return data?.data;
   },
@@ -516,11 +705,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     slug: string,
     topicId: string,
     courseId: string,
-    input: any
+    input: any,
   ) => {
     const { data } = await api.post(
       `/roadmaps/${slug}/topics/${topicId}/courses/${courseId}`,
-      input
+      input,
     );
     return data?.data;
   },
@@ -533,17 +722,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       itemId: string;
       isChapterCompleted?: boolean;
       chapter?: any;
-    }
+    },
   ) => {
     const { data } = await api.post(
       `/roadmaps/${slug}/topics/${topicId}/video`,
-      payload
+      payload,
     );
     return data?.data;
   },
 
   markCourseCompleted: async (userCourseId: string) => {
     const { data } = await api.post(`/courses/${userCourseId}/completed`);
+    return data?.data;
+  },
+
+  createCustomMockInterview: async (interview: any) => {
+    const { data } = await api.post(`/mock-interviews`, interview);
     return data?.data;
   },
 
@@ -560,7 +754,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   saveNote: async (note: string, courseId: string, videoId: string) => {
     const { data } = await api.post(
       `/courses/${courseId}/videos/${videoId}/notes`,
-      { note: note }
+      { note: note },
     );
     return data?.data;
   },
@@ -568,7 +762,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   startMilestone: async (slug: string, topicId: string, payload: any = {}) => {
     const { data } = await api.post(
       `/roadmaps/${slug}/topics/${topicId}`,
-      payload
+      payload,
     );
     return data?.data;
   },
@@ -602,7 +796,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   handleCourseEnrollment: async (
-    courseId: string
+    courseId: string,
   ): Promise<UserCourse | any> => {
     const res = await handleCourseEnrollment(courseId);
     return res.data;
@@ -611,10 +805,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   handleRoadmapCourseEnrollment: async (
     slug: string,
     topicId: string,
-    courseId: string
+    courseId: string,
   ) => {
     const { data } = await api.post(
-      `/roadmaps/${slug}/topics/${topicId}/courses/${courseId}`
+      `/roadmaps/${slug}/topics/${topicId}/courses/${courseId}`,
     );
 
     return data;
@@ -640,7 +834,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   enrollInCourse: (courseId) => {
     const course = dataStore.coursesResponse.courses.find(
-      (c) => c.id === courseId
+      (c) => c.id === courseId,
     );
     if (course) {
       course.enrolled = true;
@@ -650,7 +844,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   enrollInBootcamp: async (bootcampId: string, cohortId: string) => {
     const { data } = await api.post(
-      `/bootcamps/${bootcampId}/cohorts/${cohortId}`
+      `/bootcamps/${bootcampId}/cohorts/${cohortId}`,
     );
     return data?.data;
   },
@@ -660,11 +854,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     cohortId: string,
     weekId: string,
     lessonId: string,
-    payload: any
+    payload: any,
   ) => {
     const { data } = await api.post(
       `/bootcamps/${id}/cohorts/${cohortId}/weeks/${weekId}/lessons/${lessonId}`,
-      payload
+      payload,
     );
     return data?.data;
   },
