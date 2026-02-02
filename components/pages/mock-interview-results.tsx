@@ -320,41 +320,20 @@ export function MockInterviewResultsPage({
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Fetch report with polling
+  // Fetch report directly
   const fetchReport = useCallback(async () => {
     try {
+      setStatus("processing");
+
+      // Direct call to generate (returns existing report if already generated)
       const data = await store.getSessionReport(sessionId);
-      console.log("Report data:", data);
 
       if (!data) {
         setStatus("failed");
-        setError("Session not found");
-        return false;
+        setError("Failed to generate report");
+        return;
       }
 
-      // Check status from response
-      const reportStatus = data.status?.toUpperCase();
-
-      if (reportStatus === "PENDING" || reportStatus === "PROCESSING") {
-        setStatus(reportStatus.toLowerCase() as ReportStatus);
-        setAttempts(data.attempts || 0);
-        return true; // Continue polling
-      }
-
-      if (reportStatus === "SKIPPED") {
-        setStatus("skipped");
-        setError(data.reason || null);
-        return false;
-      }
-
-      if (reportStatus === "FAILED") {
-        setStatus("failed");
-        setError(data.error || null);
-        setAttempts(data.attempts || 0);
-        return false;
-      }
-
-      // Status is COMPLETED or report exists
       setReport(data);
       setStatus("completed");
 
@@ -367,48 +346,20 @@ export function MockInterviewResultsPage({
       } catch (transcriptErr) {
         console.error("Failed to fetch transcript:", transcriptErr);
       }
-
-      return false; // Stop polling
     } catch (err: any) {
-      console.error("Failed to fetch report:", err);
-
-      // If 202, it's still processing
-      if (err?.response?.status === 202) {
-        const data = err.response.data?.data;
-        setStatus(
-          (data?.status?.toLowerCase() || "processing") as ReportStatus,
-        );
-        setAttempts(data?.attempts || 0);
-        return true; // Continue polling
-      }
-
+      console.error("Failed to generate report:", err);
       setStatus("failed");
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to fetch report",
+          "Failed to generate report",
       );
-      return false;
     }
   }, [sessionId, store]);
 
-  // Initial fetch and polling
+  // Initial fetch
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout | null = null;
-
-    const poll = async () => {
-      const shouldContinue = await fetchReport();
-      if (shouldContinue) {
-        // Poll every 5 seconds if still processing
-        pollInterval = setTimeout(poll, 5000);
-      }
-    };
-
-    poll();
-
-    return () => {
-      if (pollInterval) clearTimeout(pollInterval);
-    };
+    fetchReport();
   }, [fetchReport]);
 
   // Handle retry
@@ -470,15 +421,15 @@ export function MockInterviewResultsPage({
   // Extract data from report
   const grade = report.grade || getGradeFromScore(report.overallScore);
   // const performance = getPerformanceMessage(report.overallScore, report.result);
+  const score = report?.overallScore ?? 0;
   const feedback = {
     grade,
     summary: report.summary || "",
-    overallScore: report.overallScore,
-    technicalScore: report.technicalScore || report.overallScore,
+    overallScore: score,
+    technicalScore: ((report?.technicalScore ?? 0) || score) ?? 0,
     communicationScore:
-      report.communicationScore || Math.max(report.overallScore - 5, 0),
-    problemSolvingScore:
-      report.problemSolvingScore || Math.max(report.overallScore - 3, 0),
+      (report?.communicationScore ?? 0) || Math.max(score - 5, 0),
+    problemSolvingScore: report.problemSolvingScore || Math.max(score - 3, 0),
     questionAnalysis: report.questionAnalysis || [],
     strengths: report.strengths || [],
     improvements: report.weaknesses || report.improvements || [],
