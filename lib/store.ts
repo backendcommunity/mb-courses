@@ -65,6 +65,9 @@ interface AppState {
   getCourseExercises: (courseId: string) => Quiz[] | any;
   getProjects: (queries?: Project30Query) => Project[] | any;
   getProject: (slug: string) => Project | any;
+  getProjectLeaderboard: (projectSlug: string, params?: { size?: number; skip?: number }) => any;
+  getGlobalProjectLeaderboard: (params?: { size?: number; skip?: number }) => any;
+  getDeveloperPortfolio: (userId: string) => any;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
@@ -111,7 +114,6 @@ interface AppState {
   getActivities: (queries: { size?: number; skip?: number }) => any;
   getVideo: (slug: string) => any;
   getProject30Leaderboard: (slug: string, filter?: any) => any;
-  getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
   getProjectAchievements: (slug: string) => any;
   getMockInterviewSessionToken: (id: string) => any;
@@ -252,15 +254,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getSavedPlaygrounds: async () => {
     const { data } = await api.get(`/playgrounds/saved`);
-    return data?.data;
-  },
-
-  getProjectLeaderboard: async (slug: string, filters?: any) => {
-    const { data } = await api.get(`/projects/${slug}/leaderboard`, {
-      params: {
-        filters,
-      },
-    });
     return data?.data;
   },
 
@@ -408,6 +401,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   getProject: async (slug: string) => {
     const { data } = await api.get(`/projects/${slug}`);
     return data?.data;
+  },
+
+  getProjectLeaderboard: async (projectSlug: string, params?: { size?: number; skip?: number }) => {
+    // Using dummy data in component - API will be added later
+    return { leaderboard: [] };
+  },
+
+  getGlobalProjectLeaderboard: async (params?: { size?: number; skip?: number }) => {
+    // Using dummy data in component - API will be added later
+    return { leaderboard: [] };
+  },
+
+  getDeveloperPortfolio: async (userId: string) => {
+    // Using dummy data in component - API will be added later
+    return null;
   },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,

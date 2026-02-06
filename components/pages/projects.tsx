@@ -112,14 +112,21 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button className="w-full md:w-auto" variant={"outline"}>
+          <Button 
+            className="w-full md:w-auto" 
+            variant={"outline"}
+            onClick={() => onNavigate("/projects/leaderboard")}
+          >
             <Trophy className="mr-2 h-4 w-4" />
-            Leaderboard
+            Global Leaderboard
           </Button>
 
-          <Button className="w-full md:w-auto">
+          <Button 
+            className="w-full md:w-auto"
+            onClick={() => onNavigate("/projects/submissions")}
+          >
             <DownloadCloud className="mr-2 h-4 w-4" />
-            Submissions
+            My Submissions
           </Button>
         </div>
       </div>
@@ -307,12 +314,22 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                 )}
               </div>
 
-              <Button
-                className="w-full text-xs md:text-sm"
-                onClick={() => onNavigate(`/projects/${project.slug}`)}
-              >
-                {project.enrolled ? "Continue Project" : "Start Project"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 text-xs md:text-sm"
+                  onClick={() => onNavigate(`/projects/${project.slug}`)}
+                >
+                  {project.enrolled ? "Continue Project" : "Start Project"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate(`/projects/${project.slug}/leaderboard`)}
+                  title="View Project Leaderboard"
+                >
+                  <Trophy className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
