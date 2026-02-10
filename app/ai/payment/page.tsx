@@ -1,41 +1,21 @@
 "use client";
 
-import { useUser } from "@/hooks/use-user";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useTheme } from "next-themes";
-import { useAppStore } from "@/lib/store";
-import { PaymentChannel } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 
-interface PaymentDialogProps {
-  data: any;
-  disableMB?: boolean;
-  disableOnetime?: boolean;
-  disableSubscription?: boolean;
-  onHandlePreview: (id?: string) => void;
-  onHandlePurchase: (id: string, type: string, success: boolean) => void;
-  onClose: () => void;
-  open: boolean;
-}
-
-const SELLER_ID = Number(process.env.NEXT_PUBLIC_SELLER_ID);
 const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
 const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
 
 const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
-export function XPayment({}) {
+export default function XPayment({}) {
   const searchParams = useSearchParams();
-  const user = useUser();
-  const store = useAppStore();
   const { theme } = useTheme();
   const [paddle, setPaddle] = useState<Paddle>();
   const [coupon, setCoupon] = useState<string | null>(null);
-
-  //   const [plan, setPlan] = useState<Plan>();
-  const [channel, setChannel] = useState<PaymentChannel>();
 
   useEffect(() => {
     const coupon = searchParams.get("coupon");
