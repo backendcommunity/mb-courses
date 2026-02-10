@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/use-user";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { initializePaddle, Paddle } from "@paddle/paddle-js";
 import { useTheme } from "next-themes";
 import { useAppStore } from "@/lib/store";
@@ -26,16 +26,23 @@ const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
 
 const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
-export default function XPayment({}) {
+export function XPayment({}) {
+  const searchParams = useSearchParams();
   const user = useUser();
   const store = useAppStore();
   const { theme } = useTheme();
   const [paddle, setPaddle] = useState<Paddle>();
-  const searchParams = useSearchParams();
-  const coupon = searchParams.get("coupon");
+  const [coupon, setCoupon] = useState<string | null>(null);
 
   //   const [plan, setPlan] = useState<Plan>();
   const [channel, setChannel] = useState<PaymentChannel>();
+
+  useEffect(() => {
+    const coupon = searchParams.get("coupon");
+    if (coupon) {
+      setCoupon(coupon);
+    }
+  }, [searchParams]);
 
   const priceId =
     coupon === "EARLYBIRD20"
