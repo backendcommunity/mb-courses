@@ -35,7 +35,7 @@ export default function XPayment({ coupon }: { coupon: string | null }) {
       settings: {
         theme: theme?.includes("dark") ? "dark" : "light",
       },
-      discountCode: coupon ? "AIEARLYBIRD" : undefined,
+      discountCode: coupon ? coupon : undefined,
       items: [{ priceId }],
       customData: {},
     });
