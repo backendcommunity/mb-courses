@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,119 +32,68 @@ import {
   Calendar,
   Star,
 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { Loader } from "../ui/loader";
 
 interface ProjectSubmissionsPageProps {
   onNavigate?: (path: string) => void;
 }
 
-const DUMMY_SUBMISSIONS = [
-  {
-    id: "1",
-    project: {
-      title: "Build a REST API with Rate Limiting",
-      slug: "rest-api-rate-limiting",
-      level: "intermediate",
-    },
-    submittedAt: "2026-02-01T10:30:00Z",
-    status: "approved",
-    score: 95,
-    feedback: "Excellent implementation! Great use of Redis for rate limiting.",
-    repositoryUrl: "https://github.com/user/rest-api-rate-limiting",
-    liveUrl: "https://api-demo.example.com",
-    technologies: ["Node.js", "Express", "Redis", "PostgreSQL"],
-  },
-  {
-    id: "2",
-    project: {
-      title: "Real-time Chat Application",
-      slug: "realtime-chat-app",
-      level: "advance",
-    },
-    submittedAt: "2026-01-28T14:20:00Z",
-    status: "approved",
-    score: 92,
-    feedback: "Well-structured WebSocket implementation. Consider adding message persistence.",
-    repositoryUrl: "https://github.com/user/realtime-chat",
-    liveUrl: "https://chat-demo.example.com",
-    technologies: ["Node.js", "Socket.io", "MongoDB", "Docker"],
-  },
-  {
-    id: "3",
-    project: {
-      title: "Task Queue System",
-      slug: "task-queue-system",
-      level: "advance",
-    },
-    submittedAt: "2026-01-25T09:15:00Z",
-    status: "pending",
-    score: null,
-    feedback: null,
-    repositoryUrl: "https://github.com/user/task-queue",
-    liveUrl: null,
-    technologies: ["Python", "Celery", "RabbitMQ", "Redis"],
-  },
-  {
-    id: "4",
-    project: {
-      title: "Authentication Service with OAuth",
-      slug: "oauth-auth-service",
-      level: "intermediate",
-    },
-    submittedAt: "2026-01-20T16:45:00Z",
-    status: "approved",
-    score: 88,
-    feedback: "Good OAuth implementation. Add more comprehensive error handling.",
-    repositoryUrl: "https://github.com/user/oauth-service",
-    liveUrl: "https://auth.example.com",
-    technologies: ["Node.js", "Passport.js", "JWT", "PostgreSQL"],
-  },
-  {
-    id: "5",
-    project: {
-      title: "File Upload Service with S3",
-      slug: "file-upload-s3",
-      level: "beginners",
-    },
-    submittedAt: "2026-01-18T11:00:00Z",
-    status: "rejected",
-    score: 65,
-    feedback: "Missing proper file validation and security measures. Please review the requirements.",
-    repositoryUrl: "https://github.com/user/file-upload",
-    liveUrl: null,
-    technologies: ["Node.js", "AWS S3", "Multer"],
-  },
-  {
-    id: "6",
-    project: {
-      title: "GraphQL API with DataLoader",
-      slug: "graphql-dataloader",
-      level: "advance",
-    },
-    submittedAt: "2026-01-15T13:30:00Z",
-    status: "approved",
-    score: 97,
-    feedback: "Outstanding! Excellent use of DataLoader for N+1 query optimization.",
-    repositoryUrl: "https://github.com/user/graphql-api",
-    liveUrl: "https://graphql.example.com",
-    technologies: ["Node.js", "GraphQL", "DataLoader", "PostgreSQL"],
-  },
-];
-
 export function ProjectSubmissionsPage({
   onNavigate,
 }: ProjectSubmissionsPageProps) {
-  const [submissions] = useState<any[]>(DUMMY_SUBMISSIONS);
-  const [loading] = useState(false);
+  const store = useAppStore();
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  // Fetch submissions
+  useEffect(() => {
+    async function fetchSubmissions() {
+      try {
+        setLoading(true);
+        const data = await store.getProjectSubmissions({
+          status: statusFilter === "all" ? undefined : statusFilter,
+          mine: true,
+          page: currentPage,
+          pageSize,
+        });
+        setSubmissions(data?.solutions || data || []);
+      } catch (error) {
+        console.error("Failed to fetch submissions:", error);
+        setSubmissions([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSubmissions();
+  }, [statusFilter, currentPage]);
+
+  // Fetch stats
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const data = await store.getSubmissionStats({ mine: true });
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    }
+
+    fetchStats();
+  }, []);
 
   const filteredSubmissions = submissions.filter((submission) => {
-    const matchesSearch = submission.project.title
-      .toLowerCase()
+    if (!searchQuery) return true;
+    const matchesSearch = submission.project?.title
+      ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || submission.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const getStatusBadge = (status: string) => {
@@ -188,15 +137,24 @@ export function ProjectSubmissionsPage({
     );
   };
 
-  const stats = {
+  // Calculate stats from API or use provided stats
+  const displayStats = stats || {
     total: submissions.length,
     approved: submissions.filter((s) => s.status === "approved").length,
     pending: submissions.filter((s) => s.status === "pending").length,
     rejected: submissions.filter((s) => s.status === "rejected").length,
     averageScore:
       submissions.filter((s) => s.score).reduce((acc, s) => acc + s.score, 0) /
-        submissions.filter((s) => s.score).length || 0,
+      submissions.filter((s) => s.score).length || 0,
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <Loader isLoader={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-6">
@@ -221,7 +179,7 @@ export function ProjectSubmissionsPage({
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold">{displayStats.total}</div>
             <p className="text-xs text-muted-foreground">submissions</p>
           </CardContent>
         </Card>
@@ -231,7 +189,7 @@ export function ProjectSubmissionsPage({
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.approved}</div>
+            <div className="text-2xl font-bold">{displayStats.approved}</div>
             <p className="text-xs text-muted-foreground">projects</p>
           </CardContent>
         </Card>
@@ -241,7 +199,7 @@ export function ProjectSubmissionsPage({
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+            <div className="text-2xl font-bold">{displayStats.pending}</div>
             <p className="text-xs text-muted-foreground">in review</p>
           </CardContent>
         </Card>
@@ -251,7 +209,7 @@ export function ProjectSubmissionsPage({
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.rejected}</div>
+            <div className="text-2xl font-bold">{displayStats.rejected}</div>
             <p className="text-xs text-muted-foreground">to revise</p>
           </CardContent>
         </Card>
@@ -261,7 +219,7 @@ export function ProjectSubmissionsPage({
             <Trophy className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageScore.toFixed(0)}%</div>
+            <div className="text-2xl font-bold">{displayStats.averageScore.toFixed(0)}%</div>
             <p className="text-xs text-muted-foreground">average</p>
           </CardContent>
         </Card>
@@ -293,114 +251,114 @@ export function ProjectSubmissionsPage({
 
       {/* Submissions List */}
       <div className="space-y-4">
-          {filteredSubmissions.map((submission) => (
-            <Card key={submission.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-lg">
-                        {submission.project.title}
-                      </CardTitle>
-                      {getLevelBadge(submission.project.level)}
+        {filteredSubmissions.map((submission) => (
+          <Card key={submission.id} className="overflow-hidden">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CardTitle className="text-lg">
+                      {submission.project.title}
+                    </CardTitle>
+                    {getLevelBadge(submission.project.level)}
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Submitted {new Date(submission.submittedAt).toLocaleDateString()}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    {submission.score && (
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+                        <Star className="h-4 w-4 text-yellow-600" />
+                        Score: {submission.score}%
                       </div>
-                      {submission.score && (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-600" />
-                          Score: {submission.score}%
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                  {getStatusBadge(submission.status)}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Technologies */}
-                <div className="flex flex-wrap gap-2">
-                  {submission.technologies.map((tech: string) => (
-                    <Badge key={tech} variant="outline" className="text-xs">
-                      <Code2 className="h-3 w-3 mr-1" />
-                      {tech}
-                    </Badge>
-                  ))}
+                {getStatusBadge(submission.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Technologies */}
+              <div className="flex flex-wrap gap-2">
+                {submission.technologies.map((tech: string) => (
+                  <Badge key={tech} variant="outline" className="text-xs">
+                    <Code2 className="h-3 w-3 mr-1" />
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* Feedback */}
+              {submission.feedback && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1">Reviewer Feedback:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {submission.feedback}
+                  </p>
                 </div>
+              )}
 
-                {/* Feedback */}
-                {submission.feedback && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-medium mb-1">Reviewer Feedback:</p>
-                    <p className="text-sm text-muted-foreground">
-                      {submission.feedback}
-                    </p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  {submission.repositoryUrl && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={submission.repositoryUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Github className="h-4 w-4 mr-2" />
-                        View Repository
-                      </a>
-                    </Button>
-                  )}
-                  {submission.liveUrl && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={submission.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Live Demo
-                      </a>
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      onNavigate?.(`/projects/${submission.project.slug}`)
-                    }
-                  >
-                    View Project Details
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2">
+                {submission.repositoryUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={submission.repositoryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Github className="h-4 w-4 mr-2" />
+                      View Repository
+                    </a>
                   </Button>
-                  {submission.status === "rejected" && (
-                    <Button size="sm">Resubmit Project</Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {filteredSubmissions.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No submissions found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery || statusFilter !== "all"
-                    ? "Try adjusting your filters"
-                    : "Start working on projects to see your submissions here"}
-                </p>
-                <Button onClick={() => onNavigate?.("/projects")}>
-                  Browse Projects
+                )}
+                {submission.liveUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={submission.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Live Demo
+                    </a>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    onNavigate?.(`/projects/${submission.project.slug}`)
+                  }
+                >
+                  View Project Details
                 </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                {submission.status === "rejected" && (
+                  <Button size="sm">Resubmit Project</Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {filteredSubmissions.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No submissions found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your filters"
+                  : "Start working on projects to see your submissions here"}
+              </p>
+              <Button onClick={() => onNavigate?.("/projects")}>
+                Browse Projects
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

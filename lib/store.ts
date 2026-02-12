@@ -130,6 +130,20 @@ interface AppState {
   ) => any;
   retryReportGeneration: (sessionId: string) => any;
 
+  // Project Solutions/Submissions
+  getProjectSubmissions: (params?: {
+    status?: string;
+    mine?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => any;
+  getProjectsLeaderboard: (params?: {
+    timeframe?: string;
+    page?: number;
+    pageSize?: number;
+  }) => any;
+  getSubmissionStats: (params?: { mine?: boolean }) => any;
+
   // Actions
   updateUser: (updates: Partial<User>) => any;
   startProject30: (slug: string) => Project30 | any;
@@ -489,6 +503,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post(
       `/mock-interviews/sessions/${sessionId}/report/retry`,
     );
+    return data?.data;
+  },
+
+  // Project Solutions/Submissions
+  getProjectSubmissions: async (params?: {
+    status?: string;
+    mine?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const { data } = await api.get("/solutions", { params });
+    return data?.data;
+  },
+
+  getProjectsLeaderboard: async (params?: {
+    timeframe?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const { data } = await api.get("/projects/leaderboard", { params });
+    return data?.data;
+  },
+
+  getSubmissionStats: async (params?: { mine?: boolean }) => {
+    const { data } = await api.get("/solutions/stats", { params });
     return data?.data;
   },
 
