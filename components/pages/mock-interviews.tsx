@@ -46,6 +46,9 @@ import {
   ChevronRight,
   Search,
   Loader2,
+  Crown,
+  AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
@@ -90,6 +93,16 @@ interface UserInterview {
   completedSessionId?: string;
 }
 
+interface InterviewAccess {
+  tier: "free" | "pro" | "enterprise";
+  hasAccess: boolean;
+  maxSessions: number;
+  usedSessions: number;
+  remainingSessions: number;
+  allowedDurations: number[];
+  message?: string;
+}
+
 interface CustomInterviewFormData {
   company: string;
   position: string;
@@ -131,6 +144,10 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     useState(false);
   const [isCreateInterviewDialogOpen, setIsCreateInterviewDialogOpen] =
     useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+
+  const [interviewAccess, setInterviewAccess] =
+    useState<InterviewAccess | null>(null);
 
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
@@ -177,11 +194,12 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     loadTemplates();
   }, [pagination, filters]);
 
-  // Load stats, booked, and completed interviews only on initial mount
+  // Load stats, booked, completed interviews, and access on initial mount
   useEffect(() => {
     loadStats();
     loadBookedInterviews();
     loadCompletedInterviews();
+    loadInterviewAccess();
   }, []);
 
   // Cleanup debounce timeout on unmount
@@ -273,7 +291,23 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
     }
   };
 
+  const loadInterviewAccess = async () => {
+    try {
+      const data = await store.getInterviewAccess();
+      setInterviewAccess(data);
+    } catch (error) {
+      console.error("Failed to load interview access");
+    }
+  };
+
   const handleBookInterview = (template: InterviewTemplate) => {
+    if (
+      interviewAccess?.remainingSessions! >= 1 &&
+      !interviewAccess?.hasAccess
+    ) {
+      setShowUpgradeDialog(true);
+      return;
+    }
     setSelectedTemplate(template);
     setIsBookingDialogOpen(true);
   };
@@ -285,7 +319,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       setCreating(true);
       const result = await store.scheduleInterviewFromTemplate(templateId, {});
 
-      if (!result) {
+      if (!result || !result.session?.id) {
         toast.error("Failed to start interview");
         return;
       }
@@ -293,11 +327,14 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       toast.success("Interview started successfully!");
       setIsBookingDialogOpen(false);
 
-      if (result.session?.id) {
-        onNavigate(`/mock-interviews/${result.session.id}`);
+      onNavigate(`/mock-interviews/${result.session.id}`);
+    } catch (error: any) {
+      if (error?.response?.status === 402) {
+        setIsBookingDialogOpen(false);
+        setShowUpgradeDialog(true);
+      } else {
+        toast.error("Failed to start interview");
       }
-    } catch (error) {
-      toast.error("Failed to start interview");
     } finally {
       setCreating(false);
     }
@@ -336,6 +373,11 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   };
 
   const handleJoinInterview = async (interview: UserInterview) => {
+    if (!interviewAccess?.hasAccess) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+
     try {
       setCreating(true);
 
@@ -396,6 +438,11 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   };
 
   const handleCreateCustomInterview = async () => {
+    if (!interviewAccess?.hasAccess) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+
     try {
       if (
         !customInterviewData.company ||
@@ -528,6 +575,32 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
           <p className="text-muted-foreground">
             Practice with AI-powered interviews to ace your next job interview
           </p>
+          {interviewAccess &&
+            (interviewAccess.tier === "free" ||
+              interviewAccess.tier === "pro") && (
+              <div className="flex items-center gap-2 mt-1">
+                <Badge
+                  variant={
+                    interviewAccess.remainingSessions === 0
+                      ? "destructive"
+                      : "secondary"
+                  }
+                  className="text-xs"
+                >
+                  {interviewAccess.tier === "free"
+                    ? interviewAccess.remainingSessions === 0
+                      ? "Free trial used"
+                      : "1 free trial interview available"
+                    : `${interviewAccess.remainingSessions} of ${interviewAccess.maxSessions} sessions remaining this month`}
+                </Badge>
+              </div>
+            )}
+          {interviewAccess?.tier === "enterprise" && (
+            <Badge variant="secondary" className="mt-1 text-xs">
+              <Crown className="h-3 w-3 mr-1" />
+              Enterprise — Unlimited sessions
+            </Badge>
+          )}
         </div>
         <div className="flex md:items-center md:flex-row flex-col gap-3">
           <Dialog
@@ -535,7 +608,14 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
             onOpenChange={setIsCreateInterviewDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button>
+              <Button
+                onClick={(e) => {
+                  if (!interviewAccess?.hasAccess) {
+                    e.preventDefault();
+                    setShowUpgradeDialog(true);
+                  }
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Create from Job Description
               </Button>
@@ -692,9 +772,21 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="30">30</SelectItem>
-                      <SelectItem value="60">60</SelectItem>
+                      {[15, 30, 45, 60].map((d) => (
+                        <SelectItem
+                          key={d}
+                          value={d + ""}
+                          disabled={
+                            interviewAccess?.hasAccess === true &&
+                            !interviewAccess.allowedDurations.includes(d)
+                          }
+                        >
+                          {d} min
+                          {interviewAccess?.hasAccess &&
+                            !interviewAccess.allowedDurations.includes(d) &&
+                            " (Enterprise)"}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -888,9 +980,21 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="30">30</SelectItem>
-                      <SelectItem value="60">60</SelectItem>
+                      {[15, 30, 45, 60].map((d) => (
+                        <SelectItem
+                          key={d}
+                          value={d + ""}
+                          disabled={
+                            interviewAccess?.hasAccess === true &&
+                            !interviewAccess.allowedDurations.includes(d)
+                          }
+                        >
+                          {d} min
+                          {interviewAccess?.hasAccess &&
+                            !interviewAccess.allowedDurations.includes(d) &&
+                            " (Enterprise)"}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -950,6 +1054,35 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Session Limit Reached Banner */}
+      {interviewAccess && !interviewAccess.hasAccess && (
+        <Card className="border-orange-500/50 bg-orange-500/5">
+          <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-4">
+            <AlertTriangle className="h-8 w-8 text-orange-500 shrink-0" />
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-semibold">
+                {interviewAccess.tier === "free"
+                  ? interviewAccess.remainingSessions === 0
+                    ? "Free Trial Used"
+                    : "Access 1 Free Trial Interview"
+                  : "Monthly Limit Reached"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {interviewAccess.tier === "free"
+                  ? interviewAccess.remainingSessions === 0
+                    ? "You've used your free trial interview. Upgrade to Pro for 4 sessions/month or Enterprise for unlimited access."
+                    : "You've 1 free trial interview. Upgrade to Pro for 4 sessions/month or Enterprise for unlimited access."
+                  : "You've used all your mock interviews this month. Upgrade to Enterprise for unlimited sessions."}
+              </p>
+            </div>
+            <Button onClick={() => onNavigate("/subscription/plans")}>
+              <Crown className="h-4 w-4 mr-2" />
+              Upgrade
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1174,7 +1307,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="text-sm text-muted-foreground">
-                          <p>{template.summary}</p>
+                          <p>{template?.summary?.substring(0, 180) + "..."}</p>
                         </div>
                         {template.topics && template.topics.length > 0 && (
                           <div>
@@ -1417,12 +1550,7 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
 
           <div className="grid gap-6 py-4">
             {/* Start Now Option */}
-            <Card
-              className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-              onClick={() =>
-                selectedTemplate && handleStartNow(selectedTemplate.id)
-              }
-            >
+            <Card className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
               <CardContent className="flex items-center gap-4 p-6">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Play className="h-6 w-6 text-primary" />
@@ -1434,7 +1562,13 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                     interviewer
                   </p>
                 </div>
-                <Button disabled={creating}>
+                <Button
+                  type="button"
+                  disabled={creating}
+                  onClick={() =>
+                    selectedTemplate && handleStartNow(selectedTemplate.id)
+                  }
+                >
                   {creating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1555,6 +1689,63 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
                 )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              Upgrade Required
+            </DialogTitle>
+            <DialogDescription>
+              {interviewAccess?.tier === "free"
+                ? "You've used your free trial interview. Upgrade to unlock more sessions."
+                : "You've reached your monthly session limit. Upgrade for more access."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Card className="border-primary">
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-yellow-500" />
+                  <h3 className="font-semibold">Pro Plan</h3>
+                </div>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>4 mock interviews per month</li>
+                  <li>15 & 30 minute sessions</li>
+                  <li>AI-powered feedback & reports</li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-purple-500" />
+                  <h3 className="font-semibold">Enterprise Plan</h3>
+                </div>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>Unlimited mock interviews</li>
+                  <li>15, 30, 45 & 60 minute sessions</li>
+                  <li>Full access to all features</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowUpgradeDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => onNavigate("/subscription/plans")}>
+              <Crown className="h-4 w-4 mr-2" />
+              View Plans
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
