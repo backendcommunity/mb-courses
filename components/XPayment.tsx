@@ -9,14 +9,27 @@ const PADDLE_TOKEN = process.env.NEXT_PUBLIC_PADDLE_TOKEN as string;
 const NODE_ENV = process.env.NEXT_PUBLIC_NODE_ENV;
 const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
-export default function XPayment({ coupon }: { coupon: string | null }) {
+export default function XPayment({
+  coupon,
+  ref,
+  from,
+}: {
+  coupon: string | null;
+  ref: any;
+  from: string | null;
+}) {
   const { theme } = useTheme();
   const [paddle, setPaddle] = useState<Paddle>();
 
+  // const priceId =
+  //   coupon === "EARLYBIRD20"
+  //     ? "pri_01kh4061zp13hm9f4f4z4n8kwr"
+  //     : "pri_01kh40552sfyf8vz39pzb75je1";
+
   const priceId =
-    coupon === "EARLYBIRD20"
-      ? "pri_01kh4061zp13hm9f4f4z4n8kwr"
-      : "pri_01kh40552sfyf8vz39pzb75je1";
+    from === "true"
+      ? "pri_01kh40552sfyf8vz39pzb75je1"
+      : "pri_01kh4061zp13hm9f4f4z4n8kwr";
 
   useEffect(() => {
     initializePaddle({
@@ -37,7 +50,7 @@ export default function XPayment({ coupon }: { coupon: string | null }) {
       },
       discountCode: coupon ? coupon : undefined,
       items: [{ priceId }],
-      customData: {},
+      customData: { ref, from },
     });
   };
 

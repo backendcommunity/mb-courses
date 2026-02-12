@@ -3,5 +3,11 @@
 import XPayment from "@/components/XPayment";
 
 export default function Page({ searchParams }: any) {
-  return <XPayment coupon={searchParams.coupon ?? null} />;
+  return (
+    <XPayment
+      coupon={searchParams.coupon ?? null}
+      from={searchParams.from ?? null}
+      ref={searchParams.ref ?? ""}
+    />
+  );
 }
