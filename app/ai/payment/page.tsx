@@ -2,12 +2,24 @@
 
 import XPayment from "@/components/XPayment";
 
-export default function Page({ searchParams }: any) {
+type SearchParams = Promise<{
+  coupon?: string;
+  from?: string;
+  ref?: string;
+}>;
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+
   return (
     <XPayment
-      coupon={searchParams.coupon ?? null}
-      from={searchParams.from ?? null}
-      ref={searchParams.ref ?? ""}
+      coupon={params.coupon ?? null}
+      from={params.from ?? null}
+      refCode={params.ref ?? ""}
     />
   );
 }

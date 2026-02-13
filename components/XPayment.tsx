@@ -11,11 +11,11 @@ const PADDLE_ENVIRONMENT = NODE_ENV === "dev" ? "sandbox" : "production";
 
 export default function XPayment({
   coupon,
-  ref,
+  refCode,
   from,
 }: {
   coupon: string | null;
-  ref: any;
+  refCode: string;
   from: string | null;
 }) {
   const { theme } = useTheme();
@@ -50,11 +50,16 @@ export default function XPayment({
       },
       discountCode: coupon ? coupon : undefined,
       items: [{ priceId }],
-      customData: { ref, from },
+      customData: { ref: refCode, from },
     });
   };
 
-  openCheckout();
+  // Auto-open checkout when paddle is initialized
+  useEffect(() => {
+    if (paddle) {
+      openCheckout();
+    }
+  }, [paddle]);
 
   return (
     <div className="space-y-2">
