@@ -35,6 +35,7 @@ import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import Countdown from "../ui/count-down";
 import { SimpleEditor } from "./SimpleEditor";
+import { WeekCompletionShare } from "../week-completion-share";
 
 interface BootcampWatchPageProps {
   slug: string;
@@ -64,6 +65,7 @@ export function BootcampVideoWatchPage({
   const [celebration, setCelebration] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
   const [note, setNote] = useState("");
+  const [showWeekComplete, setShowWeekComplete] = useState(false);
   const path = usePathname();
 
   useMemo(() => {
@@ -160,7 +162,6 @@ export function BootcampVideoWatchPage({
   };
 
   const nextVideo = next();
-  const prevVideo = prev();
 
   const handleVideoClick = (lesson: Lesson) => {
     if (currentLesson?.type == "QUIZ") {
@@ -221,7 +222,7 @@ export function BootcampVideoWatchPage({
 
       toast.success(`You've earned ${points} MB from the lesson`);
 
-      // TODO: Show a pop that's shareable on socials
+      setShowWeekComplete(true);
     } catch (error: any) {
       toast.error("An error occurred updating your points. Try again");
       setCompleted(false);
@@ -269,7 +270,7 @@ export function BootcampVideoWatchPage({
 
   const progress = () => {
     const completed = userLessons?.filter((ul) => weekId === ul.weekId);
-    return (completed?.length / week?.lessons!?.length) * 100;
+    return ((completed?.length ?? 0) / (week?.lessons!?.length ?? 0)) * 100;
   };
 
   return (
@@ -475,12 +476,12 @@ export function BootcampVideoWatchPage({
               )}
 
               {/* Show Earn Rewards button when week is completed */}
-              {!nextVideo && isWeekCompleted() && (
+              {!nextVideo && week?.nextWeek && (
                 <Button
                   variant={"destructive"}
                   onClick={() => markCourseAsCompleted()}
                 >
-                  Earn Your Rewards
+                  Claim Rewards
                   <Crown className="ml-2 h-4 w-4" />
                 </Button>
               )}
@@ -830,6 +831,26 @@ export function BootcampVideoWatchPage({
           </div>
         </div>
       </div>
+      {week && (
+        <WeekCompletionShare
+          open={showWeekComplete}
+          onClose={() => setShowWeekComplete(false)}
+          week={week}
+          userName={user.name}
+          points={week?.lessons?.reduce((p, c) => (p += c.mb), 0) ?? 0}
+          onStartNextWeek={
+            week?.nextWeek
+              ? () => {
+                  setShowWeekComplete(false);
+                  onNavigate?.(
+                    `/bootcamps/${id}/${cohort}/weeks/${week.nextWeek!.id}/${week.nextWeek!.lessons?.[0]?.id ?? ""}`,
+                  );
+                }
+              : undefined
+          }
+          nextWeekTitle={week?.nextWeek?.title}
+        />
+      )}
       <ConfettiCelebration
         onComplete={() => setCelebration(false)}
         isVisible={celebration}
