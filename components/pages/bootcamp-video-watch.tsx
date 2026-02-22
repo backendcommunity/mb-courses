@@ -787,6 +787,7 @@ export function BootcampVideoWatchPage({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{lesson.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {/* TODO: Remove this */}
                       {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
                         <>
                           <Clock className="h-3 w-3" />

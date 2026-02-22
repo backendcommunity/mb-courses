@@ -183,7 +183,7 @@ export function OnboardingFlow() {
         )}
 
         {currentStep === "result" && recommendation && (
-          <OnboardingResult recommendation={recommendation} />
+          <OnboardingResult recommendation={recommendation} learningGoal={learningGoal} />
         )}
       </div>
     </div>

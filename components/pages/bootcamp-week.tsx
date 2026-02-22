@@ -74,7 +74,7 @@ export function BootcampWeekPage({
         setEventLoading(true);
         const events = await store.getCurrentWeekEvents(
           bootcampId,
-          currentWeek?.id!
+          currentWeek?.id!,
         );
         setEvents(events);
         setEventLoading(false);
@@ -111,7 +111,7 @@ export function BootcampWeekPage({
       return onNavigate?.(`/projects/${lesson?.project?.slug}`);
 
     return onNavigate?.(
-      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${currentWeek?.id}/${lesson?.id}`
+      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${currentWeek?.id}/${lesson?.id}`,
     );
   };
 
@@ -120,7 +120,7 @@ export function BootcampWeekPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === week?.id
+      (ul) => ul.completed && ul.weekId === week?.id,
     );
     return week?.lessons?.length === completed?.length;
   };
@@ -145,7 +145,7 @@ export function BootcampWeekPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.find(
-      (ul) => ul.lessonId === lesson.id && ul.completed
+      (ul) => ul.lessonId === lesson.id && ul.completed,
     );
     return !!completed;
   };
@@ -155,7 +155,7 @@ export function BootcampWeekPage({
 
     const userLessons = userCohort.userLessons;
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === currentWeek?.id
+      (ul) => ul.completed && ul.weekId === currentWeek?.id,
     )?.length;
     return completed;
   };
@@ -258,6 +258,7 @@ export function BootcampWeekPage({
                             <span>{lesson.type}</span>
                           </div>
                           <div className="flex items-center gap-1">
+                            {/* TODO: Remove this */}
                             {(lesson.type === "VIDEO" ||
                               lesson.type === "QUIZ") && (
                               <Badge variant="outline" className="flex gap-1">
@@ -319,10 +320,10 @@ export function BootcampWeekPage({
                               {lesson.type === "VIDEO"
                                 ? "Watch"
                                 : lesson.type === "QUIZ"
-                                ? "Solve"
-                                : lesson.type === "PROJECT"
-                                ? "Build"
-                                : "Complete"}
+                                  ? "Solve"
+                                  : lesson.type === "PROJECT"
+                                    ? "Build"
+                                    : "Complete"}
                             </Button>
                           )}
                         </div>

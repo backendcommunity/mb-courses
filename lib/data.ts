@@ -2116,6 +2116,26 @@ export interface OnboardingRecommendation {
     projectsToComplete: number;
   };
   motivationalMessage: string;
+  interviewRecommendation?: {
+    hasInterviewPath: boolean;
+    phases: Array<{
+      phase: number;
+      title: string;
+      description: string;
+      steps: Array<{
+        step: number;
+        title: string;
+        description: string;
+        type: "mock_interview" | "course";
+        resource: {
+          id: string;
+          title: string;
+          difficulty?: string;
+        };
+        duration?: string;
+      }>;
+    }>;
+  } | null;
 }
 
 export interface OnboardingInput {

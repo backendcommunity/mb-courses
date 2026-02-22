@@ -76,3 +76,20 @@ export const verifyCode = async (email: string, code: string) => {
   });
   return res.data;
 };
+
+// ─── Onboarding API ──────────────────────────────────────────────────────────
+
+export const completeOnboarding = async (data: {
+  experienceLevel?: string;
+  learningGoal?: string;
+  weeklyCommitment?: string;
+  skipped?: boolean;
+}) => {
+  const response = await api.post("/auth/onboarding", data);
+  return response.data;
+};
+
+export const getOnboardingRecommendation = async () => {
+  const response = await api.get("/auth/onboarding/recommendation");
+  return response.data;
+};

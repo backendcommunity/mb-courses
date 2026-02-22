@@ -72,17 +72,17 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const isChapterCompleted = (chapterId: string) => {
     return course?.userCourse?.userChapters?.find(
-      (ch: any) => ch.chapterId === chapterId
+      (ch: any) => ch.chapterId === chapterId,
     )?.isCompleted;
   };
 
   const handleChapterComplete = (chapterId: string) => {
     const updatedChapters = course?.chapters.map((chapter) =>
-      chapter.id === chapterId ? { ...chapter, completed: true } : chapter
+      chapter.id === chapterId ? { ...chapter, completed: true } : chapter,
     );
     const completedCount = updatedChapters?.filter((c) => c.isCompleted).length;
     const newProgress = Math.round(
-      (completedCount! / updatedChapters?.length!) * 100
+      (completedCount! / updatedChapters?.length!) * 100,
     );
 
     updateCourse(slug, {
@@ -95,7 +95,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
   const handlePurchase = (
     courseId: string,
     method: "subscription" | "individual" | "mb",
-    success: boolean
+    success: boolean,
   ) => {
     setCelebration(true);
     return;
@@ -163,24 +163,32 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
     const userVideos = course?.userCourse?.userVideos;
 
     const watchedVideoIds = new Set(
-      userVideos?.filter((v) => v.isCompleted)?.map((v) => v.videoId)
+      userVideos?.filter((v) => v.isCompleted)?.map((v) => v.videoId),
     );
     const watchedChapterIds = new Set(
-      userChapters?.filter((c) => c.isCompleted)?.map((v) => v.chapterId)
+      userChapters?.filter((c) => c.isCompleted)?.map((v) => v.chapterId),
     );
+
+    console.log(watchedChapterIds, watchedVideoIds);
 
     const nextChapter =
       course?.chapters.find((c) => !watchedChapterIds.has(c.id)) ||
       course?.chapters?.[0];
 
+    console.log(nextChapter, course);
+
     const nextVideo =
       nextChapter?.videos?.find((v: Video) => !watchedVideoIds.has(v.id)) ||
       nextChapter?.videos?.[0];
 
+    console.log(slug, nextChapter?.slug!, nextVideo?.slug);
+
+    return;
+
     const watchPath = routes.courseWatch(
       slug,
       nextChapter?.slug!,
-      nextVideo?.slug
+      nextVideo?.slug,
     );
 
     onNavigate(watchPath);
@@ -192,7 +200,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       const watchPath = routes.courseWatch(
         slug,
         chapter.slug,
-        chapter?.videos[0]?.slug
+        chapter?.videos[0]?.slug,
       );
       onNavigate(watchPath);
     } else {
@@ -230,8 +238,8 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                 course?.level === "Advanced"
                   ? "destructive"
                   : course?.level === "Intermediate"
-                  ? "default"
-                  : "secondary"
+                    ? "default"
+                    : "secondary"
               }
             >
               {course?.level}
@@ -620,15 +628,15 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                                 !chapter.isPremium
                                   ? "border-green-600 text-green-600"
                                   : course?.enrolled
-                                  ? "border-blue-600 text-blue-600"
-                                  : "border-orange-600 text-orange-600"
+                                    ? "border-blue-600 text-blue-600"
+                                    : "border-orange-600 text-orange-600"
                               }`}
                             >
                               {!chapter.isPremium
                                 ? "FREE"
                                 : course?.enrolled
-                                ? "ENROLLED"
-                                : "PREMIUM"}
+                                  ? "ENROLLED"
+                                  : "PREMIUM"}
                             </Badge>
                             <span>{chapter.duration}</span>
                             <Badge variant="secondary" className="text-xs">

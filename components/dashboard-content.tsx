@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { routes } from "@/lib/routes";
 import { Topic } from "@/lib/data";
+import { OnboardingSkipBanner } from "@/components/onboarding/onboarding-skip-banner";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
@@ -105,6 +106,11 @@ export function DashboardContent({}: DashboardContentProps) {
 
   return (
     <div className="space-y-6">
+      {/* Onboarding Skip Banner — show for users who skipped onboarding */}
+      {user?.hasFinishedOnboarding && !user?.experienceLevel && (
+        <OnboardingSkipBanner userName={user.name} />
+      )}
+
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
