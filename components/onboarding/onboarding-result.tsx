@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle, Trophy, Flame, Star } from "lucide-react";
 
 import { useAppStore } from "@/lib/store";
 
@@ -52,199 +51,306 @@ export function OnboardingResult({ recommendation }: OnboardingResultProps) {
   };
 
   return (
-    <div className="text-center">
-      <div className="flex justify-center mb-4">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(19, 174, 206, 0.1)" }}
+    <div style={{ maxWidth: 640 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 32, textAlign: "center" }}>
+        <h1
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#FFFFFF",
+            marginBottom: 12,
+            letterSpacing: "-0.5px",
+          }}
         >
-          <CheckCircle className="w-8 h-8" style={{ color: "#13AECE" }} />
-        </div>
+          Your learning path is ready
+        </h1>
+        <p style={{ fontSize: 15, color: "#D1D5DB", lineHeight: 1.6 }}>
+          {motivationalMessage}
+        </p>
       </div>
-      <h1
-        className="font-extrabold mb-2"
-        style={{ fontSize: 26, color: "#FFFFFF" }}
-      >
-        Your learning path is ready!
-      </h1>
-      <p className="mb-8" style={{ fontSize: 14, color: "#9CA3AF" }}>
-        {motivationalMessage}
-      </p>
 
-      {/* Gamification Rewards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      {/* Quick Stats - Minimal Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          gap: 16,
+          marginBottom: 32,
+        }}
+      >
         <div
-          className="rounded-lg p-3 text-center"
-          style={{ background: "rgba(19, 174, 206, 0.1)" }}
+          style={{
+            padding: 16,
+            backgroundColor: "#1F2937",
+            borderRadius: 8,
+            border: "1px solid #374151",
+          }}
         >
-          <Trophy className="w-5 h-5 mx-auto mb-2" style={{ color: "#13AECE" }} />
+          <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 8 }}>
+            Timeline
+          </div>
           <div
-            className="font-bold text-sm"
-            style={{ color: "#13AECE" }}
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              marginBottom: 4,
+            }}
           >
             {stats.weeksToGoal}w
           </div>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-            Timeline
+          <div style={{ fontSize: 12, color: "#6B7280" }}>
+            to complete
           </div>
         </div>
+
         <div
-          className="rounded-lg p-3 text-center"
-          style={{ background: "rgba(34, 197, 94, 0.1)" }}
+          style={{
+            padding: 16,
+            backgroundColor: "#1F2937",
+            borderRadius: 8,
+            border: "1px solid #374151",
+          }}
         >
-          <Star className="w-5 h-5 mx-auto mb-2" style={{ color: "#22c55e" }} />
-          <div
-            className="font-bold text-sm"
-            style={{ color: "#22c55e" }}
-          >
-            +500 XP
+          <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 8 }}>
+            Content
           </div>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-            Starter Bonus
-          </div>
-        </div>
-        <div
-          className="rounded-lg p-3 text-center"
-          style={{ background: "rgba(102, 51, 153, 0.1)" }}
-        >
-          <Flame className="w-5 h-5 mx-auto mb-2" style={{ color: "#a855f7" }} />
           <div
-            className="font-bold text-sm"
-            style={{ color: "#a855f7" }}
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              marginBottom: 4,
+            }}
           >
             {stats.lessonsPlanned}
           </div>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-            Lessons
+          <div style={{ fontSize: 12, color: "#6B7280" }}>
+            lessons
           </div>
         </div>
+
         <div
-          className="rounded-lg p-3 text-center"
-          style={{ background: "rgba(249, 115, 22, 0.1)" }}
+          style={{
+            padding: 16,
+            backgroundColor: "#1F2937",
+            borderRadius: 8,
+            border: "1px solid #374151",
+          }}
         >
-          <CheckCircle className="w-5 h-5 mx-auto mb-2" style={{ color: "#f97316" }} />
+          <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 8 }}>
+            Practice
+          </div>
           <div
-            className="font-bold text-sm"
-            style={{ color: "#f97316" }}
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              marginBottom: 4,
+            }}
           >
             {stats.projectsToComplete}
           </div>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-            Projects
+          <div style={{ fontSize: 12, color: "#6B7280" }}>
+            projects
           </div>
         </div>
       </div>
 
-      {/* Recommendation Cards */}
-      <div className="flex flex-col gap-4 text-left mb-8">
-        {course && (
-          <div
-            className="rounded-xl p-4 border-l-4 relative"
-            style={{
-              background: "rgba(19, 174, 206, 0.05)",
-              borderLeft: "4px solid #13AECE",
-            }}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <span
-                className="inline-block text-xs font-bold uppercase tracking-wide rounded-full px-3 py-1"
-                style={{
-                  background: "rgba(19, 174, 206, 0.2)",
-                  color: "#13AECE",
-                }}
-              >
-                ⭐ Recommended First
-              </span>
-              <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>
-                +200 XP
-              </span>
-            </div>
-            <div className="font-bold text-white text-sm">{course.title}</div>
-            <div style={{ color: "#9CA3AF", fontSize: 12, marginTop: 6 }}>
-              {course.level} · {Math.round(course.totalDuration / 60)} hours ·{" "}
-              {course.totalStudents.toLocaleString()} enrolled
-            </div>
-          </div>
-        )}
+      {/* Recommendations */}
+      <div style={{ marginBottom: 32 }}>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#9CA3AF",
+            marginBottom: 16,
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
+        >
+          Your Recommendations
+        </div>
 
-        {project && (
-          <div
-            className="rounded-xl p-4 border-l-4 relative"
-            style={{
-              background: "rgba(34, 197, 94, 0.05)",
-              borderLeft: "4px solid #22c55e",
-            }}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <span
-                className="inline-block text-xs font-bold uppercase tracking-wide rounded-full px-3 py-1"
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {course && (
+            <div
+              style={{
+                padding: 16,
+                backgroundColor: "#1F2937",
+                borderRadius: 8,
+                border: "1px solid #374151",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                    Start with
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {course.title}
+                  </div>
+                </div>
+              </div>
+              <div
                 style={{
-                  background: "rgba(34, 197, 94, 0.2)",
-                  color: "#22c55e",
+                  fontSize: 13,
+                  color: "#D1D5DB",
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 10,
                 }}
               >
-                🚀 First Build
-              </span>
-              <span style={{ fontSize: 11, color: "#f97316", fontWeight: 600 }}>
-                +300 XP
-              </span>
+                <span>{course.level}</span>
+                <span>•</span>
+                <span>{Math.round(course.totalDuration / 60)}h</span>
+                <span>•</span>
+                <span>{course.totalStudents.toLocaleString()} learners</span>
+              </div>
             </div>
-            <div className="font-bold text-white text-sm">{project.title}</div>
-            <div style={{ color: "#9CA3AF", fontSize: 12, marginTop: 6 }}>
-              {project.level} · ~{Math.round(project.duration / 60)} hours
-            </div>
-          </div>
-        )}
+          )}
 
-        {roadmap && (
-          <div
-            className="rounded-xl p-4 border-l-4 relative"
-            style={{
-              background: "rgba(168, 85, 247, 0.05)",
-              borderLeft: "4px solid #a855f7",
-            }}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <span
-                className="inline-block text-xs font-bold uppercase tracking-wide rounded-full px-3 py-1"
+          {project && (
+            <div
+              style={{
+                padding: 16,
+                backgroundColor: "#1F2937",
+                borderRadius: 8,
+                border: "1px solid #374151",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                    Build with
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {project.title}
+                  </div>
+                </div>
+              </div>
+              <div
                 style={{
-                  background: "rgba(168, 85, 247, 0.2)",
-                  color: "#a855f7",
+                  fontSize: 13,
+                  color: "#D1D5DB",
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 10,
                 }}
               >
-                📍 Your Path
-              </span>
+                <span>{project.level}</span>
+                <span>•</span>
+                <span>~{Math.round(project.duration / 60)}h</span>
+              </div>
             </div>
-            <div className="font-bold text-white text-sm">{roadmap.title}</div>
-            <div style={{ color: "#9CA3AF", fontSize: 12, marginTop: 6 }}>
-              {roadmap.firstTopics.join(" · ")}
+          )}
+
+          {roadmap && (
+            <div
+              style={{
+                padding: 16,
+                backgroundColor: "#1F2937",
+                borderRadius: 8,
+                border: "1px solid #374151",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                    Follow
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {roadmap.title}
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#D1D5DB",
+                  marginTop: 10,
+                }}
+              >
+                {roadmap.firstTopics.slice(0, 3).join(" • ")}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* CTAs */}
-      <button
-        onClick={handleStartLesson}
-        className="w-full sm:w-auto font-bold rounded-lg py-3 px-8 transition-all"
-        style={{ background: "#13AECE", color: "#FFFFFF", fontSize: 16 }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.filter = "brightness(1.1)")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.filter = "brightness(1)")
-        }
-      >
-        Start Your First Lesson &rarr;
-      </button>
+      {/* Actions */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <button
+          onClick={handleStartLesson}
+          style={{
+            width: "100%",
+            padding: "12px 24px",
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#FFFFFF",
+            background: "#13AECE",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#0FA3C4";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#13AECE";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
+          Start Learning
+        </button>
 
-      <button
-        onClick={handleGoToDashboard}
-        className="block mx-auto mt-3 underline"
-        style={{ fontSize: 12, color: "#6B7280" }}
-      >
-        Go to Dashboard instead
-      </button>
+        <button
+          onClick={handleGoToDashboard}
+          style={{
+            width: "100%",
+            padding: "12px 24px",
+            fontSize: 15,
+            fontWeight: 500,
+            color: "#D1D5DB",
+            background: "transparent",
+            border: "1px solid #374151",
+            borderRadius: 8,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#4B5563";
+            e.currentTarget.style.color = "#F3F4F6";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "#374151";
+            e.currentTarget.style.color = "#D1D5DB";
+          }}
+        >
+          Go to Dashboard
+        </button>
+      </div>
     </div>
   );
 }

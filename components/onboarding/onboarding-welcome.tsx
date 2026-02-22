@@ -1,6 +1,5 @@
 "use client";
 
-import { Zap, Target, Award } from "lucide-react";
 import { OnboardingProgress } from "./onboarding-progress";
 
 interface OnboardingWelcomeProps {
@@ -15,77 +14,111 @@ export function OnboardingWelcome({
   onSkip,
 }: OnboardingWelcomeProps) {
   return (
-    <div className="text-center">
+    <div style={{ textAlign: "center" }}>
       <OnboardingProgress currentStep={0} />
 
-      {/* Icon Badge */}
-      <div
-        className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-        style={{ background: "rgba(19, 174, 206, 0.1)" }}
-      >
-        <Zap className="w-8 h-8" style={{ color: "#13AECE" }} />
-      </div>
-
       <h1
-        className="font-extrabold mb-4"
-        style={{ fontSize: 28, color: "#FFFFFF" }}
+        style={{
+          fontSize: 32,
+          fontWeight: 700,
+          color: "#FFFFFF",
+          marginBottom: 12,
+          letterSpacing: "-0.5px",
+        }}
       >
-        Welcome to Masteringbackend, {firstName}!
+        Welcome, {firstName}
       </h1>
 
-      <p className="mb-6" style={{ fontSize: 14, color: "#9CA3AF" }}>
-        Let&apos;s build your personalized learning path. This takes about 60 seconds.
+      <p
+        style={{
+          fontSize: 15,
+          color: "#D1D5DB",
+          marginBottom: 28,
+          lineHeight: 1.6,
+        }}
+      >
+        Let&apos;s build your learning path. This takes about 60 seconds.
       </p>
 
-      {/* Gamification Benefits */}
-      <div className="space-y-3 mb-8">
+      {/* Value Props */}
+      <div style={{ marginBottom: 32 }}>
         <div
-          className="flex items-center gap-3 px-4 py-3 rounded-lg"
-          style={{ background: "rgba(19, 174, 206, 0.05)" }}
+          style={{
+            padding: 16,
+            marginBottom: 12,
+            backgroundColor: "#1F2937",
+            borderRadius: 8,
+            border: "1px solid #374151",
+          }}
         >
-          <Target className="w-5 h-5" style={{ color: "#13AECE" }} />
-          <span style={{ fontSize: 13, color: "#D1D5DB" }}>
-            Personalized path matching your goals
-          </span>
+          <div style={{ fontSize: 14, color: "#F3F4F6", fontWeight: 500 }}>
+            Personalized recommendations
+          </div>
+          <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>
+            Based on your goals and experience
+          </div>
         </div>
         <div
-          className="flex items-center gap-3 px-4 py-3 rounded-lg"
-          style={{ background: "rgba(34, 197, 94, 0.05)" }}
+          style={{
+            padding: 16,
+            backgroundColor: "#1F2937",
+            borderRadius: 8,
+            border: "1px solid #374151",
+          }}
         >
-          <Award className="w-5 h-5" style={{ color: "#22c55e" }} />
-          <span style={{ fontSize: 13, color: "#D1D5DB" }}>
-            Earn rewards as you progress
-          </span>
+          <div style={{ fontSize: 14, color: "#F3F4F6", fontWeight: 500 }}>
+            Structured learning path
+          </div>
+          <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>
+            From fundamentals to mastery
+          </div>
         </div>
       </div>
 
-      <button
-        onClick={onContinue}
-        className="font-semibold rounded-lg transition-all w-full py-3"
-        style={{
-          background: "#13AECE",
-          color: "#FFFFFF",
-          fontSize: 15,
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.filter = "brightness(1.1)")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.filter = "brightness(1)")
-        }
-      >
-        Start Your Journey &rarr;
-      </button>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <button
+          onClick={onContinue}
+          style={{
+            width: "100%",
+            padding: "12px 24px",
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#FFFFFF",
+            background: "#13AECE",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#0FA3C4";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#13AECE";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
+          Get Started
+        </button>
 
-      <button
-        onClick={onSkip}
-        className="block mx-auto mt-4 text-sm transition-colors"
-        style={{ color: "#6B7280" }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#9CA3AF")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7280")}
-      >
-        Skip for now
-      </button>
+        <button
+          onClick={onSkip}
+          style={{
+            fontSize: 14,
+            color: "#9CA3AF",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            transition: "color 0.2s ease",
+            padding: 8,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#D1D5DB")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#9CA3AF")}
+        >
+          Skip for now
+        </button>
+      </div>
     </div>
   );
 }
