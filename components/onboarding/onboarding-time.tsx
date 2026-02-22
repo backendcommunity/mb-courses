@@ -56,7 +56,7 @@ export function OnboardingTime({
 }: OnboardingTimeProps) {
   return (
     <div>
-      <OnboardingProgress currentStep={3} />
+      <OnboardingProgress currentStep={4} />
 
       <h1
         className="font-extrabold mb-2"

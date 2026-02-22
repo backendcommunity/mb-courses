@@ -35,6 +35,12 @@ export interface User {
   phone?: string;
   createdAt?: Date | string;
   githubInstallationId?: string;
+  // Onboarding fields
+  hasFinishedOnboarding?: boolean;
+  experienceLevel?: string | null;
+  learningGoal?: string | null;
+  weeklyCommitment?: string | null;
+  preferredLanguage?: ProgrammingLanguage | null;
 }
 
 export interface Reward {
@@ -2070,3 +2076,52 @@ export const bootcamps = dataStore.bootcamps;
 export const learningPaths = dataStore.learningPaths;
 export const roadmaps = dataStore.roadmaps;
 export const user = dataStore.user;
+
+// ─── Onboarding Types ────────────────────────────────────────────────────────
+
+export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+export type LearningGoal = "fundamentals" | "projects" | "interviews" | "advanced";
+export type WeeklyCommitment = "casual" | "steady" | "intensive";
+export type ProgrammingLanguage = "PYTHON" | "JAVA" | "NODEJS" | "RUST" | "RUBY";
+
+export interface OnboardingRecommendation {
+  course: {
+    id: string;
+    title: string;
+    slug: string;
+    level: string | null;
+    totalDuration: number;
+    totalStudents: number;
+    banner: string | null;
+    firstChapterId: string | null;
+    firstVideoId: string | null;
+  } | null;
+  project: {
+    id: string;
+    title: string;
+    slug: string;
+    level: string | null;
+    duration: number;
+  } | null;
+  roadmap: {
+    id: string;
+    title: string;
+    slug: string;
+    topicsCount: number;
+    firstTopics: string[];
+  } | null;
+  stats: {
+    weeksToGoal: number;
+    lessonsPlanned: number;
+    projectsToComplete: number;
+  };
+  motivationalMessage: string;
+}
+
+export interface OnboardingInput {
+  experienceLevel?: ExperienceLevel;
+  learningGoal?: LearningGoal;
+  weeklyCommitment?: WeeklyCommitment;
+  preferredLanguage?: ProgrammingLanguage;
+  skipped: boolean;
+}

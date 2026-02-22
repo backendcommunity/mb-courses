@@ -1,83 +1,88 @@
 "use client";
 
-import { BookOpen, Hammer, Briefcase, Rocket } from "lucide-react";
+import { Code2, Python, Coffee } from "lucide-react";
 import { OnboardingProgress } from "./onboarding-progress";
 import { OnboardingOptionCard } from "./onboarding-option-card";
-import type { LearningGoal } from "@/lib/data";
+import type { ProgrammingLanguage } from "@/lib/data";
 
 const OPTIONS: {
-  value: LearningGoal;
-  icon: typeof BookOpen;
+  value: ProgrammingLanguage;
+  icon: typeof Code2;
   title: string;
   description: string;
-  points: number;
+  emoji: string;
   color: string;
 }[] = [
   {
-    value: "fundamentals",
-    icon: BookOpen,
-    title: "Learn Backend Fundamentals",
+    value: "PYTHON",
+    icon: Code2,
+    title: "Python",
     description:
-      "Structured courses from HTTP to databases to deployment.",
-    points: 500,
+      "Popular for ML, data science, and rapid backend development.",
+    emoji: "🐍",
     color: "bg-blue-500",
   },
   {
-    value: "projects",
-    icon: Hammer,
-    title: "Build Real Projects",
-    description:
-      "Hands-on project-based learning with real-world applications.",
-    points: 750,
+    value: "JAVA",
+    icon: Code2,
+    title: "Java",
+    description: "Enterprise-grade backend development with strong typing.",
+    emoji: "☕",
+    color: "bg-orange-500",
+  },
+  {
+    value: "NODEJS",
+    icon: Code2,
+    title: "Node.js",
+    description: "JavaScript runtime for full-stack development.",
+    emoji: "⚡",
     color: "bg-green-500",
   },
   {
-    value: "interviews",
-    icon: Briefcase,
-    title: "Prepare for Interviews",
-    description:
-      "Mock interviews, system design, and coding challenges.",
-    points: 600,
-    color: "bg-purple-500",
+    value: "RUST",
+    icon: Code2,
+    title: "Rust",
+    description: "Performance and memory safety for systems programming.",
+    emoji: "🦀",
+    color: "bg-red-500",
   },
   {
-    value: "advanced",
-    icon: Rocket,
-    title: "Level Up My Skills",
-    description:
-      "Advanced topics: microservices, DevOps, performance, architecture.",
-    points: 1000,
-    color: "bg-orange-500",
+    value: "RUBY",
+    icon: Code2,
+    title: "Ruby",
+    description: "Developer productivity and elegant syntax.",
+    emoji: "💎",
+    color: "bg-pink-500",
   },
 ];
 
-interface OnboardingGoalProps {
-  value: LearningGoal | null;
-  onChange: (value: LearningGoal) => void;
+interface OnboardingLanguageProps {
+  value: ProgrammingLanguage | null;
+  onChange: (value: ProgrammingLanguage) => void;
   onContinue: () => void;
   onBack: () => void;
   onSkip: () => void;
 }
 
-export function OnboardingGoal({
+export function OnboardingLanguage({
   value,
   onChange,
   onContinue,
   onBack,
   onSkip,
-}: OnboardingGoalProps) {
+}: OnboardingLanguageProps) {
   return (
     <div>
-      <OnboardingProgress currentStep={3} />
+      <OnboardingProgress currentStep={2} />
 
       <h1
         className="font-extrabold mb-2"
         style={{ fontSize: 22, color: "#FFFFFF" }}
       >
-        What brings you to Masteringbackend?
+        Which programming language do you prefer?
       </h1>
       <p className="mb-5" style={{ fontSize: 14, color: "#9CA3AF" }}>
-        Pick your primary goal. You can always explore other paths later.
+        We'll recommend courses and projects in your chosen language.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -91,7 +96,7 @@ export function OnboardingGoal({
               description={opt.description}
               selected={value === opt.value}
               onClick={() => onChange(opt.value)}
-              badge={`+${opt.points} XP`}
+              badge={opt.emoji}
               badgeColor={opt.color}
             />
           );

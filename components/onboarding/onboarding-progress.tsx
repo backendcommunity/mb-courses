@@ -2,10 +2,10 @@
 
 import { Check } from "lucide-react";
 
-const STEPS = ["Welcome", "Experience", "Goal", "Time"];
+const STEPS = ["Welcome", "Experience", "Language", "Goal", "Time"];
 
 interface OnboardingProgressProps {
-  currentStep: number; // 0-3
+  currentStep: number; // 0-4
 }
 
 export function OnboardingProgress({ currentStep }: OnboardingProgressProps) {
@@ -16,7 +16,7 @@ export function OnboardingProgress({ currentStep }: OnboardingProgressProps) {
         role="progressbar"
         aria-valuenow={currentStep}
         aria-valuemin={0}
-        aria-valuemax={3}
+        aria-valuemax={4}
         aria-label={`Step ${currentStep + 1} of ${STEPS.length}: ${STEPS[currentStep]}`}
       >
         {STEPS.map((label, i) => (
