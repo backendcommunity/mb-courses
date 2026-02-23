@@ -578,12 +578,12 @@ export function NavigationBar({
                   <Users className="mr-2 h-4 w-4" />
                   <span>Community</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem
+                {/* <DropdownMenuItem
                   onClick={() => onNavigate(routes.portfolio(user?.id))}
                 >
                   <User className="mr-2 h-4 w-4" />
                   <span>My Portfolio</span>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Leaderboard</span>

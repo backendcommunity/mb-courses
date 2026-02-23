@@ -9,10 +9,15 @@ export const routes = {
   courses: "/courses",
   courseDetail: (slug: string) => `/courses/${slug}`,
   coursePreview: (courseId: string) => `/courses/${courseId}/preview`,
-  courseWatch: (courseSlug: string, chapterId: string, videoId?: string) => {
-    if (videoId) return `/courses/${courseSlug}/watch/${chapterId}/${videoId}`;
+  courseWatch: (
+    courseSlug: string,
+    chapterSlug: string,
+    videoSlug?: string,
+  ) => {
+    if (videoSlug)
+      return `/courses/${courseSlug}/watch/${chapterSlug}/${videoSlug}`;
 
-    return `/courses/${courseSlug}/watch/${chapterId}`;
+    return `/courses/${courseSlug}/watch/${chapterSlug}`;
   },
   courseQuizzes: (courseId: string) => `/courses/${courseId}/quizzes`,
   courseQuiz: (courseId: string, quizId: string) =>
