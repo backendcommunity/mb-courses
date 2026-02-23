@@ -12,6 +12,8 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const isProd = process.env.NODE_ENV?.toLowerCase() !== "production";
+
 /**
  * Capture error with automatic context
  * Only captures in production. In development, logs to console instead.
@@ -20,29 +22,35 @@ import * as Sentry from "@sentry/nextjs";
 export const captureError = (
   error: Error | string,
   context?: Record<string, any>,
-  level: "fatal" | "error" | "warning" = "error"
+  level: "fatal" | "error" | "warning" = "error",
 ) => {
   // Skip in development unless explicitly debugging
-  if (process.env.NODE_ENV !== "production" && !process.env.SENTRY_DEBUG) {
+  if (isProd && !process.env.SENTRY_DEBUG) {
     console.error("[Dev Mode - Sentry Disabled]", error, context);
     return;
   }
 
-  Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
-    level,
-    contexts: {
-      custom: context,
+  Sentry.captureException(
+    error instanceof Error ? error : new Error(String(error)),
+    {
+      level,
+      contexts: {
+        custom: context,
+      },
     },
-  });
+  );
 };
 
 /**
  * Capture an informational message
  * Only in production. Useful for tracking important business events.
  */
-export const captureMessage = (message: string, level: "info" | "warning" = "info") => {
+export const captureMessage = (
+  message: string,
+  level: "info" | "warning" = "info",
+) => {
   // Skip in development unless explicitly debugging
-  if (process.env.NODE_ENV !== "production" && !process.env.SENTRY_DEBUG) {
+  if (isProd && !process.env.SENTRY_DEBUG) {
     console.log(`[Dev Mode - ${level}]`, message);
     return;
   }
@@ -54,7 +62,11 @@ export const captureMessage = (message: string, level: "info" | "warning" = "inf
  * Set user context for error tracking
  * Call this after successful authentication
  */
-export const setUserContext = (userId: string, email?: string, name?: string) => {
+export const setUserContext = (
+  userId: string,
+  email?: string,
+  name?: string,
+) => {
   Sentry.setUser({
     id: userId,
     email: email || undefined,
@@ -78,10 +90,10 @@ export const addBreadcrumb = (
   message: string,
   category: string,
   data?: Record<string, any>,
-  level: "debug" | "info" | "warning" = "info"
+  level: "debug" | "info" | "warning" = "info",
 ) => {
   // Skip in development unless explicitly debugging
-  if (process.env.NODE_ENV !== "production" && !process.env.SENTRY_DEBUG) {
+  if (isProd && !process.env.SENTRY_DEBUG) {
     return;
   }
 
@@ -102,7 +114,7 @@ export const captureApiError = (
   error: Error | string,
   endpoint: string,
   statusCode?: number,
-  method: string = "GET"
+  method: string = "GET",
 ) => {
   captureError(error, {
     type: "api_error",
@@ -116,13 +128,13 @@ export const captureApiError = (
  * Safe wrapper for async operations with automatic error capture
  * Useful for wrapping promise chains
  */
-export const captureAsync = async <T,>(
+export const captureAsync = async <T>(
   promise: Promise<T>,
-  operation: string
+  operation: string,
 ): Promise<T | null> => {
   try {
     return await promise;
-  } catch (error) {
+  } catch (error: any) {
     captureError(error, { operation }, "error");
     return null;
   }

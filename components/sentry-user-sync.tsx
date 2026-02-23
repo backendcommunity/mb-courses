@@ -6,7 +6,7 @@
  * Place this at the top level of your app (e.g., inside a layout or wrapper)
  */
 
-import { useSentryUser } from "@/hooks/use-sentry-user";
+import { useSentryUser } from "@/src/hooks/use-sentry-user";
 import React from "react";
 
 export function SentryUserSync({ children }: { children: React.ReactNode }) {
