@@ -78,24 +78,24 @@ export function CourseDetailPage({
   const totalVideos = course?.chapters?.reduce(
     (acc, chapter) =>
       acc + chapter.videos.filter((v) => v.type === "VIDEO").length,
-    0
+    0,
   );
 
   const quizzes = course?.chapters?.filter(
-    (chapter) => chapter?.quizzes
+    (chapter) => chapter?.quizzes,
   ).length;
   const exercises = course?.chapters?.filter(
-    (chapter) => chapter?.exercise
+    (chapter) => chapter?.exercise,
   ).length;
   const playgrounds = course?.chapters?.filter(
-    (chapter) => chapter?.playground
+    (chapter) => chapter?.playground,
   ).length;
 
   async function findRoadmap(slug: string) {
     const milestone = await store.getMilestone(slug, topicId);
     setMilestone(milestone);
     setCompletedItems(milestone?.userTopic?.completedItems ?? []);
-    setRoadmap(milestone.roadmap);
+    setRoadmap(milestone?.roadmap);
   }
 
   async function findCourse(slug: string) {
@@ -112,22 +112,22 @@ export function CourseDetailPage({
 
   if (loading) return <Loader isLoader={false} />;
   const completedIds = completedItems?.map(
-    (ci: any) => ci.itemId && ci.completed
+    (ci: any) => ci.itemId && ci.completed,
   );
 
   const isChapterCompleted = (chapterId: string) => {
     return course?.userCourse?.userChapters?.find(
-      (ch: any) => ch.chapterId === chapterId
+      (ch: any) => ch.chapterId === chapterId,
     )?.isCompleted;
   };
 
   const handleChapterComplete = (chapterId: string) => {
     const updatedChapters = course?.chapters.map((chapter) =>
-      chapter.id === chapterId ? { ...chapter, completed: true } : chapter
+      chapter.id === chapterId ? { ...chapter, completed: true } : chapter,
     );
     const completedCount = updatedChapters?.filter((c) => c.isCompleted).length;
     const newProgress = Math.round(
-      (completedCount! / updatedChapters?.length!) * 100
+      (completedCount! / updatedChapters?.length!) * 100,
     );
 
     updateCourse(slug, {
@@ -157,7 +157,7 @@ export function CourseDetailPage({
     return await store.handleRoadmapCourseEnrollment(
       roadmapId,
       topicId,
-      courseId
+      courseId,
     );
   };
 
@@ -173,13 +173,13 @@ export function CourseDetailPage({
     const videos = course?.chapters?.flatMap((ch: Chapter) =>
       ch.videos.flatMap((v) => ({
         ...v,
-      }))
+      })),
     );
 
     const videoIds = videos?.map((v) => v.id);
 
     const remainingVideoIds = videoIds?.filter(
-      (vi) => !completedIds?.includes(vi)
+      (vi) => !completedIds?.includes(vi),
     );
 
     const video =
@@ -196,7 +196,7 @@ export function CourseDetailPage({
       milestone.id,
       course?.slug!,
       nextChapter?.slug!,
-      video?.slug!
+      video?.slug!,
     );
     onNavigate(watchPath);
   };
@@ -209,7 +209,7 @@ export function CourseDetailPage({
         topicId,
         course.slug,
         chapter.slug,
-        chapter?.videos[0]?.slug
+        chapter?.videos[0]?.slug,
       );
       onNavigate(watchPath);
     } else {
@@ -220,7 +220,7 @@ export function CourseDetailPage({
   const calculateCourseProgress = () => {
     const totalVideos = course?.chapters?.reduce(
       (acc, chapter) => acc + chapter.videos.length,
-      0
+      0,
     );
 
     const videoIds = course?.chapters.flatMap((ch) =>
@@ -228,11 +228,11 @@ export function CourseDetailPage({
         .flatMap((v) => ({
           id: v.id,
         }))
-        .map((v) => v.id)
+        .map((v) => v.id),
     );
 
     const totalCompleted = videoIds?.filter((vi) =>
-      completedIds?.includes(vi)
+      completedIds?.includes(vi),
     )?.length;
 
     return (Number(totalCompleted ?? 0) / Number(totalVideos! ?? 0)) * 100;
@@ -274,8 +274,8 @@ export function CourseDetailPage({
                 course?.level === "Advanced"
                   ? "destructive"
                   : course?.level === "Intermediate"
-                  ? "default"
-                  : "secondary"
+                    ? "default"
+                    : "secondary"
               }
             >
               {course?.level}
@@ -431,7 +431,7 @@ export function CourseDetailPage({
                     className="h-20 flex-col gap-2"
                     onClick={() =>
                       onNavigate(
-                        routes.roadmapCourseQuizzes(roadmapId, topicId, slug)
+                        routes.roadmapCourseQuizzes(roadmapId, topicId, slug),
                       )
                     }
                   >
@@ -748,15 +748,15 @@ export function CourseDetailPage({
                                 !chapter.isPremium
                                   ? "border-green-600 text-green-600"
                                   : course?.enrolled
-                                  ? "border-blue-600 text-blue-600"
-                                  : "border-orange-600 text-orange-600"
+                                    ? "border-blue-600 text-blue-600"
+                                    : "border-orange-600 text-orange-600"
                               }`}
                             >
                               {!chapter.isPremium
                                 ? "FREE"
                                 : course?.enrolled
-                                ? "ENROLLED"
-                                : "PREMIUM"}
+                                  ? "ENROLLED"
+                                  : "PREMIUM"}
                             </Badge>
                             <span>{chapter.duration}</span>
                             <Badge variant="secondary" className="text-xs">
