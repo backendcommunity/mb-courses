@@ -50,7 +50,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
   const load = async () => {
     setLoading(true);
     const data = await store.getBootcamps({
-      size: 2,
+      size: 10,
       skip: 0,
     });
 
@@ -75,7 +75,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
         return;
 
       const data = await store.getBootcamps({
-        size: 2,
+        size: 10,
         skip: 0,
         filters: {
           type: selectedType,
@@ -112,7 +112,9 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Bootcamps</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Bootcamps
+            </CardTitle>
             <Zap className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -129,19 +131,27 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {bootcamps.reduce((sum: number, b: any) => sum + (b.totalEnrolled || 0), 0)}
+              {bootcamps.reduce(
+                (sum: number, b: any) => sum + (b.totalEnrolled || 0),
+                0,
+              )}
             </div>
             <p className="text-xs text-muted-foreground">Students enrolled</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Spots</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Available Spots
+            </CardTitle>
             <CheckCircle2 className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {bootcamps.reduce((sum: number, b: any) => sum + (b?.cohort?.spotsLeft || 0), 0)}
+              {bootcamps.reduce(
+                (sum: number, b: any) => sum + (b?.cohort?.spotsLeft || 0),
+                0,
+              )}
             </div>
             <p className="text-xs text-muted-foreground">Spots remaining</p>
           </CardContent>
@@ -155,7 +165,11 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {bootcamps.filter((b: any) => new Date(b?.cohort?.startsAt) > new Date()).length}
+              {
+                bootcamps.filter(
+                  (b: any) => new Date(b?.cohort?.startsAt) > new Date(),
+                ).length
+              }
             </div>
             <p className="text-xs text-muted-foreground">Starting soon</p>
           </CardContent>
@@ -253,8 +267,8 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                         bootcamp?.level === "Advanced"
                           ? "destructive"
                           : bootcamp?.level === "Intermediate"
-                          ? "default"
-                          : "secondary"
+                            ? "default"
+                            : "secondary"
                       }
                     >
                       {bootcamp?.level}
@@ -284,7 +298,7 @@ export function BootcampsPage({ onNavigate }: BootcampsPageProps) {
                     <span>
                       Starts{" "}
                       {new Date(
-                        bootcamp?.cohort?.startsAt
+                        bootcamp?.cohort?.startsAt,
                       ).toLocaleDateString()}
                     </span>
                   </div>
