@@ -58,12 +58,12 @@ export function OnboardingResult({
         await store.handleCourseEnrollment(course.id);
 
         // Navigate directly to first chapter/video
-        if (course.firstChapterId) {
+        if (course.firstChapterSlug) {
           router.push(
             routes.courseWatch(
               course.slug,
-              course.firstChapterId,
-              course.firstVideoId ?? "",
+              course.firstChapterSlug,
+              course.firstVideoSlug ?? "",
             ),
           );
         } else {
