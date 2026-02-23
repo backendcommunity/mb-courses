@@ -97,8 +97,6 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
     method: "subscription" | "individual" | "mb",
     success: boolean,
   ) => {
-    setCelebration(true);
-    return;
     if (!course || !success) return;
 
     switch (method) {
@@ -109,7 +107,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
         // onNavigate(routes.checkout("course", courseId));
         break;
       case "mb":
-        Object.assign(course!, { enrolled: true });
+        setCourse((prev) => prev ? { ...prev, enrolled: true } : prev);
         // onNavigate(routes.xpRedeem("course", courseId));
         break;
     }

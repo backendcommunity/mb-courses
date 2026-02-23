@@ -25,7 +25,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bootcamp, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
 import { toast } from "sonner";
@@ -71,19 +71,27 @@ export function BootcampDetailPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bootcampId]);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     if (active !== "bonus") return;
 
     const load = async () => {
       try {
         const id = bootcamp?.cohort?.id;
         const bonuses = await store.getBootcampBonuses(bootcampId, id);
-        setBonusCourses(bonuses);
+        if (!cancelled) {
+          setBonusCourses(bonuses);
+        }
       } catch (error) {}
     };
 
     load();
-  }, [active]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, bootcamp?.cohort?.id, bootcampId, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

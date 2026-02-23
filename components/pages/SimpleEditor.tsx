@@ -8,7 +8,7 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -48,15 +48,23 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
   const [userInput, setUserInput] = useState("");
   const [isTextRequired, setIsTextRequired] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       try {
         const playgrounds = await store.getSavedPlaygrounds();
-        setSavedCodes(playgrounds);
+        if (!cancelled) {
+          setSavedCodes(playgrounds);
+        }
       } catch (error) {}
     };
     load();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
 
   useEffect(() => {
     const lan = playground?.language ?? "node";

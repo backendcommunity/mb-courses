@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,7 +35,7 @@ export default function RootLayout({
           storageKey="masteringbackend-theme"
         >
           <Toaster />
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

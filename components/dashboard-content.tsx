@@ -27,7 +27,7 @@ import {
 import { routes } from "@/lib/routes";
 import { Topic } from "@/lib/data";
 import { OnboardingSkipBanner } from "@/components/onboarding/onboarding-skip-banner";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
 import { useUser } from "@/hooks/use-user";
@@ -44,29 +44,39 @@ export function DashboardContent({}: DashboardContentProps) {
   const [activities, setActivities] = useState([]);
   const [userRoadmaps, setUserRoadmaps] = useState([]);
 
-  async function load() {
-    try {
-      setIsActivitiesLoading(true);
-      setIsRoadmapLoading(true);
-      const [activities, userRoadmaps] = await Promise.all([
-        store.getActivities({}),
-        store.getUserRoadmaps({
-          size: 1,
-          skip: 0,
-        }),
-      ]);
+  useEffect(() => {
+    let cancelled = false;
 
-      setActivities(activities);
-      setUserRoadmaps(userRoadmaps);
-    } catch (error) {
-    } finally {
-      setIsRoadmapLoading(false);
-      setIsActivitiesLoading(false);
+    async function load() {
+      try {
+        setIsActivitiesLoading(true);
+        setIsRoadmapLoading(true);
+        const [activities, userRoadmaps] = await Promise.all([
+          store.getActivities({}),
+          store.getUserRoadmaps({
+            size: 1,
+            skip: 0,
+          }),
+        ]);
+
+        if (!cancelled) {
+          setActivities(activities);
+          setUserRoadmaps(userRoadmaps);
+        }
+      } catch (error) {
+      } finally {
+        if (!cancelled) {
+          setIsRoadmapLoading(false);
+          setIsActivitiesLoading(false);
+        }
+      }
     }
-  }
 
-  useMemo(() => {
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleNavigate = (path: string) => {
