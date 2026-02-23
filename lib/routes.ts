@@ -9,10 +9,15 @@ export const routes = {
   courses: "/courses",
   courseDetail: (slug: string) => `/courses/${slug}`,
   coursePreview: (courseId: string) => `/courses/${courseId}/preview`,
-  courseWatch: (courseId: string, chapterId: string, videoId?: string) => {
-    if (videoId) return `/courses/${courseId}/watch/${chapterId}/${videoId}`;
+  courseWatch: (
+    courseSlug: string,
+    chapterSlug: string,
+    videoSlug?: string,
+  ) => {
+    if (videoSlug)
+      return `/courses/${courseSlug}/watch/${chapterSlug}/${videoSlug}`;
 
-    return `/courses/${courseId}/watch/${chapterId}`;
+    return `/courses/${courseSlug}/watch/${chapterSlug}`;
   },
   courseQuizzes: (courseId: string) => `/courses/${courseId}/quizzes`,
   courseQuiz: (courseId: string, quizId: string) =>
@@ -38,29 +43,29 @@ export const routes = {
     topicId: string,
     course: string,
     chapterId: string,
-    videoId: string
+    videoId: string,
   ) =>
     `/roadmaps/${roadmapId}/topics/${topicId}/courses/${course}/${chapterId}/videos/${videoId}`,
   roadmapCoursePreview: (
     roadmapId: string,
     topicId: string,
-    courseId: string
+    courseId: string,
   ) => `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}`,
   roadmapCourseWatch: (
     roadmapId: string,
     courseId: string,
-    chapterId: string
+    chapterId: string,
   ) => `/roadmaps/${roadmapId}/courses/${courseId}/watch/${chapterId}`,
   roadmapCourseQuizzes: (
     roadmapId: string,
     topicId: string,
-    courseId: string
+    courseId: string,
   ) => `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/quizzes`,
   roadmapCourseQuiz: (
     roadmapId: string,
     topicId: string,
     courseId: string,
-    quizId: string
+    quizId: string,
   ) =>
     `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/quizzes/${quizId}`,
   roadmapCourseExercises: (roadmapId: string, courseId: string) =>
@@ -69,7 +74,7 @@ export const routes = {
     roadmapId: string,
     topicId: string,
     courseId: string,
-    exerciseId: string
+    exerciseId: string,
   ) =>
     `/roadmaps/${roadmapId}/topics/${topicId}/courses/${courseId}/exercises/${exerciseId}`,
   roadmapCoursePlaygrounds: (roadmapId: string, courseId: string) =>
@@ -77,14 +82,14 @@ export const routes = {
   roadmapCoursePlayground: (
     roadmapId: string,
     courseId: string,
-    playgroundId: string
+    playgroundId: string,
   ) => `/roadmaps/${roadmapId}/courses/${courseId}/playgrounds/${playgroundId}`,
   roadmapCourseProjects: (roadmapId: string, courseId: string) =>
     `/roadmaps/${roadmapId}/courses/${courseId}/projects`,
   roadmapCourseProject: (
     roadmapId: string,
     courseId: string,
-    projectId: string
+    projectId: string,
   ) => `/roadmaps/${roadmapId}/courses/${courseId}/projects/${projectId}`,
 
   // Learning Paths
@@ -105,7 +110,7 @@ export const routes = {
     bootcampId: string,
     cohort: string,
     weekId: string,
-    slug: string
+    slug: string,
   ) => `/bootcamps/${bootcampId}/${cohort}/weeks/${weekId}/${slug}`,
 
   // Project30
@@ -145,6 +150,12 @@ export const routes = {
   mockInterviewDetail: (id: string) => `/mock-interviews/${id}`,
   mockInterviewResults: (id: string) => `/mock-interviews/${id}/results`,
 
+  // Portfolio
+  portfolio: (userId: string) => `/portfolios/${userId}`,
+
+  // Onboarding
+  onboarding: "/onboarding",
+
   // Community
   community: "/community",
 
@@ -168,7 +179,7 @@ export const routes = {
 // Helper function to check if a path matches a route pattern
 export const matchesRoute = (
   currentPath: string,
-  routePattern: string
+  routePattern: string,
 ): boolean => {
   if (currentPath === routePattern) return true;
 
@@ -187,7 +198,7 @@ export const matchesRoute = (
 // Helper function to extract parameters from a route
 export const extractRouteParams = (
   currentPath: string,
-  routePattern: string
+  routePattern: string,
 ): Record<string, string> => {
   const currentSegments = currentPath.split("/").filter(Boolean);
   const patternSegments = routePattern.split("/").filter(Boolean);

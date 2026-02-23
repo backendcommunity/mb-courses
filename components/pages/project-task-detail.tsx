@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -46,18 +46,26 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
   const path = usePathname();
   const [marking, setMarking] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       const project = await store.getProject(slug);
-      setProject(project);
-      setCurrentProjectTask(project.projectTasks[0]);
-      setTask(project.projectTasks?.[0]?.tasks?.[0]);
-      setUserTasks(project?.userProject?.userTasks);
-      setLoading(false);
+      if (!cancelled) {
+        setProject(project);
+        setCurrentProjectTask(project.projectTasks[0]);
+        setTask(project.projectTasks?.[0]?.tasks?.[0]);
+        setUserTasks(project?.userProject?.userTasks);
+        setLoading(false);
+      }
     };
     load();
-  }, [slug, id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, id, store]);
 
   if (loading) return <Loader isLoader={false} />;
   if (!project?.enrolled)

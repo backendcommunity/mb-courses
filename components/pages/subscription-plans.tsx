@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Crown, X, CreditCard, ChevronRight, Info } from "lucide-react";
 import {
   Card,
@@ -67,17 +67,25 @@ export function SubscriptionPlansPage({
     return Array.from(mergedMap.values());
   }
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
       const plans = await store.getPlans();
       const merged = mergePlans([...plans, ...dataStore.plans]);
-      setPlans(merged);
-      setLoading(false);
+      if (!cancelled) {
+        setPlans(merged);
+        setLoading(false);
+      }
     }
 
     load();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
 
   if (loading) return <Loader isLoader={false} />;
 

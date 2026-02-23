@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { WIP } from "../WIP";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Meta, Project } from "@/lib/data";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Loader } from "../ui/loader";
@@ -50,9 +50,10 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
   const debouncedSearch = useDebounce(searchQuery, 500);
   const [loading, setLoading] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
-      setLoading(true);
       if (
         selectedStatus.includes("all") &&
         selectedLevel.includes("all")
@@ -60,6 +61,7 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
       )
         return;
 
+      setLoading(true);
       const projects = await store.getProjects({
         page: 20,
         size: 0,
@@ -70,15 +72,23 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         },
       });
 
-      setProjects(projects.projects);
-      setMeta(projects.meta);
-      setLoading(false);
+      if (!cancelled) {
+        setProjects(projects.projects);
+        setMeta(projects.meta);
+        setLoading(false);
+      }
     }
 
     load();
-  }, [debouncedSearch, selectedLevel, selectedStatus]);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, selectedLevel, selectedStatus, store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
       const projects = await store.getProjects({
@@ -86,13 +96,19 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
         size: 0,
         filters: {},
       });
-      setProjects(projects.projects);
-      setMeta(projects.meta);
-      setLoading(false);
+      if (!cancelled) {
+        setProjects(projects.projects);
+        setMeta(projects.meta);
+        setLoading(false);
+      }
     }
 
     load();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -112,14 +128,21 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button className="w-full md:w-auto" variant={"outline"}>
+          <Button 
+            className="w-full md:w-auto" 
+            variant={"outline"}
+            onClick={() => onNavigate("/projects/leaderboard")}
+          >
             <Trophy className="mr-2 h-4 w-4" />
-            Leaderboard
+            Global Leaderboard
           </Button>
 
-          <Button className="w-full md:w-auto">
+          <Button 
+            className="w-full md:w-auto"
+            onClick={() => onNavigate("/projects/submissions")}
+          >
             <DownloadCloud className="mr-2 h-4 w-4" />
-            Submissions
+            My Submissions
           </Button>
         </div>
       </div>
@@ -307,12 +330,22 @@ export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
                 )}
               </div>
 
-              <Button
-                className="w-full text-xs md:text-sm"
-                onClick={() => onNavigate(`/projects/${project.slug}`)}
-              >
-                {project.enrolled ? "Continue Project" : "Start Project"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 text-xs md:text-sm"
+                  onClick={() => onNavigate(`/projects/${project.slug}`)}
+                >
+                  {project.enrolled ? "Continue Project" : "Start Project"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate(`/projects/${project.slug}/leaderboard`)}
+                  title="View Project Leaderboard"
+                >
+                  <Trophy className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}

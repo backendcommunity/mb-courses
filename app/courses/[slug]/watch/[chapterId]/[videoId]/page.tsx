@@ -14,7 +14,11 @@ type CourseWatchPageRouteProps = {
 export default function CourseWatchPageRoute() {
   const router = useRouter();
 
-  const { slug, chapterId, videoId } = useParams() as CourseWatchPageRouteProps;
+  const {
+    slug,
+    chapterId: chapterSlug,
+    videoId: videoSlug,
+  } = useParams() as CourseWatchPageRouteProps;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -24,8 +28,8 @@ export default function CourseWatchPageRoute() {
     <DashboardLayout>
       <CourseWatchPage
         slug={slug}
-        chapterId={chapterId}
-        videoId={videoId}
+        chapterSlug={chapterSlug}
+        videoSlug={videoSlug}
         onNavigate={handleNavigate}
       />
     </DashboardLayout>

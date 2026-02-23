@@ -60,15 +60,15 @@ import { Separator } from "../ui/separator";
 
 interface CourseWatchPageProps {
   slug: string;
-  chapterId: string;
-  videoId?: string;
+  chapterSlug: string;
+  videoSlug?: string;
   onNavigate?: (route: string) => void;
 }
 
 export function CourseWatchPage({
   slug,
-  chapterId,
-  videoId,
+  chapterSlug,
+  videoSlug,
   onNavigate,
 }: CourseWatchPageProps) {
   const store = useAppStore();
@@ -108,11 +108,11 @@ export function CourseWatchPage({
 
       const course = userCourse.course;
       const chapter: Chapter | any = course?.chapters.find(
-        (ch: Chapter) => ch.slug === chapterId
+        (ch: Chapter) => ch.slug === chapterSlug,
       );
       setChapter(chapter);
-      const currentVideo = videoId
-        ? chapter?.videos.find((v: Video) => v.slug === videoId)
+      const currentVideo = videoSlug
+        ? chapter?.videos.find((v: Video) => v.slug === videoSlug)
         : chapter?.videos[0];
       setCurrentVideo(currentVideo);
 
@@ -152,13 +152,13 @@ export function CourseWatchPage({
     try {
       // Combine completed videos + the one being marked now
       const completedVideoIds = new Set(
-        userVideos!.filter((v) => v.isCompleted).map((v) => v.videoId)
+        userVideos!.filter((v) => v.isCompleted).map((v) => v.videoId),
       );
       completedVideoIds.add(currentVideo.id); // include this one just marked
 
       // Check if all chapter videos are now complete
       const allVideosComplete = chapter.videos.every((v: Video) =>
-        completedVideoIds.has(v.id)
+        completedVideoIds.has(v.id),
       );
 
       const hasOtherContent =
@@ -210,7 +210,7 @@ export function CourseWatchPage({
   const next = () => {
     return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
-        (video: Video) => video.id === currentVideo?.id
+        (video: Video) => video.id === currentVideo?.id,
       );
       return index === currentIndex + 1;
     });
@@ -219,7 +219,7 @@ export function CourseWatchPage({
   const prev = () => {
     return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
-        (video: Video) => video.id === currentVideo?.id
+        (video: Video) => video.id === currentVideo?.id,
       );
       return index === currentIndex - 1;
     });
@@ -245,7 +245,7 @@ export function CourseWatchPage({
     window.history.pushState(
       {},
       "",
-      `${routes.courseWatch(slug, chapter?.slug, video.slug)}?`
+      `${routes.courseWatch(slug, chapter?.slug, video.slug)}?`,
     );
   };
 
@@ -273,7 +273,7 @@ export function CourseWatchPage({
     window.history.pushState(
       {},
       "",
-      `${routes.courseWatch(slug, chapter.slug, chapter?.videos[0]?.slug)}?`
+      `${routes.courseWatch(slug, chapter.slug, chapter?.videos[0]?.slug)}?`,
     );
   };
 
@@ -290,13 +290,13 @@ export function CourseWatchPage({
   const markCourseAsCompleted = async () => {
     try {
       const completed = await store.markCourseCompleted(
-        course?.userCourse?.id!
+        course?.userCourse?.id!,
       );
 
       setCelebration(true);
       setCompleted(true);
       toast.success(
-        `You've earned ${completed?.totalPoints} MB from the course`
+        `You've earned ${completed?.totalPoints} MB from the course`,
       );
       // onNavigate?.(routes.courseCertificate(slug));
     } catch (error: any) {
@@ -307,7 +307,7 @@ export function CourseWatchPage({
 
   const calculateProgress = () => {
     const completed = userVideos?.filter(
-      (ch: UserVideo) => ch?.isCompleted
+      (ch: UserVideo) => ch?.isCompleted,
     ).length;
 
     return Math.floor(((completed ?? 0) / course.totalContent) * 100);
@@ -655,7 +655,7 @@ export function CourseWatchPage({
                               </a>
                             </Button>
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   </CardContent>
@@ -715,7 +715,7 @@ export function CourseWatchPage({
                           onClick={() =>
                             setCurrentTime(
                               Number.parseInt(item.time.split(":")[0]) * 60 +
-                                Number.parseInt(item.time.split(":")[1])
+                                Number.parseInt(item.time.split(":")[1]),
                             )
                           }
                         >
@@ -845,7 +845,7 @@ export function CourseWatchPage({
                       onClick={() =>
                         handleChapterFeatureClick(
                           "exercise",
-                          chapter.exercise!.id
+                          chapter.exercise!.id,
                         )
                       }
                     >
@@ -874,7 +874,7 @@ export function CourseWatchPage({
                       onClick={() =>
                         handleChapterFeatureClick(
                           "playground",
-                          chapter.playground!.id
+                          chapter.playground!.id,
                         )
                       }
                     >

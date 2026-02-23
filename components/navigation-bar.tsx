@@ -482,11 +482,11 @@ export function NavigationBar({
                               notification.type?.includes("COMPLETED")
                                 ? "bg-green-500"
                                 : notification.type?.includes("START") ||
-                                  notification.type?.includes("STARTED")
-                                ? "bg-primary"
-                                : notification.type?.includes("WATCHED")
-                                ? "bg-yellow-500"
-                                : "bg-purple-500"
+                                    notification.type?.includes("STARTED")
+                                  ? "bg-primary"
+                                  : notification.type?.includes("WATCHED")
+                                    ? "bg-yellow-500"
+                                    : "bg-purple-500"
                             }`}
                           />
                           <div className="flex-1 min-w-0">
@@ -578,6 +578,12 @@ export function NavigationBar({
                   <Users className="mr-2 h-4 w-4" />
                   <span>Community</span>
                 </DropdownMenuItem>
+                {/* <DropdownMenuItem
+                  onClick={() => onNavigate(routes.portfolio(user?.id))}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  <span>My Portfolio</span>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Leaderboard</span>

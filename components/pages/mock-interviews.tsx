@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +129,7 @@ interface TemplateFormData {
 export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
   const store = useAppStore();
   const user = useUser();
+  const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
   const [bookedInterviews, setBookedInterviews] = useState<UserInterview[]>([]);
   const [completedInterviews, setCompletedInterviews] = useState<
@@ -210,6 +212,20 @@ export function MockInterviewsPage({ onNavigate }: MockInterviewsPageProps) {
       }
     };
   }, []);
+
+  // Handle interview booking from URL query parameter
+  useEffect(() => {
+    const interviewId = searchParams.get("id");
+    if (!interviewId || templates.length === 0) return;
+
+    // Find template with matching ID
+    const template = templates.find((t) => t.id === interviewId);
+    if (template) {
+      // Call handleBookInterview with the found template
+      // Use setTimeout to ensure dialog is properly rendered
+      setTimeout(() => handleBookInterview(template), 100);
+    }
+  }, [searchParams, templates]);
 
   const loadTemplates = async () => {
     try {

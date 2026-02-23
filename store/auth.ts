@@ -9,8 +9,9 @@ import {
   verifyCode,
   verifyEmail,
   fetchUser,
+  completeOnboarding as completeOnboardingApi,
 } from "@/lib/auth";
-import { NewUser, updateUser, User } from "@/lib/data";
+import { NewUser, updateUser, User, OnboardingInput } from "@/lib/data";
 import { localDB } from "@/lib/localDB";
 import { setCookie, deleteCookie } from "cookies-next/client";
 
@@ -37,6 +38,7 @@ interface AuthState {
   ) => Promise<boolean>;
   verifyCode: (email: string, code: string) => Promise<boolean>;
   currentUser: () => Promise<User>;
+  completeOnboarding: (input: OnboardingInput) => Promise<any>;
 }
 
 export const useAuth = create<AuthState>((set) => ({
@@ -101,6 +103,15 @@ export const useAuth = create<AuthState>((set) => ({
   verifyCode: async (email: string, code: string) => {
     const res = await verifyCode(email, code);
     return res?.success;
+  },
+
+  completeOnboarding: async (input: OnboardingInput) => {
+    const res = await completeOnboardingApi(input);
+    if (res?.success && res?.data?.user) {
+      set({ user: res.data.user });
+      updateUser(res.data.user);
+    }
+    return res;
   },
 
   logout: async () => {

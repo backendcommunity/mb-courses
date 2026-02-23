@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Medal, Trophy, Award, ArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 
 interface LeaderboardUser {
@@ -64,19 +64,27 @@ export function LeaderboardPage({ slug, onNavigate }: LeaderboardPage) {
     setAchievements(data);
   };
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       const data = await store.getProject30Leaderboard(slug, {
         weekly: false,
       });
-      setLeaderboards(data.leaderboardUsers);
-      setTopUsers(data.topUsers);
-      setCurrentUser(data.currentUser);
+      if (!cancelled) {
+        setLeaderboards(data.leaderboardUsers);
+        setTopUsers(data.topUsers);
+        setCurrentUser(data.currentUser);
+      }
     };
     load();
-  }, []);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, store]);
+
+  useEffect(() => {
     if (activeTab.includes("weekly")) {
       loadWeekly();
     }
@@ -84,7 +92,7 @@ export function LeaderboardPage({ slug, onNavigate }: LeaderboardPage) {
     if (activeTab.includes("achievements")) {
       loadAchievements();
     }
-  }, [activeTab]);
+  }, [activeTab, slug, store]);
 
   const isTop10 = (id: string) => {
     return !!(

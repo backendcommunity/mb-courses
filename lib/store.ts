@@ -65,6 +65,9 @@ interface AppState {
   getCourseExercises: (courseId: string) => Quiz[] | any;
   getProjects: (queries?: Project30Query) => Project[] | any;
   getProject: (slug: string) => Project | any;
+  getProjectLeaderboard: (projectSlug: string, params?: { size?: number; skip?: number }) => any;
+  getGlobalProjectLeaderboard: (params?: { size?: number; skip?: number }) => any;
+  getDeveloperPortfolio: (userId: string) => any;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
@@ -112,7 +115,6 @@ interface AppState {
   getActivities: (queries: { size?: number; skip?: number }) => any;
   getVideo: (slug: string) => any;
   getProject30Leaderboard: (slug: string, filter?: any) => any;
-  getProjectLeaderboard: (slug: string, filter?: any) => any;
   getProject30Achievements: (slug: string) => any;
   getProjectAchievements: (slug: string) => any;
   getMockInterviewSessionToken: (id: string) => any;
@@ -127,6 +129,20 @@ interface AppState {
     }>,
   ) => any;
   retryReportGeneration: (sessionId: string) => any;
+
+  // Project Solutions/Submissions
+  getProjectSubmissions: (params?: {
+    status?: string;
+    mine?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => any;
+  getProjectsLeaderboard: (params?: {
+    timeframe?: string;
+    page?: number;
+    pageSize?: number;
+  }) => any;
+  getSubmissionStats: (params?: { mine?: boolean }) => any;
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
@@ -253,15 +269,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getSavedPlaygrounds: async () => {
     const { data } = await api.get(`/playgrounds/saved`);
-    return data?.data;
-  },
-
-  getProjectLeaderboard: async (slug: string, filters?: any) => {
-    const { data } = await api.get(`/projects/${slug}/leaderboard`, {
-      params: {
-        filters,
-      },
-    });
     return data?.data;
   },
 
@@ -410,6 +417,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.get(`/projects/${slug}`);
     return data?.data;
   },
+
+  getProjectLeaderboard: async (projectSlug: string, params?: { size?: number; skip?: number }) => {
+    // Using dummy data in component - API will be added later
+    return { leaderboard: [] };
+  },
+
+  getGlobalProjectLeaderboard: async (params?: { size?: number; skip?: number }) => {
+    // Using dummy data in component - API will be added later
+    return { leaderboard: [] };
+  },
+
+  getDeveloperPortfolio: async (userId: string) => {
+    // Using dummy data in component - API will be added later
+    return null;
+  },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
   getBootcamps: async (filters?) => {
@@ -481,6 +503,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post(
       `/mock-interviews/sessions/${sessionId}/report/retry`,
     );
+    return data?.data;
+  },
+
+  // Project Solutions/Submissions
+  getProjectSubmissions: async (params?: {
+    status?: string;
+    mine?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const { data } = await api.get("/solutions", { params });
+    return data?.data;
+  },
+
+  getProjectsLeaderboard: async (params?: {
+    timeframe?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const { data } = await api.get("/projects/leaderboard", { params });
+    return data?.data;
+  },
+
+  getSubmissionStats: async (params?: { mine?: boolean }) => {
+    const { data } = await api.get("/solutions/stats", { params });
     return data?.data;
   },
 

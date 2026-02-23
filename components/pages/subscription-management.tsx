@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CreditCard,
   Calendar,
@@ -84,23 +84,39 @@ export function SubscriptionManagementPage({
     netTotal: number;
   }>();
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       const transactions = await store.getTransactions({ size: 6 });
-      setBillingHistory(transactions?.transactions);
-      setStats(transactions.meta);
+      if (!cancelled) {
+        setBillingHistory(transactions?.transactions);
+        setStats(transactions.meta);
+      }
     }
 
     load();
-  }, []);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       const plan = await store.getPlan("enterprise");
-      setEnterprisePlan(plan);
+      if (!cancelled) {
+        setEnterprisePlan(plan);
+      }
     }
     load();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
 
   const activePlan = plans.find((p) =>
     p.name.includes(
