@@ -15,14 +15,23 @@ interface OnboardingResultProps {
   learningGoal?: string | null;
 }
 
-export function OnboardingResult({ recommendation, learningGoal }: OnboardingResultProps) {
+export function OnboardingResult({
+  recommendation,
+  learningGoal,
+}: OnboardingResultProps) {
   const router = useRouter();
   const store = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(true);
 
-  const { course, project, roadmap, stats, motivationalMessage, interviewRecommendation } =
-    recommendation;
+  const {
+    course,
+    project,
+    roadmap,
+    stats,
+    motivationalMessage,
+    interviewRecommendation,
+  } = recommendation;
 
   // Hide success message after 3 seconds
   useEffect(() => {
@@ -52,10 +61,10 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
         if (course.firstChapterId) {
           router.push(
             routes.courseWatch(
-              course.id,
+              course.slug,
               course.firstChapterId,
-              course.firstVideoId ?? undefined
-            )
+              course.firstVideoId ?? "",
+            ),
           );
         } else {
           // Fallback: go to course detail
@@ -111,7 +120,10 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
         });
       }
 
-      if (interviewRecommendation?.hasInterviewPath && interviewRecommendation.phases.length > 0) {
+      if (
+        interviewRecommendation?.hasInterviewPath &&
+        interviewRecommendation.phases.length > 0
+      ) {
         const [phase] = interviewRecommendation.phases;
         const [step] = phase.steps;
 
@@ -179,7 +191,14 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
         estimatedWeeks: stats.weeksToGoal,
       });
     }
-  }, [learningGoal, course, project, roadmap, stats.weeksToGoal, interviewRecommendation]);
+  }, [
+    learningGoal,
+    course,
+    project,
+    roadmap,
+    stats.weeksToGoal,
+    interviewRecommendation,
+  ]);
 
   return (
     <div style={{ maxWidth: 640 }}>
@@ -195,7 +214,14 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
             animation: "slideDown 0.3s ease",
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#ECFDF5", marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#ECFDF5",
+              marginBottom: 4,
+            }}
+          >
             Awesome! 🎉
           </div>
           <div style={{ fontSize: 13, color: "#D1FAE5" }}>
@@ -252,9 +278,7 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
           >
             {stats.weeksToGoal}w
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-            to complete
-          </div>
+          <div style={{ fontSize: 12, color: "#6B7280" }}>to complete</div>
         </div>
 
         <div
@@ -278,9 +302,7 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
           >
             {stats.lessonsPlanned}
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-            lessons
-          </div>
+          <div style={{ fontSize: 12, color: "#6B7280" }}>lessons</div>
         </div>
 
         <div
@@ -304,9 +326,7 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
           >
             {stats.projectsToComplete}
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-            projects
-          </div>
+          <div style={{ fontSize: 12, color: "#6B7280" }}>projects</div>
         </div>
       </div>
 
@@ -335,9 +355,18 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
                 border: "1px solid #374151",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 8,
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                  <div
+                    style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}
+                  >
                     Start with
                   </div>
                   <div
@@ -378,9 +407,18 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
                 border: "1px solid #374151",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 8,
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                  <div
+                    style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}
+                  >
                     Build with
                   </div>
                   <div
@@ -419,9 +457,18 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
                 border: "1px solid #374151",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 8,
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}>
+                  <div
+                    style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 4 }}
+                  >
                     Follow
                   </div>
                   <div
@@ -450,80 +497,82 @@ export function OnboardingResult({ recommendation, learningGoal }: OnboardingRes
       </div>
 
       {/* Interview Preparation */}
-      {interviewRecommendation?.hasInterviewPath && Array.isArray(interviewRecommendation?.phases) && interviewRecommendation.phases.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#9CA3AF",
-              marginBottom: 16,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Interview Practice
-          </div>
+      {interviewRecommendation?.hasInterviewPath &&
+        Array.isArray(interviewRecommendation?.phases) &&
+        interviewRecommendation.phases.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#9CA3AF",
+                marginBottom: 16,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Interview Practice
+            </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {(interviewRecommendation.phases || []).map((phase) =>
-              (phase.steps || []).map((step) =>
-                step?.resource ? (
-                  <div
-                    key={step.resource.id}
-                    style={{
-                      padding: 16,
-                      backgroundColor: "#1F2937",
-                      borderRadius: 8,
-                      border: "1px solid #374151",
-                    }}
-                  >
-                    <div style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {(interviewRecommendation.phases || []).map((phase) =>
+                (phase.steps || []).map((step) =>
+                  step?.resource ? (
+                    <div
+                      key={step.resource.id}
+                      style={{
+                        padding: 16,
+                        backgroundColor: "#1F2937",
+                        borderRadius: 8,
+                        border: "1px solid #374151",
+                      }}
+                    >
+                      <div style={{ marginBottom: 8 }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: "#9CA3AF",
+                            marginBottom: 4,
+                          }}
+                        >
+                          Practice Interview
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 600,
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          {step.resource.title || "Interview Practice"}
+                        </div>
+                      </div>
                       <div
                         style={{
                           fontSize: 13,
-                          color: "#9CA3AF",
-                          marginBottom: 4,
+                          color: "#D1D5DB",
                         }}
                       >
-                        Practice Interview
+                        {step.description || "Practice interview session"}
                       </div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 600,
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        {step.resource.title || "Interview Practice"}
-                      </div>
+                      {step.resource.difficulty && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "#9CA3AF",
+                            marginTop: 10,
+                          }}
+                        >
+                          Difficulty: {step.resource.difficulty}
+                        </div>
+                      )}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#D1D5DB",
-                      }}
-                    >
-                      {step.description || "Practice interview session"}
-                    </div>
-                    {step.resource.difficulty && (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "#9CA3AF",
-                          marginTop: 10,
-                        }}
-                      >
-                        Difficulty: {step.resource.difficulty}
-                      </div>
-                    )}
-                  </div>
-                ) : null
-              )
-            )}
+                  ) : null,
+                ),
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
