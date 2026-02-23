@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -69,28 +69,44 @@ export function Project30DayPage({
 
   const userProject30 = project30?.userProject30;
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       const data = await store.getProject30(slug);
-      setProject30(data);
-      setCompletedItems(data.userOfferItems);
-      setLoading(false);
+      if (!cancelled) {
+        setProject30(data);
+        setCompletedItems(data.userOfferItems);
+        setLoading(false);
+      }
     };
 
     load();
-  }, [slug]);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       const video = await store.getVideo(dayNumber);
-      setVideo(video);
-      setLoading(false);
+      if (!cancelled) {
+        setVideo(video);
+        setLoading(false);
+      }
     };
 
     load();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dayNumber, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

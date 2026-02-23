@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,24 +68,36 @@ export function BootcampVideoWatchPage({
   const [showWeekComplete, setShowWeekComplete] = useState(false);
   const path = usePathname();
 
-  useMemo(() => {
-    setLoading(true);
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       const week = await store.getWeek(id, cohort, weekId);
 
       const lesson = week.lessons.find((l: Lesson) => l.id === slug);
-      setUserLessons(week?.userCohort?.userLessons);
-      setLesson(lesson);
+      if (!cancelled) {
+        setUserLessons(week?.userCohort?.userLessons);
+        setLesson(lesson);
 
-      const currentLesson = slug
-        ? week?.lessons.find((v: Lesson) => v.id === slug)
-        : week?.lessons[0];
-      setCurrentLesson(currentLesson);
-      setWeek(week);
-      setLoading(false);
+        const currentLesson = slug
+          ? week?.lessons.find((v: Lesson) => v.id === slug)
+          : week?.lessons[0];
+        setCurrentLesson(currentLesson);
+        setWeek(week);
+        setLoading(false);
+      }
     };
+
+    if (!cancelled) {
+      setLoading(true);
+    }
+
     load();
-  }, [slug, id, weekId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, id, weekId, cohort, store]);
 
   useEffect(() => {
     async function loadNotes(lessonId: string, videoId: string) {
@@ -788,6 +800,7 @@ export function BootcampVideoWatchPage({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{lesson.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {/* TODO: Remove this */}
                       {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
                         <>
                           <Clock className="h-3 w-3" />

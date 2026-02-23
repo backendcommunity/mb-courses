@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Chapter, Course, Milestone, Roadmap, Video } from "@/lib/data";
 import { toast } from "sonner";
 import { Loader } from "../ui/loader";
@@ -50,17 +50,25 @@ export function RoadmapWatchPage({
   const [completedItems, setCompletedItems] = useState<any[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const l = async () => {
       setLoading(true);
       const milestone = await store.getMilestone(slug, topicId);
-      setRoadmap(milestone.roadmap);
-      setMilestone(milestone);
-      setCompletedItems(milestone?.userTopic?.completedItems);
-      setLoading(false);
+      if (!cancelled) {
+        setRoadmap(milestone.roadmap);
+        setMilestone(milestone);
+        setCompletedItems(milestone?.userTopic?.completedItems);
+        setLoading(false);
+      }
     };
     l();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, topicId, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -88,19 +88,27 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
     setTab(tabParam || "all-courses");
   }, [searchParams]);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
       const res = await store.getCourses();
-      setCourses(res.courses);
-      setMeta(res?.meta);
-      setLoading(false);
+      if (!cancelled) {
+        setCourses(res.courses);
+        setMeta(res?.meta);
+        setLoading(false);
+      }
     }
 
     load();
-  }, []);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [store]);
+
+  useEffect(() => {
     if (!searchQuery && !level && !category) return;
     handleFilter({
       terms: searchQuery,
@@ -109,19 +117,27 @@ export function CoursesPage({ onNavigate, onFilter }: CoursesPageProps) {
     });
   }, [searchQuery, level, category]);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     if (tab?.includes("my-courses")) {
       const load = async () => {
         setUserLoading(true);
         const res = await store.getUserCourses();
-        setUserCourses(res?.userCourses);
-        setUserCourseMeta(res?.meta);
-        setUserLoading(false);
+        if (!cancelled) {
+          setUserCourses(res?.userCourses);
+          setUserCourseMeta(res?.meta);
+          setUserLoading(false);
+        }
       };
 
       load();
     }
-  }, [tab]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

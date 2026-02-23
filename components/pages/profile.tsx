@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,20 +56,30 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     country: user?.country,
   });
 
-  async function loadAchievements() {
-    const achievements = await store.getUserAchievement();
-    if (!achievements?.length) return;
-    setAchievements(achievements?.filter((ach: any) => ach?.completed));
-  }
+  useEffect(() => {
+    let cancelled = false;
 
-  async function loadBadges() {
-    const badges = await store.getBadges();
-    setBadges(badges);
-  }
+    async function loadAchievements() {
+      const achievements = await store.getUserAchievement();
+      if (!achievements?.length) return;
+      if (!cancelled) {
+        setAchievements(achievements?.filter((ach: any) => ach?.completed));
+      }
+    }
 
-  useMemo(() => {
+    async function loadBadges() {
+      const badges = await store.getBadges();
+      if (!cancelled) {
+        setBadges(badges);
+      }
+    }
+
     loadAchievements();
     loadBadges();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSave = async () => {

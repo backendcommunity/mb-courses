@@ -145,6 +145,12 @@ export const routes = {
   mockInterviewDetail: (id: string) => `/mock-interviews/${id}`,
   mockInterviewResults: (id: string) => `/mock-interviews/${id}/results`,
 
+  // Portfolio
+  portfolio: (userId: string) => `/portfolios/${userId}`,
+
+  // Onboarding
+  onboarding: "/onboarding",
+
   // Community
   community: "/community",
 

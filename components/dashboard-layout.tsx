@@ -59,6 +59,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (loading || !user) return <Loader />;
 
+  // ═══ Onboarding Guard ═══════════════════════════════════════════════════
+  // Redirect unonboarded users to /onboarding
+  // This runs AFTER the user is loaded (no flash of dashboard content)
+  if (user.hasFinishedOnboarding === false) {
+    router.replace("/onboarding");
+    return null;
+  }
+  // ═══ END: Onboarding Guard ═════════════════════════════════════════════
+
   return (
     <>
       <NavigationBar

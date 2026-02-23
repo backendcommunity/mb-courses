@@ -16,7 +16,7 @@ import {
   AudioWaveform,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
 import { Loader } from "../ui/loader";
 import Countdown from "../ui/count-down";
@@ -40,53 +40,65 @@ export function BootcampDashboardPage({
   const [currentLesson, setCurrentLesson] = useState<Lesson>();
   const [userCohort, setUserCohort] = useState<UserCohort>();
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const bootcamp = await store.getBootcamp(bootcampId);
+  useEffect(() => {
+    let cancelled = false;
 
-      // Handle case where userCohort might not exist (user not enrolled)
-      const currentWeekId = bootcamp?.userCohort?.currentWeekId || null;
-      const weeks = bootcamp?.cohort?.weeks || [];
+    const load = async () => {
+      try {
+        setLoading(true);
+        const bootcamp = await store.getBootcamp(bootcampId);
 
-      let week = null;
-      let index = 1;
+        // Handle case where userCohort might not exist (user not enrolled)
+        const currentWeekId = bootcamp?.userCohort?.currentWeekId || null;
+        const weeks = bootcamp?.cohort?.weeks || [];
 
-      if (currentWeekId && weeks.length > 0) {
-        week = weeks.find((week: any) => week.id === currentWeekId);
-        index = weeks.findIndex((week: any) => week.id === currentWeekId) + 1;
-      } else if (weeks.length > 0) {
-        // Default to first week if no current week set
-        week = weeks[0];
-        index = 1;
+        let week = null;
+        let index = 1;
+
+        if (currentWeekId && weeks.length > 0) {
+          week = weeks.find((week: any) => week.id === currentWeekId);
+          index = weeks.findIndex((week: any) => week.id === currentWeekId) + 1;
+        } else if (weeks.length > 0) {
+          // Default to first week if no current week set
+          week = weeks[0];
+          index = 1;
+        }
+
+        if (!cancelled) {
+          setCurrentWeek(week ? { ...week, index } : null);
+
+          const currentLessonId = bootcamp?.userCohort?.currentLessonId;
+          let lesson = null;
+
+          if (currentLessonId && week?.lessons?.length > 0) {
+            lesson = week.lessons.find((l: any) => l.id === currentLessonId);
+          } else if (week?.lessons?.length > 0) {
+            // Default to first lesson if no current lesson set
+            lesson = week.lessons[0];
+          }
+
+          setCurrentLesson(lesson);
+          setUserCohort(bootcamp?.userCohort || null);
+          setBootcamp(bootcamp);
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
+    };
 
-      setCurrentWeek(week ? { ...week, index } : null);
-
-      const currentLessonId = bootcamp?.userCohort?.currentLessonId;
-      let lesson = null;
-
-      if (currentLessonId && week?.lessons?.length > 0) {
-        lesson = week.lessons.find((l: any) => l.id === currentLessonId);
-      } else if (week?.lessons?.length > 0) {
-        // Default to first lesson if no current lesson set
-        lesson = week.lessons[0];
-      }
-
-      setCurrentLesson(lesson);
-      setUserCohort(bootcamp?.userCohort || null);
-      setBootcamp(bootcamp);
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-    }
-  };
-
-  useMemo(() => {
     load();
-  }, [bootcampId]);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [bootcampId, store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       if (!currentWeek) return;
       try {
@@ -96,15 +108,23 @@ export function BootcampDashboardPage({
           currentWeek?.id!,
         );
 
-        setEvents(events);
-        setEventLoading(false);
+        if (!cancelled) {
+          setEvents(events);
+          setEventLoading(false);
+        }
       } catch (error) {
-        setEventLoading(false);
+        if (!cancelled) {
+          setEventLoading(false);
+        }
       }
     };
 
     load();
-  }, [bootcampId, currentWeek]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bootcampId, currentWeek, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

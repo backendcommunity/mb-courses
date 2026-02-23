@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -87,27 +87,43 @@ export function Project30Page({
   const currentDay = userProject30?.currentDay ?? 0;
   const nextDay = userProject30?.isCompleted ? currentDay : currentDay + 1;
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       const data = await store.getProject30(slug);
-      setProject30(data);
-      setLoading(false);
+      if (!cancelled) {
+        setProject30(data);
+        setLoading(false);
+      }
     };
 
     load();
-  }, [slug]);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     if (activeTab === "achievements") {
       const load = async () => {
         const data = await store.getUserAchievement("DAY_COMPLETED");
-        setAchievements(data);
+        if (!cancelled) {
+          setAchievements(data);
+        }
       };
 
       load();
     }
-  }, [activeTab]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

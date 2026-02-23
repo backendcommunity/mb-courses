@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -73,7 +73,9 @@ export function Project30ListingPage({
     }
   }
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       if (
         selectedCategory.includes("all") &&
@@ -91,22 +93,36 @@ export function Project30ListingPage({
           level: selectedLevel,
         },
       });
-      setOffers(data?.offers);
-      setMeta(data?.meta);
+      if (!cancelled) {
+        setOffers(data?.offers);
+        setMeta(data?.meta);
+      }
     }
 
     load();
-  }, [debouncedSearch, selectedCategory, selectedLevel]);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, selectedCategory, selectedLevel, store]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     if (activeTab.includes("my-courses")) {
       const load = async () => {
         const data = await store.loadMyProject30s();
-        setEnrolledCourses(data?.data);
+        if (!cancelled) {
+          setEnrolledCourses(data?.data);
+        }
       };
       load();
     }
-  }, [activeTab]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, store]);
 
   if (loading) return <Loader isLoader={false} />;
 

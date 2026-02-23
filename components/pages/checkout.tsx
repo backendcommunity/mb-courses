@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreditCard, ArrowLeft, AlertTriangle } from "lucide-react";
 import {
@@ -73,15 +73,23 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       ? currentPaymentMethod(method).pc?.monthlyPlanId
       : currentPaymentMethod(method).pc?.yearlyPlanId;
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     async function load(name: string) {
       setLoading(true);
       const plan = await store.getPlan(name);
-      setPlan(plan);
-      setLoading(false);
+      if (!cancelled) {
+        setPlan(plan);
+        setLoading(false);
+      }
     }
     load(checkoutId!);
-  }, [checkoutId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [checkoutId, store]);
 
   // Callback to open a checkout
   const openCheckout = (priceId: string | any) => {

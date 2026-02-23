@@ -16,7 +16,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader } from "../ui/loader";
 import { Bootcamp, Lesson, UserCohort, Week } from "@/lib/data";
 import { formatRelativeDate } from "@/lib/utils";
@@ -41,49 +41,69 @@ export function BootcampWeekPage({
   const [eventLoading, setEventLoading] = useState(false);
   const [events, setEvents] = useState<Array<any>>();
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       try {
         setLoading(true);
         const bootcamp = await store.getBootcamp(bootcampId);
 
         const weeks = bootcamp?.cohort?.weeks;
-        setWeeks(weeks);
+        if (!cancelled) setWeeks(weeks);
         const week = weeks?.find((w: any) => w.id === weekId);
         const index = weeks?.findIndex((w: any) => w.id === weekId) + 1;
-        setCurrentWeek({
-          ...week,
-          index,
-        });
+        if (!cancelled) {
+          setCurrentWeek({
+            ...week,
+            index,
+          });
 
-        setUserCohort(bootcamp?.userCohort);
-        setBootcamp(bootcamp);
-        setLoading(false);
+          setUserCohort(bootcamp?.userCohort);
+          setBootcamp(bootcamp);
+          setLoading(false);
+        }
       } catch (error) {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     load();
-  }, []);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [bootcampId, weekId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       if (!currentWeek) return;
       try {
         setEventLoading(true);
         const events = await store.getCurrentWeekEvents(
           bootcampId,
-          currentWeek?.id!
+          currentWeek?.id!,
         );
-        setEvents(events);
-        setEventLoading(false);
+        if (!cancelled) {
+          setEvents(events);
+          setEventLoading(false);
+        }
       } catch (error) {
-        setEventLoading(false);
+        if (!cancelled) {
+          setEventLoading(false);
+        }
       }
     };
 
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [bootcampId, currentWeek]);
 
   if (loading) return <Loader isLoader={false} />;
@@ -111,7 +131,7 @@ export function BootcampWeekPage({
       return onNavigate?.(`/projects/${lesson?.project?.slug}`);
 
     return onNavigate?.(
-      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${currentWeek?.id}/${lesson?.id}`
+      `/bootcamps/${bootcampId}/${userCohort?.cohortId}/weeks/${currentWeek?.id}/${lesson?.id}`,
     );
   };
 
@@ -120,7 +140,7 @@ export function BootcampWeekPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === week?.id
+      (ul) => ul.completed && ul.weekId === week?.id,
     );
     return week?.lessons?.length === completed?.length;
   };
@@ -145,7 +165,7 @@ export function BootcampWeekPage({
     const userLessons = userCohort.userLessons;
 
     const completed = userLessons.find(
-      (ul) => ul.lessonId === lesson.id && ul.completed
+      (ul) => ul.lessonId === lesson.id && ul.completed,
     );
     return !!completed;
   };
@@ -155,7 +175,7 @@ export function BootcampWeekPage({
 
     const userLessons = userCohort.userLessons;
     const completed = userLessons.filter(
-      (ul) => ul.completed && ul.weekId === currentWeek?.id
+      (ul) => ul.completed && ul.weekId === currentWeek?.id,
     )?.length;
     return completed;
   };
@@ -258,6 +278,7 @@ export function BootcampWeekPage({
                             <span>{lesson.type}</span>
                           </div>
                           <div className="flex items-center gap-1">
+                            {/* TODO: Remove this */}
                             {(lesson.type === "VIDEO" ||
                               lesson.type === "QUIZ") && (
                               <Badge variant="outline" className="flex gap-1">
@@ -319,10 +340,10 @@ export function BootcampWeekPage({
                               {lesson.type === "VIDEO"
                                 ? "Watch"
                                 : lesson.type === "QUIZ"
-                                ? "Solve"
-                                : lesson.type === "PROJECT"
-                                ? "Build"
-                                : "Complete"}
+                                  ? "Solve"
+                                  : lesson.type === "PROJECT"
+                                    ? "Build"
+                                    : "Complete"}
                             </Button>
                           )}
                         </div>

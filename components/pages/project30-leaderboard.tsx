@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Medal, Trophy, Award, ArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
 
@@ -68,21 +68,29 @@ export function Project30LeaderboardPage({
     setAchievements(data);
   };
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       const data = await store.getProject30Leaderboard(slug, {
         weekly: false,
       });
-      setLeaderboards(data.leaderboardUsers);
-      setTopUsers(data.topUsers);
-      setCurrentUser(data.currentUser);
-      setLoading(false);
+      if (!cancelled) {
+        setLeaderboards(data.leaderboardUsers);
+        setTopUsers(data.topUsers);
+        setCurrentUser(data.currentUser);
+        setLoading(false);
+      }
     };
     load();
-  }, []);
 
-  useMemo(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, store]);
+
+  useEffect(() => {
     if (activeTab.includes("weekly")) {
       loadWeekly();
     }
@@ -90,7 +98,7 @@ export function Project30LeaderboardPage({
     if (activeTab.includes("achievements")) {
       loadAchievements();
     }
-  }, [activeTab]);
+  }, [activeTab, slug, store]);
 
   if (loading) return <Loader isLoader={false} />;
 
