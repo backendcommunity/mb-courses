@@ -277,8 +277,9 @@ export function BootcampWeekPage({
                             )}
                             <span>{lesson.type}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            {/* TODO: Remove this */}
+                          {/* TODO: Remove this */}
+                          {/* <div className="flex items-center gap-1">
+                            
                             {(lesson.type === "VIDEO" ||
                               lesson.type === "QUIZ") && (
                               <Badge variant="outline" className="flex gap-1">
@@ -290,7 +291,7 @@ export function BootcampWeekPage({
                                 </span>
                               </Badge>
                             )}
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </div>

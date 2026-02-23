@@ -116,7 +116,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
                   ...userTask,
                   isCompleted: true,
                 }
-              : userTask
+              : userTask,
           );
         }
 
@@ -152,7 +152,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
               ...projectTask,
               tasks: updatedTasks,
             };
-          }
+          },
         );
 
         return {
@@ -188,7 +188,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
   const next = () => {
     return currentProjectTask?.tasks?.find((t: any, index: number) => {
       const currentIndex = currentProjectTask?.tasks?.findIndex(
-        (_task: any) => _task.id === task?.id
+        (_task: any) => _task.id === task?.id,
       );
       return index === currentIndex + 1;
     });
@@ -203,7 +203,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
   const nextProjectTask =
     project?.projectTasks[
       project?.projectTasks?.findIndex(
-        (ch: any) => ch.id === currentProjectTask?.id
+        (ch: any) => ch.id === currentProjectTask?.id,
       ) + 1
     ];
 
@@ -263,7 +263,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
                     window.open(
                       project?.PRDLink,
                       "_blank",
-                      "noopener,noreferrer"
+                      "noopener,noreferrer",
                     )
                   }
                   variant="outline"
@@ -353,7 +353,7 @@ export function ProjectTaskDetail({ slug, id, onNavigate }: ProjectTaskDetail) {
                 <Progress value={progress() ?? 0} className="h-2" />
               </div>
               <div className="text-sm text-muted-foreground">
-                {userTasks.length} of {project?.totalTasks} videos completed
+                {userTasks.length} of {project?.totalTasks} tasks completed
               </div>
             </CardContent>
           </Card>

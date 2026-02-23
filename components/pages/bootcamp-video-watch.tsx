@@ -768,7 +768,7 @@ export function BootcampVideoWatchPage({
                     (ul: UserLesson) => ul?.completed && ul.weekId === weekId,
                   ).length
                 }{" "}
-                of {week?.lessons?.length} videos completed
+                of {week?.lessons?.length} lessons completed
               </div>
             </CardContent>
           </Card>
@@ -801,7 +801,7 @@ export function BootcampVideoWatchPage({
                     <p className="text-sm font-medium">{lesson.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       {/* TODO: Remove this */}
-                      {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
+                      {/* {(lesson.type === "VIDEO" || lesson.type === "QUIZ") && (
                         <>
                           <Clock className="h-3 w-3" />
                           <span>
@@ -809,7 +809,7 @@ export function BootcampVideoWatchPage({
                             mins
                           </span>
                         </>
-                      )}
+                      )} */}
                       <Badge variant="outline" className="text-xs">
                         {lesson?.type}
                       </Badge>
