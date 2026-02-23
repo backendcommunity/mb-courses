@@ -2080,9 +2080,18 @@ export const user = dataStore.user;
 // ─── Onboarding Types ────────────────────────────────────────────────────────
 
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
-export type LearningGoal = "fundamentals" | "projects" | "interviews" | "advanced";
+export type LearningGoal =
+  | "fundamentals"
+  | "projects"
+  | "interviews"
+  | "advanced";
 export type WeeklyCommitment = "casual" | "steady" | "intensive";
-export type ProgrammingLanguage = "PYTHON" | "JAVA" | "NODEJS" | "RUST" | "RUBY";
+export type ProgrammingLanguage =
+  | "PYTHON"
+  | "JAVA"
+  | "NODEJS"
+  | "RUST"
+  | "RUBY";
 
 export interface OnboardingRecommendation {
   course: {
@@ -2093,8 +2102,8 @@ export interface OnboardingRecommendation {
     totalDuration: number;
     totalStudents: number;
     banner: string | null;
-    firstChapterId: string | null;
-    firstVideoId: string | null;
+    firstChapterSlug: string | null;
+    firstVideoSlug: string | null;
   } | null;
   project: {
     id: string;
