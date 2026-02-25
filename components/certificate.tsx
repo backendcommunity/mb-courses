@@ -3,11 +3,26 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Share2, Award, Calendar, CheckCircle2 } from "lucide-react";
+import {
+  Download,
+  Share2,
+  Award,
+  Calendar,
+  CheckCircle2,
+  BookOpen,
+  Star,
+  Zap,
+  Copy,
+  Check,
+  Linkedin,
+  Twitter,
+} from "lucide-react";
 import { Course } from "@/lib/data";
 import React, { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { CompletionShare } from "@/components/week-completion-share";
+import { toast } from "sonner";
 
 interface CertificateProps {
   courseName: string;
@@ -32,6 +47,8 @@ export function Certificate({
 }: CertificateProps) {
   const certificateRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [copiedResume, setCopiedResume] = useState(false);
 
   html2canvas(certificateRef?.current!, {
     scale: window.devicePixelRatio * 2, // For crisp output on all screens
@@ -84,6 +101,79 @@ export function Certificate({
     onDownload?.();
   };
 
+  const handleLinkedInShare = () => {
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    const url = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(`I completed ${courseName}`)}&summary=${encodeURIComponent(`I just earned a certificate for completing ${courseName} on Mastering Backend!`)}`;
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=600");
+  };
+
+  const handleTwitterShare = () => {
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    const text = `I just earned a certificate for completing ${courseName} on @Master_Backend! 🎓\n\nJoin me and level up your backend engineering skills!`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=400");
+  };
+
+  const handleAddToResume = async () => {
+    try {
+      const resumeText = `Certificate of Completion\nCourse: ${courseName}\nCompletion Date: ${completionDate}\nInstructor: ${instructorName}\nIssued by: Mastering Backend`;
+      await navigator.clipboard.writeText(resumeText);
+      setCopiedResume(true);
+      toast.success("Certificate details copied to clipboard!");
+      setTimeout(() => setCopiedResume(false), 2000);
+    } catch {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  const getCompletionStats = () => {
+    if (type.includes("Roadmap")) {
+      return [
+        {
+          icon: BookOpen,
+          value: course?.userRoadmap?.userTopics?.length ?? 0,
+          label: "Milestones",
+          color: "#13AECE",
+        },
+        { icon: Award, value: course?.level, label: "Level", color: "#F2C94C" },
+        { icon: Zap, value: "100%", label: "Progress", color: "#27AE60" },
+      ];
+    } else if (type.includes("bootcamp")) {
+      return [
+        {
+          icon: BookOpen,
+          value: course?.userCohort?.totalLessonsCompleted ?? 0,
+          label: "Lessons",
+          color: "#13AECE",
+        },
+        {
+          icon: Award,
+          value: (course?.userCohort?.progress ?? 100) + "%",
+          label: "Progress",
+          color: "#F2C94C",
+        },
+        {
+          icon: Star,
+          value: course?.cohort?.duration
+            ? course.cohort.duration + " weeks"
+            : "Completed",
+          label: "Duration",
+          color: "#27AE60",
+        },
+      ];
+    }
+    return [
+      {
+        icon: BookOpen,
+        value: course?.userCourse?.userChapters?.length ?? 0,
+        label: "Chapters",
+        color: "#13AECE",
+      },
+      { icon: Award, value: course?.level, label: "Level", color: "#F2C94C" },
+      { icon: Zap, value: "100%", label: "Progress", color: "#27AE60" },
+    ];
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Certificate Actions */}
@@ -93,7 +183,7 @@ export function Certificate({
           <h2 className="text-2xl font-bold">Course Completed!</h2>
         </div>
         <div className="flex gap-3">
-          <Button onClick={onShare} variant="outline">
+          <Button onClick={() => setShareDialogOpen(true)} variant="outline">
             <Share2 className="mr-2 h-4 w-4" />
             Share Certificate
           </Button>
@@ -160,7 +250,12 @@ export function Certificate({
 
             <div className="space-y-2">
               <p className="text-lg text-gray-700">
-                has successfully completed the course
+                has successfully completed the{" "}
+                {type === "bootcamp"
+                  ? "bootcamp"
+                  : type === "roadmap"
+                    ? "roadmap"
+                    : "course"}{" "}
               </p>
               <h3 className="text-2xl font-semibold text-primary">
                 {courseName}
@@ -289,7 +384,7 @@ export function Certificate({
 
                 {type.includes("bootcamp") ? (
                   <span className="font-medium text-green-600">
-                    {course?.userCohort?.assigmentScore}%
+                    {course?.userCohort?.progress}%
                   </span>
                 ) : (
                   <span className="font-medium text-green-600">
@@ -317,21 +412,55 @@ export function Certificate({
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold mb-4">Share Your Achievement</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="justify-start">
-              <div className="w-5 h-5 bg-blue-600 rounded mr-2"></div>
+            <Button
+              onClick={handleLinkedInShare}
+              variant="outline"
+              className="justify-start"
+            >
+              <Linkedin className="mr-2 h-4 w-4 text-blue-700" />
               Share on LinkedIn
             </Button>
-            <Button variant="outline" className="justify-start">
-              <div className="w-5 h-5 bg-blue-400 rounded mr-2"></div>
+            <Button
+              onClick={handleTwitterShare}
+              variant="outline"
+              className="justify-start"
+            >
+              <Twitter className="mr-2 h-4 w-4 text-blue-400" />
               Share on Twitter
             </Button>
-            <Button variant="outline" className="justify-start">
-              <div className="w-5 h-5 bg-green-600 rounded mr-2"></div>
-              Add to Resume
+            <Button
+              onClick={handleAddToResume}
+              variant="outline"
+              className="justify-start"
+            >
+              {copiedResume ? (
+                <Check className="mr-2 h-4 w-4 text-green-600" />
+              ) : (
+                <Copy className="mr-2 h-4 w-4" />
+              )}
+              {copiedResume ? "Copied!" : "Add to Resume"}
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      <CompletionShare
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        heading="Certificate Earned!"
+        title={courseName}
+        subtitle={
+          type.includes("bootcamp")
+            ? "Bootcamp"
+            : type.includes("Roadmap")
+              ? "Roadmap"
+              : "Course"
+        }
+        userName={studentName}
+        stats={getCompletionStats()}
+        shareText={`I just earned a certificate for completing ${courseName} on Mastering Backend! 🎓`}
+      />
     </div>
   );
 }

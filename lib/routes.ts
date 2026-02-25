@@ -102,6 +102,8 @@ export const routes = {
   // Bootcamps
   bootcamps: "/bootcamps",
   bootcampDetail: (bootcampId: string) => `/bootcamps/${bootcampId}`,
+  bootcampCertificate: (bootcampId: string) =>
+    `/bootcamps/${bootcampId}/certificate`,
   bootcampDashboard: (bootcampId: string) =>
     `/bootcamps/${bootcampId}/dashboard`,
   bootcampWeek: (bootcampId: string, cohort: string, weekId: string) =>
