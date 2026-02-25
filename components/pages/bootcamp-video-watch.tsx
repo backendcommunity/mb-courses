@@ -20,6 +20,7 @@ import {
   Share,
   Clock,
   Crown,
+  Trophy,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -433,6 +434,7 @@ export function BootcampVideoWatchPage({
               {currentLesson && (
                 <>
                   {currentLesson.type === "VIDEO" &&
+                    nextVideo &&
                     (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
@@ -446,6 +448,7 @@ export function BootcampVideoWatchPage({
                     ))}
 
                   {currentLesson.type === "QUIZ" &&
+                    nextVideo &&
                     (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
@@ -463,6 +466,7 @@ export function BootcampVideoWatchPage({
                   {(currentLesson.type === "ASSIGNMENT" ||
                     currentLesson.type === "EXERCISE" ||
                     currentLesson.type === "ARTICLE") &&
+                    nextVideo &&
                     (isVideoCompleted(currentLesson.id) ? (
                       <Button variant="outline" disabled>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
@@ -477,25 +481,35 @@ export function BootcampVideoWatchPage({
                 </>
               )}
 
-              {nextVideo && (
-                <Button
-                  onClick={() => handleVideoClick(nextVideo)}
-                  className="capitalize"
-                >
-                  Next Lesson
-                  <SkipForward className="ml-2 h-4 w-4" />
-                </Button>
-              )}
-
-              {/* Show Earn Rewards button when week is completed */}
-              {!nextVideo && week?.nextWeek && (
-                <Button
-                  variant={"destructive"}
-                  onClick={() => markCourseAsCompleted()}
-                >
-                  Claim Rewards
-                  <Crown className="ml-2 h-4 w-4" />
-                </Button>
+              {/* Show Claim Reward button when it's the last lesson of a week */}
+              {!nextVideo && (
+                <>
+                  {week?.nextWeek ? (
+                    <Button
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700"
+                      onClick={async () => {
+                        await handleMarkComplete();
+                        markCourseAsCompleted();
+                      }}
+                    >
+                      Claim Rewards
+                      <Crown className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700"
+                      onClick={async () => {
+                        await handleMarkComplete();
+                        setTimeout(() => {
+                          onNavigate?.(routes.bootcampCertificate(id));
+                        }, 500);
+                      }}
+                    >
+                      View Certificate
+                      <Trophy className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
