@@ -276,7 +276,7 @@ export function BootcampDetailPage({
                     {bootcamp?.topics?.map(
                       (
                         topic: { title: string; summary: string },
-                        i: number
+                        i: number,
                       ) => (
                         <div key={i} className="flex items-start gap-3">
                           <Code2 className="h-5 w-5 text-blue-600 mt-0.5" />
@@ -287,7 +287,7 @@ export function BootcampDetailPage({
                             </p>
                           </div>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </CardContent>
@@ -314,8 +314,8 @@ export function BootcampDetailPage({
                           module?.status === "current"
                             ? "border-gray-500 dark:border-gray-100/90"
                             : module?.status === "completed"
-                            ? "border-green-500/50 bg-green-500/10"
-                            : "border-gray-500/30"
+                              ? "border-green-500/50 bg-green-500/10"
+                              : "border-gray-500/30"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -340,7 +340,7 @@ export function BootcampDetailPage({
                                   variant="ghost"
                                   onClick={() =>
                                     onNavigate?.(
-                                      `/bootcamps/${bootcampId}/${bootcamp?.userCohort?.cohortId}/weeks/${module.id}`
+                                      `/bootcamps/${bootcampId}/${bootcamp?.userCohort?.cohortId}/weeks/${module.id}`,
                                     )
                                   }
                                 >
@@ -361,7 +361,7 @@ export function BootcampDetailPage({
                           ))}
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </CardContent>
               </Card>
@@ -433,7 +433,7 @@ export function BootcampDetailPage({
                                         <a
                                           target="_blank"
                                           href={routes.courseDetail(
-                                            course?.slug
+                                            course?.slug,
                                           )}
                                         >
                                           <Button
@@ -451,7 +451,7 @@ export function BootcampDetailPage({
                                           onClick={() =>
                                             enrollInBootcamp(
                                               bootcampId,
-                                              bootcamp?.cohort?.id
+                                              bootcamp?.cohort?.id,
                                             )
                                           }
                                         >
@@ -523,7 +523,7 @@ export function BootcampDetailPage({
                                           onClick={() =>
                                             enrollInBootcamp(
                                               bootcampId,
-                                              bootcamp?.cohort?.id
+                                              bootcamp?.cohort?.id,
                                             )
                                           }
                                         >
@@ -592,7 +592,7 @@ export function BootcampDetailPage({
                                           onClick={() =>
                                             enrollInBootcamp(
                                               bootcampId,
-                                              bootcamp?.cohort?.id
+                                              bootcamp?.cohort?.id,
                                             )
                                           }
                                         >
@@ -655,13 +655,14 @@ export function BootcampDetailPage({
                       bootcamp?.userCohort?.cohort?.status === "OPEN"
                         ? "outline"
                         : started
-                        ? "default"
-                        : "destructive"
+                          ? "default"
+                          : "destructive"
                     }
                   >
                     {started
                       ? "In Progress"
-                      : bootcamp?.userCohort?.cohort?.status ?? "Not enrolled"}
+                      : (bootcamp?.userCohort?.cohort?.status ??
+                        "Not enrolled")}
                   </Badge>
                 </div>
               </div>
@@ -707,7 +708,8 @@ export function BootcampDetailPage({
               {bootcamp?.enrolled && (
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <p className="text-xs text-blue-900 dark:text-blue-100">
-                    <strong>Recording Availability:</strong> Session recordings will be available 24-48 hours after each live class.
+                    <strong>Recording Availability:</strong> Session recordings
+                    will be available 24-48 hours after each live class.
                   </p>
                 </div>
               )}
@@ -720,7 +722,7 @@ export function BootcampDetailPage({
                   >
                     Enrolled
                   </Badge>
-                  
+
                   {!started ? (
                     <Button variant={"secondary"} className="w-full">
                       <Countdown
@@ -826,7 +828,7 @@ export function BootcampDetailPage({
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700"
                   onClick={() =>
-                    onNavigate?.(routes.courseCertificate(bootcampId))
+                    onNavigate?.(routes.bootcampCertificate(bootcampId))
                   }
                 >
                   <BadgeIcon className="mr-2 h-4 w-4" />
