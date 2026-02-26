@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Search,
   Bell,
@@ -92,6 +92,19 @@ export function NavigationBar({
       setIsActivitiesLoading(false);
     }
   }
+
+  // Real-time notification polling (every 10 seconds)
+  useEffect(() => {
+    // Load notifications immediately
+    load();
+
+    // Set up polling interval for real-time updates
+    const pollInterval = setInterval(() => {
+      load();
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, []);
 
   useMemo(() => {
     if (isNotificationsOpen) load();
@@ -529,44 +542,92 @@ export function NavigationBar({
                   <Loader isLoader={false} />
                 ) : (
                   <div className="max-h-[60vh] overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b cursor-pointer hover:bg-muted/50 ${
-                          !notification.isRead ? "bg-primary/5" : ""
-                        }`}
-                        onClick={() => handleNotificationClick(notification.id)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div
-                            className={`w-2 h-2 rounded-full mt-2 ${
-                              notification.type?.includes("COMPLETED")
-                                ? "bg-green-500"
-                                : notification.type?.includes("START") ||
-                                    notification.type?.includes("STARTED")
-                                  ? "bg-primary"
-                                  : notification.type?.includes("WATCHED")
-                                    ? "bg-yellow-500"
-                                    : "bg-purple-500"
-                            }`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {notification.description}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(notification.createdAt)}
-                            </p>
-                          </div>
-                          {!notification.isRead && (
-                            <div className="w-2 h-2 bg-primary rounded-full" />
-                          )}
+                    {/* Section: NEW NOTIFICATIONS */}
+                    {notifications.filter((n: Activity) => !n.isRead).length > 0 && (
+                      <div>
+                        <div className="sticky top-0 px-4 py-2 bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800">
+                          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">
+                            🆕 New ({notifications.filter((n: Activity) => !n.isRead).length})
+                          </p>
                         </div>
+                        {notifications
+                          .filter((n: Activity) => !n.isRead)
+                          .map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="p-4 border-b bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-transparent dark:hover:from-blue-900/40 transition-colors border-l-4 border-l-blue-500"
+                              onClick={() => handleNotificationClick(notification.id)}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                                    notification.type?.includes("COMPLETED")
+                                      ? "bg-green-500"
+                                      : notification.type?.includes("MILESTONE")
+                                        ? "bg-orange-500 animate-pulse"
+                                        : "bg-blue-500"
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm text-foreground">
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {notification.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {format(notification.createdAt)}
+                                  </p>
+                                </div>
+                                <div className="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
+                              </div>
+                            </div>
+                          ))}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Section: READ NOTIFICATIONS */}
+                    {notifications.filter((n: Activity) => n.isRead).length > 0 && (
+                      <div>
+                        <div className="sticky top-0 px-4 py-2 bg-muted border-b">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">
+                            Earlier
+                          </p>
+                        </div>
+                        {notifications
+                          .filter((n: Activity) => n.isRead)
+                          .map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => handleNotificationClick(notification.id)}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`w-2 h-2 rounded-full mt-2 ${
+                                    notification.type?.includes("COMPLETED")
+                                      ? "bg-green-500"
+                                      : notification.type?.includes("MILESTONE")
+                                        ? "bg-orange-500"
+                                        : "bg-gray-400"
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-muted-foreground">
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground/70">
+                                    {notification.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/60 mt-1">
+                                    {format(notification.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="p-4 border-t">
