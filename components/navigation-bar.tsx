@@ -1083,16 +1083,10 @@ export function NavigationBar({
                   <span>Project30</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>Community</span>
-                </DropdownMenuItem>
-                {/* <DropdownMenuItem
-                  onClick={() => onNavigate(routes.portfolio(user?.id))}
-                >
+                <DropdownMenuItem onClick={() => onNavigate(routes.portfolio(user?.id || ""))}>
                   <User className="mr-2 h-4 w-4" />
                   <span>My Portfolio</span>
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Leaderboard</span>

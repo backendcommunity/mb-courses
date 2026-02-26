@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -146,7 +146,7 @@ export function CourseWatchPage({
     );
   }
 
-  const handleMarkComplete = async () => {
+  const handleMarkComplete = useCallback(async () => {
     if (!currentVideo || !course || !chapter) return;
 
     try {
@@ -165,21 +165,22 @@ export function CourseWatchPage({
         chapter?.quiz || chapter.exercise || chapter.playground;
       const isChapterCompleted = allVideosComplete && !hasOtherContent;
 
+      // Update local state: remove duplicates and add the completed video
+      const existingVideoIds = new Set((userVideos ?? []).map((v) => v.videoId));
       const completedVideos = [
-        ...(userVideos ?? []),
+        ...(userVideos ?? []).filter((v) => v.videoId !== currentVideo.id),
         {
-          ...currentVideo,
-          isCompleted: true,
           videoId: currentVideo.id,
+          isCompleted: true,
+          chapterId: chapter.id,
         },
       ];
       setUserVideos(completedVideos);
 
       // Update UserChapter locally
       const userChapter = [
-        ...(userChapters ?? []),
+        ...(userChapters ?? []).filter((ch: UserChapter) => ch.chapterId !== chapter.id),
         {
-          ...chapter,
           chapterId: chapter.id,
           isCompleted: isChapterCompleted,
         },
@@ -187,7 +188,7 @@ export function CourseWatchPage({
       setUserChapters(userChapter);
 
       // Backend update with proper `isChapterCompleted`
-      markVideoComplete(course.id, chapter.id, currentVideo.id, {
+      await markVideoComplete(course.id, chapter.id, currentVideo.id, {
         isChapterCompleted,
       });
 
@@ -196,7 +197,7 @@ export function CourseWatchPage({
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
-  };
+  }, [currentVideo, course, chapter, userVideos, userChapters]);
 
   const isChapterCompleted = (chapterId: string) => {
     return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
