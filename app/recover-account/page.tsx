@@ -6,24 +6,36 @@
  * Allows users to recover their account within 7-day window
  */
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import axios from 'axios';
-import Link from 'next/link';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import axios from "axios";
+import Link from "next/link";
 
-type RecoveryStatus = 'loading' | 'success' | 'error' | 'invalid' | 'idle';
+type RecoveryStatus = "loading" | "success" | "error" | "invalid" | "idle";
 
-export default function RecoverAccountPage() {
+function RecoverAccountContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<RecoveryStatus>('idle');
+  const [status, setStatus] = useState<RecoveryStatus>("idle");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recoveryData, setRecoveryData] = useState<{
@@ -33,52 +45,54 @@ export default function RecoverAccountPage() {
 
   // Auto-recover if token is present
   useEffect(() => {
-    if (token && status === 'idle') {
+    if (token && status === "idle") {
       handleRecover();
     }
   }, [token, status]);
 
   const handleRecover = async () => {
     if (!token) {
-      setStatus('invalid');
-      setError('No recovery token provided');
+      setStatus("invalid");
+      setError("No recovery token provided");
       return;
     }
 
     try {
       setLoading(true);
-      setStatus('loading');
+      setStatus("loading");
       setError(null);
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v3/users/undelete`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v3/users/undelete`,
         { token },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (response.data.success) {
-        setStatus('success');
+        setStatus("success");
         setRecoveryData({
           email: response.data.user?.email,
-          recoveredAt: new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          recoveredAt: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         });
-        toast.success('Account recovered successfully!');
+        toast.success("Account recovered successfully!");
 
         // Redirect to dashboard after 3 seconds
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = "/dashboard";
         }, 3000);
       }
     } catch (err: any) {
-      console.error('Recovery error:', err);
-      setStatus('error');
-      const message = err.response?.data?.message || 'Failed to recover account. Token may be invalid or expired.';
+      console.error("Recovery error:", err);
+      setStatus("error");
+      const message =
+        err.response?.data?.message ||
+        "Failed to recover account. Token may be invalid or expired.";
       setError(message);
       toast.error(message);
     } finally {
@@ -90,7 +104,7 @@ export default function RecoverAccountPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Loading State */}
-        {status === 'loading' && (
+        {status === "loading" && (
           <Card className="border-gray-700 bg-gray-800">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-white">
@@ -99,13 +113,15 @@ export default function RecoverAccountPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-gray-300">Please wait while we restore your account...</p>
+              <p className="text-gray-300">
+                Please wait while we restore your account...
+              </p>
             </CardContent>
           </Card>
         )}
 
         {/* Success State */}
-        {status === 'success' && (
+        {status === "success" && (
           <Card className="border-green-700 bg-green-900/20">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-green-400">
@@ -134,7 +150,9 @@ export default function RecoverAccountPage() {
 
               {/* What's Next */}
               <div className="p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
-                <h3 className="font-semibold text-blue-200 mb-2">What's next?</h3>
+                <h3 className="font-semibold text-blue-200 mb-2">
+                  What's next?
+                </h3>
                 <ul className="text-sm text-blue-200 space-y-1 list-disc list-inside">
                   <li>Your account is now active</li>
                   <li>All your courses and progress are restored</li>
@@ -155,7 +173,7 @@ export default function RecoverAccountPage() {
         )}
 
         {/* Error State */}
-        {status === 'error' && (
+        {status === "error" && (
           <Card className="border-red-700 bg-red-900/20">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-red-400">
@@ -178,7 +196,9 @@ export default function RecoverAccountPage() {
 
               {/* Help Box */}
               <div className="p-4 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-                <h3 className="font-semibold text-yellow-200 mb-2">Possible reasons:</h3>
+                <h3 className="font-semibold text-yellow-200 mb-2">
+                  Possible reasons:
+                </h3>
                 <ul className="text-sm text-yellow-200 space-y-1 list-disc list-inside">
                   <li>Recovery token has expired (7-day limit)</li>
                   <li>Token is invalid or has already been used</li>
@@ -204,7 +224,7 @@ export default function RecoverAccountPage() {
         )}
 
         {/* Invalid State */}
-        {status === 'invalid' && (
+        {status === "invalid" && (
           <Card className="border-gray-700 bg-gray-800">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-yellow-400">
@@ -216,14 +236,19 @@ export default function RecoverAccountPage() {
             <CardContent className="space-y-6">
               <div className="p-4 bg-gray-700/50 border border-gray-600 rounded-lg">
                 <p className="text-sm text-gray-200">
-                  It looks like you're trying to recover your account, but no recovery token was found in the link.
+                  It looks like you're trying to recover your account, but no
+                  recovery token was found in the link.
                 </p>
               </div>
 
               <div className="p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
-                <h3 className="font-semibold text-blue-200 mb-2">How to recover your account:</h3>
+                <h3 className="font-semibold text-blue-200 mb-2">
+                  How to recover your account:
+                </h3>
                 <ol className="text-sm text-blue-200 space-y-1 list-decimal list-inside">
-                  <li>Check your email for the account deletion confirmation</li>
+                  <li>
+                    Check your email for the account deletion confirmation
+                  </li>
                   <li>Click the "Recover Account" link in the email</li>
                   <li>You have 7 days to recover your account</li>
                 </ol>
@@ -246,7 +271,7 @@ export default function RecoverAccountPage() {
         )}
 
         {/* Idle State - Waiting for token */}
-        {status === 'idle' && (
+        {status === "idle" && (
           <Card className="border-gray-700 bg-gray-800">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-yellow-400">
@@ -264,8 +289,8 @@ export default function RecoverAccountPage() {
                   <strong>Your account is pending deletion.</strong>
                 </p>
                 <p className="text-sm text-blue-200">
-                  You have 7 days from the deletion date to recover your account. After that, your data will be
-                  permanently deleted.
+                  You have 7 days from the deletion date to recover your
+                  account. After that, your data will be permanently deleted.
                 </p>
               </div>
 
@@ -281,6 +306,36 @@ export default function RecoverAccountPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Fallback loading component for Suspense
+function RecoverAccountLoading() {
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-gray-700 bg-gray-800">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-yellow-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            Loading...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-gray-400">
+            Processing recovery request...
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Main export with Suspense boundary for useSearchParams()
+export default function RecoverAccountPage() {
+  return (
+    <Suspense fallback={<RecoverAccountLoading />}>
+      <RecoverAccountContent />
+    </Suspense>
   );
 }
 
