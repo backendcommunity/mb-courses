@@ -142,39 +142,62 @@ export function NavigationBar({
 
   // Load popular items when popover opens (if not searching)
   useEffect(() => {
-    if (isExploreOpen && !exploreSearchQuery.trim()) {
-      const loadPopular = async () => {
-        try {
-          setIsExploreSearchLoading(true);
-          const results = await store.search("");
-          setExploreSearchResults(results);
-        } catch {
-          setExploreSearchResults(null);
-        } finally {
-          setIsExploreSearchLoading(false);
+    if (isExploreOpen) {
+      if (!exploreSearchQuery.trim()) {
+        const loadPopular = async () => {
+          try {
+            setIsExploreSearchLoading(true);
+            const results = await store.search("");
+            setExploreSearchResults(results);
+          } catch {
+            setExploreSearchResults(null);
+          } finally {
+            setIsExploreSearchLoading(false);
+          }
+        };
+        loadPopular();
+      }
+
+      // Ensure input is focused when popover opens
+      setTimeout(() => {
+        const searchInput = exploreSearchRef.current?.querySelector("input");
+        if (searchInput && document.activeElement !== searchInput) {
+          searchInput.focus();
         }
-      };
-      loadPopular();
+      }, 0);
     }
   }, [isExploreOpen]);
 
-  // Keyboard shortcut to open Explore (Cmd/Ctrl + K)
+  // Keyboard shortcut to open Explore (Cmd/Ctrl + K) and focus input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K to open search
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsExploreOpen(true);
+        // Focus the input after popover opens
         setTimeout(() => {
           const searchInput = exploreSearchRef.current?.querySelector("input");
-          searchInput?.focus();
-        }, 0);
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }, 50);
       }
       // Escape to close
-      if (e.key === "Escape" && isExploreOpen) {
-        setIsExploreOpen(false);
-        setExploreSearchQuery("");
+      else if (e.key === "Escape") {
+        if (isExploreOpen) {
+          setIsExploreOpen(false);
+          setExploreSearchQuery("");
+          // Return focus to the search input
+          setTimeout(() => {
+            const searchInput = exploreSearchRef.current?.querySelector("input");
+            searchInput?.blur();
+          }, 0);
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isExploreOpen]);
@@ -338,17 +361,18 @@ export function NavigationBar({
 
           {/* Global Search Bar */}
           <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
-            <PopoverTrigger asChild>
-              <div className="flex-1 max-w-2xl mx-4" ref={exploreSearchRef}>
-                <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <div className="flex-1 max-w-2xl mx-4" ref={exploreSearchRef}>
+              <PopoverTrigger asChild>
+                <div className="relative group cursor-text">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
                   <Input
                     type="search"
                     placeholder="Search courses, roadmaps, projects, bootcamps..."
                     value={exploreSearchQuery}
                     onChange={(e) => setExploreSearchQuery(e.target.value)}
-                    onFocus={() => setIsExploreOpen(true)}
-                    className="w-full pl-10 pr-16 h-10 bg-muted/50 border border-muted hover:border-primary/50 focus:border-primary focus:bg-background transition-colors rounded-lg font-medium"
+                    onClick={() => !isExploreOpen && setIsExploreOpen(true)}
+                    onFocus={() => !isExploreOpen && setIsExploreOpen(true)}
+                    className="w-full pl-10 pr-16 h-10 bg-muted/50 border border-muted hover:border-primary/50 focus:border-primary focus:bg-background transition-colors rounded-lg font-medium focus:outline-none"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none hidden sm:block">
                     <kbd className="px-2.5 py-1 rounded bg-muted border border-border text-foreground">
@@ -356,8 +380,8 @@ export function NavigationBar({
                     </kbd>
                   </div>
                 </div>
-              </div>
-            </PopoverTrigger>
+              </PopoverTrigger>
+            </div>
             <PopoverContent
               className="lg:w-[1200px] w-screen sm:w-[90vw] md:w-[600px] p-0 mt-2 border-border bg-popover"
               align="start"
