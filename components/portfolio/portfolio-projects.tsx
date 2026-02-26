@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,11 +21,7 @@ import {
   ChevronDown,
   FileText,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-} from "recharts";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import type { PortfolioProject } from "@/lib/portfolio-types";
 
@@ -94,8 +90,7 @@ function sortProjects(projects: PortfolioProject[], sort: SortOption) {
       break;
     case "level":
       sorted.sort(
-        (a, b) =>
-          (LEVEL_ORDER[b.level] || 0) - (LEVEL_ORDER[a.level] || 0),
+        (a, b) => (LEVEL_ORDER[b.level] || 0) - (LEVEL_ORDER[a.level] || 0),
       );
       break;
   }
@@ -159,9 +154,15 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h4 className="font-semibold text-sm truncate">
-                {project.title}
-              </h4>
+              <a
+                href={`/projects/${project.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <h4 className="font-semibold text-sm truncate">
+                  {project.title}
+                </h4>
+              </a>
               {project.isVerified && (
                 <CheckCircle2 className="h-3.5 w-3.5 text-[#13AECE] shrink-0" />
               )}
@@ -229,9 +230,9 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
 
         {/* Technologies */}
         <div className="flex flex-wrap gap-1">
-          {project.technologies.map((tech) => (
+          {project.technologies.map((tech, idx) => (
             <Badge
-              key={tech}
+              key={`${tech}-${idx}`}
               variant="secondary"
               className="text-[10px] px-2 py-0 font-normal"
             >
@@ -306,8 +307,8 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
                   Challenges Solved
                 </p>
                 <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                  {project.challenges.map((c) => (
-                    <li key={c}>{c}</li>
+                  {project.challenges.map((c, idx) => (
+                    <li key={`${c}-${idx}`}>{c}</li>
                   ))}
                 </ul>
               </div>
@@ -318,9 +319,9 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
                   Tools & Infrastructure
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {project.tools.map((tool) => (
+                  {project.tools.map((tool, idx) => (
                     <Badge
-                      key={tool}
+                      key={`${tool}-${idx}`}
                       variant="outline"
                       className="text-[10px] px-1.5 py-0"
                     >
@@ -373,6 +374,7 @@ export function PortfolioProjects({ projects }: PortfolioProjectsProps) {
 
   const [tab, setTab] = useState("all");
   const [sort, setSort] = useState<SortOption>("featured");
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const filtered = useMemo(() => {
     let base = visibleProjects;
@@ -383,6 +385,17 @@ export function PortfolioProjects({ projects }: PortfolioProjectsProps) {
     return sortProjects(base, sort);
   }, [visibleProjects, tab, sort]);
 
+  // Reset visible count when tab or sort changes
+  const displayedProjects = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [tab, sort]);
+
+  const hasMore = filtered.length > visibleCount;
+
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -391,10 +404,7 @@ export function PortfolioProjects({ projects }: PortfolioProjectsProps) {
             <CardTitle className="text-lg">Projects</CardTitle>
             <ScoreSparkline projects={visibleProjects} />
           </div>
-          <Select
-            value={sort}
-            onValueChange={(v) => setSort(v as SortOption)}
-          >
+          <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
             <SelectTrigger className="w-[130px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -423,10 +433,21 @@ export function PortfolioProjects({ projects }: PortfolioProjectsProps) {
 
           <TabsContent value={tab} forceMount className="mt-0">
             {filtered.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {filtered.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {displayedProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+                {hasMore && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setVisibleCount((v) => v + 6)}
+                  >
+                    Show More ({filtered.length - visibleCount} remaining)
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="text-center py-8 text-sm text-muted-foreground">

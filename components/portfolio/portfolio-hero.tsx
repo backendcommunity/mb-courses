@@ -17,6 +17,7 @@ import {
   Twitter,
   Hash,
   Calendar,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { PortfolioUser, PortfolioStats } from "@/lib/portfolio-types";
@@ -37,7 +38,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
 
     if (typeof navigator !== "undefined" && navigator.share) {
       navigator
-        .share({ title: `${user.name} — Portfolio`, text: shareText, url: shareUrl })
+        .share({
+          title: `${user.name} — Portfolio`,
+          text: shareText,
+          url: shareUrl,
+        })
         .catch(() => {});
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl);
@@ -53,9 +58,17 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
 
   const statItems = [
     { icon: Trophy, value: stats.totalProjects, label: "Projects" },
-    { icon: Award, value: stats.totalPoints.toLocaleString(), label: "MB Points" },
+    {
+      icon: Award,
+      value: stats.totalPoints.toLocaleString(),
+      label: "MB Points",
+    },
     { icon: BookOpen, value: stats.coursesCompleted, label: "Courses" },
-    { icon: Hash, value: `#${stats.globalRank}`, label: `of ${stats.totalUsers.toLocaleString()}` },
+    {
+      icon: Hash,
+      value: `#${stats.globalRank}`,
+      label: `of ${stats.totalUsers.toLocaleString()}`,
+    },
   ];
 
   return (
@@ -122,17 +135,25 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
               {user.isVerified && (
                 <CheckCircle2 className="h-5 w-5 text-[#13AECE] shrink-0" />
               )}
+              {user.isPremium && (
+                <Badge className="bg-[#F2C94C]/15 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20 text-[10px] px-1.5 py-0 gap-0.5">
+                  <Crown className="h-2.5 w-2.5 fill-current" />
+                  {user.isTrial ? "Trial" : "Pro"}
+                </Badge>
+              )}
               {user.isOpenToWork && (
                 <span className="inline-flex items-center gap-1.5 bg-[#27AE60]/15 border border-[#27AE60]/25 rounded-full px-2.5 py-0.5">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#27AE60] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#27AE60]" />
                   </span>
-                  <span className="text-[#27AE60] text-[10px] font-medium">Open to Work</span>
+                  <span className="text-[#27AE60] text-[10px] font-medium">
+                    Open to Work
+                  </span>
                 </span>
               )}
             </div>
-            <p className="text-white/60 text-sm mt-0.5">{user.title}</p>
+            <p className="text-white/60 text-sm mt-0.5">{user.username}</p>
             {user.location && (
               <p className="text-white/40 text-xs flex items-center gap-1 mt-1">
                 <MapPin className="h-3 w-3" />
@@ -162,7 +183,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
                 className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
                 asChild
               >
-                <a href={user.socialLinks.github} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={user.socialLinks.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Github className="h-4 w-4" />
                 </a>
               </Button>
@@ -174,7 +199,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
                 className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
                 asChild
               >
-                <a href={user.socialLinks.linkedin} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={user.socialLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Linkedin className="h-4 w-4" />
                 </a>
               </Button>
@@ -186,7 +215,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
                 className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
                 asChild
               >
-                <a href={user.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={user.socialLinks.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Twitter className="h-4 w-4" />
                 </a>
               </Button>
@@ -198,7 +231,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
                 className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
                 asChild
               >
-                <a href={user.socialLinks.website} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={user.socialLinks.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Globe className="h-4 w-4" />
                 </a>
               </Button>

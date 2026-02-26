@@ -140,6 +140,103 @@ export interface SearchResults {
   total: number;
 }
 
+// Epic 6: Portfolio API Response
+export interface PortfolioResponse {
+  user: {
+    id: string;
+    name: string;
+    bio: string;
+    avatar: string;
+    level: number;
+    levelName: string;
+    points: number;
+    streak: number;
+    username: string;
+    location: string;
+    longestStreak: number;
+    joinedAt: string;
+    socialLinks: {
+      github?: string;
+      linkedin?: string;
+      website?: string;
+    };
+  };
+  stats: {
+    totalProjects: number;
+    totalPoints: number;
+    coursesCompleted: number;
+    certificates: number;
+    globalRank: number;
+    totalUsers: number;
+  };
+  projects: Array<{
+    id: string;
+    title: string;
+    level?: string;
+    summary: string;
+    technologies: string[];
+    isCompleted: boolean;
+    slug: string;
+  }>;
+  activity: {
+    days: Array<{
+      date: string;
+      count: number;
+      xp: number;
+      types?: Array<{ label: string; count: number }>;
+    }>;
+    currentStreak: number;
+    longestStreak: number;
+    activeDaysCount: number;
+    totalActivities: number;
+    monthlyXp: number;
+  };
+  mockInterviews: {
+    totalInterviews: number;
+    averageScore: number;
+    topicBreakdown: Array<{
+      topic: string;
+      score: number;
+    }>;
+  };
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon?: string;
+    completed: boolean;
+    progress: number;
+    earnedAt?: string;
+  }>;
+  certificates: Array<{
+    id: string;
+    code: string;
+    courseName: string;
+    finalScore: number;
+    date: string;
+  }>;
+  roadmaps: Array<{
+    id: string;
+    name: string;
+    progress: number;
+  }>;
+  quizExerciseSummary: {
+    quizzesPassed: number;
+    quizzesTotal: number;
+    quizAvgScore: number;
+    exercisesCompleted: number;
+    exercisesTotal: number;
+    exerciseAvgScore: number;
+  };
+  bootcamps: Array<{
+    id: string;
+    name: string;
+    status: string;
+    completionPercent: number;
+  }>;
+  skills: Array<any>;
+}
+
 export interface Subscription {
   id: string;
   name: string;

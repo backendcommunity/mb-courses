@@ -30,7 +30,7 @@ export const RARITY_COLORS: Record<BadgeRarity, string> = {
 export interface PortfolioUser {
   id: string;
   name: string;
-  title: string;
+  username: string;
   bio: string;
   avatar: string;
   location: string;
@@ -41,6 +41,8 @@ export interface PortfolioUser {
   points: number;
   streak: number;
   isVerified: boolean;
+  isPremium: boolean;
+  isTrial: boolean;
   isOpenToWork: boolean;
   joinedAt: string;
   socialLinks: {
@@ -74,7 +76,7 @@ export interface PortfolioProject {
   title: string;
   level: string;
   score: number;
-  status: ProjectStatus;
+  status: ProjectStatus | string;
   isVerified: boolean;
   technologies: string[];
   repositoryUrl?: string;
@@ -85,6 +87,7 @@ export interface PortfolioProject {
   challenges?: string[];
   tools?: string[];
   docsUrl?: string;
+  slug: string;
 }
 
 export interface ActivityDay {
@@ -165,7 +168,7 @@ export interface PortfolioBootcamp {
   attendanceRate: number;
   peerRank: number;
   totalPeers: number;
-  startedAt: string;
+  startedAt?: string;
   completedAt?: string;
 }
 
@@ -181,4 +184,133 @@ export interface PortfolioData {
   roadmaps: PortfolioRoadmap[];
   quizExerciseSummary: PortfolioQuizExerciseSummary;
   bootcamps: PortfolioBootcamp[];
+}
+
+// Backend API Response Type with enriched fields from database
+export interface PortfolioResponse {
+  user: {
+    id: string;
+    name: string;
+    bio: string;
+    avatar: string;
+    level: number;
+    username: string; // From user.username
+    levelName: string;
+    xp?: number; // From user.points
+    points: number;
+    streak: number;
+    longestStreak: number;
+    isVerified?: boolean; // From user.emailConfirmed
+    isPremium?: boolean; // From User.isPremium
+    isTrial?: boolean; // From User.isTrial
+    joinedAt: string;
+    location: string; // From user.address
+    openToWork?: boolean; // From user.openToWork
+    socialLinks: {
+      github?: string;
+      linkedin?: string;
+      website?: string;
+    };
+  };
+  stats: {
+    totalProjects: number;
+    totalPoints: number;
+    coursesCompleted: number;
+    certificates: number;
+    globalRank: number;
+    totalUsers: number;
+  };
+  projects: Array<{
+    id: string;
+    title: string;
+    level?: string;
+    summary: string;
+    technologies: string[];
+    score?: number; // From Solution.score
+    status?: string; // From Solution.status
+    isVerified?: boolean; // From Solution.status == 'APPROVED'
+    repositoryUrl?: string; // From Solution.repository
+    liveUrl?: string; // From Solution.baseURL
+    completedAt?: string; // From Solution.createdAt
+    featured?: boolean; // From Solution.isPublic
+    challenges?: string[]; // From Solution.challenges
+    tools?: string[]; // From Solution.tools
+    docsUrl?: string; // From Solution.docsURL
+    slug: string; // From PortfolioAggregator
+  }>;
+  activity: {
+    days: Array<{
+      date: string;
+      count: number;
+      xp: number;
+      types?: Array<{ label: string; count: number }>;
+    }>;
+    currentStreak: number;
+    longestStreak: number;
+    activeDaysCount: number;
+    totalActivities: number;
+    monthlyXp: number;
+  };
+  mockInterviews: {
+    totalInterviews: number;
+    averageScore: number;
+    practicedHours?: number; // From aggregated mock interview data
+    topicBreakdown: Array<{
+      topic: string;
+      score: number;
+    }>;
+    strengths?: string[]; // From mock interview analysis
+    practiceTemplates?: string[]; // Available practice templates
+  };
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon?: string;
+    completed: boolean;
+    progress: number;
+    earnedAt?: string;
+  }>;
+  certificates: Array<{
+    id: string;
+    code: string;
+    courseName: string;
+    finalScore: number;
+    date: string;
+  }>;
+  roadmaps: Array<{
+    id: string;
+    name: string;
+    progress: number;
+    topicsCompleted?: number; // From RoadmapTopic completion count
+    topicsTotal?: number; // From total RoadmapTopic count
+  }>;
+  quizExerciseSummary: {
+    quizzesPassed: number;
+    quizzesTotal: number;
+    quizAvgScore: number;
+    exercisesCompleted: number;
+    exercisesTotal: number;
+    exerciseAvgScore: number;
+  };
+  bootcamps: Array<{
+    id: string;
+    name: string;
+    status: string;
+    completionPercent: number;
+    cohortName?: string; // From Cohort.name
+    score?: number; // From UserCohort.score
+    attendanceRate?: number; // From UserCohort
+    peerRank?: number; // Rank within cohort
+    totalPeers?: number; // Count of UserCohort members
+    startedAt?: string; // From Cohort.startsAt
+    completedAt?: string; // From UserCohort.endedAt
+  }>;
+  skills: Array<{
+    name: string;
+    domain: string;
+    projectCount: number;
+    maxProjectCount: number;
+    coursesCompleted: number;
+  }>;
 }

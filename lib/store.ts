@@ -14,6 +14,7 @@ import {
   type StreakData,
   type ContinueLearningItem,
   type SearchResults,
+  type PortfolioResponse,
   dataStore,
   updateUser as updateUserInStore,
   updateCourse as updateCourseInStore,
@@ -71,7 +72,7 @@ interface AppState {
   getProject: (slug: string) => Project | any;
   getProjectLeaderboard: (projectSlug: string, params?: { size?: number; skip?: number }) => any;
   getGlobalProjectLeaderboard: (params?: { size?: number; skip?: number }) => any;
-  getDeveloperPortfolio: (userId: string) => any;
+  getDeveloperPortfolio: (userId: string) => Promise<PortfolioResponse | null>;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
@@ -442,8 +443,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   getDeveloperPortfolio: async (userId: string) => {
-    // Using dummy data in component - API will be added later
-    return null;
+    try {
+      const { data } = await api.get(`/portfolio/${userId}`);
+      return data?.data as PortfolioResponse;
+    } catch (error) {
+      console.error("Failed to fetch portfolio:", error);
+      return null;
+    }
   },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
