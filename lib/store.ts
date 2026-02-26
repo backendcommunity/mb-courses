@@ -13,6 +13,7 @@ import {
   type Activity,
   type StreakData,
   type ContinueLearningItem,
+  type SearchResults,
   dataStore,
   updateUser as updateUserInStore,
   updateCourse as updateCourseInStore,
@@ -241,6 +242,9 @@ interface AppState {
   getContinueLearning: () => Promise<ContinueLearningItem[]>;
   markActivityRead: (id: string) => Promise<void>;
   markAllActivitiesRead: () => Promise<void>;
+
+  // Epic 6: Global Search
+  search: (query: string) => Promise<SearchResults>;
 
   // Force re-render trigger
   version: number;
@@ -828,6 +832,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   markAllActivitiesRead: async () => {
     await api.patch(`/activities/read-all`);
+  },
+
+  search: async (query: string) => {
+    const { data } = await api.get(`/search`, { params: { q: query } });
+    return data?.data;
   },
 
   saveNote: async (note: string, courseId: string, videoId: string) => {
