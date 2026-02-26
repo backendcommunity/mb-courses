@@ -22,8 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,8 +41,9 @@ import { useAuth } from "@/store/auth";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
-import { updateUser } from "@/lib/data";
+import { updateUser, type Activity } from "@/lib/data";
 import { Loader } from "./ui/loader";
+import { analytics } from "@/lib/analytics";
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
   onMenuToggle?: () => void;
@@ -63,7 +62,7 @@ export function NavigationBar({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
-  const [notifications, setNotifications] = useState<Array<any>>([]);
+  const [notifications, setNotifications] = useState<Activity[]>([]);
   const user = useUser();
 
   // Mock subscription data
@@ -80,6 +79,14 @@ export function NavigationBar({
         skip: 0,
       });
       setNotifications(activities);
+
+      // Epic 5: Track notification panel view
+      const unreadCount = activities.filter((a: Activity) => !a.isRead).length;
+      analytics.track("view_notification_bell", {
+        totalNotifications: activities.length,
+        unreadCount,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
     } finally {
       setIsActivitiesLoading(false);
@@ -164,9 +171,36 @@ export function NavigationBar({
     }
   };
 
-  const handleNotificationClick = (notificationId: string) => {
-    console.log("Clicked notification:", notificationId);
-    setIsNotificationsOpen(false);
+  const handleNotificationClick = async (id: string) => {
+    try {
+      // Mark activity as read via store
+      await store.markActivityRead(id);
+
+      // Find the notification being marked as read for analytics
+      const notification = notifications.find((n) => n.id === id);
+
+      // Update local state to reflect read status
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
+
+      // Decrement the badge count (unread notification count)
+      updateUser({
+        ...user,
+        totalNotifications: Math.max(0, (user?.totalNotifications ?? 0) - 1),
+      });
+
+      // Epic 5: Track notification interaction
+      analytics.track("mark_notification_read", {
+        notificationId: id,
+        notificationType: notification?.type,
+        title: notification?.title,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+    // setIsNotificationsOpen(false);
   };
 
   const handleLogout = async () => {
@@ -190,6 +224,33 @@ export function NavigationBar({
       totalNotifications: user.totalNotifications - ids.length,
     });
     setNotifications([]);
+    setIsNotificationsOpen(false);
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const markedCount = notifications.filter((n: Activity) => !n.isRead).length;
+
+      // Mark all activities as read via store
+      await store.markAllActivitiesRead();
+
+      // Update local state to reflect read status
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+      // Set badge count to 0
+      updateUser({
+        ...user,
+        totalNotifications: 0,
+      });
+
+      // Epic 5: Track mark all read action
+      analytics.track("mark_all_notifications_read", {
+        notificationsMarked: markedCount,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
     setIsNotificationsOpen(false);
   };
 
@@ -472,7 +533,7 @@ export function NavigationBar({
                       <div
                         key={notification.id}
                         className={`p-4 border-b cursor-pointer hover:bg-muted/50 ${
-                          !notification.read ? "bg-primary/5" : ""
+                          !notification.isRead ? "bg-primary/5" : ""
                         }`}
                         onClick={() => handleNotificationClick(notification.id)}
                       >
@@ -500,7 +561,7 @@ export function NavigationBar({
                               {format(notification.createdAt)}
                             </p>
                           </div>
-                          {!notification.read && (
+                          {!notification.isRead && (
                             <div className="w-2 h-2 bg-primary rounded-full" />
                           )}
                         </div>
@@ -510,12 +571,12 @@ export function NavigationBar({
                 )}
                 <div className="p-4 border-t">
                   <Button
-                    onClick={handleDeleteNotifications}
+                    onClick={handleMarkAllRead}
                     variant="ghost"
                     size="sm"
                     className="w-full"
                   >
-                    Clear All Notifications
+                    Mark All as Read
                   </Button>
                 </div>
               </PopoverContent>

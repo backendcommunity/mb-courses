@@ -10,6 +10,9 @@ import {
   type Bootcamp,
   type LearningPath,
   type Roadmap,
+  type Activity,
+  type StreakData,
+  type ContinueLearningItem,
   dataStore,
   updateUser as updateUserInStore,
   updateCourse as updateCourseInStore,
@@ -147,7 +150,7 @@ interface AppState {
   // Actions
   updateUser: (updates: Partial<User>) => any;
   startProject30: (slug: string) => Project30 | any;
-  deleteAccount: () => void;
+  deleteAccount: (email: string) => Promise<any>;
   changePassword: (updates: {
     oldPassword: string;
     newPassword: string;
@@ -232,6 +235,12 @@ interface AppState {
   ) => any;
   executeCode: (payload: { language: string; code: string }) => any;
   createMockInterviewRoom: (userInterviewId: string) => any;
+
+  // Epic 5: Engagement features
+  getStreak: () => Promise<StreakData>;
+  getContinueLearning: () => Promise<ContinueLearningItem[]>;
+  markActivityRead: (id: string) => Promise<void>;
+  markAllActivitiesRead: () => Promise<void>;
 
   // Force re-render trigger
   version: number;
@@ -800,6 +809,25 @@ export const useAppStore = create<AppState>((set, get) => ({
       confirmDelete: true,
     });
     return data?.data;
+  },
+
+  // Epic 5: Engagement features
+  getStreak: async () => {
+    const { data } = await api.get(`/users/streak`);
+    return data?.data;
+  },
+
+  getContinueLearning: async () => {
+    const { data } = await api.get(`/users/continue-learning`);
+    return data?.data;
+  },
+
+  markActivityRead: async (id: string) => {
+    await api.patch(`/activities/${id}/read`);
+  },
+
+  markAllActivitiesRead: async () => {
+    await api.patch(`/activities/read-all`);
   },
 
   saveNote: async (note: string, courseId: string, videoId: string) => {

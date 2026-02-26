@@ -27,11 +27,13 @@ import {
 import { routes } from "@/lib/routes";
 import { Topic } from "@/lib/data";
 import { OnboardingSkipBanner } from "@/components/onboarding/onboarding-skip-banner";
+import { ContinueLearningCard } from "@/components/continue-learning-card";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
 import { useUser } from "@/hooks/use-user";
 import { Loader } from "./ui/loader";
+import { analytics } from "@/lib/analytics";
 
 interface DashboardContentProps {}
 
@@ -79,6 +81,17 @@ export function DashboardContent({}: DashboardContentProps) {
     };
   }, []);
 
+  // Epic 5: Track streak badge view on dashboard load
+  useEffect(() => {
+    if (user?.currentStreak !== undefined || user?.streak !== undefined) {
+      analytics.track("view_streak_badge", {
+        currentStreak: user?.currentStreak ?? user?.streak ?? 0,
+        longestStreak: user?.longestStreak,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, [user?.currentStreak, user?.longestStreak, user?.streak]);
+
   const handleNavigate = (path: string) => {
     router.push(path);
   };
@@ -120,7 +133,6 @@ export function DashboardContent({}: DashboardContentProps) {
       {user?.hasFinishedOnboarding && !user?.experienceLevel && (
         <OnboardingSkipBanner userName={user.name} />
       )}
-
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -135,11 +147,10 @@ export function DashboardContent({}: DashboardContentProps) {
             className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10"
           >
             <Flame className="h-3 w-3 mr-1 text-orange-500" />
-            {user?.streak ?? 0} day streak
+            {user?.currentStreak ?? user?.streak ?? 0} day streak
           </Badge>
         </div>
       </div>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -209,6 +220,8 @@ export function DashboardContent({}: DashboardContentProps) {
           </CardContent>
         </Card>
       </div>
+      {/* Epic 5, Story 5.1: Continue Learning */}
+      <ContinueLearningCard />
 
       {/* Quick Actions */}
       <Card>
@@ -239,7 +252,6 @@ export function DashboardContent({}: DashboardContentProps) {
           </div>
         </CardContent>
       </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
 

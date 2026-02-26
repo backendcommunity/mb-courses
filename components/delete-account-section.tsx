@@ -28,13 +28,14 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
+import { useAppStore } from "@/lib/store";
 
 interface DeleteAccountSectionProps {
   email?: string;
 }
 
 export function DeleteAccountSection({ email }: DeleteAccountSectionProps) {
+  const store = useAppStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [emailInput, setEmailInput] = useState("");
@@ -76,31 +77,20 @@ export function DeleteAccountSection({ email }: DeleteAccountSectionProps) {
       setLoading(true);
       setError(null);
 
-      // Call backend endpoint
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/delete-account`,
-        {
-          email: emailInput,
-          confirmDelete: true,
-        },
-        {
-          withCredentials: true,
-        },
+      // Call store action (Epic 4: Delete account with email verification)
+      await store.deleteAccount(emailInput);
+
+      toast.success(
+        "Account deletion initiated. Check your email for recovery options.",
       );
 
-      if (response.data.success) {
-        toast.success(
-          "Account deletion initiated. Check your email for recovery options.",
-        );
+      // Close modal
+      setShowDeleteModal(false);
 
-        // Close modal and show recovery info
-        setShowDeleteModal(false);
-
-        // Optional: Redirect to a "Account Deletion Initiated" page
-        // setTimeout(() => {
-        //   window.location.href = '/account-deletion-initiated';
-        // }, 2000);
-      }
+      // Optional: Redirect to a "Account Deletion Initiated" page
+      // setTimeout(() => {
+      //   window.location.href = '/account-deletion-initiated';
+      // }, 2000);
     } catch (err: any) {
       console.error("Delete account error:", err);
       const message =

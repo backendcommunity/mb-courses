@@ -41,6 +41,11 @@ export interface User {
   learningGoal?: string | null;
   weeklyCommitment?: string | null;
   preferredLanguage?: ProgrammingLanguage | null;
+  // Epic 5: Streak System
+  currentStreak?: number;
+  longestStreak?: number;
+  // Epic 5: Notifications
+  totalNotifications?: number;
 }
 
 export interface Reward {
@@ -55,6 +60,41 @@ export interface Reward {
   enrolled?: boolean;
   userReward?: any;
   createdAt?: Date | string;
+}
+
+// Epic 5: Activity/Notification types
+export interface Activity {
+  id: string;
+  title?: string;
+  description?: string;
+  type?: string;
+  mb?: number;
+  isRead: boolean;
+  isNotification: boolean;
+  createdAt: Date | string;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
+  isStreakActiveToday: boolean;
+}
+
+export interface ContinueLearningItem {
+  courseId: string;
+  title: string;
+  slug: string;
+  banner?: string;
+  resume: {
+    chapterId?: string | null;
+    chapterTitle?: string | null;
+    videoId?: string | null;
+    videoTitle?: string | null;
+    articleId?: string | null;
+    articleTitle?: string | null;
+  } | null;
+  lastActiveAt: string;
 }
 
 export interface Subscription {
