@@ -793,8 +793,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
-  deleteAccount: async () => {
-    const { data } = await api.delete(`/users`);
+  deleteAccount: async (email: string) => {
+    // Epic 4: Delete account with email verification (works for OAuth & email/password users)
+    const { data } = await api.post(`/users/delete-account`, {
+      email,
+      confirmDelete: true,
+    });
     return data?.data;
   },
 

@@ -22,7 +22,6 @@ import {
   Palette,
   Globe,
   Download,
-  Trash2,
   Key,
   Smartphone,
   Mail,
@@ -36,15 +35,9 @@ import { SoundSettings } from "../sound-settings";
 import { useAppStore } from "@/lib/store";
 import { useUser } from "@/hooks/use-user";
 import { Checkbox } from "../ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
 import { toast } from "sonner";
 import { routes } from "@/lib/routes";
+import { DeleteAccountSection } from "../delete-account-section";
 
 interface SettingsPageProps {
   onNavigate: (path: string) => void;
@@ -56,8 +49,6 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
   const user = useUser();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notMatch, setNotMatch] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -200,20 +191,6 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
       }
 
       setMessage({ type: "error", text: m });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      setLoading(true);
-      if (name !== user?.name) return;
-      await store.deleteAccount();
-      toast.success("Account deleted successfully");
-      onNavigate("/auth/login");
-    } catch (error) {
-      toast.error("Account not deleted. Try again");
     } finally {
       setLoading(false);
     }
@@ -679,52 +656,16 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 <Download className="h-4 w-4" />
                 Export Data
               </Button>
-              <Button
-                onClick={() => setShowDelete(true)}
-                variant="destructive"
-                className="w-full gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Account
-              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <Dialog open={showDelete} onOpenChange={() => setShowDelete(false)}>
-        <DialogContent className="w-[95vw] max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base md:text-lg">
-              Delete your account
-            </DialogTitle>
-            <DialogDescription className="text-sm">
-              Type your name{" "}
-              <span className="italic text-gray-300 bg-gray-700 p-1">
-                {user?.name}
-              </span>{" "}
-              in the box below to delete your account.
-            </DialogDescription>
-          </DialogHeader>
-          <Input value={name} onChange={(e) => setName(e.target.value)}></Input>
-
-          <Button
-            onClick={handleDelete}
-            variant="destructive"
-            disabled={loading}
-            className="w-full gap-2"
-          >
-            {loading ? (
-              "Deleteing..."
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4" />
-                Delete Account
-              </>
-            )}
-          </Button>
-        </DialogContent>
-      </Dialog>
+      {/* Epic 4: Account Deletion Section */}
+      <div className="border-t pt-8">
+        <h2 className="text-2xl font-bold mb-6">Danger Zone</h2>
+        <DeleteAccountSection email={user?.email} />
+      </div>
     </div>
   );
 }
