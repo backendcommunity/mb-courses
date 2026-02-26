@@ -229,9 +229,9 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
 
         {/* Technologies */}
         <div className="flex flex-wrap gap-1">
-          {project.technologies.map((tech) => (
+          {project.technologies.map((tech, idx) => (
             <Badge
-              key={tech}
+              key={`${tech}-${idx}`}
               variant="secondary"
               className="text-[10px] px-2 py-0 font-normal"
             >
@@ -306,8 +306,8 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
                   Challenges Solved
                 </p>
                 <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                  {project.challenges.map((c) => (
-                    <li key={c}>{c}</li>
+                  {project.challenges.map((c, idx) => (
+                    <li key={`${c}-${idx}`}>{c}</li>
                   ))}
                 </ul>
               </div>
@@ -318,9 +318,9 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
                   Tools & Infrastructure
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {project.tools.map((tool) => (
+                  {project.tools.map((tool, idx) => (
                     <Badge
-                      key={tool}
+                      key={`${tool}-${idx}`}
                       variant="outline"
                       className="text-[10px] px-1.5 py-0"
                     >

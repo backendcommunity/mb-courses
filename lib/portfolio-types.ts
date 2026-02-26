@@ -30,7 +30,7 @@ export const RARITY_COLORS: Record<BadgeRarity, string> = {
 export interface PortfolioUser {
   id: string;
   name: string;
-  title: string;
+  username: string;
   bio: string;
   avatar: string;
   location: string;
@@ -191,6 +191,7 @@ export interface PortfolioResponse {
     bio: string;
     avatar: string;
     level: number;
+    username: string; // From user.username
     levelName: string;
     xp?: number; // From user.points
     points: number;
@@ -198,6 +199,8 @@ export interface PortfolioResponse {
     longestStreak: number;
     isVerified?: boolean; // From user.emailConfirmed
     joinedAt: string;
+    location: string; // From user.address
+    openToWork?: boolean; // From user.openToWork
     socialLinks: {
       github?: string;
       linkedin?: string;

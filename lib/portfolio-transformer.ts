@@ -12,10 +12,10 @@ export function transformPortfolioResponse(
     user: {
       id: response.user.id,
       name: response.user.name,
-      title: "", // Not provided by API
+      username: response.user.username, // Not provided by API
       bio: response.user.bio,
       avatar: response.user.avatar,
-      location: "", // Not provided by API
+      location: response.user.location || "",
       level: response.user.level,
       levelName:
         response.user.levelName ||
@@ -26,7 +26,7 @@ export function transformPortfolioResponse(
       points: response.user.points,
       streak: response.user.streak,
       isVerified: response.user.isVerified || false, // ✅ From API (emailConfirmed)
-      isOpenToWork: false, // Not provided by API
+      isOpenToWork: response.user.openToWork || false, // ✅ From API (user.openToWork)
       joinedAt: response.user.joinedAt,
       socialLinks: {
         github: response.user.socialLinks?.github,
