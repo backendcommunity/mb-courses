@@ -151,6 +151,8 @@ export interface PortfolioResponse {
     levelName: string;
     points: number;
     streak: number;
+    username: string;
+    location: string;
     longestStreak: number;
     joinedAt: string;
     socialLinks: {
@@ -174,6 +176,7 @@ export interface PortfolioResponse {
     summary: string;
     technologies: string[];
     isCompleted: boolean;
+    slug: string;
   }>;
   activity: {
     days: Array<{
@@ -231,6 +234,7 @@ export interface PortfolioResponse {
     status: string;
     completionPercent: number;
   }>;
+  skills: Array<any>;
 }
 
 export interface Subscription {
