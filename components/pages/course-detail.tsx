@@ -107,7 +107,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
         // onNavigate(routes.checkout("course", courseId));
         break;
       case "mb":
-        setCourse((prev) => prev ? { ...prev, enrolled: true } : prev);
+        setCourse((prev) => (prev ? { ...prev, enrolled: true } : prev));
         // onNavigate(routes.xpRedeem("course", courseId));
         break;
     }
@@ -167,21 +167,12 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       userChapters?.filter((c) => c.isCompleted)?.map((v) => v.chapterId),
     );
 
-    console.log(watchedChapterIds, watchedVideoIds);
-
     const nextChapter =
       course?.chapters.find((c) => !watchedChapterIds.has(c.id)) ||
       course?.chapters?.[0];
-
-    console.log(nextChapter, course);
-
     const nextVideo =
       nextChapter?.videos?.find((v: Video) => !watchedVideoIds.has(v.id)) ||
       nextChapter?.videos?.[0];
-
-    console.log(slug, nextChapter?.slug!, nextVideo?.slug);
-
-    return;
 
     const watchPath = routes.courseWatch(
       slug,
