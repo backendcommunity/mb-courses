@@ -17,6 +17,7 @@ import {
   Twitter,
   Hash,
   Calendar,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { PortfolioUser, PortfolioStats } from "@/lib/portfolio-types";
@@ -133,6 +134,12 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
               </h1>
               {user.isVerified && (
                 <CheckCircle2 className="h-5 w-5 text-[#13AECE] shrink-0" />
+              )}
+              {user.isPremium && (
+                <Badge className="bg-[#F2C94C]/15 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20 text-[10px] px-1.5 py-0 gap-0.5">
+                  <Crown className="h-2.5 w-2.5 fill-current" />
+                  {user.isTrial ? "Trial" : "Pro"}
+                </Badge>
               )}
               {user.isOpenToWork && (
                 <span className="inline-flex items-center gap-1.5 bg-[#27AE60]/15 border border-[#27AE60]/25 rounded-full px-2.5 py-0.5">

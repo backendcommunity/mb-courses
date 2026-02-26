@@ -41,6 +41,8 @@ export interface PortfolioUser {
   points: number;
   streak: number;
   isVerified: boolean;
+  isPremium: boolean;
+  isTrial: boolean;
   isOpenToWork: boolean;
   joinedAt: string;
   socialLinks: {
@@ -85,6 +87,7 @@ export interface PortfolioProject {
   challenges?: string[];
   tools?: string[];
   docsUrl?: string;
+  slug: string;
 }
 
 export interface ActivityDay {
@@ -198,6 +201,8 @@ export interface PortfolioResponse {
     streak: number;
     longestStreak: number;
     isVerified?: boolean; // From user.emailConfirmed
+    isPremium?: boolean; // From User.isPremium
+    isTrial?: boolean; // From User.isTrial
     joinedAt: string;
     location: string; // From user.address
     openToWork?: boolean; // From user.openToWork
@@ -231,6 +236,7 @@ export interface PortfolioResponse {
     challenges?: string[]; // From Solution.challenges
     tools?: string[]; // From Solution.tools
     docsUrl?: string; // From Solution.docsURL
+    slug: string; // From PortfolioAggregator
   }>;
   activity: {
     days: Array<{
@@ -299,5 +305,12 @@ export interface PortfolioResponse {
     totalPeers?: number; // Count of UserCohort members
     startedAt?: string; // From Cohort.startsAt
     completedAt?: string; // From UserCohort.endedAt
+  }>;
+  skills: Array<{
+    name: string;
+    domain: string;
+    projectCount: number;
+    maxProjectCount: number;
+    coursesCompleted: number;
   }>;
 }

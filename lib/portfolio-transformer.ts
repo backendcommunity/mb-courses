@@ -1,4 +1,8 @@
-import type { PortfolioResponse, PortfolioData } from "./portfolio-types";
+import type {
+  PortfolioResponse,
+  PortfolioData,
+  SkillDomain,
+} from "./portfolio-types";
 import { LEVEL_NAMES } from "./portfolio-types";
 
 /**
@@ -26,6 +30,8 @@ export function transformPortfolioResponse(
       points: response.user.points,
       streak: response.user.streak,
       isVerified: response.user.isVerified || false, // ✅ From API (emailConfirmed)
+      isPremium: response.user.isPremium ?? false, // ✅ From API (User.isPremium)
+      isTrial: response.user.isTrial ?? false, // ✅ From API (User.isTrial)
       isOpenToWork: response.user.openToWork || false, // ✅ From API (user.openToWork)
       joinedAt: response.user.joinedAt,
       socialLinks: {
@@ -43,7 +49,13 @@ export function transformPortfolioResponse(
       globalRank: response.stats.globalRank,
       totalUsers: response.stats.totalUsers,
     },
-    skills: [], // Not provided by API - could be derived from projects in future
+    skills: (response.skills ?? []).map((s) => ({
+      name: s.name,
+      domain: s.domain as SkillDomain,
+      projectCount: s.projectCount,
+      maxProjectCount: s.maxProjectCount,
+      coursesCompleted: s.coursesCompleted || 0,
+    })),
     projects: response.projects.map((p) => ({
       id: p.id,
       title: p.title,
@@ -60,6 +72,7 @@ export function transformPortfolioResponse(
       challenges: p.challenges, // ✅ From API (Solution.challenges)
       tools: p.tools, // ✅ From API (Solution.tools)
       docsUrl: p.docsUrl, // ✅ From API (Solution.docsURL)
+      slug: p.slug, // ✅ From API (added in PortfolioAggregator)
     })),
     activity: {
       days: response.activity.days.map((d) => ({
