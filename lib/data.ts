@@ -97,6 +97,49 @@ export interface ContinueLearningItem {
   lastActiveAt: string;
 }
 
+// Epic 6: Global Search types
+export interface SearchResultCourse {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  banner?: string;
+  level?: string;
+  isPremium?: boolean;
+  isEnrolled: boolean;
+  isCompleted: boolean;
+}
+
+export interface SearchResultRoadmap {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  banner?: string;
+}
+
+export interface SearchResultProject {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  level?: string;
+}
+
+export interface SearchResultBootcamp {
+  id: string;
+  title: string;
+  summary?: string;
+}
+
+export interface SearchResults {
+  courses: SearchResultCourse[];
+  roadmaps: SearchResultRoadmap[];
+  projects: SearchResultProject[];
+  bootcamps: SearchResultBootcamp[];
+  total: number;
+}
+
 export interface Subscription {
   id: string;
   name: string;
