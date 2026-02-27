@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,10 @@ import {
   Trophy,
   Calendar,
   Award,
+  Download,
+  Loader2,
+  Flame,
+  Lock,
 } from "lucide-react";
 
 import { useUser } from "@/hooks/use-user";
@@ -44,16 +48,27 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [achievements, setAchievements] = useState<any[]>([]);
   const { level, mbToNextLevel } = useLevel();
 
+  // File input refs
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload states
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user?.phone,
-    address: user?.address,
-    bio: user?.bio,
-    website: user?.website,
-    github: user?.github,
-    linkedin: user?.linkedin,
-    country: user?.country,
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: user?.address || "",
+    bio: user?.bio || "",
+    website: user?.website || "",
+    github: user?.github || "",
+    linkedin: user?.linkedin || "",
+    country: user?.country || "",
+    title: user?.title || "",
+    username: user?.username || "",
+    openToWork: user?.openToWork ?? false,
+    twitter: user?.twitter || "",
+    resume: user?.resume || "",
   });
 
   useEffect(() => {
@@ -83,37 +98,99 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   }, []);
 
   const handleSave = async () => {
-    // In a real app, this would save to the backend
-    const user = await store.updateUser(formData);
-    if (user) updateUser(user!);
+    // Exclude email from update (read-only field)
+    const { email, ...updateData } = formData;
+    const updatedUser = await store.updateUser(updateData);
+    if (updatedUser) updateUser(updatedUser!);
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset form data
+    // Reset form data to current user values
     setFormData({
-      name: user.name,
-      email: user.email,
-      phone: user?.phone,
-      address: user?.address,
-      bio: user?.bio,
-      website: user?.website,
-      github: user?.github,
-      linkedin: user?.linkedin,
-      country: user?.country,
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      bio: user?.bio || "",
+      website: user?.website || "",
+      github: user?.github || "",
+      linkedin: user?.linkedin || "",
+      country: user?.country || "",
+      title: user?.title || "",
+      username: user?.username || "",
+      openToWork: user?.openToWork ?? false,
+      twitter: user?.twitter || "",
+      resume: user?.resume || "",
     });
   };
 
+  // Avatar upload handler
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarUploading(true);
+    try {
+      const { signedUrl, publicUrl } = await store.getUploadUrl("avatar");
+
+      // Convert File to ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+
+      // Upload directly to R2 using presigned URL
+      const response = await fetch(signedUrl, {
+        method: "PUT",
+        body: arrayBuffer,
+        headers: {
+          "Content-Type": "image/jpeg",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
+      }
+
+      // Save the public URL to user profile
+      const updated = await store.updateUser({ avatar: publicUrl });
+      if (updated) updateUser(updated);
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+
+  // Statistics with real data (not dummy)
   const stats = [
     {
       label: "Courses Completed",
-      value: user.numberOfCoursesCompleted,
+      value: user?.numberOfCoursesCompleted ?? 0,
       icon: Trophy,
     },
-    { label: "Projects Built", value: user.numberOfProjectsBuilt, icon: Award },
-    { label: "Total MB", value: user?.points?.toLocaleString(), icon: Star },
-    { label: "Learning Streak", value: user.streak + " days", icon: Calendar },
+    {
+      label: "Projects Built",
+      value: user?.numberOfProjectsBuilt ?? 0,
+      icon: Award,
+    },
+    {
+      label: "Total MB",
+      value: user?.points?.toLocaleString() ?? "0",
+      icon: Star,
+    },
+    {
+      label: "Current Streak",
+      value: `${user?.currentStreak ?? user?.streak ?? 0} days`,
+      icon: Calendar,
+    },
+    {
+      label: "Longest Streak",
+      value: `${user?.longestStreak ?? 0} days`,
+      icon: Flame,
+    },
   ];
 
   return (
@@ -158,7 +235,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-2 border-border">
                     <AvatarImage
-                      src={user.avatar || "/placeholder.svg"}
+                      src={user?.avatar || "/placeholder.svg"}
                       alt={formData.name}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-lg">
@@ -166,12 +243,27 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button
-                      size="sm"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                    >
-                      <Edit3 className="h-3 w-3" />
-                    </Button>
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
+                      <Button
+                        size="sm"
+                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={avatarUploading}
+                      >
+                        {avatarUploading ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Edit3 className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </>
                   )}
                 </div>
                 <div className="flex-1 space-y-4">
@@ -194,15 +286,17 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className="flex items-center gap-2">
+                        Email
+                        {isEditing && <Lock className="h-3 w-3 text-muted-foreground" />}
+                      </Label>
                       {isEditing ? (
                         <Input
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
-                          }
+                          disabled
+                          className="bg-muted cursor-not-allowed"
                         />
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
@@ -212,6 +306,48 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       )}
                     </div>
                   </div>
+
+                  {/* New fields: Title & Username */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title</Label>
+                      {isEditing ? (
+                        <Input
+                          id="title"
+                          placeholder="e.g., Senior Backend Engineer"
+                          value={formData.title}
+                          onChange={(e) =>
+                            setFormData({ ...formData, title: e.target.value })
+                          }
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          {formData.title || "Not specified"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      {isEditing ? (
+                        <Input
+                          id="username"
+                          placeholder="username"
+                          value={formData.username}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              username: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          {formData.username || "Not specified"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
@@ -226,7 +362,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-primary" />
-                          {formData.phone}
+                          {formData.phone || "Not specified"}
                         </div>
                       )}
                     </div>
@@ -246,11 +382,12 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
-                          {formData?.address}
+                          {formData?.address || "Not specified"}
                         </div>
                       )}
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="country">Country</Label>
@@ -268,7 +405,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
-                          {formData?.country}
+                          {formData?.country || "Not specified"}
                         </div>
                       )}
                     </div>
@@ -292,8 +429,101 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                   />
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    {formData.bio}
+                    {formData.bio || "Not specified"}
                   </p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Professional Info: Open to Work & Twitter */}
+              <div className="space-y-4">
+                <Label>Professional Info</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="twitter" className="text-xs">
+                      Twitter/X
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        id="twitter"
+                        placeholder="twitter_handle"
+                        value={formData.twitter}
+                        onChange={(e) =>
+                          setFormData({ ...formData, twitter: e.target.value })
+                        }
+                      />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        {formData.twitter ? `@${formData.twitter}` : "Not specified"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="openToWork" className="text-xs">
+                        Open to Work
+                      </Label>
+                      {isEditing ? (
+                        <input
+                          id="openToWork"
+                          type="checkbox"
+                          checked={formData.openToWork}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              openToWork: e.target.checked,
+                            })
+                          }
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                      ) : (
+                        <Badge
+                          variant={formData.openToWork ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {formData.openToWork ? "Yes" : "No"}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Resume URL */}
+              <div className="space-y-2">
+                <Label htmlFor="resume">Resume URL</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Input
+                      id="resume"
+                      type="url"
+                      placeholder="https://example.com/resume.pdf"
+                      value={formData.resume}
+                      onChange={(e) =>
+                        setFormData({ ...formData, resume: e.target.value })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Link to your resume PDF or document
+                    </p>
+                  </div>
+                ) : formData.resume ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={formData.resume}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      View Resume
+                    </a>
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No resume link added</p>
                 )}
               </div>
 
@@ -326,7 +556,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         >
                           {formData.website
                             ? formData.website.substring(0, 20) + "..."
-                            : ""}
+                            : "Not specified"}
                         </a>
                       </div>
                     )}
@@ -354,7 +584,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         >
                           {formData.github
                             ? formData.github?.substring(0, 20) + "..."
-                            : ""}
+                            : "Not specified"}
                         </a>
                       </div>
                     )}
@@ -382,7 +612,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         >
                           {formData?.linkedin
                             ? formData?.linkedin.substring(0, 20) + "..."
-                            : ""}
+                            : "Not specified"}
                         </a>
                       </div>
                     )}

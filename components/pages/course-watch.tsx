@@ -101,6 +101,14 @@ export function CourseWatchPage({
     setLoading(true);
     async function findUserCourse(slug: string) {
       const userCourse = await store.getUserCourse(slug);
+
+      // Redirect if user is not enrolled in the course
+      if (!userCourse || !userCourse.id) {
+        onNavigate?.(routes.courseDetail(slug));
+        setLoading(false);
+        return;
+      }
+
       setCourse(userCourse.course);
       setUserCourse(userCourse);
       setUserChapters(userCourse?.userChapters);
@@ -122,7 +130,7 @@ export function CourseWatchPage({
   }, [slug]);
 
   useMemo(() => {
-    if (activeTab.includes("notes")) {
+    if (activeTab?.includes("notes")) {
       loadNotes(slug, currentVideo?.slug!);
     }
   }, [activeTab, slug, currentVideo?.slug]);
@@ -147,7 +155,9 @@ export function CourseWatchPage({
       const isChapterCompleted = allVideosComplete && !hasOtherContent;
 
       // Update local state: remove duplicates and add the completed video
-      const existingVideoIds = new Set((userVideos ?? []).map((v) => v.videoId));
+      const existingVideoIds = new Set(
+        (userVideos ?? []).map((v) => v.videoId),
+      );
       const completedVideos = [
         ...(userVideos ?? []).filter((v) => v.videoId !== currentVideo.id),
         {
@@ -160,7 +170,9 @@ export function CourseWatchPage({
 
       // Update UserChapter locally
       const userChapter = [
-        ...(userChapters ?? []).filter((ch: UserChapter) => ch.chapterId !== chapter.id),
+        ...(userChapters ?? []).filter(
+          (ch: UserChapter) => ch.chapterId !== chapter.id,
+        ),
         {
           chapterId: chapter.id,
           isCompleted: isChapterCompleted,

@@ -151,6 +151,7 @@ interface AppState {
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
+  getUploadUrl: (type: "avatar" | "resume") => Promise<{ signedUrl: string; publicUrl: string; key: string }>;
   startProject30: (slug: string) => Project30 | any;
   deleteAccount: (email: string) => Promise<any>;
   changePassword: (updates: {
@@ -877,6 +878,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateUserInStore(data?.data);
     get().forceUpdate();
     return data?.data;
+  },
+
+  getUploadUrl: async (type: "avatar" | "resume") => {
+    const { data } = await api.get(`/users/upload-url?type=${type}`);
+    return data?.data as { signedUrl: string; publicUrl: string; key: string };
   },
 
   savePlayground: async (payload: any) => {
