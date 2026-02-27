@@ -127,25 +127,6 @@ export function CourseWatchPage({
     }
   }, [activeTab, slug, currentVideo?.slug]);
 
-  if (loading) return <Loader isLoader={false} />;
-
-  if (!course || !chapter) {
-    return (
-      <div className="flex-1 p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Chapter not found</h1>
-          <Button
-            onClick={() => onNavigate?.(routes.courseDetail(slug))}
-            className="mt-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Course
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   const handleMarkComplete = useCallback(async () => {
     if (!currentVideo || !course || !chapter) return;
 
@@ -198,6 +179,25 @@ export function CourseWatchPage({
       toast.error("An error occurred. Please try again");
     }
   }, [currentVideo, course, chapter, userVideos, userChapters]);
+
+  if (loading) return <Loader isLoader={false} />;
+
+  if (!course || !chapter) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Chapter not found</h1>
+          <Button
+            onClick={() => onNavigate?.(routes.courseDetail(slug))}
+            className="mt-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Course
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const isChapterCompleted = (chapterId: string) => {
     return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)

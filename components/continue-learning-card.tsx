@@ -151,16 +151,23 @@ export function ContinueLearningCard() {
                     // Navigate to the exact resume point (chapter + video/article)
                     let targetUrl = `/courses/${course.slug}`;
 
-                    if (course.resume && (course.resume.videoId || course.resume.articleId)) {
+                    if (
+                      course.resume &&
+                      (course.resume.videoId || course.resume.articleId)
+                    ) {
                       const fullCourse = courseData[course.courseId];
                       if (fullCourse) {
                         // Find chapter slug containing the video/article
                         const chapter = fullCourse.chapters?.find((ch: any) => {
                           if (course.resume?.videoId) {
-                            return ch.videos?.some((v: any) => v.id === course.resume?.videoId);
+                            return ch.videos?.some(
+                              (v: any) => v.id === course.resume?.videoId,
+                            );
                           }
                           if (course.resume?.articleId) {
-                            return ch.articles?.some((a: any) => a.id === course.resume?.articleId);
+                            return ch.articles?.some(
+                              (a: any) => a.id === course.resume?.articleId,
+                            );
                           }
                           return false;
                         });
@@ -168,17 +175,17 @@ export function ContinueLearningCard() {
                         if (chapter) {
                           if (course.resume?.videoId) {
                             const video = chapter.videos?.find(
-                              (v: any) => v.id === course.resume?.videoId
+                              (v: any) => v.id === course.resume?.videoId,
                             );
                             if (video) {
-                              targetUrl = `/courses/${course.slug}/${chapter.slug}/${video.slug}`;
+                              targetUrl = `/courses/${course.slug}/watch/${chapter.slug}/${video.slug}`;
                             }
                           } else if (course.resume?.articleId) {
                             const article = chapter.articles?.find(
-                              (a: any) => a.id === course.resume?.articleId
+                              (a: any) => a.id === course.resume?.articleId,
                             );
                             if (article) {
-                              targetUrl = `/courses/${course.slug}/${chapter.slug}/${article.slug}`;
+                              targetUrl = `/courses/${course.slug}/watch/${chapter.slug}/${article.slug}`;
                             }
                           }
                         }
