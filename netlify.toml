@@ -3,32 +3,10 @@
   publish = ".next"
 
 [build.environment]
-  NODE_ENV = "production"
   NODE_VERSION = "18"
 
 # Cache the .next directory between builds
-[build.cache]
-  paths = [".next/cache/**"]
-
-# Redirect all dynamic routes to Next.js
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/___next"
+  to = "/index.html"
   status = 200
-  conditions = { NOT = [{role = "next-middleware"}] }
-
-[[redirects]]
-  from = "/_next/static/*"
-  to = "/_next/static/:splat"
-  status = 200
-
-# Error pages
-[[redirects]]
-  from = "/404"
-  to = "/.netlify/functions/___next"
-  status = 404
-
-[[redirects]]
-  from = "/500"
-  to = "/.netlify/functions/___next"
-  status = 500
