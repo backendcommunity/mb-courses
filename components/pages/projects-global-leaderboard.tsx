@@ -66,12 +66,6 @@ export function GlobalLeaderboardPage({
         setTopUsers(topUsersData);
         setListUsers(leaderboardUsersData);
         setCurrentUser(currentUserData);
-
-        console.log("Fetched leaderboard:", {
-          topUsers: topUsersData,
-          leaderboardUsers: leaderboardUsersData,
-          currentUser: currentUserData,
-        });
       } catch (error) {
         console.error("Failed to fetch leaderboard:", error);
         toast.error("Failed to load leaderboard");
@@ -124,7 +118,7 @@ export function GlobalLeaderboardPage({
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Trophy className="h-8 w-8 text-yellow-500" />
-            Global Project Leaderboard
+            Project Leaderboard
           </h1>
           <p className="text-muted-foreground">
             Top developers ranked by total project points across all MB Projects
