@@ -83,8 +83,8 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                 userReward,
                 enrolled: true,
               }
-            : r
-        )
+            : r,
+        ),
       );
       setRedeemReward(false);
       toast.success("You've redeemed this reward");
@@ -134,7 +134,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
               {rewards
                 ?.sort(
                   (a: Reward | any, b: Reward | any) =>
-                    b?.enrolled - a?.enrolled
+                    b?.enrolled - a?.enrolled,
                 )
                 ?.map((reward: Reward) => (
                   <Card
@@ -204,7 +204,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
 
         <TabsContent value="achievements" className="space-y-4">
           <div className="grid gap-4">
-            {!achievements.length && (
+            {!achievements?.length && (
               <div className="text-center p-8">
                 <p className="text-muted-foreground">
                   You do not have any achievement at this moment. The quickest
@@ -308,8 +308,8 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                           redemption.active
                             ? "default"
                             : redemption.completed
-                            ? "secondary"
-                            : "outline"
+                              ? "secondary"
+                              : "outline"
                         }
                       >
                         {redemption.active ? "Active" : "Inactive"}
