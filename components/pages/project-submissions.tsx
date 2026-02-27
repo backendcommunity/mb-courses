@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,8 +134,10 @@ export function ProjectSubmissionsPage({
 
   const getLevelBadge = (level: string) => {
     const colors: Record<string, string> = {
-      beginners: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-      intermediate: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
+      beginners:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+      intermediate:
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
       advance: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
     };
     return (
@@ -158,8 +155,10 @@ export function ProjectSubmissionsPage({
     rejected: submissions.filter((s) => s.status === "rejected").length,
     averageScore:
       submissions.filter((s) => s.score).length > 0
-        ? submissions.filter((s) => s.score).reduce((acc, s) => acc + s.score, 0) /
-        submissions.filter((s) => s.score).length
+        ? submissions
+            .filter((s) => s.score)
+            .reduce((acc, s) => acc + s.score, 0) /
+          submissions.filter((s) => s.score).length
         : 0,
   };
 
@@ -186,20 +185,22 @@ export function ProjectSubmissionsPage({
       <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
         <button
           onClick={() => setViewMode("mine")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "mine"
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            viewMode === "mine"
               ? "bg-background shadow-sm text-foreground"
               : "text-muted-foreground hover:text-foreground"
-            }`}
+          }`}
         >
           <User className="h-4 w-4" />
           My Submissions
         </button>
         <button
           onClick={() => setViewMode("all")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "all"
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            viewMode === "all"
               ? "bg-background shadow-sm text-foreground"
               : "text-muted-foreground hover:text-foreground"
-            }`}
+          }`}
         >
           <Users className="h-4 w-4" />
           All Submissions
@@ -302,7 +303,8 @@ export function ProjectSubmissionsPage({
                       <CardTitle className="text-lg">
                         {submission.project?.title}
                       </CardTitle>
-                      {submission.project?.level && getLevelBadge(submission.project.level)}
+                      {submission.project?.level &&
+                        getLevelBadge(submission.project.level)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       {/* Show submitter name in "All" mode */}
@@ -315,7 +317,10 @@ export function ProjectSubmissionsPage({
                       {submission.submittedAt && (
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+                          Submitted{" "}
+                          {new Date(
+                            submission.submittedAt,
+                          ).toLocaleDateString()}
                         </div>
                       )}
                       {submission.score != null && (
@@ -345,10 +350,13 @@ export function ProjectSubmissionsPage({
                 {/* Feedback */}
                 {submission.feedback && (
                   <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-medium mb-1">Reviewer Feedback:</p>
-                    <p className="text-sm text-muted-foreground">
-                      {submission.feedback}
+                    <p className="text-sm font-medium mb-1">
+                      Reviewer Feedback:
                     </p>
+                    <p
+                      className="text-sm text-muted-foreground"
+                      dangerouslySetInnerHTML={{ __html: submission.feedback }}
+                    ></p>
                   </div>
                 )}
 
@@ -401,7 +409,9 @@ export function ProjectSubmissionsPage({
             <Card>
               <CardContent className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No submissions found</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  No submissions found
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery || statusFilter !== "all"
                     ? "Try adjusting your filters"
