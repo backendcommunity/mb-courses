@@ -4,6 +4,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig = {
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   eslint: {
     ignoreDuringBuilds: true,
   },
