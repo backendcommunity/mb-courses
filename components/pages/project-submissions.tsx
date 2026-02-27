@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -31,6 +30,8 @@ import {
   XCircle,
   Calendar,
   Star,
+  Users,
+  User,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
@@ -38,6 +39,8 @@ import { Loader } from "../ui/loader";
 interface ProjectSubmissionsPageProps {
   onNavigate?: (path: string) => void;
 }
+
+type ViewMode = "mine" | "all";
 
 export function ProjectSubmissionsPage({
   onNavigate,
@@ -48,17 +51,18 @@ export function ProjectSubmissionsPage({
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("mine");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
-  // Fetch submissions
+  // Fetch submissions when filters change
   useEffect(() => {
     async function fetchSubmissions() {
       try {
         setLoading(true);
         const data = await store.getProjectSubmissions({
           status: statusFilter === "all" ? undefined : statusFilter,
-          mine: true,
+          mine: viewMode === "mine",
           page: currentPage,
           pageSize,
         });
@@ -72,28 +76,37 @@ export function ProjectSubmissionsPage({
     }
 
     fetchSubmissions();
-  }, [statusFilter, currentPage]);
+  }, [statusFilter, viewMode, currentPage]);
 
-  // Fetch stats
+  // Fetch stats — scoped to current view mode
   useEffect(() => {
     async function fetchStats() {
       try {
-        const data = await store.getSubmissionStats({ mine: true });
+        const data = await store.getSubmissionStats({
+          mine: viewMode === "mine",
+        });
         setStats(data);
       } catch (error) {
         console.error("Failed to fetch stats:", error);
+        setStats(null);
       }
     }
 
     fetchStats();
-  }, []);
+  }, [viewMode]);
+
+  // Reset to page 1 when switching modes
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery("");
+    setStatusFilter("all");
+  }, [viewMode]);
 
   const filteredSubmissions = submissions.filter((submission) => {
     if (!searchQuery) return true;
-    const matchesSearch = submission.project?.title
+    return submission.project?.title
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return matchesSearch;
   });
 
   const getStatusBadge = (status: string) => {
@@ -125,36 +138,30 @@ export function ProjectSubmissionsPage({
   };
 
   const getLevelBadge = (level: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       beginners: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
       intermediate: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
       advance: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
     };
     return (
-      <Badge className={colors[level as keyof typeof colors] || ""}>
+      <Badge className={colors[level] || "bg-muted text-muted-foreground"}>
         {level}
       </Badge>
     );
   };
 
-  // Calculate stats from API or use provided stats
+  // Computed stats: use API stats or fall back to local calculation
   const displayStats = stats || {
     total: submissions.length,
     approved: submissions.filter((s) => s.status === "approved").length,
     pending: submissions.filter((s) => s.status === "pending").length,
     rejected: submissions.filter((s) => s.status === "rejected").length,
     averageScore:
-      submissions.filter((s) => s.score).reduce((acc, s) => acc + s.score, 0) /
-      submissions.filter((s) => s.score).length || 0,
+      submissions.filter((s) => s.score).length > 0
+        ? submissions.filter((s) => s.score).reduce((acc, s) => acc + s.score, 0) /
+        submissions.filter((s) => s.score).length
+        : 0,
   };
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[400px]">
-        <Loader isLoader={true} />
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 space-y-6">
@@ -164,11 +171,39 @@ export function ProjectSubmissionsPage({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">My Submissions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {viewMode === "mine" ? "My Submissions" : "All Submissions"}
+          </h1>
           <p className="text-muted-foreground">
-            Track your project submissions and feedback
+            {viewMode === "mine"
+              ? "Track your project submissions and feedback"
+              : "Browse all project submissions from the community"}
           </p>
         </div>
+      </div>
+
+      {/* View Toggle */}
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+        <button
+          onClick={() => setViewMode("mine")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "mine"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          <User className="h-4 w-4" />
+          My Submissions
+        </button>
+        <button
+          onClick={() => setViewMode("all")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "all"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          <Users className="h-4 w-4" />
+          All Submissions
+        </button>
       </div>
 
       {/* Stats */}
@@ -219,7 +254,9 @@ export function ProjectSubmissionsPage({
             <Trophy className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{displayStats.averageScore.toFixed(0)}%</div>
+            <div className="text-2xl font-bold">
+              {Number(displayStats.averageScore || 0).toFixed(0)}%
+            </div>
             <p className="text-xs text-muted-foreground">average</p>
           </CardContent>
         </Card>
@@ -250,115 +287,138 @@ export function ProjectSubmissionsPage({
       </div>
 
       {/* Submissions List */}
-      <div className="space-y-4">
-        {filteredSubmissions.map((submission) => (
-          <Card key={submission.id} className="overflow-hidden">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="text-lg">
-                      {submission.project.title}
-                    </CardTitle>
-                    {getLevelBadge(submission.project.level)}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader isLoader={true} />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredSubmissions.map((submission) => (
+            <Card key={submission.id} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CardTitle className="text-lg">
+                        {submission.project?.title}
+                      </CardTitle>
+                      {submission.project?.level && getLevelBadge(submission.project.level)}
                     </div>
-                    {submission.score && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-600" />
-                        Score: {submission.score}%
-                      </div>
-                    )}
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      {/* Show submitter name in "All" mode */}
+                      {viewMode === "all" && submission.user?.name && (
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          {submission.user.name}
+                        </div>
+                      )}
+                      {submission.submittedAt && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+                        </div>
+                      )}
+                      {submission.score != null && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-600" />
+                          Score: {submission.score}%
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  {getStatusBadge(submission.status)}
                 </div>
-                {getStatusBadge(submission.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Technologies */}
-              <div className="flex flex-wrap gap-2">
-                {submission.technologies.map((tech: string) => (
-                  <Badge key={tech} variant="outline" className="text-xs">
-                    <Code2 className="h-3 w-3 mr-1" />
-                    {tech}
-                  </Badge>
-                ))}
-              </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Technologies */}
+                {submission.technologies?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {submission.technologies.map((tech: string) => (
+                      <Badge key={tech} variant="outline" className="text-xs">
+                        <Code2 className="h-3 w-3 mr-1" />
+                        {tech}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
-              {/* Feedback */}
-              {submission.feedback && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-1">Reviewer Feedback:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {submission.feedback}
-                  </p>
-                </div>
-              )}
+                {/* Feedback */}
+                {submission.feedback && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium mb-1">Reviewer Feedback:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {submission.feedback}
+                    </p>
+                  </div>
+                )}
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2">
-                {submission.repositoryUrl && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={submission.repositoryUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2">
+                  {submission.repositoryUrl && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={submission.repositoryUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Github className="h-4 w-4 mr-2" />
+                        View Repository
+                      </a>
+                    </Button>
+                  )}
+                  {submission.liveUrl && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={submission.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Live Demo
+                      </a>
+                    </Button>
+                  )}
+                  {submission.project?.slug && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        onNavigate?.(`/projects/${submission.project.slug}`)
+                      }
                     >
-                      <Github className="h-4 w-4 mr-2" />
-                      View Repository
-                    </a>
+                      View Project Details
+                    </Button>
+                  )}
+                  {viewMode === "mine" && submission.status === "rejected" && (
+                    <Button size="sm">Resubmit Project</Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {filteredSubmissions.length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No submissions found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery || statusFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : viewMode === "mine"
+                      ? "Start working on projects to see your submissions here"
+                      : "No community submissions yet"}
+                </p>
+                {viewMode === "mine" && (
+                  <Button onClick={() => onNavigate?.("/projects")}>
+                    Browse Projects
                   </Button>
                 )}
-                {submission.liveUrl && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={submission.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Live Demo
-                    </a>
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    onNavigate?.(`/projects/${submission.project.slug}`)
-                  }
-                >
-                  View Project Details
-                </Button>
-                {submission.status === "rejected" && (
-                  <Button size="sm">Resubmit Project</Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {filteredSubmissions.length === 0 && (
-          <Card>
-            <CardContent className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No submissions found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery || statusFilter !== "all"
-                  ? "Try adjusting your filters"
-                  : "Start working on projects to see your submissions here"}
-              </p>
-              <Button onClick={() => onNavigate?.("/projects")}>
-                Browse Projects
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }
