@@ -191,7 +191,8 @@ export function NavigationBar({
           setExploreSearchQuery("");
           // Return focus to the search input
           setTimeout(() => {
-            const searchInput = exploreSearchRef.current?.querySelector("input");
+            const searchInput =
+              exploreSearchRef.current?.querySelector("input");
             searchInput?.blur();
           }, 0);
         }
@@ -1083,7 +1084,9 @@ export function NavigationBar({
                   <span>Project30</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.portfolio(user?.id || ""))}>
+                <DropdownMenuItem
+                  onClick={() => onNavigate(routes.portfolio(user?.id || ""))}
+                >
                   <User className="mr-2 h-4 w-4" />
                   <span>My Portfolio</span>
                 </DropdownMenuItem>

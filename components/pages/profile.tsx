@@ -69,6 +69,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     openToWork: user?.openToWork ?? false,
     twitter: user?.twitter || "",
     resume: user?.resume || "",
+    avatar: user?.avatar || "",
   });
 
   useEffect(() => {
@@ -101,7 +102,27 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     // Exclude email from update (read-only field)
     const { email, ...updateData } = formData;
     const updatedUser = await store.updateUser(updateData);
-    if (updatedUser) updateUser(updatedUser!);
+    if (updatedUser) {
+      updateUser(updatedUser!);
+      // Force state update to trigger re-render
+      setFormData({
+        name: updatedUser?.name || "",
+        email: updatedUser?.email || "",
+        phone: updatedUser?.phone || "",
+        address: updatedUser?.address || "",
+        bio: updatedUser?.bio || "",
+        website: updatedUser?.website || "",
+        github: updatedUser?.github || "",
+        linkedin: updatedUser?.linkedin || "",
+        country: updatedUser?.country || "",
+        title: updatedUser?.title || "",
+        username: updatedUser?.username || "",
+        openToWork: updatedUser?.openToWork ?? false,
+        twitter: updatedUser?.twitter || "",
+        resume: updatedUser?.resume || "",
+        avatar: updatedUser?.avatar || "",
+      });
+    }
     setIsEditing(false);
   };
 
@@ -123,6 +144,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       openToWork: user?.openToWork ?? false,
       twitter: user?.twitter || "",
       resume: user?.resume || "",
+      avatar: user?.avatar || "",
     });
   };
 
@@ -130,6 +152,13 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    //get image url from file here
+    const imageUrl = URL.createObjectURL(file);
+    // set a temporary preview URL while uploading
+    setFormData((prev) => ({ ...prev, avatar: imageUrl }));
+    // update localstorage user data immediately for instant UI update
+    localStorage.setItem("user", JSON.stringify({ ...user, avatar: imageUrl }));
 
     setAvatarUploading(true);
     try {
@@ -153,16 +182,24 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       }
 
       // Save the public URL to user profile
-      const updated = await store.updateUser({ avatar: publicUrl });
-      if (updated) updateUser(updated);
+      const updated = await store.updateUser({
+        avatar: publicUrl + "?t=" + Date.now(),
+      }); // Cache-busting query param
+      if (updated) {
+        console.log(updated, publicUrl);
+        updateUser(updated);
+        // Update formData to show the new avatar immediately
+        setFormData((prev) => ({ ...prev, avatar: publicUrl }));
+      }
     } catch (error) {
       console.error("Avatar upload failed:", error);
-      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(
+        `Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setAvatarUploading(false);
     }
   };
-
 
   // Statistics with real data (not dummy)
   const stats = [
@@ -235,7 +272,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-2 border-border">
                     <AvatarImage
-                      src={user?.avatar || "/placeholder.svg"}
+                      src={formData.avatar || "/placeholder.svg"}
                       alt={formData.name}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-lg">
@@ -286,9 +323,14 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="email"
+                        className="flex items-center gap-2"
+                      >
                         Email
-                        {isEditing && <Lock className="h-3 w-3 text-muted-foreground" />}
+                        {isEditing && (
+                          <Lock className="h-3 w-3 text-muted-foreground" />
+                        )}
                       </Label>
                       {isEditing ? (
                         <Input
@@ -455,7 +497,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground">
-                        {formData.twitter ? `@${formData.twitter}` : "Not specified"}
+                        {formData.twitter
+                          ? `@${formData.twitter}`
+                          : "Not specified"}
                       </div>
                     )}
                   </div>
@@ -479,7 +523,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                         />
                       ) : (
                         <Badge
-                          variant={formData.openToWork ? "default" : "secondary"}
+                          variant={
+                            formData.openToWork ? "default" : "secondary"
+                          }
                           className="text-xs"
                         >
                           {formData.openToWork ? "Yes" : "No"}
@@ -523,7 +569,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     </a>
                   </Button>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No resume link added</p>
+                  <p className="text-sm text-muted-foreground">
+                    No resume link added
+                  </p>
                 )}
               </div>
 
