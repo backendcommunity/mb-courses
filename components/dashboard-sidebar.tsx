@@ -54,13 +54,13 @@ const navigationData = {
       active: true,
       beta: false,
     },
-    {
-      title: "Learning Paths",
-      url: routes.paths,
-      icon: Target,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "Learning Paths",
+    //   url: routes.paths,
+    //   icon: Target,
+    //   active: false,
+    //   beta: false,
+    // },
     {
       title: "Roadmaps",
       url: routes.roadmaps,
@@ -84,22 +84,22 @@ const navigationData = {
       active: true,
       beta: false,
     },
-    {
-      title: "MB Lands",
-      url: routes.lands,
-      icon: Trophy,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "MB Lands",
+    //   url: routes.lands,
+    //   icon: Trophy,
+    //   active: false,
+    //   beta: false,
+    // },
   ],
   grow: [
-    {
-      title: "MB Interviews",
-      url: routes.interviews,
-      icon: Briefcase,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "MB Interviews",
+    //   url: routes.interviews,
+    //   icon: Briefcase,
+    //   active: false,
+    //   beta: false,
+    // },
     {
       title: "Mock Interviews",
       url: routes.mockInterviews,
@@ -107,20 +107,20 @@ const navigationData = {
       active: true,
       beta: true,
     },
-    {
-      title: "Certifications",
-      url: "/certifications",
-      icon: Award,
-      active: false,
-      beta: false,
-    },
-    {
-      title: "Community",
-      url: routes.community,
-      icon: Users,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "Certifications",
+    //   url: "/certifications",
+    //   icon: Award,
+    //   active: false,
+    //   beta: false,
+    // },
+    // {
+    //   title: "Community",
+    //   url: routes.community,
+    //   icon: Users,
+    //   active: false,
+    //   beta: false,
+    // },
   ],
 };
 
