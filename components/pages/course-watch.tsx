@@ -57,6 +57,8 @@ import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
+import { useNextContent } from "@/hooks/use-next-content";
+import { NextContentButton } from "../next-content-button";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -88,6 +90,18 @@ export function CourseWatchPage({
   const [note, setNote] = useState("");
   const path = usePathname();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showNextContent, setShowNextContent] = useState(false);
+
+  // Hook to fetch next content after video completion
+  const { nextContent, loading: nextContentLoading, fetchNextContent } = useNextContent(
+    course?.id || "",
+    chapter?.id || "",
+    currentVideo?.id || "",
+    {
+      enabled: false, // Manual trigger, not automatic
+      onSuccess: () => setShowNextContent(true),
+    }
+  );
 
   async function loadNotes(courseId: string, videoId: string) {
     setLoadingNotes(true);
@@ -187,10 +201,13 @@ export function CourseWatchPage({
 
       toast.success("You just earned some points!");
       setCelebration(true);
+
+      // Fetch next content for auto-progression (Story 7.1)
+      fetchNextContent();
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
-  }, [currentVideo, course, chapter, userVideos, userChapters]);
+  }, [currentVideo, course, chapter, userVideos, userChapters, fetchNextContent]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -444,6 +461,47 @@ export function CourseWatchPage({
               />
             )}
           </Card>
+
+          {/* Next Content Button - Auto-progression to next video/quiz/exercise (Story 7.1) */}
+          {showNextContent && (
+            <NextContentButton
+              nextContent={nextContent}
+              isLoading={nextContentLoading}
+              onContinue={() => {
+                if (nextContent) {
+                  // Navigate to next content based on type and route
+                  if (nextContent.type === "VIDEO") {
+                    handleVideoClick({
+                      ...currentVideo,
+                      id: nextContent.id,
+                      slug: nextContent.slug,
+                      title: nextContent.title,
+                    } as Video);
+                  } else if (nextContent.type === "QUIZ") {
+                    handleVideoClick({
+                      ...currentVideo,
+                      id: nextContent.id,
+                      slug: nextContent.slug,
+                      title: nextContent.title,
+                      type: "QUIZ",
+                      quizId: nextContent.id,
+                    } as Video);
+                  } else if (nextContent.type === "EXERCISE") {
+                    handleVideoClick({
+                      ...currentVideo,
+                      id: nextContent.id,
+                      slug: nextContent.slug,
+                      title: nextContent.title,
+                      type: "EXERCISE",
+                    } as Video);
+                  }
+                  setShowNextContent(false);
+                }
+              }}
+              disabled={nextContentLoading}
+            />
+          )}
+
           {/* Video Actions */}
           {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
