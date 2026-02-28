@@ -93,14 +93,18 @@ export function CourseWatchPage({
   const [showNextContent, setShowNextContent] = useState(false);
 
   // Hook to fetch next content after video completion
-  const { nextContent, loading: nextContentLoading, fetchNextContent } = useNextContent(
+  const {
+    nextContent,
+    loading: nextContentLoading,
+    fetchNextContent,
+  } = useNextContent(
     course?.id || "",
     chapter?.id || "",
     currentVideo?.id || "",
     {
       enabled: false, // Manual trigger, not automatic
       onSuccess: () => setShowNextContent(true),
-    }
+    },
   );
 
   async function loadNotes(courseId: string, videoId: string) {
@@ -137,7 +141,7 @@ export function CourseWatchPage({
         ? chapter?.videos.find((v: Video) => v.slug === videoSlug)
         : chapter?.videos[0];
       setCurrentVideo(currentVideo);
-
+      setShowNextContent(true);
       setLoading(false);
     }
     findUserCourse(slug);
@@ -207,7 +211,14 @@ export function CourseWatchPage({
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
-  }, [currentVideo, course, chapter, userVideos, userChapters, fetchNextContent]);
+  }, [
+    currentVideo,
+    course,
+    chapter,
+    userVideos,
+    userChapters,
+    fetchNextContent,
+  ]);
 
   if (loading) return <Loader isLoader={false} />;
 
