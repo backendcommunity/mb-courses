@@ -474,44 +474,44 @@ export function CourseWatchPage({
           </Card>
 
           {/* Next Content Button - Auto-progression to next video/quiz/exercise (Story 7.1) */}
-          {showNextContent && (
-            <NextContentButton
-              nextContent={nextContent}
-              isLoading={nextContentLoading}
-              onContinue={() => {
-                if (nextContent) {
-                  // Navigate to next content based on type and route
-                  if (nextContent.type === "VIDEO") {
-                    handleVideoClick({
-                      ...currentVideo,
-                      id: nextContent.id,
-                      slug: nextContent.slug,
-                      title: nextContent.title,
-                    } as Video);
-                  } else if (nextContent.type === "QUIZ") {
-                    handleVideoClick({
-                      ...currentVideo,
-                      id: nextContent.id,
-                      slug: nextContent.slug,
-                      title: nextContent.title,
-                      type: "QUIZ",
-                      quizId: nextContent.id,
-                    } as Video);
-                  } else if (nextContent.type === "EXERCISE") {
-                    handleVideoClick({
-                      ...currentVideo,
-                      id: nextContent.id,
-                      slug: nextContent.slug,
-                      title: nextContent.title,
-                      type: "EXERCISE",
-                    } as Video);
-                  }
-                  setShowNextContent(false);
+          {/* {showNextContent && ( */}
+          <NextContentButton
+            nextContent={nextContent}
+            isLoading={nextContentLoading}
+            onContinue={() => {
+              if (nextContent) {
+                // Navigate to next content based on type and route
+                if (nextContent.type === "VIDEO") {
+                  handleVideoClick({
+                    ...currentVideo,
+                    id: nextContent.id,
+                    slug: nextContent.slug,
+                    title: nextContent.title,
+                  } as Video);
+                } else if (nextContent.type === "QUIZ") {
+                  handleVideoClick({
+                    ...currentVideo,
+                    id: nextContent.id,
+                    slug: nextContent.slug,
+                    title: nextContent.title,
+                    type: "QUIZ",
+                    quizId: nextContent.id,
+                  } as Video);
+                } else if (nextContent.type === "EXERCISE") {
+                  handleVideoClick({
+                    ...currentVideo,
+                    id: nextContent.id,
+                    slug: nextContent.slug,
+                    title: nextContent.title,
+                    type: "EXERCISE",
+                  } as Video);
                 }
-              }}
-              disabled={nextContentLoading}
-            />
-          )}
+                setShowNextContent(false);
+              }
+            }}
+            disabled={nextContentLoading}
+          />
+          {/* )} */}
 
           {/* Video Actions */}
           {/* <div className="flex items-center justify-between">
