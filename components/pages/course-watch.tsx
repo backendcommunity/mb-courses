@@ -57,6 +57,7 @@ import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
+import { NextContentOverlay } from "../next-content-overlay";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -88,6 +89,7 @@ export function CourseWatchPage({
   const [note, setNote] = useState("");
   const path = usePathname();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showNextOverlay, setShowNextOverlay] = useState(false);
 
   async function loadNotes(courseId: string, videoId: string) {
     setLoadingNotes(true);
@@ -186,6 +188,7 @@ export function CourseWatchPage({
 
       toast.success("You just earned some points!");
       setCelebration(true);
+      setShowNextOverlay(true);
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
@@ -257,6 +260,16 @@ export function CourseWatchPage({
       course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
         1
     ];
+
+  const handleContinueNext = useCallback(() => {
+    if (nextVideo) {
+      handleVideoClick(nextVideo);
+      setShowNextOverlay(false);
+    } else if (nextChapter) {
+      handleChapterClick(nextChapter);
+      setShowNextOverlay(false);
+    }
+  }, [nextVideo, nextChapter]);
 
   const handleVideoClick = (video: Video) => {
     setCurrentVideo(video);
@@ -1034,6 +1047,13 @@ export function CourseWatchPage({
         celebrationType="enrollment"
         courseName={course?.title!}
         duration={2000}
+      />
+
+      <NextContentOverlay
+        isOpen={showNextOverlay}
+        onClose={() => setShowNextOverlay(false)}
+        nextItem={nextVideo}
+        onContinue={handleContinueNext}
       />
     </div>
   );

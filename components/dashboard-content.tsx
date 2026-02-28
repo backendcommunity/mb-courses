@@ -28,6 +28,7 @@ import { routes } from "@/lib/routes";
 import { Topic } from "@/lib/data";
 import { OnboardingSkipBanner } from "@/components/onboarding/onboarding-skip-banner";
 import { ContinueLearningCard } from "@/components/continue-learning-card";
+import { EmptyStateCard } from "@/components/empty-state-card";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
@@ -265,7 +266,15 @@ export function DashboardContent({}: DashboardContentProps) {
 
           {activities?.length < 1 && (
             <CardContent className="space-y-4">
-              No recent activities.
+              <EmptyStateCard
+                icon={Trophy}
+                title="No Activities Yet"
+                description="Complete a course to see your progress and achievements here."
+                primaryCTA={{
+                  label: "Browse Courses",
+                  onClick: () => handleNavigate("/courses"),
+                }}
+              />
             </CardContent>
           )}
 
@@ -316,17 +325,15 @@ export function DashboardContent({}: DashboardContentProps) {
             ) : (
               <>
                 {userRoadmaps.length < 1 ? (
-                  <div className="text-center p-8">
-                    <p className="text-muted-foreground">
-                      You're not on any roadmap as a backend engineer. wow!
-                    </p>
-                    <Button
-                      onClick={() => handleNavigate("/roadmaps")}
-                      className="mt-2"
-                    >
-                      Start one now
-                    </Button>
-                  </div>
+                  <EmptyStateCard
+                    icon={BookOpen}
+                    title="No Learning Roadmap Yet"
+                    description="Choose a structured learning path to guide your backend engineering journey."
+                    primaryCTA={{
+                      label: "Explore Roadmaps",
+                      onClick: () => handleNavigate("/roadmaps"),
+                    }}
+                  />
                 ) : (
                   <>
                     {userRoadmaps.map((userRoadmap: any, i: number) => {

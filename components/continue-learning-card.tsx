@@ -21,6 +21,7 @@ import { useAppStore } from "@/lib/store";
 import { type ContinueLearningItem } from "@/lib/data";
 import { ChevronRight, BookOpen } from "lucide-react";
 import { analytics } from "@/lib/analytics";
+import { EmptyStateCard } from "@/components/empty-state-card";
 
 export function ContinueLearningCard() {
   const store = useAppStore();
@@ -62,11 +63,6 @@ export function ContinueLearningCard() {
     loadContinueLearning();
   }, [store]);
 
-  // Hide if no courses (empty state is implicit)
-  if (!loading && courses.length === 0) {
-    return null;
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -75,6 +71,17 @@ export function ContinueLearningCard() {
       </CardHeader>
 
       <CardContent>
+        {!loading && courses.length === 0 ? (
+          <EmptyStateCard
+            icon={BookOpen}
+            title="No Courses Started Yet"
+            description="Enroll in a course to start your learning journey."
+            primaryCTA={{
+              label: "Browse Courses",
+              onClick: () => router.push("/courses"),
+            }}
+          />
+        ) : (
         <div className="space-y-3">
           {loading ? (
             // Skeleton loading state
@@ -201,6 +208,7 @@ export function ContinueLearningCard() {
             ))
           )}
         </div>
+        )}
       </CardContent>
     </Card>
   );

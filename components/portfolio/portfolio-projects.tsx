@@ -24,6 +24,7 @@ import {
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import type { PortfolioProject } from "@/lib/portfolio-types";
+import { EmptyStateCard } from "@/components/empty-state-card";
 
 interface PortfolioProjectsProps {
   projects: PortfolioProject[];
@@ -450,9 +451,17 @@ export function PortfolioProjects({ projects }: PortfolioProjectsProps) {
                 )}
               </div>
             ) : (
-              <div className="text-center py-8 text-sm text-muted-foreground">
-                No projects in this category
-              </div>
+              <EmptyStateCard
+                icon={FileText}
+                title="No Projects Yet"
+                description={
+                  tab === "approved"
+                    ? "Your completed and verified projects will appear here."
+                    : tab === "in_progress"
+                    ? "Your ongoing projects will appear here."
+                    : "Build and submit projects to showcase your skills."
+                }
+              />
             )}
           </TabsContent>
         </Tabs>
