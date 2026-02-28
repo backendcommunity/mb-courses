@@ -151,6 +151,7 @@ interface AppState {
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
+  getUploadUrl: (type: "avatar" | "resume") => Promise<{ signedUrl: string; publicUrl: string; key: string }>;
   startProject30: (slug: string) => Project30 | any;
   deleteAccount: (email: string) => Promise<any>;
   changePassword: (updates: {
@@ -246,6 +247,11 @@ interface AppState {
 
   // Epic 6: Global Search
   search: (query: string) => Promise<SearchResults>;
+
+  // Epic 7: Auto-progression
+  autoProgressionEnabled: boolean;
+  setAutoProgressionEnabled: (enabled: boolean) => void;
+  getNextContent: (courseId: string, chapterId: string, videoId: string) => Promise<any>;
 
   // Force re-render trigger
   version: number;
@@ -845,6 +851,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
+  // Epic 7: Auto-progression
+  autoProgressionEnabled: true, // Default enabled
+  setAutoProgressionEnabled: (enabled: boolean) => {
+    set({ autoProgressionEnabled: enabled });
+  },
+  getNextContent: async (courseId: string, chapterId: string, videoId: string) => {
+    try {
+      const { data } = await api.get(
+        `/courses/${courseId}/chapters/${chapterId}/videos/${videoId}/next-content`
+      );
+      return data?.data;
+    } catch (error) {
+      console.error("Failed to fetch next content:", error);
+      return null;
+    }
+  },
+
   saveNote: async (note: string, courseId: string, videoId: string) => {
     const { data } = await api.post(
       `/courses/${courseId}/videos/${videoId}/notes`,
@@ -877,6 +900,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateUserInStore(data?.data);
     get().forceUpdate();
     return data?.data;
+  },
+
+  getUploadUrl: async (type: "avatar" | "resume") => {
+    const { data } = await api.get(`/users/upload-url?type=${type}`);
+    return data?.data as { signedUrl: string; publicUrl: string; key: string };
   },
 
   savePlayground: async (payload: any) => {

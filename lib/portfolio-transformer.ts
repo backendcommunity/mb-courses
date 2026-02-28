@@ -6,6 +6,20 @@ import type {
 import { LEVEL_NAMES } from "./portfolio-types";
 
 /**
+ * Completes Twitter URL if only username is provided
+ * @param twitter - Twitter username or full URL
+ * @returns Full Twitter URL or undefined
+ */
+function normalizeTwitterUrl(twitter?: string): string | undefined {
+  if (!twitter) return undefined;
+  // If already a full URL, return as-is
+  if (twitter.startsWith("http")) return twitter;
+  // If just a username, add Twitter domain
+  const username = twitter.startsWith("@") ? twitter.slice(1) : twitter;
+  return `https://twitter.com/${username}`;
+}
+
+/**
  * Transforms API PortfolioResponse to component PortfolioData format
  * Now includes enriched fields from database (Solution, UserCohort, Quiz/Exercise data)
  */
@@ -16,7 +30,7 @@ export function transformPortfolioResponse(
     user: {
       id: response.user.id,
       name: response.user.name,
-      username: response.user.username, // Not provided by API
+      title: response.user.title, // Not provided by API
       bio: response.user.bio,
       avatar: response.user.avatar,
       location: response.user.location || "",
@@ -26,7 +40,7 @@ export function transformPortfolioResponse(
         LEVEL_NAMES[response.user.level] ||
         "Developer",
       xp: response.user.xp || 0, // ✅ From API (user.points)
-      xpToNextLevel: 0, // Not tracked yet
+      xpToNextLevel: 0, // Not tracked on portfolio (use useLevel hook on dashboard)
       points: response.user.points,
       streak: response.user.streak,
       isVerified: response.user.isVerified || false, // ✅ From API (emailConfirmed)
@@ -34,11 +48,12 @@ export function transformPortfolioResponse(
       isTrial: response.user.isTrial ?? false, // ✅ From API (User.isTrial)
       isOpenToWork: response.user.openToWork || false, // ✅ From API (user.openToWork)
       joinedAt: response.user.joinedAt,
+      resume: response.user.resume, // ✅ From API (user.resume)
       socialLinks: {
         github: response.user.socialLinks?.github,
         linkedin: response.user.socialLinks?.linkedin,
         website: response.user.socialLinks?.website,
-        twitter: undefined, // Not provided by API
+        twitter: normalizeTwitterUrl(response.user.socialLinks?.twitter), // ✅ From API (user.twitter - converted to full URL)
       },
     },
     stats: {

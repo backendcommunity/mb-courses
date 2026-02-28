@@ -16,7 +16,7 @@ export interface User {
   xp: number;
   xpToNextLevel: number;
   streak: number;
-  title: string;
+  title?: string;
   badges: Badge[];
   isPremium: boolean;
   subscription?: Subscription;
@@ -31,6 +31,7 @@ export interface User {
   github?: string;
   website?: string;
   address?: string;
+  country?: string;
   settings: any;
   phone?: string;
   createdAt?: Date | string;
@@ -46,6 +47,11 @@ export interface User {
   longestStreak?: number;
   // Epic 5: Notifications
   totalNotifications?: number;
+  // Profile enhancements
+  username?: string;
+  openToWork?: boolean;
+  twitter?: string;
+  resume?: string;
 }
 
 export interface Reward {
@@ -151,7 +157,7 @@ export interface PortfolioResponse {
     levelName: string;
     points: number;
     streak: number;
-    username: string;
+    title: string;
     location: string;
     longestStreak: number;
     joinedAt: string;
@@ -708,7 +714,7 @@ export interface Project {
 export interface Resource {
   id: string;
   title: string;
-  type: "documentation" | "video" | "article" | "code";
+  type: string; // "documentation" | "video" | "article" | "code";
   url: string;
 }
 
@@ -2082,7 +2088,7 @@ export const markVideoComplete = (
   if (chapter) {
     const video = chapter.videos.find((v) => v.id === videoId);
     if (video) {
-      video.completed = true;
+      video.isCompleted = true;
     }
   }
 };
@@ -2133,7 +2139,7 @@ export const updateProjectProgress = (
   if (project) {
     project.progress = progress;
     if (status) {
-      project.status = status;
+      project.status = status as any;
     }
   }
 };

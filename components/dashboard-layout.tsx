@@ -85,8 +85,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             isMobile && !isCollapsed
               ? "w-72 z-40"
               : isCollapsed
-              ? "w-20"
-              : "w-72"
+                ? "w-20"
+                : "w-72"
           }
           bg-backgroun border-r border-border`}
         >
