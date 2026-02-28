@@ -7,7 +7,6 @@ import {
   Trophy,
   Users,
   Briefcase,
-  Star,
   Zap,
   Target,
   TrendingUp,
@@ -17,6 +16,7 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -222,7 +222,11 @@ export function DashboardSidebar({
               )}
             </div>
             <Progress
-              value={(user?.points / user?.xpToNextLevel) * 100}
+              value={
+                ((user?.points ?? 0) /
+                  ((user?.points ?? 0) + (level?.mbToNextLevel ?? 1))) *
+                100
+              }
               className="h-2 mb-1"
             />
             <div className="flex justify-between text-xs text-muted-foreground">

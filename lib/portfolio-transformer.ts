@@ -40,7 +40,7 @@ export function transformPortfolioResponse(
         LEVEL_NAMES[response.user.level] ||
         "Developer",
       xp: response.user.xp || 0, // ✅ From API (user.points)
-      xpToNextLevel: 0, // Not tracked yet
+      xpToNextLevel: 0, // Not tracked on portfolio (use useLevel hook on dashboard)
       points: response.user.points,
       streak: response.user.streak,
       isVerified: response.user.isVerified || false, // ✅ From API (emailConfirmed)
