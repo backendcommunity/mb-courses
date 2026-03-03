@@ -185,34 +185,6 @@ export function CourseWatchPage({
     }
   }, [currentVideo, course, chapter, userVideos, userChapters]);
 
-  if (loading) return <Loader isLoader={false} />;
-
-  if (!course || !chapter) {
-    return (
-      <div className="flex-1 p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Chapter not found</h1>
-          <Button
-            onClick={() => onNavigate?.(routes.courseDetail(slug))}
-            className="mt-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Course
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const isChapterCompleted = (chapterId: string) => {
-    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
-      ?.isCompleted;
-  };
-
-  const isVideoCompleted = (videoId: string) => {
-    return userVideos?.find((ch: any) => ch.videoId === videoId)?.isCompleted;
-  };
-
   const next = () => {
     return chapter?.videos?.find((v: Video, index: number) => {
       const currentIndex = chapter.videos.findIndex(
@@ -231,24 +203,71 @@ export function CourseWatchPage({
     });
   };
 
-  const nextVideo = useMemo(() => next(), [chapter, currentVideo]);
-  const prevVideo = useMemo(() => prev(), [chapter, currentVideo]);
+  const nextVideo = useMemo(() => {
+    if (!chapter || !currentVideo) return undefined;
+    const idx = chapter.videos.findIndex(
+      (v: Video) => v.id === currentVideo.id,
+    );
+    return chapter.videos[idx + 1] as Video | undefined;
+  }, [chapter, currentVideo]);
 
-  const nextChapter = useMemo(
-    () =>
-      course?.chapters[
-        course?.chapters?.findIndex(
-          (ch: Chapter) => ch.slug === chapter?.slug,
-        ) + 1
-      ],
-    [course, chapter],
+  const prevVideo = useMemo(() => {
+    if (!chapter || !currentVideo) return undefined;
+    const idx = chapter.videos.findIndex(
+      (v: Video) => v.id === currentVideo.id,
+    );
+    return idx > 0 ? (chapter.videos[idx - 1] as Video) : undefined;
+  }, [chapter, currentVideo]);
+
+  const nextChapter = useMemo(() => {
+    if (!course || !chapter) return undefined;
+    const idx = course.chapters.findIndex(
+      (ch: Chapter) => ch.slug === chapter.slug,
+    );
+    return idx >= 0 ? course.chapters[idx + 1] : undefined;
+  }, [course, chapter]);
+
+  const prevChapter = useMemo(() => {
+    if (!course || !chapter) return undefined;
+    const idx = course.chapters.findIndex(
+      (ch: Chapter) => ch.slug === chapter.slug,
+    );
+    return idx > 0 ? course.chapters[idx - 1] : undefined;
+  }, [course, chapter]);
+
+  const isChapterCompleted = (chapterId: string) => {
+    return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
+      ?.isCompleted;
+  };
+
+  const isVideoCompleted = (videoId: string) => {
+    return userVideos?.find((ch: any) => ch.videoId === videoId)?.isCompleted;
+  };
+
+  const handleVideoClick = useCallback(
+    (video: Video) => {
+      setCurrentVideo(video);
+      window.history.pushState(
+        {},
+        "",
+        `${routes.courseWatch(slug, chapter?.slug!, video.slug)}?`,
+      );
+    },
+    [slug, chapter?.slug],
   );
 
-  const prevChapter =
-    course?.chapters[
-      course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
-        1
-    ];
+  const handleChapterClick = useCallback(
+    (ch: Chapter) => {
+      setChapter(ch);
+      setCurrentVideo(ch.videos[0]);
+      window.history.pushState(
+        {},
+        "",
+        `${routes.courseWatch(slug, ch.slug, ch.videos[0]?.slug)}?`,
+      );
+    },
+    [slug],
+  );
 
   const handleContinueNext = useCallback(() => {
     if (nextVideo) {
@@ -258,16 +277,7 @@ export function CourseWatchPage({
       handleChapterClick(nextChapter);
       setShowNextOverlay(false);
     }
-  }, [nextVideo, nextChapter]);
-
-  const handleVideoClick = (video: Video) => {
-    setCurrentVideo(video);
-    window.history.pushState(
-      {},
-      "",
-      `${routes.courseWatch(slug, chapter?.slug, video.slug)}?`,
-    );
-  };
+  }, [nextVideo, nextChapter, handleVideoClick, handleChapterClick]);
 
   const handleChapterFeatureClick = (type: string, id?: string) => {
     if (!onNavigate) return;
@@ -287,20 +297,14 @@ export function CourseWatchPage({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleChapterClick = (chapter: Chapter) => {
-    setChapter(chapter);
-    setCurrentVideo(chapter?.videos[0]);
-    window.history.pushState(
-      {},
-      "",
-      `${routes.courseWatch(slug, chapter.slug, chapter?.videos[0]?.slug)}?`,
-    );
-  };
-
   const handleSaveNotes = async () => {
     if (!note) return;
     try {
-      const saveNote = await store.saveNote(note, course.id, currentVideo?.id!);
+      const saveNote = await store.saveNote(
+        note,
+        course?.id!,
+        currentVideo?.id!,
+      );
       setNotes([...notes, saveNote]);
     } catch (error) {
       toast.error("Error occurred adding note");
@@ -330,9 +334,28 @@ export function CourseWatchPage({
       (ch: UserVideo) => ch?.isCompleted,
     ).length;
 
-    return Math.floor(((completed ?? 0) / course.totalContent) * 100);
+    return Math.floor(((completed ?? 0) / (course?.totalContent ?? 0)) * 100);
   };
   const progress = calculateProgress();
+
+  if (loading) return <Loader isLoader={false} />;
+
+  if (!course || !chapter) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Chapter not found</h1>
+          <Button
+            onClick={() => onNavigate?.(routes.courseDetail(slug))}
+            className="mt-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Course
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-6">
