@@ -1,13 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -23,12 +17,10 @@ import {
   CheckCircle2,
   BookOpen,
   Download,
-  Share,
   Clock,
   Brain,
   Code,
   Gamepad2,
-  Crown,
   Share2,
   ChevronLeft,
   ChevronRight,
@@ -130,7 +122,7 @@ export function CourseWatchPage({
     findUserCourse(slug);
   }, [slug]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (activeTab?.includes("notes")) {
       loadNotes(slug, currentVideo?.slug!);
     }
@@ -192,13 +184,7 @@ export function CourseWatchPage({
     } catch (error) {
       toast.error("An error occurred. Please try again");
     }
-  }, [
-    currentVideo,
-    course,
-    chapter,
-    userVideos,
-    userChapters,
-  ]);
+  }, [currentVideo, course, chapter, userVideos, userChapters]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -400,7 +386,7 @@ export function CourseWatchPage({
                         </Button>
                         <Button
                           onClick={() =>
-                            handleShare(currentVideo?.title!, path)
+                            handleShare(currentVideo?.title!, path!)
                           }
                           className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition pointer-events-auto"
                         >

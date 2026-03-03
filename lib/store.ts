@@ -70,8 +70,11 @@ interface AppState {
   getCourseExercises: (courseId: string) => Quiz[] | any;
   getProjects: (queries?: Project30Query) => Project[] | any;
   getProject: (slug: string) => Project | any;
-  getProjectLeaderboard: (projectSlug: string, params?: { size?: number; skip?: number }) => any;
-  getGlobalProjectLeaderboard: (params?: { size?: number; skip?: number }) => any;
+  getProjectLeaderboard: (projectSlug: string, filters?: any) => any;
+  getGlobalProjectLeaderboard: (params?: {
+    size?: number;
+    skip?: number;
+  }) => any;
   getDeveloperPortfolio: (userId: string) => Promise<PortfolioResponse | null>;
   getPlans: () => any;
   getChallenges: () => Challenge[];
@@ -151,7 +154,9 @@ interface AppState {
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
-  getUploadUrl: (type: "avatar" | "resume") => Promise<{ signedUrl: string; publicUrl: string; key: string }>;
+  getUploadUrl: (
+    type: "avatar" | "resume",
+  ) => Promise<{ signedUrl: string; publicUrl: string; key: string }>;
   startProject30: (slug: string) => Project30 | any;
   deleteAccount: (email: string) => Promise<any>;
   changePassword: (updates: {
@@ -251,7 +256,11 @@ interface AppState {
   // Epic 7: Auto-progression
   autoProgressionEnabled: boolean;
   setAutoProgressionEnabled: (enabled: boolean) => void;
-  getNextContent: (courseId: string, chapterId: string, videoId: string) => Promise<any>;
+  getNextContent: (
+    courseId: string,
+    chapterId: string,
+    videoId: string,
+  ) => Promise<any>;
 
   // Force re-render trigger
   version: number;
@@ -438,12 +447,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
-  getProjectLeaderboard: async (projectSlug: string, params?: { size?: number; skip?: number }) => {
-    // Using dummy data in component - API will be added later
-    return { leaderboard: [] };
+  getProjectLeaderboard: async (slug: string, filters?: any) => {
+    const { data } = await api.get(`/projects/${slug}/leaderboard`, {
+      params: {
+        filters,
+      },
+    });
+    return data?.data;
   },
 
-  getGlobalProjectLeaderboard: async (params?: { size?: number; skip?: number }) => {
+  getGlobalProjectLeaderboard: async (params?: {
+    size?: number;
+    skip?: number;
+  }) => {
     // Using dummy data in component - API will be added later
     return { leaderboard: [] };
   },
@@ -856,10 +872,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAutoProgressionEnabled: (enabled: boolean) => {
     set({ autoProgressionEnabled: enabled });
   },
-  getNextContent: async (courseId: string, chapterId: string, videoId: string) => {
+  getNextContent: async (
+    courseId: string,
+    chapterId: string,
+    videoId: string,
+  ) => {
     try {
       const { data } = await api.get(
-        `/courses/${courseId}/chapters/${chapterId}/videos/${videoId}/next-content`
+        `/courses/${courseId}/chapters/${chapterId}/videos/${videoId}/next-content`,
       );
       return data?.data;
     } catch (error) {
