@@ -4,6 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   CheckCircle2,
   Github,
   Globe,
@@ -17,6 +22,8 @@ import {
   Twitter,
   Hash,
   Calendar,
+  Crown,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { PortfolioUser, PortfolioStats } from "@/lib/portfolio-types";
@@ -37,7 +44,11 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
 
     if (typeof navigator !== "undefined" && navigator.share) {
       navigator
-        .share({ title: `${user.name} — Portfolio`, text: shareText, url: shareUrl })
+        .share({
+          title: `${user.name} — Portfolio`,
+          text: shareText,
+          url: shareUrl,
+        })
         .catch(() => {});
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl);
@@ -53,9 +64,17 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
 
   const statItems = [
     { icon: Trophy, value: stats.totalProjects, label: "Projects" },
-    { icon: Award, value: stats.totalPoints.toLocaleString(), label: "MB Points" },
+    {
+      icon: Award,
+      value: stats.totalPoints.toLocaleString(),
+      label: "MB Points",
+    },
     { icon: BookOpen, value: stats.coursesCompleted, label: "Courses" },
-    { icon: Hash, value: `#${stats.globalRank}`, label: `of ${stats.totalUsers.toLocaleString()}` },
+    {
+      icon: Hash,
+      value: `#${stats.globalRank}`,
+      label: `of ${stats.totalUsers.toLocaleString()}`,
+    },
   ];
 
   return (
@@ -119,8 +138,21 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
               <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                 {user.name}
               </h1>
-              {user.isVerified && (
-                <CheckCircle2 className="h-5 w-5 text-[#13AECE] shrink-0" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {user.isVerified && (
+                    <CheckCircle2 className="h-5 w-5 text-[#13AECE] shrink-0" />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  Verified Account by MasteringBackend
+                </TooltipContent>
+              </Tooltip>
+              {user.isPremium && (
+                <Badge className="bg-[#F2C94C]/15 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20 text-[10px] px-1.5 py-0 gap-0.5">
+                  <Crown className="h-2.5 w-2.5 fill-current" />
+                  {user.isTrial ? "Trial" : "Pro"}
+                </Badge>
               )}
               {user.isOpenToWork && (
                 <span className="inline-flex items-center gap-1.5 bg-[#27AE60]/15 border border-[#27AE60]/25 rounded-full px-2.5 py-0.5">
@@ -128,7 +160,9 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#27AE60] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#27AE60]" />
                   </span>
-                  <span className="text-[#27AE60] text-[10px] font-medium">Open to Work</span>
+                  <span className="text-[#27AE60] text-[10px] font-medium">
+                    Open to Work
+                  </span>
                 </span>
               )}
             </div>
@@ -156,63 +190,126 @@ export function PortfolioHero({ user, stats }: PortfolioHeroProps) {
           {/* Social links + share */}
           <div className="flex items-center gap-2 flex-wrap">
             {user.socialLinks.github && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
-                asChild
-              >
-                <a href={user.socialLinks.github} target="_blank" rel="noopener noreferrer">
-                  <Github className="h-4 w-4" />
-                </a>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
+                    asChild
+                  >
+                    <a
+                      href={user.socialLinks.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Github className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>View GitHub Profile</TooltipContent>
+              </Tooltip>
             )}
             {user.socialLinks.linkedin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
-                asChild
-              >
-                <a href={user.socialLinks.linkedin} target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="h-4 w-4" />
-                </a>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
+                    asChild
+                  >
+                    <a
+                      href={user.socialLinks.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>View LinkedIn Profile</TooltipContent>
+              </Tooltip>
             )}
             {user.socialLinks.twitter && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
-                asChild
-              >
-                <a href={user.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
-                  <Twitter className="h-4 w-4" />
-                </a>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
+                    asChild
+                  >
+                    <a
+                      href={user.socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Twitter className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Follow on X (Twitter)</TooltipContent>
+              </Tooltip>
             )}
             {user.socialLinks.website && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
-                asChild
-              >
-                <a href={user.socialLinks.website} target="_blank" rel="noopener noreferrer">
-                  <Globe className="h-4 w-4" />
-                </a>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
+                    asChild
+                  >
+                    <a
+                      href={user.socialLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Globe className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Visit Website</TooltipContent>
+              </Tooltip>
+            )}
+            {user.resume && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg"
+                    asChild
+                  >
+                    <a
+                      href={user.resume}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    >
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download Resume</TooltipContent>
+              </Tooltip>
             )}
             <div className="w-px h-5 bg-white/10 mx-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg text-xs gap-1.5"
-              onClick={handleShare}
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              Share
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg text-xs gap-1.5"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  Share
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share this portfolio</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 

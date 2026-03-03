@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Loader } from "@/components/ui/loader";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { PortfolioData } from "@/lib/portfolio-types";
-import { DUMMY_PORTFOLIO_DATA } from "@/lib/portfolio-dummy-data";
+import type { PortfolioData, PortfolioResponse } from "@/lib/portfolio-types";
+import { transformPortfolioResponse } from "@/lib/portfolio-transformer";
+import { useAppStore } from "@/lib/store";
 import { PortfolioHero } from "@/components/portfolio/portfolio-hero";
 import { PortfolioTechStack } from "@/components/portfolio/portfolio-tech-stack";
 import { PortfolioProjects } from "@/components/portfolio/portfolio-projects";
@@ -25,16 +26,24 @@ export function DeveloperPortfolioPage({
 }: DeveloperPortfolioPageProps) {
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
+  const store = useAppStore();
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
         setLoading(true);
-        // FUTURE: Replace with real API call:
-        // const data = await store.getDeveloperPortfolio(userId);
-        // if (!cancelled) setPortfolio(data);
-        if (!cancelled) setPortfolio(DUMMY_PORTFOLIO_DATA);
+        // Fetch real portfolio data from API
+        const data = await store.getDeveloperPortfolio(userId);
+        if (!cancelled) {
+          if (data) {
+            // Transform PortfolioResponse to PortfolioData for component compatibility
+            const portfolioData = transformPortfolioResponse(data);
+            setPortfolio(portfolioData);
+          } else {
+            setPortfolio(null);
+          }
+        }
       } catch (error) {
         console.error("Failed to load portfolio:", error);
         if (!cancelled) setPortfolio(null);
@@ -44,7 +53,7 @@ export function DeveloperPortfolioPage({
     };
     load();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, store]);
 
   if (loading) {
     return <Loader isLoader={false} />;

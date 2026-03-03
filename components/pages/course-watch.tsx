@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -57,6 +57,7 @@ import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
+import { NextContentOverlay } from "../next-content-overlay";
 
 interface CourseWatchPageProps {
   slug: string;
@@ -88,6 +89,7 @@ export function CourseWatchPage({
   const [note, setNote] = useState("");
   const path = usePathname();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showNextOverlay, setShowNextOverlay] = useState(false);
 
   async function loadNotes(courseId: string, videoId: string) {
     setLoadingNotes(true);
@@ -101,6 +103,14 @@ export function CourseWatchPage({
     setLoading(true);
     async function findUserCourse(slug: string) {
       const userCourse = await store.getUserCourse(slug);
+
+      // Redirect if user is not enrolled in the course
+      if (!userCourse || !userCourse.id) {
+        onNavigate?.(routes.courseDetail(slug));
+        setLoading(false);
+        return;
+      }
+
       setCourse(userCourse.course);
       setUserCourse(userCourse);
       setUserChapters(userCourse?.userChapters);
@@ -115,17 +125,80 @@ export function CourseWatchPage({
         ? chapter?.videos.find((v: Video) => v.slug === videoSlug)
         : chapter?.videos[0];
       setCurrentVideo(currentVideo);
-
       setLoading(false);
     }
     findUserCourse(slug);
   }, [slug]);
 
   useMemo(() => {
-    if (activeTab.includes("notes")) {
+    if (activeTab?.includes("notes")) {
       loadNotes(slug, currentVideo?.slug!);
     }
   }, [activeTab, slug, currentVideo?.slug]);
+
+  const handleMarkComplete = useCallback(async () => {
+    if (!currentVideo || !course || !chapter) return;
+
+    try {
+      // Combine completed videos + the one being marked now
+      const completedVideoIds = new Set(
+        userVideos!.filter((v) => v.isCompleted).map((v) => v.videoId),
+      );
+      completedVideoIds.add(currentVideo.id); // include this one just marked
+
+      // Check if all chapter videos are now complete
+      const allVideosComplete = chapter.videos.every((v: Video) =>
+        completedVideoIds.has(v.id),
+      );
+
+      const hasOtherContent =
+        chapter?.quiz || chapter.exercise || chapter.playground;
+      const isChapterCompleted = allVideosComplete && !hasOtherContent;
+
+      // Update local state: remove duplicates and add the completed video
+      const existingVideoIds = new Set(
+        (userVideos ?? []).map((v) => v.videoId),
+      );
+      const completedVideos = [
+        ...(userVideos ?? []).filter((v) => v.videoId !== currentVideo.id),
+        {
+          videoId: currentVideo.id,
+          isCompleted: true,
+          chapterId: chapter.id,
+        },
+      ];
+      setUserVideos(completedVideos);
+
+      // Update UserChapter locally
+      const userChapter = [
+        ...(userChapters ?? []).filter(
+          (ch: UserChapter) => ch.chapterId !== chapter.id,
+        ),
+        {
+          chapterId: chapter.id,
+          isCompleted: isChapterCompleted,
+        },
+      ];
+      setUserChapters(userChapter);
+
+      // Backend update with proper `isChapterCompleted`
+      await markVideoComplete(course.id, chapter.id, currentVideo.id, {
+        isChapterCompleted,
+      });
+
+      toast.success("You just earned some points!");
+      setCelebration(true);
+      setShowNextOverlay(true);
+    } catch (error) {
+      toast.error("An error occurred. Please try again");
+    }
+  }, [
+    currentVideo,
+    course,
+    chapter,
+    userVideos,
+    userChapters,
+  ]);
 
   if (loading) return <Loader isLoader={false} />;
 
@@ -145,58 +218,6 @@ export function CourseWatchPage({
       </div>
     );
   }
-
-  const handleMarkComplete = async () => {
-    if (!currentVideo || !course || !chapter) return;
-
-    try {
-      // Combine completed videos + the one being marked now
-      const completedVideoIds = new Set(
-        userVideos!.filter((v) => v.isCompleted).map((v) => v.videoId),
-      );
-      completedVideoIds.add(currentVideo.id); // include this one just marked
-
-      // Check if all chapter videos are now complete
-      const allVideosComplete = chapter.videos.every((v: Video) =>
-        completedVideoIds.has(v.id),
-      );
-
-      const hasOtherContent =
-        chapter?.quiz || chapter.exercise || chapter.playground;
-      const isChapterCompleted = allVideosComplete && !hasOtherContent;
-
-      const completedVideos = [
-        ...(userVideos ?? []),
-        {
-          ...currentVideo,
-          isCompleted: true,
-          videoId: currentVideo.id,
-        },
-      ];
-      setUserVideos(completedVideos);
-
-      // Update UserChapter locally
-      const userChapter = [
-        ...(userChapters ?? []),
-        {
-          ...chapter,
-          chapterId: chapter.id,
-          isCompleted: isChapterCompleted,
-        },
-      ];
-      setUserChapters(userChapter);
-
-      // Backend update with proper `isChapterCompleted`
-      markVideoComplete(course.id, chapter.id, currentVideo.id, {
-        isChapterCompleted,
-      });
-
-      toast.success("You just earned some points!");
-      setCelebration(true);
-    } catch (error) {
-      toast.error("An error occurred. Please try again");
-    }
-  };
 
   const isChapterCompleted = (chapterId: string) => {
     return userChapters?.find((ch: UserChapter) => ch.chapterId === chapterId)
@@ -239,6 +260,16 @@ export function CourseWatchPage({
       course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
         1
     ];
+
+  const handleContinueNext = useCallback(() => {
+    if (nextVideo) {
+      handleVideoClick(nextVideo);
+      setShowNextOverlay(false);
+    } else if (nextChapter) {
+      handleChapterClick(nextChapter);
+      setShowNextOverlay(false);
+    }
+  }, [nextVideo, nextChapter]);
 
   const handleVideoClick = (video: Video) => {
     setCurrentVideo(video);
@@ -431,6 +462,7 @@ export function CourseWatchPage({
               />
             )}
           </Card>
+
           {/* Video Actions */}
           {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1015,6 +1047,13 @@ export function CourseWatchPage({
         celebrationType="enrollment"
         courseName={course?.title!}
         duration={2000}
+      />
+
+      <NextContentOverlay
+        isOpen={showNextOverlay}
+        onClose={() => setShowNextOverlay(false)}
+        nextItem={nextVideo}
+        onContinue={handleContinueNext}
       />
     </div>
   );

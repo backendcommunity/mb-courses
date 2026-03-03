@@ -16,7 +16,7 @@ export interface User {
   xp: number;
   xpToNextLevel: number;
   streak: number;
-  title: string;
+  title?: string;
   badges: Badge[];
   isPremium: boolean;
   subscription?: Subscription;
@@ -31,6 +31,7 @@ export interface User {
   github?: string;
   website?: string;
   address?: string;
+  country?: string;
   settings: any;
   phone?: string;
   createdAt?: Date | string;
@@ -41,6 +42,16 @@ export interface User {
   learningGoal?: string | null;
   weeklyCommitment?: string | null;
   preferredLanguage?: ProgrammingLanguage | null;
+  // Epic 5: Streak System
+  currentStreak?: number;
+  longestStreak?: number;
+  // Epic 5: Notifications
+  totalNotifications?: number;
+  // Profile enhancements
+  username?: string;
+  openToWork?: boolean;
+  twitter?: string;
+  resume?: string;
 }
 
 export interface Reward {
@@ -55,6 +66,181 @@ export interface Reward {
   enrolled?: boolean;
   userReward?: any;
   createdAt?: Date | string;
+}
+
+// Epic 5: Activity/Notification types
+export interface Activity {
+  id: string;
+  title?: string;
+  description?: string;
+  type?: string;
+  mb?: number;
+  isRead: boolean;
+  isNotification: boolean;
+  createdAt: Date | string;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
+  isStreakActiveToday: boolean;
+}
+
+export interface ContinueLearningItem {
+  courseId: string;
+  title: string;
+  slug: string;
+  banner?: string;
+  resume: {
+    chapterId?: string | null;
+    chapterTitle?: string | null;
+    videoId?: string | null;
+    videoTitle?: string | null;
+    articleId?: string | null;
+    articleTitle?: string | null;
+  } | null;
+  lastActiveAt: string;
+}
+
+// Epic 6: Global Search types
+export interface SearchResultCourse {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  banner?: string;
+  level?: string;
+  isPremium?: boolean;
+  isEnrolled: boolean;
+  isCompleted: boolean;
+}
+
+export interface SearchResultRoadmap {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  banner?: string;
+}
+
+export interface SearchResultProject {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  level?: string;
+}
+
+export interface SearchResultBootcamp {
+  id: string;
+  title: string;
+  summary?: string;
+}
+
+export interface SearchResults {
+  courses: SearchResultCourse[];
+  roadmaps: SearchResultRoadmap[];
+  projects: SearchResultProject[];
+  bootcamps: SearchResultBootcamp[];
+  total: number;
+}
+
+// Epic 6: Portfolio API Response
+export interface PortfolioResponse {
+  user: {
+    id: string;
+    name: string;
+    bio: string;
+    avatar: string;
+    level: number;
+    levelName: string;
+    points: number;
+    streak: number;
+    title: string;
+    location: string;
+    longestStreak: number;
+    joinedAt: string;
+    socialLinks: {
+      github?: string;
+      linkedin?: string;
+      website?: string;
+    };
+  };
+  stats: {
+    totalProjects: number;
+    totalPoints: number;
+    coursesCompleted: number;
+    certificates: number;
+    globalRank: number;
+    totalUsers: number;
+  };
+  projects: Array<{
+    id: string;
+    title: string;
+    level?: string;
+    summary: string;
+    technologies: string[];
+    isCompleted: boolean;
+    slug: string;
+  }>;
+  activity: {
+    days: Array<{
+      date: string;
+      count: number;
+      xp: number;
+      types?: Array<{ label: string; count: number }>;
+    }>;
+    currentStreak: number;
+    longestStreak: number;
+    activeDaysCount: number;
+    totalActivities: number;
+    monthlyXp: number;
+  };
+  mockInterviews: {
+    totalInterviews: number;
+    averageScore: number;
+    topicBreakdown: Array<{
+      topic: string;
+      score: number;
+    }>;
+  };
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon?: string;
+    completed: boolean;
+    progress: number;
+    earnedAt?: string;
+  }>;
+  certificates: Array<{
+    id: string;
+    code: string;
+    courseName: string;
+    finalScore: number;
+    date: string;
+  }>;
+  roadmaps: Array<{
+    id: string;
+    name: string;
+    progress: number;
+  }>;
+  quizExerciseSummary: {
+    quizzesPassed: number;
+    quizzesTotal: number;
+    quizAvgScore: number;
+    exercisesCompleted: number;
+    exercisesTotal: number;
+    exerciseAvgScore: number;
+  };
+  bootcamps: Array<{
+    id: string;
+    name: string;
+    status: string;
+    completionPercent: number;
+  }>;
+  skills: Array<any>;
 }
 
 export interface Subscription {
@@ -528,7 +714,7 @@ export interface Project {
 export interface Resource {
   id: string;
   title: string;
-  type: "documentation" | "video" | "article" | "code";
+  type: string; // "documentation" | "video" | "article" | "code";
   url: string;
 }
 
@@ -1902,7 +2088,7 @@ export const markVideoComplete = (
   if (chapter) {
     const video = chapter.videos.find((v) => v.id === videoId);
     if (video) {
-      video.completed = true;
+      video.isCompleted = true;
     }
   }
 };
@@ -1953,7 +2139,7 @@ export const updateProjectProgress = (
   if (project) {
     project.progress = progress;
     if (status) {
-      project.status = status;
+      project.status = status as any;
     }
   }
 };

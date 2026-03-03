@@ -7,7 +7,6 @@ import {
   Trophy,
   Users,
   Briefcase,
-  Star,
   Zap,
   Target,
   TrendingUp,
@@ -17,6 +16,7 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -54,13 +54,13 @@ const navigationData = {
       active: true,
       beta: false,
     },
-    {
-      title: "Learning Paths",
-      url: routes.paths,
-      icon: Target,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "Learning Paths",
+    //   url: routes.paths,
+    //   icon: Target,
+    //   active: false,
+    //   beta: false,
+    // },
     {
       title: "Roadmaps",
       url: routes.roadmaps,
@@ -84,22 +84,22 @@ const navigationData = {
       active: true,
       beta: false,
     },
-    {
-      title: "MB Lands",
-      url: routes.lands,
-      icon: Trophy,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "MB Lands",
+    //   url: routes.lands,
+    //   icon: Trophy,
+    //   active: false,
+    //   beta: false,
+    // },
   ],
   grow: [
-    {
-      title: "MB Interviews",
-      url: routes.interviews,
-      icon: Briefcase,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "MB Interviews",
+    //   url: routes.interviews,
+    //   icon: Briefcase,
+    //   active: false,
+    //   beta: false,
+    // },
     {
       title: "Mock Interviews",
       url: routes.mockInterviews,
@@ -107,20 +107,20 @@ const navigationData = {
       active: true,
       beta: true,
     },
-    {
-      title: "Certifications",
-      url: "/certifications",
-      icon: Award,
-      active: false,
-      beta: false,
-    },
-    {
-      title: "Community",
-      url: routes.community,
-      icon: Users,
-      active: false,
-      beta: false,
-    },
+    // {
+    //   title: "Certifications",
+    //   url: "/certifications",
+    //   icon: Award,
+    //   active: false,
+    //   beta: false,
+    // },
+    // {
+    //   title: "Community",
+    //   url: routes.community,
+    //   icon: Users,
+    //   active: false,
+    //   beta: false,
+    // },
   ],
 };
 
@@ -148,18 +148,22 @@ export function DashboardSidebar({
       }`}
     >
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div
+        className={`border-b border-border flex items-center min-h-16 transition-all duration-300 ${
+          collapsed ? "px-2 py-2 justify-center gap-1" : "px-4 py-3 gap-3"
+        }`}
+      >
         <button
           onClick={() => onNavigate(routes.dashboard)}
-          className="flex items-center gap-2"
+          className={`flex items-center gap-2 ${collapsed ? "justify-center" : "flex-1 min-w-0"}`}
         >
           {collapsed && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg ">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0">
               <BrandLogo size="md" showText={true} variant="default" />
             </div>
           )}
           {!collapsed && (
-            <div className="grid text-left text-sm leading-tight">
+            <div className="grid text-left text-sm leading-tight flex-1 min-w-0">
               {theme === "light" ? (
                 <img src="/blue-logo-trimed.png" alt="logo" />
               ) : (
@@ -169,19 +173,24 @@ export function DashboardSidebar({
           )}
         </button>
 
+        {/* Divider — only show when expanded */}
+        {!collapsed && <div className="w-px h-5 bg-border/50" />}
+
+        {/* Collapse/Expand Button */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={() => {
             onCollapsed(!collapsed);
             setCollapsed(!collapsed);
           }}
-          className="ml-auto"
+          className="h-6 w-6 rounded-md flex-shrink-0 border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 group"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
           )}
         </Button>
       </div>
@@ -213,7 +222,11 @@ export function DashboardSidebar({
               )}
             </div>
             <Progress
-              value={(user?.points / user?.xpToNextLevel) * 100}
+              value={
+                ((user?.points ?? 0) /
+                  ((user?.points ?? 0) + (level?.mbToNextLevel ?? 1))) *
+                100
+              }
               className="h-2 mb-1"
             />
             <div className="flex justify-between text-xs text-muted-foreground">

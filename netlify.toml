@@ -1,0 +1,12 @@
+[build]
+  command = "yarn build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Cache the .next directory between builds
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

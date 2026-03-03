@@ -10,6 +10,11 @@ import {
   type Bootcamp,
   type LearningPath,
   type Roadmap,
+  type Activity,
+  type StreakData,
+  type ContinueLearningItem,
+  type SearchResults,
+  type PortfolioResponse,
   dataStore,
   updateUser as updateUserInStore,
   updateCourse as updateCourseInStore,
@@ -67,7 +72,7 @@ interface AppState {
   getProject: (slug: string) => Project | any;
   getProjectLeaderboard: (projectSlug: string, params?: { size?: number; skip?: number }) => any;
   getGlobalProjectLeaderboard: (params?: { size?: number; skip?: number }) => any;
-  getDeveloperPortfolio: (userId: string) => any;
+  getDeveloperPortfolio: (userId: string) => Promise<PortfolioResponse | null>;
   getPlans: () => any;
   getChallenges: () => Challenge[];
   getSavedPlaygrounds: () => Playground[] | any;
@@ -146,8 +151,9 @@ interface AppState {
 
   // Actions
   updateUser: (updates: Partial<User>) => any;
+  getUploadUrl: (type: "avatar" | "resume") => Promise<{ signedUrl: string; publicUrl: string; key: string }>;
   startProject30: (slug: string) => Project30 | any;
-  deleteAccount: () => void;
+  deleteAccount: (email: string) => Promise<any>;
   changePassword: (updates: {
     oldPassword: string;
     newPassword: string;
@@ -232,6 +238,20 @@ interface AppState {
   ) => any;
   executeCode: (payload: { language: string; code: string }) => any;
   createMockInterviewRoom: (userInterviewId: string) => any;
+
+  // Epic 5: Engagement features
+  getStreak: () => Promise<StreakData>;
+  getContinueLearning: () => Promise<ContinueLearningItem[]>;
+  markActivityRead: (id: string) => Promise<void>;
+  markAllActivitiesRead: () => Promise<void>;
+
+  // Epic 6: Global Search
+  search: (query: string) => Promise<SearchResults>;
+
+  // Epic 7: Auto-progression
+  autoProgressionEnabled: boolean;
+  setAutoProgressionEnabled: (enabled: boolean) => void;
+  getNextContent: (courseId: string, chapterId: string, videoId: string) => Promise<any>;
 
   // Force re-render trigger
   version: number;
@@ -429,8 +449,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   getDeveloperPortfolio: async (userId: string) => {
-    // Using dummy data in component - API will be added later
-    return null;
+    try {
+      const { data } = await api.get(`/portfolio/${userId}`);
+      return data?.data as PortfolioResponse;
+    } catch (error) {
+      console.error("Failed to fetch portfolio:", error);
+      return null;
+    }
   },
   getChallenges: () => dataStore.challenges,
   getInterviews: () => dataStore.interviews,
@@ -793,9 +818,54 @@ export const useAppStore = create<AppState>((set, get) => ({
     return data?.data;
   },
 
-  deleteAccount: async () => {
-    const { data } = await api.delete(`/users`);
+  deleteAccount: async (email: string) => {
+    // Epic 4: Delete account with email verification (works for OAuth & email/password users)
+    const { data } = await api.post(`/users/delete-account`, {
+      email,
+      confirmDelete: true,
+    });
     return data?.data;
+  },
+
+  // Epic 5: Engagement features
+  getStreak: async () => {
+    const { data } = await api.get(`/users/streak`);
+    return data?.data;
+  },
+
+  getContinueLearning: async () => {
+    const { data } = await api.get(`/users/continue-learning`);
+    return data?.data;
+  },
+
+  markActivityRead: async (id: string) => {
+    await api.patch(`/activities/${id}/read`);
+  },
+
+  markAllActivitiesRead: async () => {
+    await api.patch(`/activities/read-all`);
+  },
+
+  search: async (query: string) => {
+    const { data } = await api.get(`/search`, { params: { q: query } });
+    return data?.data;
+  },
+
+  // Epic 7: Auto-progression
+  autoProgressionEnabled: true, // Default enabled
+  setAutoProgressionEnabled: (enabled: boolean) => {
+    set({ autoProgressionEnabled: enabled });
+  },
+  getNextContent: async (courseId: string, chapterId: string, videoId: string) => {
+    try {
+      const { data } = await api.get(
+        `/courses/${courseId}/chapters/${chapterId}/videos/${videoId}/next-content`
+      );
+      return data?.data;
+    } catch (error) {
+      console.error("Failed to fetch next content:", error);
+      return null;
+    }
   },
 
   saveNote: async (note: string, courseId: string, videoId: string) => {
@@ -830,6 +900,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateUserInStore(data?.data);
     get().forceUpdate();
     return data?.data;
+  },
+
+  getUploadUrl: async (type: "avatar" | "resume") => {
+    const { data } = await api.get(`/users/upload-url?type=${type}`);
+    return data?.data as { signedUrl: string; publicUrl: string; key: string };
   },
 
   savePlayground: async (payload: any) => {

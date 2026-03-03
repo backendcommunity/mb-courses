@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   Search,
   Bell,
@@ -22,8 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,14 +35,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { routes } from "@/lib/routes";
 import { useAuth } from "@/store/auth";
 import { useUser } from "@/hooks/use-user";
 import { useAppStore } from "@/lib/store";
 import { format } from "timeago.js";
-import { updateUser } from "@/lib/data";
+import { updateUser, type Activity, type SearchResults } from "@/lib/data";
 import { Loader } from "./ui/loader";
+import { analytics } from "@/lib/analytics";
 interface NavigationBarProps {
   onNavigate: (path: string) => void;
   onMenuToggle?: () => void;
@@ -59,11 +59,16 @@ export function NavigationBar({
   const auth = useAuth();
   const store = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const [exploreSearchQuery, setExploreSearchQuery] = useState("");
+  const [exploreSearchResults, setExploreSearchResults] =
+    useState<SearchResults | null>(null);
+  const [isExploreSearchLoading, setIsExploreSearchLoading] = useState(false);
+  const exploreSearchRef = useRef<HTMLDivElement>(null);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
-  const [notifications, setNotifications] = useState<Array<any>>([]);
+  const [notifications, setNotifications] = useState<Activity[]>([]);
   const user = useUser();
 
   // Mock subscription data
@@ -80,15 +85,123 @@ export function NavigationBar({
         skip: 0,
       });
       setNotifications(activities);
+
+      // Epic 5: Track notification panel view
+      const unreadCount = activities.filter((a: Activity) => !a.isRead).length;
+      analytics.track("view_notification_bell", {
+        totalNotifications: activities.length,
+        unreadCount,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
     } finally {
       setIsActivitiesLoading(false);
     }
   }
 
+  // Real-time notification polling (every 10 seconds)
+  useEffect(() => {
+    // Load notifications immediately
+    load();
+
+    // Set up polling interval for real-time updates
+    const pollInterval = setInterval(() => {
+      load();
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, []);
+
   useMemo(() => {
     if (isNotificationsOpen) load();
   }, [isNotificationsOpen]);
+
+  // Debounced search effect for Explore popover (Epic 6: Global Search)
+  useEffect(() => {
+    if (!exploreSearchQuery.trim() || exploreSearchQuery.length < 2) {
+      setExploreSearchResults(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setIsExploreSearchLoading(true);
+        const results = await store.search(exploreSearchQuery);
+        setExploreSearchResults(results);
+        analytics.track("explore_search_results_shown", {
+          query: exploreSearchQuery,
+          totalResults: results?.total ?? 0,
+        });
+      } catch {
+        setExploreSearchResults(null);
+      } finally {
+        setIsExploreSearchLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [exploreSearchQuery]);
+
+  // Load popular items when popover opens (if not searching)
+  useEffect(() => {
+    if (isExploreOpen) {
+      if (!exploreSearchQuery.trim()) {
+        const loadPopular = async () => {
+          try {
+            setIsExploreSearchLoading(true);
+            const results = await store.search("");
+            setExploreSearchResults(results);
+          } catch {
+            setExploreSearchResults(null);
+          } finally {
+            setIsExploreSearchLoading(false);
+          }
+        };
+        loadPopular();
+      }
+
+      // Ensure input is focused when popover opens
+      setTimeout(() => {
+        const searchInput = exploreSearchRef.current?.querySelector("input");
+        if (searchInput && document.activeElement !== searchInput) {
+          searchInput.focus();
+        }
+      }, 0);
+    }
+  }, [isExploreOpen]);
+
+  // Keyboard shortcut to open Explore (Cmd/Ctrl + K) and focus input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K to open search
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsExploreOpen(true);
+        // Focus the input after popover opens
+        setTimeout(() => {
+          const searchInput = exploreSearchRef.current?.querySelector("input");
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }, 50);
+      }
+      // Escape to close
+      else if (e.key === "Escape") {
+        if (isExploreOpen) {
+          setIsExploreOpen(false);
+          setExploreSearchQuery("");
+          // Return focus to the search input
+          setTimeout(() => {
+            const searchInput =
+              exploreSearchRef.current?.querySelector("input");
+            searchInput?.blur();
+          }, 0);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isExploreOpen]);
 
   const skillGuides = [
     {
@@ -120,43 +233,9 @@ export function NavigationBar({
     },
   ];
 
-  const roadmaps = [
-    {
-      id: "1",
-      title: "Career Essentials in Generative AI using Ruby",
-      image: "/placeholder.svg?height=120&width=200",
-      category: "Roadmap",
-    },
-    {
-      id: "2",
-      title: "Become Ruby Hero",
-      image: "/placeholder.svg?height=120&width=200",
-      category: "Roadmap",
-    },
-    {
-      id: "3",
-      title: "Full-Stack Development",
-      image: "/placeholder.svg?height=120&width=200",
-      category: "Roadmap",
-    },
-    {
-      id: "4",
-      title: "DevOps Engineering",
-      image: "/placeholder.svg?height=120&width=200",
-      category: "Roadmap",
-    },
-    {
-      id: "5",
-      title: "Cloud Architecture",
-      image: "/placeholder.svg?height=120&width=200",
-      category: "Roadmap",
-    },
-  ];
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
       // Implement search functionality
       if (isMobile) {
         setShowMobileSearch(false);
@@ -164,9 +243,36 @@ export function NavigationBar({
     }
   };
 
-  const handleNotificationClick = (notificationId: string) => {
-    console.log("Clicked notification:", notificationId);
-    setIsNotificationsOpen(false);
+  const handleNotificationClick = async (id: string) => {
+    try {
+      // Mark activity as read via store
+      await store.markActivityRead(id);
+
+      // Find the notification being marked as read for analytics
+      const notification = notifications.find((n) => n.id === id);
+
+      // Update local state to reflect read status
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
+
+      // Decrement the badge count (unread notification count)
+      updateUser({
+        ...user,
+        totalNotifications: Math.max(0, (user?.totalNotifications ?? 0) - 1),
+      });
+
+      // Epic 5: Track notification interaction
+      analytics.track("mark_notification_read", {
+        notificationId: id,
+        notificationType: notification?.type,
+        title: notification?.title,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+    // setIsNotificationsOpen(false);
   };
 
   const handleLogout = async () => {
@@ -190,6 +296,35 @@ export function NavigationBar({
       totalNotifications: user.totalNotifications - ids.length,
     });
     setNotifications([]);
+    setIsNotificationsOpen(false);
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const markedCount = notifications.filter(
+        (n: Activity) => !n.isRead,
+      ).length;
+
+      // Mark all activities as read via store
+      await store.markAllActivitiesRead();
+
+      // Update local state to reflect read status
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+      // Set badge count to 0
+      updateUser({
+        ...user,
+        totalNotifications: 0,
+      });
+
+      // Epic 5: Track mark all read action
+      analytics.track("mark_all_notifications_read", {
+        notificationsMarked: markedCount,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
     setIsNotificationsOpen(false);
   };
 
@@ -225,164 +360,480 @@ export function NavigationBar({
             )}
           </div>
 
-          {/* Explore Dropdown */}
-          {/* isExploreOpen */}
-          <Popover open={false} onOpenChange={setIsExploreOpen}>
-            {/* <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-10 px-4 py-2 border-2 rounded-lg font-medium nav-item"
-              >
-                Explore
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
+          {/* Global Search Bar */}
+          <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+            <div className="flex-1 max-w-2xl mx-4" ref={exploreSearchRef}>
+              <PopoverTrigger asChild>
+                <div className="relative group cursor-text">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                  <Input
+                    type="search"
+                    placeholder="Search courses, roadmaps, projects, bootcamps..."
+                    value={exploreSearchQuery}
+                    onChange={(e) => setExploreSearchQuery(e.target.value)}
+                    onClick={() => !isExploreOpen && setIsExploreOpen(true)}
+                    onFocus={() => !isExploreOpen && setIsExploreOpen(true)}
+                    className="w-full pl-10 pr-16 h-10 bg-muted/50 border border-muted hover:border-primary/50 focus:border-primary focus:bg-background transition-colors rounded-lg font-medium focus:outline-none"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none hidden sm:block">
+                    <kbd className="px-2.5 py-1 rounded bg-muted border border-border text-foreground">
+                      ⌘K
+                    </kbd>
+                  </div>
+                </div>
+              </PopoverTrigger>
+            </div>
             <PopoverContent
-              className="lg:w-[1200px]  p-0 mt-2 border-border bg-popover"
+              className="lg:w-[1200px] w-screen sm:w-[90vw] md:w-[600px] p-0 mt-2 border-border bg-popover"
               align="start"
               side="bottom"
             >
-              <div className="p-8 space-y-8">
-                <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Beginner Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">Beginner Level</h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=beginner`);
-                          setIsExploreOpen(false);
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Intermediate Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">
-                        Intermediate Level
-                      </h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=intermediate`);
-                          setIsExploreOpen(false);
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="relative overflow-hidden border-border card-hover">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent to-purple-600">
-                      <img
-                        src="/placeholder.svg?height=200&width=300"
-                        alt="Advanced Level"
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    </div>
-                    <CardContent className="relative z-10 p-6 text-white">
-                      <h3 className="text-xl font-bold mb-2">Advanced Level</h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          onNavigate(`${routes.courses}?level=advanced`);
-                          setIsExploreOpen(false);
-                        }}
-                      >
-                        Explore
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold mb-4">Skill Guides</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Explore foundational content and tools to help you
-                    understand, learn, and improve at the skills involved in
-                    trending industry roles.
-                  </p>
-                  <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
-                    {skillGuides.map((skill) => (
-                      <Card
-                        key={skill.name}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
-                        onClick={() => {
-                          onNavigate(
-                            `${
-                              routes.courses
-                            }?skill=${skill.name.toLowerCase()}`
-                          );
-                          setIsExploreOpen(false);
-                        }}
-                      >
-                        <CardContent className="p-4 flex items-center space-x-3">
-                          <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${skill.color}`}
-                          >
-                            {skill.icon}
+              <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
+                {/* Show search results if query exists */}
+                {exploreSearchQuery.trim().length >= 2 ? (
+                  <>
+                    {isExploreSearchLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="space-y-3 text-center">
+                          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           </div>
-                          <span className="font-medium">{skill.name}</span>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold mb-6">Roadmaps</h3>
-                  <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
-                    {roadmaps.map((roadmap) => (
-                      <Card
-                        key={roadmap.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
-                        onClick={() => {
-                          onNavigate(routes.roadmapDetail(roadmap.id));
-                          setIsExploreOpen(false);
-                        }}
-                      >
-                        <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                          <img
-                            src={roadmap.image || "/placeholder.svg"}
-                            alt={roadmap.title}
-                            className="w-full h-full object-cover"
-                          />
+                          <p className="text-sm text-muted-foreground">
+                            Searching...
+                          </p>
                         </div>
-                        <CardContent className="p-3">
-                          <Badge variant="secondary" className="text-xs mb-2">
-                            {roadmap.category}
-                          </Badge>
-                          <h4 className="font-medium text-sm leading-tight">
-                            {roadmap.title}
-                          </h4>
-                        </CardContent>
-                      </Card>
-                    ))}
+                      </div>
+                    ) : exploreSearchResults?.total === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-4xl mb-3">🔍</div>
+                        <p className="text-sm font-medium text-foreground">
+                          No results found
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Try searching with different keywords
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Courses Results */}
+                        {(exploreSearchResults?.courses?.length ?? 0) > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                              📚 Courses{" "}
+                              <span className="font-normal">
+                                ({exploreSearchResults!.courses.length})
+                              </span>
+                            </h3>
+                            <div className="space-y-2">
+                              {exploreSearchResults!.courses
+                                .slice(0, 3)
+                                .map((course) => (
+                                  <button
+                                    key={course.id}
+                                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                    onClick={() => {
+                                      setIsExploreOpen(false);
+                                      setExploreSearchQuery("");
+                                      onNavigate(
+                                        routes.courseDetail(course.slug),
+                                      );
+                                    }}
+                                  >
+                                    <BookOpen className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate text-foreground">
+                                        {course.title}
+                                      </p>
+                                      {course.summary && (
+                                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                          {course.summary}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {course.isEnrolled && (
+                                      <Badge className="text-xs flex-shrink-0 ml-2">
+                                        ✓ Enrolled
+                                      </Badge>
+                                    )}
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Roadmaps Results */}
+                        {(exploreSearchResults?.roadmaps?.length ?? 0) > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                              🛣️ Roadmaps{" "}
+                              <span className="font-normal">
+                                ({exploreSearchResults!.roadmaps.length})
+                              </span>
+                            </h3>
+                            <div className="space-y-2">
+                              {exploreSearchResults!.roadmaps
+                                .slice(0, 3)
+                                .map((roadmap) => (
+                                  <button
+                                    key={roadmap.id}
+                                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                    onClick={() => {
+                                      setIsExploreOpen(false);
+                                      setExploreSearchQuery("");
+                                      onNavigate(
+                                        routes.roadmapDetail(roadmap.slug),
+                                      );
+                                    }}
+                                  >
+                                    <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate text-foreground">
+                                        {roadmap.title}
+                                      </p>
+                                    </div>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Projects Results */}
+                        {(exploreSearchResults?.projects?.length ?? 0) > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                              💻 Projects{" "}
+                              <span className="font-normal">
+                                ({exploreSearchResults!.projects.length})
+                              </span>
+                            </h3>
+                            <div className="space-y-2">
+                              {exploreSearchResults!.projects
+                                .slice(0, 3)
+                                .map((project) => (
+                                  <button
+                                    key={project.id}
+                                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                    onClick={() => {
+                                      setIsExploreOpen(false);
+                                      setExploreSearchQuery("");
+                                      onNavigate(
+                                        routes.projectDetail(project.slug),
+                                      );
+                                    }}
+                                  >
+                                    <Code className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate text-foreground">
+                                        {project.title}
+                                      </p>
+                                      {project.level && (
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                          {project.level}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Bootcamps Results */}
+                        {(exploreSearchResults?.bootcamps?.length ?? 0) > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                              👥 Bootcamps{" "}
+                              <span className="font-normal">
+                                ({exploreSearchResults!.bootcamps.length})
+                              </span>
+                            </h3>
+                            <div className="space-y-2">
+                              {exploreSearchResults!.bootcamps
+                                .slice(0, 3)
+                                .map((bootcamp) => (
+                                  <button
+                                    key={bootcamp.id}
+                                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                    onClick={() => {
+                                      setIsExploreOpen(false);
+                                      setExploreSearchQuery("");
+                                      onNavigate(
+                                        routes.bootcampDetail(bootcamp.id),
+                                      );
+                                    }}
+                                  >
+                                    <Users className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate text-foreground">
+                                        {bootcamp.title}
+                                      </p>
+                                    </div>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                ) : isExploreSearchLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <div className="space-y-3 text-center">
+                      <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Loading popular content...
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-8">
+                    {/* Popular Courses */}
+                    {(exploreSearchResults?.courses?.length ?? 0) > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                          📚 Popular Courses
+                        </h3>
+                        <div className="space-y-2">
+                          {exploreSearchResults!.courses
+                            .slice(0, 4)
+                            .map((course) => (
+                              <button
+                                key={course.id}
+                                className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                onClick={() => {
+                                  setIsExploreOpen(false);
+                                  setExploreSearchQuery("");
+                                  onNavigate(routes.courseDetail(course.slug));
+                                }}
+                              >
+                                <BookOpen className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {course.title}
+                                  </p>
+                                  {course.summary && (
+                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                      {course.summary}
+                                    </p>
+                                  )}
+                                </div>
+                                {course.isEnrolled && (
+                                  <Badge className="text-xs flex-shrink-0 ml-2">
+                                    ✓ Enrolled
+                                  </Badge>
+                                )}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Popular Roadmaps */}
+                    {(exploreSearchResults?.roadmaps?.length ?? 0) > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                          🛣️ Popular Roadmaps
+                        </h3>
+                        <div className="space-y-2">
+                          {exploreSearchResults!.roadmaps
+                            .slice(0, 4)
+                            .map((roadmap) => (
+                              <button
+                                key={roadmap.id}
+                                className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                onClick={() => {
+                                  setIsExploreOpen(false);
+                                  setExploreSearchQuery("");
+                                  onNavigate(
+                                    routes.roadmapDetail(roadmap.slug),
+                                  );
+                                }}
+                              >
+                                <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {roadmap.title}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Popular Projects */}
+                    {(exploreSearchResults?.projects?.length ?? 0) > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                          💻 Popular Projects
+                        </h3>
+                        <div className="space-y-2">
+                          {exploreSearchResults!.projects
+                            .slice(0, 4)
+                            .map((project) => (
+                              <button
+                                key={project.id}
+                                className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                onClick={() => {
+                                  setIsExploreOpen(false);
+                                  setExploreSearchQuery("");
+                                  onNavigate(
+                                    routes.projectDetail(project.slug),
+                                  );
+                                }}
+                              >
+                                <Code className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {project.title}
+                                  </p>
+                                  {project.level && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {project.level}
+                                    </p>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Popular Bootcamps */}
+                    {(exploreSearchResults?.bootcamps?.length ?? 0) > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                          👥 Popular Bootcamps
+                        </h3>
+                        <div className="space-y-2">
+                          {exploreSearchResults!.bootcamps
+                            .slice(0, 4)
+                            .map((bootcamp) => (
+                              <button
+                                key={bootcamp.id}
+                                className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 text-left transition-all duration-150 hover:translate-x-1 hover:shadow-sm"
+                                onClick={() => {
+                                  setIsExploreOpen(false);
+                                  setExploreSearchQuery("");
+                                  onNavigate(
+                                    routes.bootcampDetail(bootcamp.id),
+                                  );
+                                }}
+                              >
+                                <Users className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {bootcamp.title}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Skill Guides */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-3">
+                        🎯 Skill Guides
+                      </h3>
+                      <div className="lg:grid grid-cols-5 gap-4 flex flex-col">
+                        {skillGuides.map((skill) => (
+                          <Card
+                            key={skill.name}
+                            className="cursor-pointer hover:shadow-md transition-shadow border-border card-hover"
+                            onClick={() => {
+                              onNavigate(
+                                `${routes.courses}?skill=${skill.name.toLowerCase()}`,
+                              );
+                              setIsExploreOpen(false);
+                            }}
+                          >
+                            <CardContent className="p-4 flex items-center space-x-3">
+                              <div
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${skill.color}`}
+                              >
+                                {skill.icon}
+                              </div>
+                              <span className="font-medium text-sm">
+                                {skill.name}
+                              </span>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Levels */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-4">
+                        📈 Browse by Level
+                      </h3>
+                      <div className="lg:grid grid-cols-3 gap-6 flex flex-col">
+                        <Card
+                          className="relative overflow-hidden border-border card-hover cursor-pointer"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=beginner`);
+                            setIsExploreOpen(false);
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500">
+                            <img
+                              src="/placeholder.svg?height=200&width=300"
+                              alt="Beginner Level"
+                              className="w-full h-full object-cover opacity-80"
+                            />
+                          </div>
+                          <CardContent className="relative z-10 p-6 text-white">
+                            <h4 className="text-lg font-bold">Beginner</h4>
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          className="relative overflow-hidden border-border card-hover cursor-pointer"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=intermediate`);
+                            setIsExploreOpen(false);
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent">
+                            <img
+                              src="/placeholder.svg?height=200&width=300"
+                              alt="Intermediate Level"
+                              className="w-full h-full object-cover opacity-80"
+                            />
+                          </div>
+                          <CardContent className="relative z-10 p-6 text-white">
+                            <h4 className="text-lg font-bold">Intermediate</h4>
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          className="relative overflow-hidden border-border card-hover cursor-pointer"
+                          onClick={() => {
+                            onNavigate(`${routes.courses}?level=advanced`);
+                            setIsExploreOpen(false);
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-accent to-purple-600">
+                            <img
+                              src="/placeholder.svg?height=200&width=300"
+                              alt="Advanced Level"
+                              className="w-full h-full object-cover opacity-80"
+                            />
+                          </div>
+                          <CardContent className="relative z-10 p-6 text-white">
+                            <h4 className="text-lg font-bold">Advanced</h4>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </PopoverContent> */}
+            </PopoverContent>
           </Popover>
 
           {/* Desktop Search Bar */}
@@ -468,54 +919,113 @@ export function NavigationBar({
                   <Loader isLoader={false} />
                 ) : (
                   <div className="max-h-[60vh] overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b cursor-pointer hover:bg-muted/50 ${
-                          !notification.read ? "bg-primary/5" : ""
-                        }`}
-                        onClick={() => handleNotificationClick(notification.id)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div
-                            className={`w-2 h-2 rounded-full mt-2 ${
-                              notification.type?.includes("COMPLETED")
-                                ? "bg-green-500"
-                                : notification.type?.includes("START") ||
-                                    notification.type?.includes("STARTED")
-                                  ? "bg-primary"
-                                  : notification.type?.includes("WATCHED")
-                                    ? "bg-yellow-500"
-                                    : "bg-purple-500"
-                            }`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {notification.description}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(notification.createdAt)}
-                            </p>
-                          </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-primary rounded-full" />
-                          )}
+                    {/* Section: NEW NOTIFICATIONS */}
+                    {notifications.filter((n: Activity) => !n.isRead).length >
+                      0 && (
+                      <div>
+                        <div className="sticky top-0 px-4 py-2 bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800">
+                          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">
+                            🆕 New (
+                            {
+                              notifications.filter((n: Activity) => !n.isRead)
+                                .length
+                            }
+                            )
+                          </p>
                         </div>
+                        {notifications
+                          .filter((n: Activity) => !n.isRead)
+                          .map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="p-4 border-b bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-transparent dark:hover:from-blue-900/40 transition-colors border-l-4 border-l-blue-500"
+                              onClick={() =>
+                                handleNotificationClick(notification.id)
+                              }
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                                    notification.type?.includes("COMPLETED")
+                                      ? "bg-green-500"
+                                      : notification.type?.includes("MILESTONE")
+                                        ? "bg-orange-500 animate-pulse"
+                                        : "bg-blue-500"
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm text-foreground">
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {notification.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {format(notification.createdAt)}
+                                  </p>
+                                </div>
+                                <div className="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
+                              </div>
+                            </div>
+                          ))}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Section: READ NOTIFICATIONS */}
+                    {notifications.filter((n: Activity) => n.isRead).length >
+                      0 && (
+                      <div>
+                        <div className="sticky top-0 px-4 py-2 bg-muted border-b">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">
+                            Earlier
+                          </p>
+                        </div>
+                        {notifications
+                          .filter((n: Activity) => n.isRead)
+                          .map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() =>
+                                handleNotificationClick(notification.id)
+                              }
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`w-2 h-2 rounded-full mt-2 ${
+                                    notification.type?.includes("COMPLETED")
+                                      ? "bg-green-500"
+                                      : notification.type?.includes("MILESTONE")
+                                        ? "bg-orange-500"
+                                        : "bg-gray-400"
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-muted-foreground">
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground/70">
+                                    {notification.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/60 mt-1">
+                                    {format(notification.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="p-4 border-t">
                   <Button
-                    onClick={handleDeleteNotifications}
+                    onClick={handleMarkAllRead}
                     variant="ghost"
                     size="sm"
                     className="w-full"
                   >
-                    Clear All Notifications
+                    Mark All as Read
                   </Button>
                 </div>
               </PopoverContent>
@@ -574,16 +1084,12 @@ export function NavigationBar({
                   <span>Project30</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>Community</span>
-                </DropdownMenuItem>
-                {/* <DropdownMenuItem
-                  onClick={() => onNavigate(routes.portfolio(user?.id))}
+                <DropdownMenuItem
+                  onClick={() => onNavigate(routes.portfolio(user?.id || ""))}
                 >
                   <User className="mr-2 h-4 w-4" />
                   <span>My Portfolio</span>
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate(routes.community)}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Leaderboard</span>
