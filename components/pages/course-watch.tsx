@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,6 @@ import { usePathname } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
-import Link from "next/link";
 import { Separator } from "../ui/separator";
 import { NextContentOverlay } from "../next-content-overlay";
 
@@ -98,17 +97,17 @@ export function CourseWatchPage({
 
       // Redirect if user is not enrolled in the course
       if (!userCourse || !userCourse.id) {
-        onNavigate?.(routes.courseDetail(slug));
         setLoading(false);
+        setTimeout(() => onNavigate?.(routes.courseDetail(slug)), 0);
         return;
       }
 
-      setCourse(userCourse.course);
+      setCourse(userCourse?.course);
       setUserCourse(userCourse);
       setUserChapters(userCourse?.userChapters);
       setUserVideos(userCourse?.userVideos);
 
-      const course = userCourse.course;
+      const course = userCourse?.course;
       const chapter: Chapter | any = course?.chapters.find(
         (ch: Chapter) => ch.slug === chapterSlug,
       );
@@ -232,14 +231,18 @@ export function CourseWatchPage({
     });
   };
 
-  const nextVideo = next();
-  const prevVideo = prev();
+  const nextVideo = useMemo(() => next(), [chapter, currentVideo]);
+  const prevVideo = useMemo(() => prev(), [chapter, currentVideo]);
 
-  const nextChapter =
-    course?.chapters[
-      course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) +
-        1
-    ];
+  const nextChapter = useMemo(
+    () =>
+      course?.chapters[
+        course?.chapters?.findIndex(
+          (ch: Chapter) => ch.slug === chapter?.slug,
+        ) + 1
+      ],
+    [course, chapter],
+  );
 
   const prevChapter =
     course?.chapters[
@@ -345,9 +348,11 @@ export function CourseWatchPage({
                   <VimeoPlayer
                     video={currentVideo}
                     onEnded={async () => {
-                      if (nextVideo) return handleVideoClick(nextVideo);
-                      if (!nextVideo && nextChapter)
-                        handleChapterClick(nextChapter);
+                      setTimeout(() => {
+                        if (nextVideo) return handleVideoClick(nextVideo);
+                        if (!nextVideo && nextChapter)
+                          handleChapterClick(nextChapter);
+                      }, 0);
                     }}
                     onComplete={handleMarkComplete}
                   />

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Medal, Trophy, Award, ArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Loader } from "../ui/loader";
 
@@ -80,11 +80,11 @@ export function ProjectLeaderboardPage({
     setAchievements(data);
   };
 
-  useMemo(() => {
+  useEffect(() => {
     load();
   }, []);
 
-  useMemo(() => {
+  useEffect(() => {
     if (activeTab.includes("weekly")) {
       loadWeekly();
     }
