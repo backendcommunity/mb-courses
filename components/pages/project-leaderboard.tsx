@@ -247,7 +247,7 @@ export function ProjectLeaderboardPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {leaderboards.length <= 0 && (
+              {leaderboards?.length <= 0 && (
                 <div className="text-center p-8">
                   <p className="text-muted-foreground">
                     Weekly leaderboard resets every day at midnight
@@ -255,7 +255,7 @@ export function ProjectLeaderboardPage({
                   <p className="mt-2">Check back for the overall rankings!</p>
                 </div>
               )}
-              {leaderboards.length >= 1 && (
+              {leaderboards?.length >= 1 && (
                 <div className="space-y-4">
                   {/* Leaderboard Table */}
                   <div className="rounded-md border">
@@ -350,7 +350,7 @@ export function ProjectLeaderboardPage({
               <CardDescription>Top performers for this week</CardDescription>
             </CardHeader>
             <CardContent>
-              {weeklyLeaderboards.length >= 1 && (
+              {weeklyLeaderboards?.length >= 1 && (
                 <div className="space-y-4">
                   {/* Leaderboard Table */}
                   <div className="rounded-md border">
@@ -434,7 +434,7 @@ export function ProjectLeaderboardPage({
                   </div>
                 </div>
               )}
-              {weeklyLeaderboards.length <= 0 && (
+              {weeklyLeaderboards?.length <= 0 && (
                 <div className="text-center p-8">
                   <p className="text-muted-foreground">
                     Weekly leaderboard resets every Sunday at midnight
@@ -456,7 +456,7 @@ export function ProjectLeaderboardPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {achievements.map((achievement) => (
+                {achievements?.map((achievement) => (
                   <div
                     key={achievement.name}
                     className="flex items-center justify-between p-4 border rounded-lg"
