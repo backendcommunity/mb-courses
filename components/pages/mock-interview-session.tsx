@@ -795,13 +795,14 @@ export function MockInterviewSessionPage({
       console.error("Failed to initialize session:", err);
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          "Failed to initialize interview session.",
+        err?.message ||
+        "Failed to initialize interview session.",
       );
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, user?.id, store]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, user?.id]);
 
   useEffect(() => {
     initializeSession();

@@ -237,17 +237,17 @@ export function CourseWatchPage({
   const nextChapter = useMemo(
     () =>
       course?.chapters[
-        course?.chapters?.findIndex(
-          (ch: Chapter) => ch.slug === chapter?.slug,
-        ) + 1
+      course?.chapters?.findIndex(
+        (ch: Chapter) => ch.slug === chapter?.slug,
+      ) + 1
       ],
     [course, chapter],
   );
 
   const prevChapter =
     course?.chapters[
-      course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
-        1
+    course?.chapters?.findIndex((ch: Chapter) => ch.slug === chapter?.slug) -
+    1
     ];
 
   const handleContinueNext = useCallback(() => {
@@ -300,8 +300,9 @@ export function CourseWatchPage({
   const handleSaveNotes = async () => {
     if (!note) return;
     try {
-      const saveNote = await store.saveNote(note, course.id, currentVideo?.id!);
+      const saveNote = await store.saveNote(note, slug, currentVideo?.slug!);
       setNotes([...notes, saveNote]);
+      setNote("");
     } catch (error) {
       toast.error("Error occurred adding note");
     }
@@ -433,7 +434,7 @@ export function CourseWatchPage({
               <Card className="overflow-hidden">
                 <CourseQuizPage
                   courseId={slug}
-                  onNavigate={() => {}}
+                  onNavigate={() => { }}
                   quizId={currentVideo?.quizId!}
                   showNav={false}
                   handleQuizSubmit={(passed) => {
@@ -715,9 +716,8 @@ export function CourseWatchPage({
                       {[
                         {
                           time: "00:00",
-                          text: `Welcome to ${
-                            currentVideo?.title || chapter.title
-                          }.`,
+                          text: `Welcome to ${currentVideo?.title || chapter.title
+                            }.`,
                         },
                         {
                           time: "00:15",
@@ -738,7 +738,7 @@ export function CourseWatchPage({
                           onClick={() =>
                             setCurrentTime(
                               Number.parseInt(item.time.split(":")[0]) * 60 +
-                                Number.parseInt(item.time.split(":")[1]),
+                              Number.parseInt(item.time.split(":")[1]),
                             )
                           }
                         >
@@ -799,11 +799,10 @@ export function CourseWatchPage({
                   {chapter.videos.map((video: Video) => (
                     <div
                       key={video.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                        video.id === currentVideo?.id
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${video.id === currentVideo?.id
                           ? "border border-blue-200"
                           : ""
-                      }`}
+                        }`}
                       onClick={() => handleVideoClick(video)}
                     >
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
@@ -819,15 +818,15 @@ export function CourseWatchPage({
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {(!video?.duration?.includes("0") ||
                             video?.quizCourse?.quiz?.timeLimit! > 0) && (
-                            <>
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                {video?.duration ??
-                                  video?.quizCourse?.quiz?.timeLimit}{" "}
-                                mins
-                              </span>
-                            </>
-                          )}
+                              <>
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {video?.duration ??
+                                    video?.quizCourse?.quiz?.timeLimit}{" "}
+                                  mins
+                                </span>
+                              </>
+                            )}
                           <Badge variant="outline" className="text-xs">
                             {video?.type}
                           </Badge>
@@ -931,11 +930,10 @@ export function CourseWatchPage({
                   {course.chapters.map((ch: Chapter, index: number) => (
                     <div
                       key={ch.slug}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                        ch.slug === chapter?.slug
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${ch.slug === chapter?.slug
                           ? "border border-blue-200"
                           : ""
-                      }`}
+                        }`}
                       onClick={() => handleChapterClick(ch)}
                     >
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
@@ -955,35 +953,35 @@ export function CourseWatchPage({
 
                           {ch.videos.filter((v) => v.type === "QUIZ").length >
                             0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "QUIZ")
-                                  .length
-                              }{" "}
-                              quizzes
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "QUIZ")
+                                    .length
+                                }{" "}
+                                quizzes
+                              </Badge>
+                            )}
                           {ch.videos.filter((v) => v.type === "EXERCISE")
                             .length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "EXERCISE")
-                                  .length
-                              }{" "}
-                              exercises
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "EXERCISE")
+                                    .length
+                                }{" "}
+                                exercises
+                              </Badge>
+                            )}
 
                           {ch.videos.filter((v) => v.type === "PLAYGROUND")
                             .length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "PLAYGROUND")
-                                  .length
-                              }{" "}
-                              playgrounds
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "PLAYGROUND")
+                                    .length
+                                }{" "}
+                                playgrounds
+                              </Badge>
+                            )}
                         </div>
                       </div>
                     </div>

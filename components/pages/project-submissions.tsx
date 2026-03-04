@@ -13,6 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -48,6 +55,7 @@ export function ProjectSubmissionsPage({
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<ViewMode>("mine");
   const [currentPage, setCurrentPage] = useState(1);
+  const [previewSubmission, setPreviewSubmission] = useState<any>(null);
   const pageSize = 20;
 
   // Fetch submissions when filters change
@@ -156,9 +164,9 @@ export function ProjectSubmissionsPage({
     averageScore:
       submissions.filter((s) => s.score).length > 0
         ? submissions
-            .filter((s) => s.score)
-            .reduce((acc, s) => acc + s.score, 0) /
-          submissions.filter((s) => s.score).length
+          .filter((s) => s.score)
+          .reduce((acc, s) => acc + s.score, 0) /
+        submissions.filter((s) => s.score).length
         : 0,
   };
 
@@ -185,22 +193,20 @@ export function ProjectSubmissionsPage({
       <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
         <button
           onClick={() => setViewMode("mine")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            viewMode === "mine"
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "mine"
+            ? "bg-background shadow-sm text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+            }`}
         >
           <User className="h-4 w-4" />
           My Submissions
         </button>
         <button
           onClick={() => setViewMode("all")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            viewMode === "all"
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === "all"
+            ? "bg-background shadow-sm text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+            }`}
         >
           <Users className="h-4 w-4" />
           All Submissions
@@ -394,9 +400,21 @@ export function ProjectSubmissionsPage({
                         onNavigate?.(`/projects/${submission.project.slug}`)
                       }
                     >
-                      View Project Details
+                      View Code
                     </Button>
                   )}
+                  {submission.liveUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPreviewSubmission(submission)
+                      }
+                    >
+                      View Submission
+                    </Button>
+                  )}
+
                   {viewMode === "mine" && submission.status === "rejected" && (
                     <Button size="sm">Resubmit Project</Button>
                   )}
@@ -428,6 +446,36 @@ export function ProjectSubmissionsPage({
             </Card>
           )}
         </div>
+      )}
+
+      {/* Preview Dialog */}
+      {previewSubmission && (
+        <Dialog
+          open={!!previewSubmission}
+          onOpenChange={(open) => !open && setPreviewSubmission(null)}
+        >
+          <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col p-0">
+            <DialogHeader className="p-4 border-b">
+              <DialogTitle>
+                Preview Submission: {previewSubmission.project?.title}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden relative bg-muted/20">
+              {previewSubmission.liveUrl ? (
+                <iframe
+                  src={previewSubmission.liveUrl}
+                  className="w-full h-full border-0"
+                  title="Project Preview"
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No preview available for this submission
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
