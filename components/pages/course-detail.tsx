@@ -156,15 +156,16 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
   const handleContinueLearning = () => {
     // Navigate to first incomplete chapter or continue from current
+    if (!course?.chapters?.length) return;
 
-    const userChapters = course?.userCourse?.userChapters;
-    const userVideos = course?.userCourse?.userVideos;
+    const userChapters = course?.userCourse?.userChapters ?? [];
+    const userVideos = course?.userCourse?.userVideos ?? [];
 
     const watchedVideoIds = new Set(
-      userVideos?.filter((v) => v.isCompleted)?.map((v) => v.videoId),
+      userVideos?.filter((v: any) => v.isCompleted)?.map((v: any) => v.videoId),
     );
     const watchedChapterIds = new Set(
-      userChapters?.filter((c) => c.isCompleted)?.map((v) => v.chapterId),
+      userChapters?.filter((c: any) => c.isCompleted)?.map((v: any) => v.chapterId),
     );
 
     const nextChapter =
@@ -174,9 +175,11 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
       nextChapter?.videos?.find((v: Video) => !watchedVideoIds.has(v.id)) ||
       nextChapter?.videos?.[0];
 
+    if (!nextChapter?.slug) return;
+
     const watchPath = routes.courseWatch(
       slug,
-      nextChapter?.slug!,
+      nextChapter.slug,
       nextVideo?.slug,
     );
 
@@ -298,9 +301,8 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
             </CardHeader>
             <CardContent>
               <div
-                className={`space-y-4 ${
-                  isDescriptionExpanded ? "" : "line-clamp-3"
-                }`}
+                className={`space-y-4 ${isDescriptionExpanded ? "" : "line-clamp-3"
+                  }`}
               >
                 {course?.description
                   ?.split("\n\n")
@@ -453,7 +455,7 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                   onClose={() => setShowPaymentDialog(false)}
                   open={showPaymentDialog}
                   data={{ ...course, type: "course" }}
-                  onHandlePreview={() => {}}
+                  onHandlePreview={() => { }}
                   onHandlePurchase={(id: string, type: any, success: boolean) =>
                     handlePurchase(id, type, success)
                   }
@@ -477,18 +479,16 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
 
           {/* Certification Card */}
           <Card
-            className={`${
-              canEarnCertificate
+            className={`${canEarnCertificate
                 ? "border-green-200 bg-green-50/50"
                 : "border-orange-200 bg-orange-50/50"
-            }`}
+              }`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-lg ${
-                    canEarnCertificate ? "bg-green-100" : "bg-orange-100"
-                  }`}
+                  className={`p-2 rounded-lg ${canEarnCertificate ? "bg-green-100" : "bg-orange-100"
+                    }`}
                 >
                   {canEarnCertificate ? (
                     <Trophy className="h-6 w-6 text-green-600" />
@@ -591,9 +591,8 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                   return (
                     <div
                       key={chapter.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${
-                        currentChapter?.id === chapter.id ? "bg-muted" : ""
-                      }`}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 ${currentChapter?.id === chapter.id ? "bg-muted" : ""
+                        }`}
                       onClick={() => handleChapterClick(chapter, index)}
                     >
                       <div className="flex items-center gap-3">
@@ -613,13 +612,12 @@ export function CourseDetailPage({ slug, onNavigate }: CourseDetailPageProps) {
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Badge
                               variant="outline"
-                              className={`text-xs ${
-                                !chapter.isPremium
+                              className={`text-xs ${!chapter.isPremium
                                   ? "border-green-600 text-green-600"
                                   : course?.enrolled
                                     ? "border-blue-600 text-blue-600"
                                     : "border-orange-600 text-orange-600"
-                              }`}
+                                }`}
                             >
                               {!chapter.isPremium
                                 ? "FREE"

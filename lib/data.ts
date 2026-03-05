@@ -78,6 +78,7 @@ export interface Activity {
   isRead: boolean;
   isNotification: boolean;
   createdAt: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface StreakData {

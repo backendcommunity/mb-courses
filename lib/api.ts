@@ -44,5 +44,6 @@ api.interceptors.response.use(
 
 export const socketAPI = axios.create({
   baseURL: process.env.NEXT_PUBLIC_WEBHOOK_URL || "http://localhost:8080",
+  timeout: 30000, // 30 second timeout for code execution
   // withCredentials: true, // if you're using cookies
 });

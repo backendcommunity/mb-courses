@@ -24,6 +24,9 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
+  Pencil,
+  Trash2,
+  X,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
@@ -81,6 +84,8 @@ export function CourseWatchPage({
   const path = usePathname();
   const [activeTab, setActiveTab] = useState("overview");
   const [showNextOverlay, setShowNextOverlay] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState("");
 
   async function loadNotes(courseId: string, videoId: string) {
     setLoadingNotes(true);
@@ -305,6 +310,31 @@ export function CourseWatchPage({
       setNote("");
     } catch (error) {
       toast.error("Error occurred adding note");
+    }
+  };
+
+  const handleUpdateNote = async (noteId: string) => {
+    if (!editingNoteContent.trim()) return;
+    try {
+      await store.updateNote(noteId, slug, currentVideo?.slug!, editingNoteContent);
+      setNotes(notes.map((n: Note) =>
+        n.id === noteId ? { ...n, content: editingNoteContent } : n
+      ));
+      setEditingNoteId(null);
+      setEditingNoteContent("");
+      toast.success("Note updated");
+    } catch (error) {
+      toast.error("Failed to update note");
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await store.deleteNote(noteId, slug, currentVideo?.slug!);
+      setNotes(notes.filter((n: Note) => n.id !== noteId));
+      toast.success("Note deleted");
+    } catch (error) {
+      toast.error("Failed to delete note");
     }
   };
 
@@ -619,26 +649,90 @@ export function CourseWatchPage({
                         <Loader isLoader={true} isFull={false} />
                       ) : (
                         <div className="space-y-3  pt-5">
-                          {notes?.map((note: Note) => (
+                          {notes?.map((noteItem: Note) => (
                             <div
                               className="border rounded-lg p-3"
-                              key={note.id}
+                              key={noteItem.id}
                             >
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                                  {user.name
-                                    .split(" ")
-                                    .map((n: any) => n[0])
-                                    .join("")}
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {user.avatar ? (
+                                    <img
+                                      src={user.avatar}
+                                      alt={user.name}
+                                      className="w-6 h-6 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+                                      {user.name
+                                        .split(" ")
+                                        .map((n: any) => n[0])
+                                        .join("")}
+                                    </div>
+                                  )}
+                                  <span className="font-medium text-sm">
+                                    {user.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(noteItem?.createdAt)}
+                                  </span>
                                 </div>
-                                <span className="font-medium text-sm">
-                                  {user.name}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(note?.createdAt)}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  {editingNoteId === noteItem.id ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => {
+                                        setEditingNoteId(null);
+                                        setEditingNoteContent("");
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={() => {
+                                          setEditingNoteId(noteItem.id);
+                                          setEditingNoteContent(noteItem.content);
+                                        }}
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-destructive hover:text-destructive"
+                                        onClick={() => handleDeleteNote(noteItem.id)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                              <p className="text-sm">{note.content}</p>
+                              {editingNoteId === noteItem.id ? (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    value={editingNoteContent}
+                                    onChange={(e) => setEditingNoteContent(e.target.value)}
+                                    className="text-sm min-h-[60px]"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleUpdateNote(noteItem.id)}
+                                    disabled={!editingNoteContent.trim()}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              ) : (
+                                <p className="text-sm">{noteItem.content}</p>
+                              )}
                             </div>
                           ))}
                           {!notes.length && <div>No notes added yet</div>}
@@ -800,8 +894,8 @@ export function CourseWatchPage({
                     <div
                       key={video.id}
                       className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${video.id === currentVideo?.id
-                          ? "border border-blue-200"
-                          : ""
+                        ? "border border-blue-200"
+                        : ""
                         }`}
                       onClick={() => handleVideoClick(video)}
                     >
@@ -931,8 +1025,8 @@ export function CourseWatchPage({
                     <div
                       key={ch.slug}
                       className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${ch.slug === chapter?.slug
-                          ? "border border-blue-200"
-                          : ""
+                        ? "border border-blue-200"
+                        : ""
                         }`}
                       onClick={() => handleChapterClick(ch)}
                     >

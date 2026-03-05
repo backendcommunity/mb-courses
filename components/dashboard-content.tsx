@@ -46,6 +46,7 @@ export function DashboardContent({ }: DashboardContentProps) {
   const [isRoadmapLoading, setIsRoadmapLoading] = useState(false);
   const [activities, setActivities] = useState([]);
   const [userRoadmaps, setUserRoadmaps] = useState([]);
+  const [streakData, setStreakData] = useState<any>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,17 +55,19 @@ export function DashboardContent({ }: DashboardContentProps) {
       try {
         setIsActivitiesLoading(true);
         setIsRoadmapLoading(true);
-        const [activities, userRoadmaps] = await Promise.all([
+        const [activities, userRoadmaps, streak] = await Promise.all([
           store.getActivities({}),
           store.getUserRoadmaps({
             size: 1,
             skip: 0,
           }),
+          store.getStreak().catch(() => null),
         ]);
 
         if (!cancelled) {
           setActivities(activities);
           setUserRoadmaps(userRoadmaps);
+          if (streak) setStreakData(streak);
         }
       } catch (error) {
       } finally {
@@ -148,7 +151,7 @@ export function DashboardContent({ }: DashboardContentProps) {
             className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10"
           >
             <Flame className="h-3 w-3 mr-1 text-orange-500" />
-            {user?.currentStreak ?? user?.streak ?? 0} day streak
+            {streakData?.currentStreak ?? user?.currentStreak ?? user?.streak ?? 0} day streak
           </Badge>
         </div>
       </div>

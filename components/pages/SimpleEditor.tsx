@@ -57,7 +57,7 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
         if (!cancelled) {
           setSavedCodes(playgrounds);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
     load();
 
@@ -112,14 +112,22 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
       return;
     }
     setIsLoading(true);
-    const data = await store.executeCode({
-      language: language.code,
-      code: btoa(code),
-    });
+    try {
+      const data = await store.executeCode({
+        language: language.code,
+        code: btoa(code),
+      });
 
-    const result = data?.stdout ?? data?.stderr;
-    setResult(result);
-    setIsLoading(false);
+      const result = data?.stdout ?? data?.stderr;
+      setResult(result || "No output");
+    } catch (error: any) {
+      const errorMsg = error?.code === "ECONNABORTED"
+        ? "Code execution timed out. Please try again."
+        : error?.message || "Failed to execute code. Please try again.";
+      setResult(`<p class='text-red-500'>${errorMsg}</p>`);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const handleEditorDidMount = (editor: any) => {
@@ -144,9 +152,8 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
   return (
     <Card className="relative">
       <CardHeader
-        className={`flex justify-between  ${
-          full ? "lg:flex-row flex-col" : "flex-col"
-        }`}
+        className={`flex justify-between  ${full ? "lg:flex-row flex-col" : "flex-col"
+          }`}
       >
         <span>
           <CardTitle className="flex items-center gap-2">
@@ -160,6 +167,7 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
 
         <div className="flex gap-5 justify-between">
           <Select
+            value={language?.code}
             onValueChange={(lang) => {
               const language = languages.find((l) => l.code === lang);
               setLanguage(language);
@@ -244,9 +252,8 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
 
           {/* Right Drawer */}
           <div
-            className={`absolute top-0 right-0 h-full w-80 bg-white dark:bg-secondary border-l shadow-md transform transition-transform duration-300 ${
-              drawerOpen ? "translate-x-0" : "translate-x-full"
-            }`}
+            className={`absolute top-0 right-0 h-full w-80 bg-white dark:bg-secondary border-l shadow-md transform transition-transform duration-300 ${drawerOpen ? "translate-x-0" : "translate-x-full"
+              }`}
           >
             <div className="p-4">
               <h3 className="font-semibold text-lg">Execution Result</h3>
@@ -288,9 +295,8 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
 
           {/* Bottom Drawer for User Input */}
           <div
-            className={`absolute bottom-0 left-0 w-full bg-white dark:bg-secondary border-t shadow-md transform transition-transform duration-300 ${
-              userInputOpen ? "translate-y-0" : "translate-y-full"
-            }`}
+            className={`absolute bottom-0 left-0 w-full bg-white dark:bg-secondary border-t shadow-md transform transition-transform duration-300 ${userInputOpen ? "translate-y-0" : "translate-y-full"
+              }`}
           >
             <div className="p-4">
               <h3 className="font-semibold text-lg">User Input</h3>
@@ -320,9 +326,8 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
                   setTitle(e.target.value);
                 }}
                 type="text"
-                className={`${
-                  isTextRequired ? "border-red-300 focus:ring-red-500" : ""
-                }`}
+                className={`${isTextRequired ? "border-red-300 focus:ring-red-500" : ""
+                  }`}
               ></Input>
             </div>
             <Button
@@ -413,9 +418,8 @@ export function SimpleEditor({ playground, full = true }: EditorProps) {
                   setTitle(e.target.value);
                 }}
                 type="text"
-                className={`${
-                  isTextRequired ? "border-red-300 focus:ring-red-500" : ""
-                }`}
+                className={`${isTextRequired ? "border-red-300 focus:ring-red-500" : ""
+                  }`}
               ></Input>
             </div>
             <Button

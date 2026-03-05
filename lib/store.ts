@@ -220,6 +220,8 @@ interface AppState {
   startQuiz: (id: string) => any;
   submitQuiz: (id: string, questions: any) => any;
   saveNote: (note: string, courseId: string, videoId: string) => any;
+  updateNote: (noteId: string, courseId: string, videoId: string, content: string) => any;
+  deleteNote: (noteId: string, courseId: string, videoId: string) => any;
   startMilestone: (slug: string, topicId: string, data: any) => any;
   markRoadmapItemCompleted: (
     slug: string,
@@ -892,6 +894,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { data } = await api.post(
       `/courses/${courseId}/videos/${videoId}/notes`,
       { note: note },
+    );
+    return data?.data;
+  },
+
+  updateNote: async (noteId: string, courseId: string, videoId: string, content: string) => {
+    const { data } = await api.put(
+      `/courses/${courseId}/videos/${videoId}/notes/${noteId}`,
+      { note: content },
+    );
+    return data?.data;
+  },
+
+  deleteNote: async (noteId: string, courseId: string, videoId: string) => {
+    const { data } = await api.delete(
+      `/courses/${courseId}/videos/${videoId}/notes/${noteId}`,
     );
     return data?.data;
   },

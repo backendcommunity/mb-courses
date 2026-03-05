@@ -71,25 +71,32 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
   const handleRedeem = async (reward: Reward) => {
     try {
       setLoading(true);
-      if (name !== reward?.title) return;
-      if (userXP < reward?.mb) toast.warning("You have insufficient MB");
+      if (name !== reward?.title) {
+        toast.error("Please type the exact reward name to confirm");
+        return;
+      }
+      if (userXP < reward?.mb) {
+        toast.warning("You have insufficient MB");
+        return;
+      }
       const userReward = await store.redeemReward(reward.id);
 
       setRewards((prev: Reward[]) =>
         prev.map((r: Reward) =>
           r.id === reward.id
             ? {
-                ...r,
-                userReward,
-                enrolled: true,
-              }
+              ...r,
+              userReward,
+              enrolled: true,
+            }
             : r,
         ),
       );
       setRedeemReward(false);
+      setName("");
       toast.success("You've redeemed this reward");
     } catch (error: any) {
-      toast.error(error?.message);
+      toast.error(error?.response?.data?.message || error?.message || "Failed to redeem reward");
     } finally {
       setLoading(false);
     }
@@ -139,9 +146,8 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
                 ?.map((reward: Reward) => (
                   <Card
                     key={reward.id}
-                    className={`relative ${
-                      !reward?.active ? "opacity-50" : ""
-                    }`}
+                    className={`relative ${!reward?.active ? "opacity-50" : ""
+                      }`}
                   >
                     {reward?.enrolled && (
                       <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500">
@@ -327,7 +333,7 @@ export function XpRedemptionPage({ onNavigate }: XpRedemptionPageProps) {
         <DialogContent className="w-[95vw] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base md:text-lg">
-              Redeen your reward
+              Redeem your reward
             </DialogTitle>
             <DialogDescription className="text-sm">
               Type this name{" "}
