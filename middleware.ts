@@ -8,11 +8,11 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!token?.value;
 
   const isAuthPage =
-    pathname.startsWith("/auth/") || pathname.startsWith("/xpayment");
+    pathname.startsWith("/auth/") || pathname.startsWith("/ai/payment");
   const isSecret = !isAuthPage;
 
-  if (pathname.startsWith("/xpayment")) {
-    const payment = new URL("/xpayment", request.url);
+  if (pathname.startsWith("/ai/payment")) {
+    const payment = new URL("/ai/payment", request.url);
     return NextResponse.redirect(payment);
   }
 
