@@ -36,9 +36,9 @@ import { useUser } from "@/hooks/use-user";
 import { Loader } from "./ui/loader";
 import { analytics } from "@/lib/analytics";
 
-interface DashboardContentProps {}
+interface DashboardContentProps { }
 
-export function DashboardContent({}: DashboardContentProps) {
+export function DashboardContent({ }: DashboardContentProps) {
   const router = useRouter();
   const user = useUser();
   const store = useAppStore();
@@ -99,8 +99,8 @@ export function DashboardContent({}: DashboardContentProps) {
 
   const quickActions = [
     {
-      title: "Continue Learning",
-      description: "Resume your current course",
+      title: "Browse Courses",
+      description: "Discover new skills",
       icon: Play,
       action: () => handleNavigate(routes.courses),
       color: "bg-blue-500",
@@ -303,7 +303,9 @@ export function DashboardContent({}: DashboardContentProps) {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="secondary">+{activity?.mb} MB</Badge>
+                    {activity?.mb > 0 && (
+                      <Badge variant="secondary">+{activity?.mb} MB</Badge>
+                    )}
                   </div>
                 ))}
               </>
