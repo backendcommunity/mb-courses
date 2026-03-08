@@ -13,6 +13,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/ai/payment")) {
     const payment = new URL("/ai/payment", request.url);
+    payment.search = request.nextUrl.search;
     return NextResponse.redirect(payment);
   }
 
