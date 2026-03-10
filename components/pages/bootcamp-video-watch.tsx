@@ -178,7 +178,7 @@ export function BootcampVideoWatchPage({
 
   const handleVideoClick = (lesson: Lesson) => {
     if (currentLesson?.type == "QUIZ") {
-      if (!quizPassed || currentLesson?.quiz?.required) {
+      if (currentLesson?.quiz?.required && !quizPassed) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
@@ -246,7 +246,7 @@ export function BootcampVideoWatchPage({
     if (!currentLesson || !lesson || !week) return;
 
     if (currentLesson?.type == "QUIZ") {
-      if (!quizPassed || currentLesson?.quiz?.required) {
+      if (currentLesson?.quiz?.required && !quizPassed) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
@@ -308,15 +308,15 @@ export function BootcampVideoWatchPage({
           <Badge variant="outline">{currentLesson?.type}</Badge>
           {(currentLesson?.type === "VIDEO" ||
             currentLesson?.type === "QUIZ") && (
-            <Badge variant="outline" className="flex gap-1">
-              <Clock className="h-3 w-3" />
-              <span className="">
-                {currentLesson?.video?.duration ??
-                  currentLesson?.quiz?.timeLimit}{" "}
-                mins
-              </span>
-            </Badge>
-          )}
+              <Badge variant="outline" className="flex gap-1">
+                <Clock className="h-3 w-3" />
+                <span className="">
+                  {currentLesson?.video?.duration ??
+                    currentLesson?.quiz?.timeLimit}{" "}
+                  mins
+                </span>
+              </Badge>
+            )}
         </div>
       </div>
 
@@ -336,7 +336,7 @@ export function BootcampVideoWatchPage({
               <Card className="overflow-hidden">
                 <CourseQuizPage
                   courseId={slug}
-                  onNavigate={() => {}}
+                  onNavigate={() => { }}
                   quizId={currentLesson?.quizId!}
                   showNav={false}
                   handleQuizSubmit={(passed) => {
@@ -721,9 +721,8 @@ export function BootcampVideoWatchPage({
                     {[
                       {
                         time: "00:00",
-                        text: `Welcome to ${
-                          currentLesson?.title || week?.title
-                        }.`,
+                        text: `Welcome to ${currentLesson?.title || week?.title
+                          }.`,
                       },
                       {
                         time: "00:15",
@@ -744,7 +743,7 @@ export function BootcampVideoWatchPage({
                         onClick={() =>
                           setCurrentTime(
                             Number.parseInt(item.time.split(":")[0]) * 60 +
-                              Number.parseInt(item.time.split(":")[1]),
+                            Number.parseInt(item.time.split(":")[1]),
                           )
                         }
                       >
@@ -797,11 +796,10 @@ export function BootcampVideoWatchPage({
               {week?.lessons?.map((lesson: Lesson) => (
                 <div
                   key={lesson.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    lesson.id === currentLesson?.id
+                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${lesson.id === currentLesson?.id
                       ? "border border-blue-200"
                       : ""
-                  }`}
+                    }`}
                   onClick={() => handleVideoClick(lesson)}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
@@ -868,11 +866,11 @@ export function BootcampVideoWatchPage({
           onStartNextWeek={
             week?.nextWeek
               ? () => {
-                  setShowWeekComplete(false);
-                  onNavigate?.(
-                    `/bootcamps/${id}/${cohort}/weeks/${week.nextWeek!.id}/${week.nextWeek!.lessons?.[0]?.id ?? ""}`,
-                  );
-                }
+                setShowWeekComplete(false);
+                onNavigate?.(
+                  `/bootcamps/${id}/${cohort}/weeks/${week.nextWeek!.id}/${week.nextWeek!.lessons?.[0]?.id ?? ""}`,
+                );
+              }
               : undefined
           }
           nextWeekTitle={week?.nextWeek?.title}

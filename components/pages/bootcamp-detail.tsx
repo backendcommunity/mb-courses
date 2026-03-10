@@ -83,7 +83,7 @@ export function BootcampDetailPage({
         if (!cancelled) {
           setBonusCourses(bonuses);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     load();
@@ -225,10 +225,10 @@ export function BootcampDetailPage({
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold">
-                        {bootcamp?.userCohort?.totalAssigments}
+                        {bootcamp?.userCohort?.totalAssignments}
                       </div>
                       <div className="text-xs text-blue-100">
-                        Assigments Completed
+                        Assignments Completed
                       </div>
                     </div>
                   </div>
@@ -310,13 +310,12 @@ export function BootcampDetailPage({
                     (module: any, index: number) => (
                       <div
                         key={index}
-                        className={`border rounded-lg p-4 ${
-                          module?.status === "current"
-                            ? "border-gray-500 dark:border-gray-100/90"
-                            : module?.status === "completed"
-                              ? "border-green-500/50 bg-green-500/10"
-                              : "border-gray-500/30"
-                        }`}
+                        className={`border rounded-lg p-4 ${module?.status === "current"
+                          ? "border-gray-500 dark:border-gray-100/90"
+                          : module?.status === "completed"
+                            ? "border-green-500/50 bg-green-500/10"
+                            : "border-gray-500/30"
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div>
@@ -507,7 +506,7 @@ export function BootcampDetailPage({
                                     </div>
                                     <div className="mt-4 flex items-center justify-between">
                                       {bootcamp?.enrolled ? (
-                                        <a target="_blank" href={"#"}>
+                                        <a target="_blank" href={routes.courseDetail(video.courseId)}>
                                           <Button
                                             size="sm"
                                             onClick={(e) => {
@@ -754,20 +753,18 @@ export function BootcampDetailPage({
           </Card>
 
           <Card
-            className={`${
-              bootcamp?.userCohort?.progress >= 100
-                ? "border-green-200 bg-green-50/50"
-                : "border-orange-200 bg-orange-50/50"
-            }`}
+            className={`${bootcamp?.userCohort?.progress >= 100
+              ? "border-green-200 bg-green-50/50"
+              : "border-orange-200 bg-orange-50/50"
+              }`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-lg ${
-                    bootcamp?.userCohort?.progress >= 100
-                      ? "bg-green-100"
-                      : "bg-orange-100"
-                  }`}
+                  className={`p-2 rounded-lg ${bootcamp?.userCohort?.progress >= 100
+                    ? "bg-green-100"
+                    : "bg-orange-100"
+                    }`}
                 >
                   {bootcamp?.userCohort?.progress >= 100 ? (
                     <Trophy className="h-6 w-6 text-green-600" />
@@ -866,7 +863,7 @@ export function BootcampDetailPage({
           amount: bootcamp?.cohort?.amount,
           id: bootcamp?.cohort?.id,
         }}
-        onHandlePreview={() => {}}
+        onHandlePreview={() => { }}
         onHandlePurchase={(id: string, type: any, success: boolean) =>
           handlePurchase(id, type, success)
         }

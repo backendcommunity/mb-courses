@@ -249,9 +249,8 @@ export function BootcampWeekPage({
               {currentWeek?.lessons?.map((lesson: Lesson, index: number) => (
                 <div
                   key={lesson.id}
-                  className={`border rounded-lg p-4 ${
-                    isLessonCompleted(lesson) ? "border-green-500/10" : "" //bg-green-500/10
-                  }`}
+                  className={`border rounded-lg p-4 ${isLessonCompleted(lesson) ? "border-green-500/10" : "" //bg-green-500/10
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -442,14 +441,16 @@ export function BootcampWeekPage({
               {weeks.map((week: Week, i: number) => (
                 <div
                   key={i + 1}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                    week?.id === currentWeek?.id ? "border border-blue-200" : ""
-                  }`}
+                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${week?.id === currentWeek?.id ? "border border-blue-200" : ""
+                    }`}
                   onClick={() => {
                     setCurrentWeek({
                       ...week,
                       index: i + 1,
                     });
+                    if (onNavigate && userCohort?.cohortId) {
+                      onNavigate(`/bootcamps/${bootcampId}/${userCohort.cohortId}/weeks/${week.id}`);
+                    }
                   }}
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">

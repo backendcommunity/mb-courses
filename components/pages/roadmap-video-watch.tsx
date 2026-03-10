@@ -165,12 +165,12 @@ export function RoadmapVideoWatchPage({
 
   const nextChapter =
     course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) + 1
+    course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) + 1
     ];
 
   const prevChapter =
     course.chapters[
-      course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) - 1
+    course.chapters.findIndex((ch: Chapter) => ch.slug === chapter?.slug) - 1
     ];
 
   const next = (chapter: Chapter) => {
@@ -218,7 +218,7 @@ export function RoadmapVideoWatchPage({
   const handleVideoClick = (vid: Video) => {
     if (!vid) return;
     if (currentVideo?.type == "QUIZ") {
-      if (!quizPassed || currentVideo?.quiz?.required) {
+      if (currentVideo?.quiz?.required && !quizPassed) {
         toast.warning("This quiz is required and you have to meet the mark");
         return;
       }
@@ -765,11 +765,10 @@ export function RoadmapVideoWatchPage({
                   {chapter?.videos.map((vid: Video) => (
                     <div
                       key={vid.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                        vid.slug === currentVideo?.slug
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${vid.slug === currentVideo?.slug
                           ? "border border-blue-200"
                           : ""
-                      }`}
+                        }`}
                       onClick={() => handleVideoClick(vid)}
                     >
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
@@ -885,11 +884,10 @@ export function RoadmapVideoWatchPage({
                   {course.chapters.map((ch: Chapter, index: number) => (
                     <div
                       key={ch.slug}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                        ch.slug === chapter?.slug
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${ch.slug === chapter?.slug
                           ? "border border-blue-200"
                           : ""
-                      }`}
+                        }`}
                       onClick={() => handleChapterClick(ch)}
                     >
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
@@ -909,35 +907,35 @@ export function RoadmapVideoWatchPage({
 
                           {ch.videos.filter((v) => v.type === "QUIZ").length >
                             0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "QUIZ")
-                                  .length
-                              }{" "}
-                              quizzes
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "QUIZ")
+                                    .length
+                                }{" "}
+                                quizzes
+                              </Badge>
+                            )}
                           {ch.videos.filter((v) => v.type === "EXERCISE")
                             .length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "EXERCISE")
-                                  .length
-                              }{" "}
-                              exercises
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "EXERCISE")
+                                    .length
+                                }{" "}
+                                exercises
+                              </Badge>
+                            )}
 
                           {ch.videos.filter((v) => v.type === "PLAYGROUND")
                             .length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {
-                                ch.videos.filter((v) => v.type === "PLAYGROUND")
-                                  .length
-                              }{" "}
-                              playgrounds
-                            </Badge>
-                          )}
+                              <Badge variant="outline" className="text-xs">
+                                {
+                                  ch.videos.filter((v) => v.type === "PLAYGROUND")
+                                    .length
+                                }{" "}
+                                playgrounds
+                              </Badge>
+                            )}
                         </div>
                       </div>
                     </div>

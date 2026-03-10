@@ -805,7 +805,7 @@ export interface UserCohort {
   score: number;
   currentWeekId: string;
   projectBuilt: number;
-  totalAssigments: number;
+  totalAssignments: number;
   totalLessonsCompleted: number;
   currentLessonId: string;
   endedAt: Date;

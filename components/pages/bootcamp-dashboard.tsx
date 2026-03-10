@@ -192,6 +192,19 @@ export function BootcampDashboardPage({
     return !!completed;
   };
 
+  const totalLessons =
+    bootcamp?.cohort?.weeks?.reduce(
+      (acc: number, week: Week) => acc + (week?.lessons?.length || 0),
+      0,
+    ) || 0;
+
+  const completedLessons =
+    userCohort?.userLessons?.filter((ul) => ul.completed)?.length || 0;
+
+  const calculatedProgress =
+    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -213,7 +226,7 @@ export function BootcampDashboardPage({
               {bootcamp?.cohort?.duration ||
                 bootcamp?.cohorts?.[0]?.duration ||
                 "N/A"}{" "}
-              • {bootcamp?.userCohort?.progress ?? 0}% Complete
+              • {calculatedProgress}% Complete
             </p>
           </div>
           <div className="flex gap-2">
@@ -232,13 +245,13 @@ export function BootcampDashboardPage({
             >
               {new Date(
                 userCohort?.cohort?.startsAt ||
-                  bootcamp?.cohort?.startsAt ||
-                  bootcamp?.cohorts?.[0]?.startsAt,
+                bootcamp?.cohort?.startsAt ||
+                bootcamp?.cohorts?.[0]?.startsAt,
               ) < new Date()
                 ? "In Progress"
                 : userCohort?.cohort?.status ||
-                  bootcamp?.cohort?.status ||
-                  bootcamp?.cohorts?.[0]?.status}
+                bootcamp?.cohort?.status ||
+                bootcamp?.cohorts?.[0]?.status}
             </Badge>
           </div>
         </div>
@@ -256,10 +269,10 @@ export function BootcampDashboardPage({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Overall Progress</span>
-              <span>{bootcamp?.userCohort?.progress ?? 0}%</span>
+              <span>{calculatedProgress}%</span>
             </div>
             <Progress
-              value={bootcamp?.userCohort?.progress ?? 0}
+              value={calculatedProgress}
               className="h-3"
             />
             <div className="grid gap-4 md:grid-cols-4">
@@ -271,7 +284,7 @@ export function BootcampDashboardPage({
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {bootcamp?.userCohort?.totalLessonsCompleted ?? 0}
+                  {completedLessons}
                 </div>
                 <div className="text-xs text-blue-100">Lessons Completed</div>
               </div>
@@ -283,7 +296,7 @@ export function BootcampDashboardPage({
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {userCohort?.totalAssigments ?? 0}
+                  {userCohort?.totalAssignments ?? 0}
                 </div>
                 <div className="text-xs text-blue-100">
                   Assignments Completed
@@ -317,11 +330,10 @@ export function BootcampDashboardPage({
                   {currentWeek.lessons.map((lesson: any, index: number) => (
                     <div
                       key={lesson.id || index}
-                      className={`flex items-center gap-3 p-3 rounded-lg border ${
-                        lesson.id === currentLesson?.id
-                          ? "border-green-900/20 dark:border-green-200/20 bg-green-400/10"
-                          : ""
-                      }`}
+                      className={`flex items-center gap-3 p-3 rounded-lg border ${lesson.id === currentLesson?.id
+                        ? "border-green-900/20 dark:border-green-200/20 bg-green-400/10"
+                        : ""
+                        }`}
                     >
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                         {isLessonCompleted(lesson) ? (
@@ -447,7 +459,7 @@ export function BootcampDashboardPage({
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Assignment Score</span>
                   <span className="font-medium">
-                    {bootcamp?.userCohort?.assigmentScore ?? "N/A"}
+                    {bootcamp?.userCohort?.assignmentScore ?? "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -485,17 +497,15 @@ export function BootcampDashboardPage({
                 bootcamp.cohort.weeks.map((week: any, i: number) => (
                   <div
                     key={week.id || i}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
-                      week?.id?.toString() === currentWeek?.id
-                        ? "border border-blue-200"
-                        : ""
-                    }`}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${week?.id?.toString() === currentWeek?.id
+                      ? "border border-blue-200"
+                      : ""
+                      }`}
                     onClick={() =>
                       onNavigate?.(
-                        `/bootcamps/${bootcampId}/${
-                          userCohort?.cohortId ||
-                          bootcamp?.cohort?.id ||
-                          bootcamp?.cohorts?.[0]?.id
+                        `/bootcamps/${bootcampId}/${userCohort?.cohortId ||
+                        bootcamp?.cohort?.id ||
+                        bootcamp?.cohorts?.[0]?.id
                         }/weeks/${week.id}`,
                       )
                     }
@@ -558,7 +568,7 @@ export function BootcampDashboardPage({
                   onNavigate?.(
                     routes.bootcampLeaderboard(
                       bootcampId,
-                      userCohort?.cohortId || ""
+                      String(userCohort?.cohortId || 0)
                     )
                   )
                 }
