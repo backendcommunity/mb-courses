@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { VimeoPlayer } from "@/components/ui/vimeo-player";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "timeago.js";
 import {
@@ -31,12 +32,14 @@ import { toast } from "sonner";
 import ConfettiCelebration from "../confetti-celebration";
 import { codeSample, handleShare } from "@/lib/utils";
 import { CourseQuizPage } from "./course-quiz";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import Countdown from "../ui/count-down";
 import { SimpleEditor } from "./SimpleEditor";
 import { WeekCompletionShare } from "../week-completion-share";
+import { useVimeoTranscript, formatTime } from "@/hooks/use-vimeo-transcript";
+import { VimeoPlayerHandle } from "@/components/ui/vimeo-player";
 
 interface BootcampWatchPageProps {
   slug: string;
@@ -67,7 +70,14 @@ export function BootcampVideoWatchPage({
   const [quizPassed, setQuizPassed] = useState(false);
   const [note, setNote] = useState("");
   const [showWeekComplete, setShowWeekComplete] = useState(false);
+  const searchParams = useSearchParams();
+  const noteParam = searchParams?.get("add_note");
   const path = usePathname();
+
+  const playerRef = useRef<VimeoPlayerHandle>(null);
+  const { transcript, loading: loadingTranscript } = useVimeoTranscript(
+    currentLesson?.type === "VIDEO" ? Number(currentLesson?.video?.video) : undefined
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -328,7 +338,7 @@ export function BootcampVideoWatchPage({
             {currentLesson?.type === "VIDEO" && (
               <Card className="overflow-hidden">
                 <div className="aspect-video bg-black relative">
-                  <VimeoPlayer video={currentLesson?.video} />
+                  <VimeoPlayer ref={playerRef} video={currentLesson?.video} />
                 </div>
               </Card>
             )}
@@ -520,7 +530,6 @@ export function BootcampVideoWatchPage({
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              {/* Only show transcript for VIDEO type, not for text-based content */}
               {currentLesson?.type === "VIDEO" && (
                 <TabsTrigger value="transcript">Transcript</TabsTrigger>
               )}
@@ -708,55 +717,61 @@ export function BootcampVideoWatchPage({
               </Card>
             </TabsContent>
 
-            <TabsContent value="transcript" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Video Transcript</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Auto-generated transcript with timestamps
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {[
-                      {
-                        time: "00:00",
-                        text: `Welcome to ${currentLesson?.title || week?.title
-                          }.`,
-                      },
-                      {
-                        time: "00:15",
-                        text: "In this section, we'll explore the key concepts and practical applications.",
-                      },
-                      {
-                        time: "00:30",
-                        text: "Let's start by understanding the fundamental principles.",
-                      },
-                      {
-                        time: "01:00",
-                        text: "Now let's look at a practical example of implementing this concept.",
-                      },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
-                        onClick={() =>
-                          setCurrentTime(
-                            Number.parseInt(item.time.split(":")[0]) * 60 +
-                            Number.parseInt(item.time.split(":")[1]),
-                          )
-                        }
-                      >
-                        <span className="text-sm font-mono text-blue-600 min-w-[50px]">
-                          {item.time}
-                        </span>
-                        <span className="text-sm">{item.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {currentLesson?.type === "VIDEO" && (
+              <TabsContent value="transcript" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Video Transcript</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Auto-generated transcript with timestamps
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {loadingTranscript ? (
+                        <div className="space-y-4 p-2">
+                          <div className="flex gap-3">
+                            <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                            <Skeleton className="h-4 w-full bg-muted/60" />
+                          </div>
+                          <div className="flex gap-3">
+                            <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                            <Skeleton className="h-4 w-5/6 bg-muted/60" />
+                          </div>
+                          <div className="flex gap-3">
+                            <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                            <Skeleton className="h-4 w-4/6 bg-muted/60" />
+                          </div>
+                          <div className="flex gap-3">
+                            <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                            <Skeleton className="h-4 w-full bg-muted/60" />
+                          </div>
+                        </div>
+                      ) : transcript.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No transcript available.</div>
+                      ) : (
+                        transcript.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                            onClick={() => {
+                              if (playerRef.current) {
+                                playerRef.current.seekTo(item.start);
+                              }
+                            }}
+                          >
+                            <span className="text-sm font-mono text-blue-600 min-w-[50px]">
+                              {formatTime(item.start)}
+                            </span>
+                            <span className="text-sm">{item.text}</span>
+                          </div>
+                        )))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
+
           </Tabs>
         </div>
 
@@ -797,8 +812,8 @@ export function BootcampVideoWatchPage({
                 <div
                   key={lesson.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${lesson.id === currentLesson?.id
-                      ? "border border-blue-200"
-                      : ""
+                    ? "border border-blue-200"
+                    : ""
                     }`}
                   onClick={() => handleVideoClick(lesson)}
                 >

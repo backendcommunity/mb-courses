@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
@@ -44,6 +45,8 @@ import { ExercisePage } from "../exercise";
 import { Loader } from "../ui/loader";
 import { SimpleEditor } from "./SimpleEditor";
 import { Separator } from "../ui/separator";
+import { useVimeoTranscript, formatTime } from "@/hooks/use-vimeo-transcript";
+import { VimeoPlayerHandle } from "@/components/ui/vimeo-player";
 
 interface RoadmapVideoWatchPageProps {
   slug: string;
@@ -66,6 +69,7 @@ export function RoadmapVideoWatchPage({
   const user = useUser();
   const path = usePathname();
 
+
   const [roadmap, setRoadmap] = useState<Roadmap>();
   const [userCourse, setUserCourse] = useState<UserCourse>();
   const [course, setCourse] = useState<Course>();
@@ -83,6 +87,11 @@ export function RoadmapVideoWatchPage({
   const [userVideos, setUserVideos] = useState<any[]>();
   const [currentVideo, setCurrentVideo] = useState<Video>();
   const [chapter, setChapter] = useState<Chapter>();
+
+  const playerRef = useRef<VimeoPlayerHandle>(null);
+  const { transcript, loading: loadingTranscript } = useVimeoTranscript(
+    currentVideo?.type === "VIDEO" ? Number(currentVideo?.video) : undefined
+  );
 
   async function loadMilestone() {
     try {
@@ -382,6 +391,7 @@ export function RoadmapVideoWatchPage({
                 <div className="aspect-video bg-black relative">
                   {/* Vimeo Player */}
                   <VimeoPlayer
+                    ref={playerRef}
                     video={currentVideo}
                     onEnded={async () => {
                       if (nextVideo) return handleVideoClick(nextVideo);
@@ -581,34 +591,45 @@ export function RoadmapVideoWatchPage({
                       <CardTitle>Video Transcript</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex gap-3">
-                          <span className="text-muted-foreground min-w-[60px]">
-                            00:00
-                          </span>
-                          <p>
-                            Welcome to this comprehensive guide on system design
-                            fundamentals...
-                          </p>
-                        </div>
-                        <div className="flex gap-3">
-                          <span className="text-muted-foreground min-w-[60px]">
-                            00:30
-                          </span>
-                          <p>
-                            Today we'll cover the core principles that every
-                            backend engineer needs to know...
-                          </p>
-                        </div>
-                        <div className="flex gap-3">
-                          <span className="text-muted-foreground min-w-[60px]">
-                            01:15
-                          </span>
-                          <p>
-                            Let's start with scalability. When we talk about
-                            scalable systems...
-                          </p>
-                        </div>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {loadingTranscript ? (
+                          <div className="space-y-4 p-2">
+                            <div className="flex gap-3">
+                              <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                              <Skeleton className="h-4 w-full bg-muted/60" />
+                            </div>
+                            <div className="flex gap-3">
+                              <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                              <Skeleton className="h-4 w-5/6 bg-muted/60" />
+                            </div>
+                            <div className="flex gap-3">
+                              <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                              <Skeleton className="h-4 w-4/6 bg-muted/60" />
+                            </div>
+                            <div className="flex gap-3">
+                              <Skeleton className="h-4 w-[50px] bg-muted/60" />
+                              <Skeleton className="h-4 w-full bg-muted/60" />
+                            </div>
+                          </div>
+                        ) : transcript.length === 0 ? (
+                          <div className="text-sm text-muted-foreground">No transcript available.</div>
+                        ) : (
+                          transcript.map((item, index) => (
+                            <div
+                              key={index}
+                              className="flex gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                              onClick={() => {
+                                if (playerRef.current) {
+                                  playerRef.current.seekTo(item.start);
+                                }
+                              }}
+                            >
+                              <span className="text-sm font-mono text-blue-600 min-w-[50px]">
+                                {formatTime(item.start)}
+                              </span>
+                              <span className="text-sm">{item.text}</span>
+                            </div>
+                          )))}
                       </div>
                     </CardContent>
                   </Card>
@@ -766,8 +787,8 @@ export function RoadmapVideoWatchPage({
                     <div
                       key={vid.id}
                       className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${vid.slug === currentVideo?.slug
-                          ? "border border-blue-200"
-                          : ""
+                        ? "border border-blue-200"
+                        : ""
                         }`}
                       onClick={() => handleVideoClick(vid)}
                     >
@@ -885,8 +906,8 @@ export function RoadmapVideoWatchPage({
                     <div
                       key={ch.slug}
                       className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${ch.slug === chapter?.slug
-                          ? "border border-blue-200"
-                          : ""
+                        ? "border border-blue-200"
+                        : ""
                         }`}
                       onClick={() => handleChapterClick(ch)}
                     >
