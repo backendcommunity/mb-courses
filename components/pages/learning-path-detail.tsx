@@ -22,7 +22,9 @@ import {
   Play,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { Course } from "@/lib/data";
+import { Course, Project, Roadmap } from "@/lib/data";
+import { Loader } from "../ui/loader";
+import { useEffect, useState } from "react";
 
 interface LearningPathDetailPageProps {
   pathId: string;
@@ -34,9 +36,65 @@ export function LearningPathDetailPage({
   onNavigate,
 }: LearningPathDetailPageProps) {
   const store = useAppStore();
-  const path = store.getLearningPaths().find((p) => p.id === pathId);
-  const courses = store.getCourses();
-  const projects = store.getProjects();
+  const [path, setPath] = useState<Roadmap | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const loadPath = async () => {
+      setLoading(true);
+      try {
+        let roadmap = await store.getRoadmapBySlug(pathId);
+
+        if (!roadmap) {
+          const allRoadmaps = await store.getRoadmaps({ size: 20, skip: 0 });
+          roadmap = allRoadmaps.find(
+            (r: any) => r.slug === pathId || r.id === pathId,
+          );
+        }
+
+        setPath(roadmap || null);
+      } catch (error) {
+        console.error("Failed to load learning path detail:", error);
+        setPath(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPath();
+  }, [pathId, store]);
+
+  useEffect(() => {
+    const loadAux = async () => {
+      try {
+        const loadedCourses = await store.getCourses({
+          page: "1",
+          size: "20",
+          filters: {},
+        } as any);
+        const normalizedCourses = Array.isArray(loadedCourses)
+          ? loadedCourses
+          : loadedCourses?.courses ?? [];
+        setCourses(normalizedCourses || []);
+      } catch {}
+      try {
+        const loadedProjects = await store.getProjects({
+          page: 1,
+          size: 20,
+          filters: {},
+        } as any);
+        const normalizedProjects = Array.isArray(loadedProjects)
+          ? loadedProjects
+          : loadedProjects?.projects ?? loadedProjects;
+        setProjects(normalizedProjects || []);
+      } catch {}
+    };
+    loadAux();
+  }, [store]);
+
+  if (loading) return <Loader isLoader={true} />;
 
   if (!path) {
     return (
@@ -52,16 +110,23 @@ export function LearningPathDetailPage({
     );
   }
 
+  const topicCourses = path.topics?.flatMap((topic: any) => topic.courses || []) || [];
+  const courseCount = topicCourses.length;
+  const projectCount = path.topics?.flatMap((topic: any) => topic.projects || [])?.length || 0;
+
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 text-slate-100">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onNavigate?.("/paths")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{path.title}</h1>
-          <p className="text-muted-foreground">{path.description}</p>
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">{path.title}</h1>
+            <p className="text-slate-300 max-w-2xl">{path.description}</p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => onNavigate?.("/paths")}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to Paths
+          </Button>
         </div>
       </div>
 
@@ -70,7 +135,7 @@ export function LearningPathDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Progress Card (if enrolled) */}
           {path.enrolled && (
-            <Card className="bg-gradient-to-r from-[#0E1F33] to-[#13AECE] text-white">
+            <Card className="bg-slate-900 border border-slate-800 text-white">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="h-5 w-5" />
@@ -84,15 +149,15 @@ export function LearningPathDetailPage({
                     <span>{path.progress}%</span>
                   </div>
                   <Progress value={path.progress} className="h-3" />
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         <span className="text-sm">Courses</span>
                       </div>
-                      <Progress value={60} className="h-2" />
-                      <span className="text-xs text-blue-100">
-                        2 of {path.courses.length} completed
+                      <Progress value={Math.min(100, path.progress)} className="h-2" />
+                      <span className="text-xs text-slate-300">
+                        {Math.round(path.progress / 100 * courseCount)} of {courseCount} completed
                       </span>
                     </div>
                     <div className="space-y-2">
@@ -100,19 +165,9 @@ export function LearningPathDetailPage({
                         <Code2 className="h-4 w-4" />
                         <span className="text-sm">Projects</span>
                       </div>
-                      <Progress value={50} className="h-2" />
-                      <span className="text-xs text-blue-100">
-                        1 of {path.projects.length} completed
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span className="text-sm">Assessments</span>
-                      </div>
-                      <Progress value={25} className="h-2" />
-                      <span className="text-xs text-blue-100">
-                        1 of 4 completed
+                      <Progress value={Math.min(100, path.progress)} className="h-2" />
+                      <span className="text-xs text-slate-300">
+                        {Math.round((path.progress / 100) * projectCount)} of {projectCount} completed
                       </span>
                     </div>
                   </div>
@@ -160,27 +215,27 @@ export function LearningPathDetailPage({
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-3">
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {path.courses.length}
+                    <div className="text-center p-4 border rounded-lg bg-slate-800">
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {courseCount}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-slate-300">
                         Courses
                       </div>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
-                        {path.projects.length}
+                    <div className="text-center p-4 border rounded-lg bg-slate-800">
+                      <div className="text-2xl font-bold text-emerald-400">
+                        {projectCount}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-slate-300">
                         Projects
                       </div>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-center p-4 border rounded-lg bg-slate-800">
+                      <div className="text-2xl font-bold text-violet-400">
                         {path.estimatedTime}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-slate-300">
                         Est. Time
                       </div>
                     </div>
@@ -192,52 +247,53 @@ export function LearningPathDetailPage({
             <TabsContent value="curriculum" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Courses ({path.courses.length})</CardTitle>
+                  <CardTitle>Courses ({courseCount})</CardTitle>
                   <CardDescription>
                     Core courses in this learning path
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {path.courses.map((courseId, index) => {
-                    const course = courses.find(
-                      (c: Course) => c.id === courseId
+                  {(topicCourses || []).map((course: any, index: number) => {
+                    const courseData = courses.find(
+                      (c: Course) => c.id === course.id,
                     );
-                    if (!course) return null;
+                    const courseItem = courseData || course;
+                    if (!courseItem) return null;
 
                     return (
-                      <div key={courseId} className="border rounded-lg p-4">
+                      <div key={courseItem.id} className="border border-slate-700 bg-slate-900 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium">
+                            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-medium text-white">
                               {index + 1}
                             </div>
                             <div>
-                              <h4 className="font-medium">{course.title}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {course.description}
+                              <h4 className="font-medium text-white">{courseItem.title}</h4>
+                              <p className="text-sm text-slate-300">
+                                {courseItem.summary || courseItem.description}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">{course?.level}</Badge>
+                            <Badge variant="outline">{courseItem?.level || "N/A"}</Badge>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                onNavigate?.(`/courses/${course.id}`)
+                                onNavigate?.(`/courses/${courseItem.id}`)
                               }
                             >
                               <Play className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-slate-300">
                           <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
+                            <Clock className="h-4 w-4 text-cyan-300" />
                             {course.duration}
                           </span>
                           <span className="flex items-center gap-1">
-                            <BookOpen className="h-4 w-4" />
+                            <BookOpen className="h-4 w-4 text-cyan-300" />
                             {course.chapters?.length || 0} lessons
                           </span>
                           <span className="flex items-center gap-1">
@@ -256,35 +312,36 @@ export function LearningPathDetailPage({
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    Hands-on Projects ({path.projects.length})
+                    Hands-on Projects ({projectCount})
                   </CardTitle>
                   <CardDescription>
                     Build real-world applications
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {path.projects.map((projectId, index) => {
-                    const project = projects.find((p) => p.id === projectId);
-                    if (!project) return null;
+                  {projectCount > 0 ? (
+                    (path.topics?.flatMap((topic: any) => topic.projects || []) || []).map((projectId: any, index: number) => {
+                      const project = projects.find((p) => p.id === projectId);
+                      if (!project) return null;
 
                     return (
-                      <div key={projectId} className="border rounded-lg p-4">
+                      <div key={projectId} className="border border-slate-700 bg-slate-900 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm font-medium">
+                            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-medium text-white">
                               {index + 1}
                             </div>
                             <div>
-                              <h4 className="font-medium">{project.title}</h4>
-                              <p className="text-sm text-muted-foreground">
+                              <h4 className="font-medium text-white">{project.title}</h4>
+                              <p className="text-sm text-slate-300">
                                 {project.description}
                               </p>
                             </div>
                           </div>
-                          <Badge variant="outline">{project.difficulty}</Badge>
+                          <Badge variant="outline" className="text-slate-300 border-slate-600">{project.difficulty}</Badge>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {project.technologies.map((tech, techIndex) => (
+                          {(project.technologies || []).map((tech, techIndex) => (
                             <Badge
                               key={techIndex}
                               variant="secondary"
@@ -296,7 +353,12 @@ export function LearningPathDetailPage({
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                  ) : (
+                    <div className="text-sm text-slate-300">
+                      No projects available in this path yet.
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -310,21 +372,8 @@ export function LearningPathDetailPage({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="text-center p-4 border rounded-lg">
-                      <Users className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                      <div className="text-2xl font-bold">1,247</div>
-                      <div className="text-sm text-muted-foreground">
-                        Active learners
-                      </div>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                      <div className="text-2xl font-bold">892</div>
-                      <div className="text-sm text-muted-foreground">
-                        Completed path
-                      </div>
-                    </div>
+                  <div className="text-sm text-slate-300">
+                    Community stats and discussions will appear here when available.
                   </div>
                 </CardContent>
               </Card>
@@ -345,8 +394,8 @@ export function LearningPathDetailPage({
                 >
                   {path?.level}
                 </Badge>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-1 text-slate-300">
+                  <Clock className="h-4 w-4 text-cyan-300" />
                   <span className="text-sm">{path.estimatedTime}</span>
                 </div>
               </div>
@@ -356,7 +405,7 @@ export function LearningPathDetailPage({
                 <div className="space-y-3">
                   <Badge
                     variant="outline"
-                    className="w-full justify-center bg-green-50 text-green-700 border-green-200"
+                    className="w-full justify-center bg-slate-800 text-emerald-300 border-slate-700"
                   >
                     Enrolled - {path.progress}% Complete
                   </Badge>

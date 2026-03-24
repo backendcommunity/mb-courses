@@ -89,12 +89,12 @@ export function ContinueLearningCard() {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="flex gap-3 p-3 border border-border rounded-lg animate-pulse"
+                    className="flex gap-3 p-3 border border-slate-800 rounded-lg animate-pulse bg-slate-900"
                   >
-                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0" />
+                    <div className="w-12 h-12 bg-slate-800 rounded-lg flex-shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-muted rounded w-3/4" />
-                      <div className="h-2 bg-muted rounded w-1/2" />
+                      <div className="h-3 bg-slate-800 rounded w-3/4" />
+                      <div className="h-2 bg-slate-800 rounded w-1/2" />
                     </div>
                   </div>
                 ))}
@@ -104,7 +104,7 @@ export function ContinueLearningCard() {
               courses.map((course) => (
                 <div
                   key={course.courseId}
-                  className="flex gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                  className="flex gap-3 p-3 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors group cursor-pointer bg-slate-900"
                   onClick={() => {
                     // Epic 5: Track continue learning interaction
                     analytics.track("click_resume_course", {
@@ -172,8 +172,8 @@ export function ContinueLearningCard() {
                       className="w-12 h-12 rounded-lg flex-shrink-0 object-cover"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <BookOpen className="h-5 w-5 text-primary/60" />
+                    <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                      <BookOpen className="h-5 w-5 text-slate-300" />
                     </div>
                   )}
 

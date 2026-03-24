@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { Roadmap } from "@/lib/data";
+import { Loader } from "../ui/loader";
+import { useEffect, useState } from "react";
 
 interface PathContentWatchPageProps {
   pathId: string;
@@ -30,7 +33,35 @@ export function PathContentWatchPage({
   onNavigate,
 }: PathContentWatchPageProps) {
   const store = useAppStore();
-  const path = store.getLearningPaths().find((p) => p.id === pathId);
+  const [path, setPath] = useState<Roadmap | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadPath = async () => {
+      setLoading(true);
+      try {
+        let roadmap = await store.getRoadmapBySlug(pathId);
+
+        if (!roadmap) {
+          const allRoadmaps = await store.getRoadmaps({ size: 20, skip: 0 });
+          roadmap = allRoadmaps.find(
+            (r: any) => r.slug === pathId || r.id === pathId,
+          );
+        }
+
+        setPath(roadmap || null);
+      } catch (error) {
+        console.error("Failed to load path content watch:", error);
+        setPath(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPath();
+  }, [pathId, store]);
+
+  if (loading) return <Loader isLoader={true} />;
 
   // Mock step data
   const steps = [
@@ -76,7 +107,7 @@ export function PathContentWatchPage({
         <div className="text-center">
           <h1 className="text-2xl font-bold">Learning path not found</h1>
           <Button
-            onClick={() => onNavigate?.(routes.learningPaths)}
+            onClick={() => onNavigate?.(routes.paths)}
             className="mt-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -88,12 +119,12 @@ export function PathContentWatchPage({
   }
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 text-slate-100">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => onNavigate?.(routes.learningPathContinue(pathId))}
+          onClick={() => onNavigate?.(routes.pathContinue(pathId))}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -101,7 +132,7 @@ export function PathContentWatchPage({
           <h1 className="text-2xl font-bold tracking-tight">
             {currentStep.title}
           </h1>
-          <p className="text-muted-foreground">{path.title}</p>
+          <p className="text-slate-300">{path.title}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{currentStep.type}</Badge>
@@ -113,8 +144,8 @@ export function PathContentWatchPage({
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
           {/* Content Area */}
-          <Card className="overflow-hidden">
-            <div className="aspect-video bg-gradient-to-br from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
+          <Card className="overflow-hidden bg-slate-900 border border-slate-800">
+            <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center">
               <div className="text-center text-white">
                 {currentStep.type === "lesson" && (
                   <BookOpen className="h-16 w-16 mx-auto mb-4" />
@@ -126,7 +157,7 @@ export function PathContentWatchPage({
                   <Target className="h-16 w-16 mx-auto mb-4" />
                 )}
                 <h3 className="text-xl font-bold">{currentStep.title}</h3>
-                <p className="text-blue-200">Learning path step content</p>
+                <p className="text-slate-200">Learning path step content</p>
               </div>
             </div>
           </Card>
@@ -136,7 +167,7 @@ export function PathContentWatchPage({
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
-                className="text-blue-600 border-blue-600"
+                className="text-cyan-300 border-cyan-300"
               >
                 Step {currentIndex + 1} of {steps.length}
               </Badge>
@@ -161,7 +192,7 @@ export function PathContentWatchPage({
 
           {/* Content Tabs */}
           <Tabs defaultValue="content" className="w-full">
-            <TabsList>
+            <TabsList className="bg-slate-900 border border-slate-800 rounded-lg">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="exercise">Exercise</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -175,14 +206,14 @@ export function PathContentWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">
+                    <p className="text-slate-300">
                       In this step, you'll learn how to build your first API
                       using Node.js and Express. We'll cover routing,
                       middleware, and basic CRUD operations.
                     </p>
                     <div className="space-y-3">
                       <h4 className="font-medium">What You'll Learn:</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                      <ul className="text-sm text-slate-300 space-y-1 ml-4">
                         <li>• Setting up Express server</li>
                         <li>• Creating API routes</li>
                         <li>• Handling HTTP methods</li>
@@ -201,15 +232,15 @@ export function PathContentWatchPage({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-medium mb-2">
+                      <div className="p-4 bg-slate-800 rounded-lg">
+                        <h4 className="font-medium mb-2 text-white">
                         Task: Build a Simple API
                       </h4>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-300">
                         Create a basic Express server with the following
                         endpoints:
                       </p>
-                      <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                      <ul className="text-sm text-slate-300 mt-2 space-y-1">
                         <li>• GET /api/users - Return list of users</li>
                         <li>• POST /api/users - Create a new user</li>
                         <li>• GET /api/users/:id - Get user by ID</li>
@@ -271,15 +302,15 @@ export function PathContentWatchPage({
                     ].map((resource, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
+                        className="flex items-center justify-between p-3 border border-slate-700 rounded-lg bg-slate-900"
                       >
                         <div className="flex items-center gap-3">
                           <BookOpen className="h-4 w-4 text-blue-600" />
                           <div>
                             <h4 className="font-medium">{resource.title}</h4>
-                            <p className="text-sm text-muted-foreground">
+                            <span className="text-sm text-slate-300">
                               {resource.type}
-                            </p>
+                            </span>
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -303,13 +334,13 @@ export function PathContentWatchPage({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-sm text-slate-300">
                   <span>Overall Progress</span>
                   <span>{path.progress}%</span>
                 </div>
                 <Progress value={path.progress} className="h-2" />
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-slate-300">
                 {steps.filter((s) => s.completed).length} of {steps.length}{" "}
                 steps completed
               </div>
@@ -327,23 +358,23 @@ export function PathContentWatchPage({
                   key={step.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${
                     step.id === stepId
-                      ? "bg-blue-50 border border-blue-200"
+                      ? "bg-slate-800 border border-slate-700"
                       : ""
                   }`}
                   onClick={() =>
                     onNavigate?.(routes.pathContentWatch(pathId, step.id))
                   }
                 >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-xs text-slate-100">
                     {step.completed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                     ) : (
                       <span>{index + 1}</span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{step.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <p className="text-sm font-medium text-white">{step.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-300">
                       <Clock className="h-3 w-3" />
                       <span>{step.duration}</span>
                       <Badge variant="outline" className="text-xs">

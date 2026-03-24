@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { routes } from "@/lib/routes";
-import { WIP } from "../WIP";
+// import { WIP } from "../WIP";
+import { Loader } from "../ui/loader";
+import { Roadmap } from "@/lib/data";
+import { useEffect, useState } from "react";
 
 interface LearningPathsPageProps {
   onNavigate?: (url: string) => void;
@@ -28,22 +31,41 @@ interface LearningPathsPageProps {
 
 export function LearningPathsPage({ onNavigate }: LearningPathsPageProps) {
   const store = useAppStore();
-  const paths = store.getLearningPaths();
+  const [paths, setPaths] = useState<Roadmap[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadPaths = async () => {
+      setLoading(true);
+      try {
+        const roadmaps = await store.getRoadmaps({ size: 20, skip: 0 });
+        setPaths(roadmaps || []);
+      } catch (error) {
+        console.error("Failed to load learning paths as roadmaps:", error);
+        setPaths([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPaths();
+  }, [store]);
+
+  if (loading) return <Loader isLoader={true} />;
 
   return (
-    <div className="flex-1 space-y-6 relative">
-      <WIP />
+    <div className="flex-1 space-y-6 relative text-white">
+      {/* <WIP /> */}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Learning Paths</h1>
-          <p className="text-muted-foreground">
-            Structured learning journeys designed to take you from beginner to
-            expert
+          <p className="text-slate-300 max-w-xl">
+            Structured journeys that map roadmaps into clear steps, from beginner to expert.
           </p>
         </div>
-        <Button>
+        <Button className="h-10 bg-slate-700 text-white hover:bg-slate-600">
           <Target className="mr-2 h-4 w-4" />
           Create Custom Path
         </Button>
@@ -51,10 +73,10 @@ export function LearningPathsPage({ onNavigate }: LearningPathsPageProps) {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="rounded-xl border border-slate-800 bg-slate-900 text-white shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Paths</CardTitle>
-            <Target className="h-4 w-4 text-blue-600" />
+            <Target className="h-4 w-4 text-cyan-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -63,171 +85,137 @@ export function LearningPathsPage({ onNavigate }: LearningPathsPageProps) {
             <p className="text-xs text-muted-foreground">Currently enrolled</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-xl border border-slate-800 bg-slate-900 text-white shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            <Clock className="h-4 w-4 text-violet-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {
+                paths.filter(
+                  (p) => (p.progress || 0) > 0 && (p.progress || 0) < 100,
+                ).length
+              }
+            </div>
+            <p className="text-xs text-slate-300">Actively learning</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border border-slate-800 bg-slate-900 text-white shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">Paths completed</p>
+            <div className="text-2xl font-bold">
+              {paths.filter((p) => (p.progress || 0) >= 100).length}
+            </div>
+            <p className="text-xs text-slate-300">Paths completed</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-xl border border-slate-800 bg-slate-900 text-white shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-            <Clock className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium">Total Paths</CardTitle>
+            <Target className="h-4 w-4 text-cyan-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">Learning time</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Certificates</CardTitle>
-            <Star className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">Earned</p>
+            <div className="text-2xl font-bold">{paths.length}</div>
+            <p className="text-xs text-muted-foreground">Available</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Learning Paths Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {paths.map((path) => (
-          <Card key={path.id} className="overflow-hidden">
-            <div className="aspect-video bg-gradient-to-br from-[#0E1F33] to-[#13AECE] flex items-center justify-center">
-              <div className="text-center text-white">
-                <Target className="h-12 w-12 mx-auto mb-2" />
-                <h3 className="text-lg font-bold">Learning Path</h3>
-              </div>
-            </div>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <Badge
-                  variant={
-                    path?.level === "Advanced"
-                      ? "destructive"
-                      : path?.level === "Intermediate"
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {path?.level}
-                </Badge>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{path.estimatedTime}</span>
-                </div>
-              </div>
-              <CardTitle className="line-clamp-2">{path.title}</CardTitle>
-              <CardDescription className="line-clamp-2">
-                {path.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span>{path.courses.length} courses</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Code className="h-4 w-4 text-muted-foreground" />
-                  <span>{path.projects.length} projects</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>2.3k enrolled</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-muted-foreground" />
-                  <span>4.8 rating</span>
-                </div>
-              </div>
+        {paths.map((path) => {
+          const courseCount = path.topics?.flatMap((topic: any) => topic.courses || []).length || 0;
+          const projectCount = path.topics?.flatMap((topic: any) => topic.projects || []).length || 0;
+          const roadmapId = path.slug || path.id;
 
-              {path.enrolled ? (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Progress</span>
-                      <span>{path.progress}%</span>
+          return (
+            <Card key={roadmapId} className="overflow-hidden h-full min-h-[420px] border border-slate-800 bg-slate-900 rounded-xl shadow-lg text-white transition-all hover:shadow-2xl hover:-translate-y-0.5">
+              <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center">
+                <div className="text-center text-white">
+                  <Target className="h-12 w-12 mx-auto mb-2" />
+                  <h3 className="text-lg font-bold">Learning Path</h3>
+                </div>
+              </div>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant={
+                      path?.level === "Advanced"
+                        ? "destructive"
+                        : path?.level === "Intermediate"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {path?.level || path?.difficulty || "Beginner"}
+                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{path.estimatedTime || path.timeframe || "TBD"}</span>
+                  </div>
+                </div>
+                <CardTitle className="line-clamp-2">{path.title}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {path.summary || path.description || "No description available"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <BookOpen className="h-4 w-4 text-slate-300" />
+                    <span className="text-slate-300">{courseCount} courses</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Code className="h-4 w-4 text-slate-300" />
+                    <span className="text-slate-300">{projectCount} projects</span>
+                  </div>
+                </div>
+
+                {path.enrolled ? (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Progress</span>
+                        <span>{path.progress}%</span>
+                      </div>
+                      <Progress value={path.progress || 0} className="h-2" />
                     </div>
-                    <Progress value={path.progress} className="h-2" />
+                    <Button
+                      className="w-full"
+                      onClick={() => onNavigate?.(routes.pathContinue(roadmapId))}
+                    >
+                      Continue Learning
+                    </Button>
                   </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => onNavigate?.(routes.pathContinue(path.id))}
-                  >
-                    Continue Learning
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="text-center">
-                    <span className="text-2xl font-bold text-green-600">
-                      Free
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Full access included
-                    </p>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-center">
+                      <span className="text-2xl font-bold text-green-600">
+                        Free
+                      </span>
+                      <p className="text-sm text-muted-foreground">
+                        Full access included
+                      </p>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => onNavigate?.(routes.pathDetail(roadmapId))}
+                    >
+                      Start Learning Path
+                    </Button>
                   </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => onNavigate?.(routes.pathDetail(path.id))}
-                  >
-                    Start Learning Path
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Featured Path */}
-      <Card className="bg-gradient-to-r from-[#0E1F33] to-[#13AECE] text-white">
-        <CardHeader>
-          <CardTitle>🚀 Featured Path: Backend Engineer</CardTitle>
-          <CardDescription className="text-blue-100">
-            Our most comprehensive path covering everything from basics to
-            advanced backend development
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                <span className="font-medium">12 Courses</span>
-              </div>
-              <p className="text-sm text-blue-100">
-                From Node.js basics to advanced architecture
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Code className="h-5 w-5" />
-                <span className="font-medium">8 Projects</span>
-              </div>
-              <p className="text-sm text-blue-100">
-                Build real-world applications
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                <span className="font-medium">Certificate</span>
-              </div>
-              <p className="text-sm text-blue-100">
-                Industry-recognized completion
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Removed Featured Path section to avoid dummy content */}
     </div>
   );
 }
