@@ -55,7 +55,7 @@ const navigationData = {
       beta: false,
     },
     {
-      title: "Learning Paths",
+      title: "My Paths",
       url: routes.paths,
       icon: Target,
       active: false,
