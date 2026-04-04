@@ -65,8 +65,8 @@ export const resetPassword = async (
 };
 
 export const fetchUser = async (): Promise<any> => {
-  const { data } = await api.get("/auth/me");
-  return data;
+  const response = await api.get("/user/profile");
+  return { data: response.data.user };
 };
 
 export const verifyCode = async (email: string, code: string) => {

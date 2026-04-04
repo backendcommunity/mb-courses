@@ -3,23 +3,23 @@ import { localDB } from "./localDB";
 import { deleteCookie } from "cookies-next/client";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v3",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
   withCredentials: true, // if you're using cookies
 });
 
 // Request interceptor to add token to requests
-// api.interceptors.request.use(
-//   (config) => {
-//     const token = localDB.get("token", "");
-//     if (token && token !== "null") {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
+api.interceptors.request.use(
+  (config) => {
+    const token = localDB.get("token", "");
+    if (token && token !== "null") {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor to handle authentication errors
 api.interceptors.response.use(
@@ -43,7 +43,12 @@ api.interceptors.response.use(
 );
 
 export const socketAPI = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_WEBHOOK_URL || "http://localhost:8080",
+  baseURL: process.env.NEXT_PUBLIC_WEBHOOK_URL || "https://demo.masteringbackend.com",
   timeout: 30000, // 30 second timeout for code execution
   // withCredentials: true, // if you're using cookies
 });
+
+
+
+
+

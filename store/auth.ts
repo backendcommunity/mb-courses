@@ -62,17 +62,17 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   login: async (email, password) => {
-    const { data } = await login(email, password);
-    localDB.set("token", data.token);
-    setCookie("mb_token", data.token, {
+    const response = await login(email, password);
+    localDB.set("token", response.token);
+    setCookie("mb_token", response.token, {
       maxAge: 30 * 24 * 60 * 60, // 30 days
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
     });
-    set({ user: data.user, token: data.token });
-    updateUser(data.user);
-    return data.user;
+    set({ user: response.user, token: response.token });
+    updateUser(response.user);
+    return response.user;
   },
 
   register: async (data: NewUser) => {
