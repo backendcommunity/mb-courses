@@ -380,7 +380,7 @@ export default function HomePage() {
                     <div className="p-6 flex-1 flex flex-col">
                       <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">COURSE</span>
                       <h3 className="text-xl font-bold text-[#0B152A] mb-3 leading-tight">{course.title}</h3>
-                      
+                        
                       <div className="flex items-center gap-4 mb-4">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
                           <BarChart2 className="w-4 h-4 text-slate-700" /> {course.level}

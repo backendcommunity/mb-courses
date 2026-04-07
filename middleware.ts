@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
 
   const isAuthPage =
     pathname.startsWith("/auth/") || pathname.startsWith("/ai/payment");
-  const isSecret = !isAuthPage;
+  const isPublicPage = pathname === "/home" || pathname.startsWith("/home/");
+  const isSecret = !isAuthPage && !isPublicPage;
 
   if (pathname.startsWith("/ai/payment")) {
     const payment = new URL("/ai/payment", request.url);
