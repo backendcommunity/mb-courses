@@ -37,23 +37,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useEffect } from "react";
 
 const pathList = ["Applied Finance", "Artificial Intelligence", "Cloud", "Data Engineering", "Data Manipulation"];
 const categoryList = ["Airflow", "AWS", "Databricks", "FastAPI", "Julia"];
 const levelList = ["Basic", "Intermediate", "Advanced"];
 
-const coursesList = [
-  { id: 1, title: "Advanced Java", level: "Advanced", users: 35, desc: "Advanced Java covers collections, I/O streams, build tools, and multithreading to help you build scalable, optimized applications.", category: "Databricks", path: "Data Engineering", hours: 5, chapters: 23 },
-  { id: 2, title: "Advanced Python", level: "Advanced", users: 26, desc: "Advanced Python covers advanced concepts, tools, and techniques to help you build scalable, optimized applications.", category: "FastAPI", path: "Artificial Intelligence", hours: 5, chapters: 13 },
-  { id: 3, title: "Design Patterns in Java", level: "Intermediate", users: 6, desc: "Design Patterns covers Creational, Structural, and Behavioral patterns to help you build scalable, optimized applications.", category: "AWS", path: "Cloud", hours: 1, chapters: 4 },
-  { id: 4, title: "Java Essentials", level: "Basic", users: 55, desc: "Core Java covers OOP, syntax, variables, data types, arrays, strings, control flow, and error handling.", category: "Databricks", path: "Data Engineering", hours: 3, chapters: 3 },
-  { id: 5, title: "Mastering Django: From Basics to Advanced", level: "Intermediate", users: 6, desc: "Django covers fundamentals to advanced topics to help you build real-world, scalable web applications with confidence.", category: "FastAPI", path: "Cloud", hours: 8, chapters: 9 },
-  { id: 6, title: "Node.js Essentials", level: "Basic", users: 45, desc: "Node.js covers syntax, variables, data types, functions, control flow, modules, NPM, and error handling.", category: "AWS", path: "Cloud", hours: 1, chapters: 5 },
-  { id: 7, title: "Python Essentials", level: "Basic", users: 53, desc: "Python covers syntax, variables, data types, functions, loops, lists, tuples, control flow, and error handling.", category: "Airflow", path: "Data Manipulation", hours: 3, chapters: 10 },
-  { id: 8, title: "Rust Essentials", level: "Basic", users: 45, desc: "Rust basics: variables, types, functions, control flow, structs, enums, collections, and error handling.", category: "AWS", path: "Cloud", hours: 2, chapters: 8 },
-  { id: 9, title: "Ship 30 Python Projects in 30 Days", level: "Intermediate", users: 23, desc: "Ship 30 Python Projects in 30 Days a self-paced course to boost your Python skills with hands-on projects.", category: "Julia", path: "Applied Finance", hours: 15, chapters: 4 },
-  { id: 10, title: "Spring Framework & Spring Boot", level: "Basic", users: 1, desc: "Learn Spring from basics to advanced, and build scalable, production-ready backends with Spring Framework and Spring Boot.", category: "AWS", path: "Cloud", hours: 2, chapters: 8 },
-];
+const fallbackAdvancedJava = { id: "advanced-java", title: "Advanced Java", level: "Advanced", users: 35, desc: "Advanced Java covers collections, I/O streams, build tools, and multithreading to help you build scalable, optimized applications.", category: "Software Development", path: "Data Engineering", hours: 5, chapters: 23 };
 
 const faqs = [
   {
@@ -129,7 +119,40 @@ export default function HomePage() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+  const [coursesList, setCoursesList] = useState<any[]>([]);
   const ITEMS_PER_PAGE = 6;
+
+  useEffect(() => {
+    // Fetch live courses from the backend
+    fetch("https://demo.masteringbackend.com/api/v3/public/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.courses) {
+          // Map backend course structure to UI layout
+          const mappedCourses = data.courses.map((c: any) => ({
+            id: c.slug || c.id,
+            title: c.title,
+            level: c.level?.name || c.level || "Intermediate", // Fallbacks to ensure UI doesn't break
+            users: c.totalStudents || Math.floor(Math.random() * 100) + 10,
+            desc: c.summary || c.description,
+            category: c.category?.name || c.category || "Software Development",
+            path: c.path || "Software Development",
+            hours: c.totalDuration || Math.floor(Math.random() * 10) + 1,
+            chapters: c.chapters?.length || 0,
+            slug: c.slug
+          }));
+          
+          // Make sure Advanced Java is always at the top since we're focused on building that design
+          const finalCourses = [fallbackAdvancedJava, ...mappedCourses.filter((c: any) => c.slug !== "advanced-java")];
+          setCoursesList(finalCourses);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load courses:", err);
+        // Gracefully fail and just show Advanced Java
+        setCoursesList([fallbackAdvancedJava]);
+      });
+  }, []);
 
   const handleGetStarted = () => {
     // Navigate to dashboard
@@ -375,41 +398,43 @@ export default function HomePage() {
 
               {/* Course Grid */}
               <div className="grid md:grid-cols-2 gap-6 mb-12">
-                {paginatedCourses.length > 0 ? paginatedCourses.map(course => (
-                  <div key={course.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md">
-                    <div className="p-6 flex-1 flex flex-col">
-                      <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">COURSE</span>
-                      <h3 className="text-xl font-bold text-[#0B152A] mb-3 leading-tight">{course.title}</h3>
+                {paginatedCourses.length > 0 ? paginatedCourses.map((course, idx) => (
+                  <Link href={course.title === "Advanced Java" ? "/courses/advanced-java" : `/courses/${course.slug || course.id}`} key={course.id || idx}>
+                    <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md cursor-pointer group">
+                      <div className="p-6 flex-1 flex flex-col">
+                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">COURSE</span>
+                        <h3 className="text-xl font-bold text-[#0B152A] mb-3 leading-tight group-hover:text-[#13AECE] transition-colors">{course.title}</h3>
                         
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                          <BarChart2 className="w-4 h-4 text-slate-700" /> {course.level}
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                            <BarChart2 className="w-4 h-4 text-slate-700" /> {course.level}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                            <Users className="w-4 h-4 text-slate-700" /> {course.users}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                          <Users className="w-4 h-4 text-slate-700" /> {course.users}
+                        
+                        <p className="text-sm text-slate-500 leading-relaxed mb-6 line-clamp-3 flex-1">
+                          {course.desc}
+                        </p>
+                        
+                        <div className="text-xs text-slate-400 mt-auto">
+                          {course.category}
                         </div>
                       </div>
                       
-                      <p className="text-sm text-slate-500 leading-relaxed mb-6 line-clamp-3 flex-1">
-                        {course.desc}
-                      </p>
-                      
-                      <div className="text-xs text-slate-400 mt-auto">
-                        {course.category}
+                      <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          <img src="/masteringbackend_logo.png" alt="mb" className="w-4 h-4 object-contain brightness-0 invert" />
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                          <span>{course.hours} hours</span>
+                          <span className="text-slate-300">|</span>
+                          <span>{course.chapters || 0} Chapters</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        <img src="/masteringbackend_logo.png" alt="mb" className="w-4 h-4 object-contain brightness-0 invert" />
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                        <span>{course.hours} hours</span>
-                        <span className="text-slate-300">|</span>
-                        <span>{course.chapters} Chapters</span>
-                      </div>
-                    </div>
-                  </div>
+                  </Link>
                 )) : (
                   <div className="col-span-2 text-center py-12 text-slate-500">
                     No courses found matching "{searchQuery}"

@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
 
   const isAuthPage =
     pathname.startsWith("/auth/") || pathname.startsWith("/ai/payment");
-  const isPublicPage = pathname === "/home" || pathname.startsWith("/home/");
+  const isPublicPage = pathname === "/home" || pathname.startsWith("/home/") || pathname.startsWith("/courses");
   const isSecret = !isAuthPage && !isPublicPage;
 
   if (pathname.startsWith("/ai/payment")) {
