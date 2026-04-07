@@ -123,8 +123,8 @@ export default function HomePage() {
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
-    // Fetch live courses from the backend
-    fetch("https://demo.masteringbackend.com/api/v3/public/courses")
+    // Fetch live courses from our local Next.js proxy to bypass CORS
+    fetch("/api/courses")
       .then(res => res.json())
       .then(data => {
         if (data && data.courses) {
