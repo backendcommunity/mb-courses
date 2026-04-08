@@ -225,12 +225,27 @@ export default function AdvancedJavaCoursePage() {
 
             <div className="relative w-full max-w-[500px] mx-auto lg:ml-auto aspect-square">
               <div className="absolute inset-0 border border-white/10 rounded-2xl p-4 lg:p-6 bg-white/[0.02] backdrop-blur-sm">
-                <div className="w-full h-full rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl overflow-hidden"
+                <div className="w-full h-full rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl overflow-hidden relative"
                      style={{
-                       backgroundImage: 'repeating-linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6), repeating-linear-gradient(45deg, #f3f4f6 25%, #ffffff 25%, #ffffff 75%, #f3f4f6 75%, #f3f4f6)',
-                       backgroundPosition: '0 0, 10px 10px',
-                       backgroundSize: '20px 20px'
+                       backgroundColor: 'rgba(255,255,255,0.05)',
                      }}>
+                  <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <iframe 
+                      src={`https://player.vimeo.com/video/1135011825?h=7b9264c76b&badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0&dnt=1`} 
+                      frameBorder="0" 
+                      allow="autoplay; fullscreen; picture-in-picture" 
+                      className="absolute top-0 left-0 w-full h-full object-cover" 
+                      title="Advanced Java Preview"
+                    />
+                  </div>
+                  {/* Fallback for localhost tracking blocks or privacy errors */}
+                  <div className="absolute inset-0 hidden" id="preview-fallback" style={typeof window !== 'undefined' && window.location.hostname.includes('localhost') ? {display: 'block'} : {}}>
+                    <img 
+                      src="/editor-preview.png" 
+                      alt="Advanced Java Course Environment" 
+                      className="w-full h-full object-cover rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl" 
+                    />
+                  </div>
                 </div>
               </div>
             </div>

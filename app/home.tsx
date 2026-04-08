@@ -43,7 +43,19 @@ const pathList = ["Applied Finance", "Artificial Intelligence", "Cloud", "Data E
 const categoryList = ["Airflow", "AWS", "Databricks", "FastAPI", "Julia"];
 const levelList = ["Basic", "Intermediate", "Advanced"];
 
-const fallbackAdvancedJava = { id: "advanced-java", title: "Advanced Java", level: "Advanced", users: 35, desc: "Advanced Java covers collections, I/O streams, build tools, and multithreading to help you build scalable, optimized applications.", category: "Software Development", path: "Data Engineering", hours: 5, chapters: 23 };
+const fallbackAdvancedJava = { 
+  id: "advanced-java", 
+  title: "Advanced Java", 
+  level: "Advanced", 
+  users: 35, 
+  desc: "Advanced Java covers collections, I/O streams, build tools, and multithreading to help you build scalable, optimized applications.", 
+  category: "Software Development", 
+  path: "Data Engineering", 
+  hours: 5, 
+  chapters: 23,
+  preview: "1135011825",
+  banner: "https://pub-63da695b9ece47c5b3b49bd78b86d884.r2.dev/design-patterns-in-java.png"
+};
 
 const faqs = [
   {
@@ -120,37 +132,58 @@ export default function HomePage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [coursesList, setCoursesList] = useState<any[]>([]);
+  const [apiPaths, setApiPaths] = useState<string[]>(pathList); // Default fallback
+  const [isPathsLoaded, setIsPathsLoaded] = useState(false);
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
-    // Fetch live courses from our local Next.js proxy to bypass CORS
-    fetch("/api/courses")
+    // 1. Fetch Paths First
+    fetch("/api/roadmaps")
       .then(res => res.json())
       .then(data => {
-        if (data && data.courses) {
-          // Map backend course structure to UI layout
-          const mappedCourses = data.courses.map((c: any) => ({
-            id: c.slug || c.id,
-            title: c.title,
-            level: c.level?.name || c.level || "Intermediate", // Fallbacks to ensure UI doesn't break
-            users: c.totalStudents || Math.floor(Math.random() * 100) + 10,
-            desc: c.summary || c.description,
-            category: c.category?.name || c.category || "Software Development",
-            path: c.path || "Software Development",
-            hours: c.totalDuration || Math.floor(Math.random() * 10) + 1,
-            chapters: c.chapters?.length || 0,
-            slug: c.slug
-          }));
-          
-          // Make sure Advanced Java is always at the top since we're focused on building that design
-          const finalCourses = [fallbackAdvancedJava, ...mappedCourses.filter((c: any) => c.slug !== "advanced-java")];
-          setCoursesList(finalCourses);
+        if (data && data.data && Array.isArray(data.data)) {
+          // Assuming roadmaps API returns an array in data.data
+          const loadedPaths = data.data.map((r: any) => r.title || r.name).filter(Boolean);
+          if (loadedPaths.length > 0) {
+            setApiPaths(loadedPaths);
+          }
         }
       })
-      .catch(err => {
-        console.error("Failed to load courses:", err);
-        // Gracefully fail and just show Advanced Java
-        setCoursesList([fallbackAdvancedJava]);
+      .catch(err => console.error("Failed to load roadmaps:", err))
+      .finally(() => {
+        setIsPathsLoaded(true);
+
+        // 2. Fetch Courses After Paths
+        fetch("/api/courses")
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.courses) {
+              // Map backend course structure to UI layout
+              const mappedCourses = data.courses.map((c: any) => ({
+                id: c.slug || c.id,
+                title: c.title,
+                level: c.level?.name || c.level || "Intermediate", // Fallbacks to ensure UI doesn't break
+                users: c.totalStudents || Math.floor(Math.random() * 100) + 10,
+                desc: c.summary || c.description,
+                category: c.category?.name || c.category || "Software Development",
+                path: c.path || "Software Development",
+                hours: c.totalDuration || Math.floor(Math.random() * 10) + 1,
+                chapters: c.chapters?.length || 0,
+                slug: c.slug,
+                preview: c.preview,
+                banner: c.banner
+              }));
+              
+              // Make sure Advanced Java is always at the top since we're focused on building that design
+              const finalCourses = [fallbackAdvancedJava, ...mappedCourses.filter((c: any) => c.slug !== "advanced-java")];
+              setCoursesList(finalCourses);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to load courses:", err);
+            // Gracefully fail and just show Advanced Java
+            setCoursesList([fallbackAdvancedJava]);
+          });
       });
   }, []);
 
@@ -268,12 +301,15 @@ export default function HomePage() {
 
             <div className="relative w-full max-w-[500px] mx-auto lg:ml-auto aspect-square">
               <div className="absolute inset-0 border border-white/10 rounded-2xl p-4 lg:p-6 bg-white/[0.02] backdrop-blur-sm">
-                <div className="w-full h-full rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl overflow-hidden"
+                <div className="w-full h-full rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl overflow-hidden relative"
                      style={{
-                       backgroundImage: 'repeating-linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6), repeating-linear-gradient(45deg, #f3f4f6 25%, #ffffff 25%, #ffffff 75%, #f3f4f6 75%, #f3f4f6)',
-                       backgroundPosition: '0 0, 10px 10px',
-                       backgroundSize: '20px 20px'
+                       backgroundColor: 'rgba(255,255,255,0.05)',
                      }}>
+                  <img 
+                    src="/home-image.png" 
+                    alt="Course Environment" 
+                    className="absolute top-0 left-0 w-full h-full object-cover" 
+                  />
                 </div>
               </div>
             </div>
@@ -298,7 +334,7 @@ export default function HomePage() {
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">Path</h3>
                   <div className="space-y-3">
-                    {(showMorePath ? pathList : pathList.slice(0, 3)).map(item => (
+                    {(showMorePath ? apiPaths : apiPaths.slice(0, 3)).map((item: string) => (
                       <label key={item} className="flex items-center gap-3 cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -310,7 +346,7 @@ export default function HomePage() {
                       </label>
                     ))}
                   </div>
-                  {pathList.length > 3 && (
+                  {apiPaths.length > 3 && (
                     <button 
                       onClick={() => setShowMorePath(!showMorePath)}
                       className="text-sm font-semibold text-[#13AECE] flex items-center gap-1 mt-3 hover:text-[#0f8b9e]"
@@ -398,7 +434,12 @@ export default function HomePage() {
 
               {/* Course Grid */}
               <div className="grid md:grid-cols-2 gap-6 mb-12">
-                {paginatedCourses.length > 0 ? paginatedCourses.map((course, idx) => (
+                {!isPathsLoaded || coursesList.length === 0 ? (
+                  <div className="col-span-2 text-center py-12 text-slate-500">
+                    <div className="w-8 h-8 border-2 border-slate-300 border-t-[#13AECE] rounded-full animate-spin mx-auto mb-4"></div>
+                    Loading courses...
+                  </div>
+                ) : paginatedCourses.length > 0 ? paginatedCourses.map((course, idx) => (
                   <Link href={course.title === "Advanced Java" ? "/courses/advanced-java" : `/courses/${course.slug || course.id}`} key={course.id || idx}>
                     <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md cursor-pointer group">
                       <div className="p-6 flex-1 flex flex-col">
