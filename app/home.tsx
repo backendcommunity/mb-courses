@@ -39,8 +39,8 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useEffect } from "react";
 
-const pathList = ["Applied Finance", "Artificial Intelligence", "Cloud", "Data Engineering", "Data Manipulation"];
-const categoryList = ["Airflow", "AWS", "Databricks", "FastAPI", "Julia"];
+const pathList = ["Backend Engineering", "Cybersecurity for Engineers", "Product Engineering", "Blockchain Engineering", "AI Engineering", "Cloud Engineering", "DevOps Engineering", "Data Engineering", "Platform Engineering"];
+const categoryList = ["Backend", "Cybersecurity", "Product", "Blockchain", "AI", "Cloud", "DevOps", "Data", "Platform"];
 const levelList = ["Basic", "Intermediate", "Advanced"];
 
 const fallbackAdvancedJava = { 
@@ -102,7 +102,7 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
     <div className="border-b border-slate-100 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-6 text-left focus:outline-none group"
+        className="w-full flex items-center justify-between py-4 text-left focus:outline-none group"
       >
         <span className="text-[17px] font-semibold text-[#0B152A] pr-8 group-hover:text-[#13AECE] transition-colors">{question}</span>
         {isOpen ? (
@@ -113,7 +113,7 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
       </button>
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-[500px] pb-6 opacity-100" : "max-h-0 opacity-0"
+          isOpen ? "max-h-[500px] pb-4 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <p className="text-slate-600 leading-relaxed text-[15px] pr-8">{answer}</p>
@@ -531,32 +531,62 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
-                    <img 
-                      src={`https://i.pravatar.cc/150?img=${item * 11}`} 
-                      alt="Solomon Eseme" 
-                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#0B152A] text-lg">Solomon Eseme</span>
-                    <span className="text-sm text-slate-500">Backend engineer at Andela</span>
-                  </div>
+            <div key="agoro" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
+                  <img 
+                    src="/agoro1.jpeg" 
+                    alt="Agoro Adegbenga B" 
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
+                  />
                 </div>
-                <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
-                  “This is testimonial. Or should we call it a success story? Whatever, just be sure it conveys MB's real value and piques the ideal buyer to actually want to buy, Okay. This is testimonial. It's also a real success story”.
-                </p>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[#0B152A] text-lg">Agoro, Adegbenga. B</span>
+                  <span className="text-sm text-slate-500">CTO, Crenet</span>
+                </div>
               </div>
-            ))}
-          </div>
+              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
+                "I strongly recommend exploring Mastering Backend as a resource for your personal and/or professional growth."
+              </p>
+            </div>
 
-          <div className="mt-14 flex justify-center">
-            <button className="flex items-center gap-2 px-8 py-3 rounded-full border border-[#0B152A] text-[#0B152A] font-medium hover:bg-slate-100 transition-colors">
-              See more <ArrowRight className="w-5 h-5" />
-            </button>
+            <div key="eshan" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
+                  <img 
+                    src="/eshan3.jpeg" 
+                    alt="Eshan Shafeeq" 
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[#0B152A] text-lg">Eshan Shafeeq</span>
+                  <span className="text-sm text-slate-500">Blockchain & Web3 Engineer, Cake Defi</span>
+                </div>
+              </div>
+              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
+                "The course is an excellent resource for beginners. Your explanations of the basics are clear, making it easy for newcomers to grasp. I particularly enjoyed the task management application; it's a practical example that helps solidify the concepts."
+              </p>
+            </div>
+
+            <div key="daniel" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
+                  <img 
+                    src="/daniel2.jpg" 
+                    alt="Daniel Tinivella" 
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[#0B152A] text-lg">Daniel Tinivella</span>
+                  <span className="text-sm text-slate-500">Software Engineer, Globant</span>
+                </div>
+              </div>
+              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
+                "The practical examples and hands-on exercises were particularly beneficial. They not only reinforced the theoretical concepts but also allowed me to apply them in real-world scenarios. The inclusion of best practices and common pitfalls added a practical dimension to the learning process."
+              </p>
+            </div>
           </div>
         </div>
       </section>
