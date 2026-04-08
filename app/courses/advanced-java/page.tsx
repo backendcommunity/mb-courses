@@ -14,7 +14,8 @@ import {
   FileText,
   ArrowRight,
   Plus,
-  Minus
+  Minus,
+  Play
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,54 @@ const faqs = [
     answer: "Topics span across data wrangling, exploratory data analysis, machine learning (supervised and unsupervised), deep learning, natural language processing (NLP), data visualization, and deployment of AI models.",
   },
 ];
+
+function ChapterCard({ chapter }: { chapter: { num: number; title: string; desc: string; lessons?: string[] } }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col gap-6 transition-all hover:shadow-md">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shrink-0">
+          {chapter.num}
+        </div>
+        <h3 className="font-bold text-slate-800">{chapter.title}</h3>
+      </div>
+      
+      <div className="border-t border-slate-100 pt-6">
+        <p className={`text-[13px] text-slate-500 leading-relaxed mb-6 ${isExpanded ? "" : "line-clamp-2"}`}>
+          {chapter.desc}
+        </p>
+        
+        {isExpanded && chapter.lessons && (
+          <div className="mb-6 space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Lessons in this chapter</h4>
+            {chapter.lessons.map((lesson, i) => (
+              <div key={i} className="flex items-center gap-3 text-[13px] text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <div className="w-6 h-6 rounded-full bg-[#13AECE]/10 flex items-center justify-center shrink-0">
+                  <Play className="w-3 h-3 text-[#13AECE] ml-0.5" />
+                </div>
+                {lesson}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-slate-800 text-[13px] font-bold flex items-center gap-1 hover:text-[#13AECE] transition-colors"
+          >
+            {isExpanded ? "Hide Details" : "View Details"} 
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          <Button className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 text-xs h-9 px-6 rounded-md shadow-sm">
+            Start Chapter
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function FAQItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -289,52 +338,36 @@ export default function AdvancedJavaCoursePage() {
                 {[
                   {
                     num: 1, title: "Intro to basics", 
-                    desc: "Take your first steps with R. In this chapter, you will learn how to use the console as a calculator and how to assign variables. You will also get to know the basic data types in R. Let's get started."
+                    desc: "Take your first steps with R. In this chapter, you will learn how to use the console as a calculator and how to assign variables. You will also get to know the basic data types in R. Let's get started.",
+                    lessons: ["Introduction to R", "Console as a calculator", "Variable assignment", "Basic data types in R"]
                   },
                   {
                     num: 2, title: "Vectors", 
-                    desc: "We take you on a trip to Vegas, where you will learn how to analyze your gambling results using vectors in R. After completing this chapter, you will be able to create vectors in R, name them, select elements from them, and compare different vectors."
+                    desc: "We take you on a trip to Vegas, where you will learn how to analyze your gambling results using vectors in R. After completing this chapter, you will be able to create vectors in R, name them, select elements from them, and compare different vectors.",
+                    lessons: ["Creating vectors", "Naming a vector", "Calculating total winnings", "Comparing vectors"]
                   },
                   {
                     num: 3, title: "Matrices", 
-                    desc: "In this chapter, you will learn how to work with matrices in R. By the end of the chapter, you will be able to create matrices and understand how to do basic computations with them. You will analyze the box office numbers of the Star Wars movies and learn how to use matrices in R. May the force be with you!"
+                    desc: "In this chapter, you will learn how to work with matrices in R. By the end of the chapter, you will be able to create matrices and understand how to do basic computations with them. You will analyze the box office numbers of the Star Wars movies and learn how to use matrices in R. May the force be with you!",
+                    lessons: ["What's a matrix?", "Analyzing matrices", "Adding rows/columns to a matrix", "Matrix arithmetic"]
                   },
                   {
                     num: 4, title: "Factors", 
-                    desc: "Data often falls into a limited number of categories. For example, human hair color can be categorized as black, brown, blond, red, grey, or white—and perhaps a few more options for people who color their hair. In R, categorical data is stored in factors. Factors are very important in data analysis, so start learning how to create, subset, and compare them now."
+                    desc: "Data often falls into a limited number of categories. For example, human hair color can be categorized as black, brown, blond, red, grey, or white—and perhaps a few more options for people who color their hair. In R, categorical data is stored in factors. Factors are very important in data analysis, so start learning how to create, subset, and compare them now.",
+                    lessons: ["What's a factor and why use it?", "Factor levels", "Summarizing a factor", "Ordered factors"]
                   },
                   {
                     num: 5, title: "Data frames", 
-                    desc: "Most datasets you will be working with will be stored as data frames. By the end of this chapter, you will be able to create a data frame, select interesting parts of a data frame, and order a data frame according to certain variables."
+                    desc: "Most datasets you will be working with will be stored as data frames. By the end of this chapter, you will be able to create a data frame, select interesting parts of a data frame, and order a data frame according to certain variables.",
+                    lessons: ["What's a data frame?", "Creating a data frame", "Selection of data frame elements", "Sorting"]
                   },
                   {
                     num: 6, title: "Lists", 
-                    desc: "As opposed to vectors, lists can hold components of different types, just as your to-do lists can contain different categories of tasks. This chapter will teach you how to create, name, and subset these lists."
+                    desc: "As opposed to vectors, lists can hold components of different types, just as your to-do lists can contain different categories of tasks. This chapter will teach you how to create, name, and subset these lists.",
+                    lessons: ["Why would you need a list?", "Creating a named list", "Selecting elements from a list", "Adding more information to the list"]
                   }
                 ].map(chapter => (
-                  <div key={chapter.num} className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col gap-6 transition-all hover:shadow-md">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                        {chapter.num}
-                      </div>
-                      <h3 className="font-bold text-slate-800">{chapter.title}</h3>
-                    </div>
-                    
-                    <div className="border-t border-slate-100 pt-6">
-                      <p className="text-[13px] text-slate-500 leading-relaxed mb-6">
-                        {chapter.desc}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <button className="text-slate-800 text-[13px] font-bold flex items-center gap-1 hover:text-[#13AECE] transition-colors">
-                          View Details <ChevronDown className="w-3.5 h-3.5" />
-                        </button>
-                        <Button className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 text-xs h-9 px-6 rounded-md">
-                          Start Chapter
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <ChapterCard key={chapter.num} chapter={chapter} />
                 ))}
               </div>
 
