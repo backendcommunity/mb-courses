@@ -146,7 +146,7 @@ export default function HomePage() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
-  const [coursesList, setCoursesList] = useState<any[]>([]);
+  const [coursesList, setCoursesList] = useState<any[]>([fallbackAdvancedJava]);
   const [roadmapsList, setRoadmapsList] = useState<any[]>([]);
   const [apiPaths, setApiPaths] = useState<string[]>(pathList); // Default fallback
   const [isPathsLoaded, setIsPathsLoaded] = useState(false);
@@ -183,7 +183,7 @@ export default function HomePage() {
           setRoadmapsList(roadmapData.roadmaps);
         }
 
-        if (courseData && courseData.courses) {
+        if (courseData && Array.isArray(courseData.courses)) {
           if (courseData.courses.length === 0) {
             setCoursesList([fallbackAdvancedJava]);
           } else {
@@ -212,6 +212,9 @@ export default function HomePage() {
             /* ignore */
           }
           }
+        } else {
+          // If the API returns an error structure instead of { courses: [] }
+          setCoursesList([fallbackAdvancedJava]);
         }
       })
       .catch(err => {
