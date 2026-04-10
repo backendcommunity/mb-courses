@@ -184,7 +184,10 @@ export default function HomePage() {
         }
 
         if (courseData && courseData.courses) {
-          const mappedCourses = courseData.courses.map((c: any) => ({
+          if (courseData.courses.length === 0) {
+            setCoursesList([fallbackAdvancedJava]);
+          } else {
+            const mappedCourses = courseData.courses.map((c: any) => ({
             id: c.slug || c.id,
             title: c.title,
             level: c.level?.name || c.level || 'Intermediate',
@@ -204,9 +207,10 @@ export default function HomePage() {
 
           // persist cache
           try {
-            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), roadmaps: roadmapData.roadmaps || [], courses: finalCourses }));
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), roadmaps: roadmapData?.roadmaps || [], courses: finalCourses }));
           } catch (e) {
             /* ignore */
+          }
           }
         }
       })
@@ -536,7 +540,7 @@ export default function HomePage() {
 
               {/* Course Grid */}
               <div className="grid md:grid-cols-2 gap-6 mb-12">
-                {!isPathsLoaded || coursesList.length === 0 ? (
+                {!isPathsLoaded ? (
                   <div className="col-span-2 text-center py-12 text-slate-500">
                     <div className="w-8 h-8 border-2 border-slate-300 border-t-[#13AECE] rounded-full animate-spin mx-auto mb-4"></div>
                     Loading courses...
