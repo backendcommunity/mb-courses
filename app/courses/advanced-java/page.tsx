@@ -9,59 +9,48 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  LayoutTemplate,
-  UserCircle,
-  FileText,
-  ArrowRight,
+  Play,
   Plus,
   Minus,
-  Play
+  ArrowRight,
+  Layout as LayoutTemplate,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect, JSX } from "react";
+import Testimonials from "@/components/testimonials";
 
-const faqs = [
-  {
-    question: "What is data science?",
-    answer: "Data science is the study of data to extract meaningful insights for business. It is a multidisciplinary approach that combines principles and practices from the fields of mathematics, statistics, artificial intelligence, and computer engineering to analyze large amounts of data.",
-  },
-  {
-    question: "How can I learn data science?",
-    answer: "You can learn data science by following a structured learning path, starting with programming fundamentals (like Python or R), mastering statistics, and moving onto machine learning and data visualization through hands-on projects and courses.",
-  },
-  {
-    question: "What skills are required for data science?",
-    answer: "Key skills include proficiency in programming languages (such as Python or SQL), an understanding of statistical analysis, experience with machine learning algorithms, data wrangling, and effective data communication/visualization.",
-  },
-  {
-    question: "What can I use data science for?",
-    answer: "Data science is used to build predictive models, recommendation engines, automate decision-making processes, detect fraud, analyze customer behavior, and optimize business strategies across almost every industry.",
-  },
-  {
-    question: "Is data science a good career?",
-    answer: "Yes, data science is widely considered one of the fastest-growing and highest-paid careers in technology, offering excellent job security, diverse opportunities, and impactful work.",
-  },
-  {
-    question: "Is it difficult to become a data scientist?",
-    answer: "It requires dedication and continuous learning due to its multidisciplinary nature. However, with a consistent study routine, structured curriculum, and hands-on practice, anyone with perseverance can transition into the field.",
-  },
-  {
-    question: "Does data science require coding?",
-    answer: "Yes, coding is an essential tool for data scientists. Languages like Python, R, and SQL are heavily used to process, analyze, and build models from raw data.",
-  },
-  {
-    question: "How long does it take to become a data scientist?",
-    answer: "Depending on your prior experience and time commitment, it generally takes between 6 to 12 months of focused, rigorous study to acquire the necessary entry-level skills to land a data science role.",
-  },
-  {
-    question: "What topics can I study within data science?",
-    answer: "Topics span across data wrangling, exploratory data analysis, machine learning (supervised and unsupervised), deep learning, natural language processing (NLP), data visualization, and deployment of AI models.",
-  },
-];
+function stripHtml(html?: string) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-function ChapterCard({ chapter }: { chapter: { num: number; title: string; desc: string; lessons?: string[] } }) {
+
+
+function ChapterCard({ chapter }: { chapter: any }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const lessonNodes: JSX.Element[] = [];
+  if (chapter.lessons && Array.isArray(chapter.lessons)) {
+    for (let idx = 0; idx < chapter.lessons.length; idx++) {
+      const lesson: any = chapter.lessons[idx];
+      lessonNodes.push(
+        <div key={idx} className="flex items-center gap-3 text-[13px] text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <div className="w-6 h-6 rounded-full bg-[#13AECE]/10 flex items-center justify-center shrink-0">
+            <Play className="w-3 h-3 text-[#13AECE] ml-0.5" />
+          </div>
+          {lesson}
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col gap-6 transition-all hover:shadow-md">
@@ -73,23 +62,27 @@ function ChapterCard({ chapter }: { chapter: { num: number; title: string; desc:
       </div>
       
       <div className="border-t border-slate-100 pt-6">
-        <p className={`text-[13px] text-slate-500 leading-relaxed mb-6 ${isExpanded ? "" : "line-clamp-2"}`}>
-          {chapter.desc}
-        </p>
-        
-        {isExpanded && chapter.lessons && (
-          <div className="mb-6 space-y-3">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Lessons in this chapter</h4>
-            {chapter.lessons.map((lesson, i) => (
-              <div key={i} className="flex items-center gap-3 text-[13px] text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <div className="w-6 h-6 rounded-full bg-[#13AECE]/10 flex items-center justify-center shrink-0">
-                  <Play className="w-3 h-3 text-[#13AECE] ml-0.5" />
-                </div>
-                {lesson}
+        {isExpanded ? (
+          <>
+            <p className={`text-[13px] text-slate-500 leading-relaxed mb-4`}>
+              {chapter.desc}
+            </p>
+
+            {chapter.videoTitle && (
+              <div className="text-sm text-slate-700 mb-4">
+                <span className="text-sky-600 font-medium">Video:</span>
+                <span className="ml-2">{chapter.videoTitle}</span>
               </div>
-            ))}
-          </div>
-        )}
+            )}
+
+            {chapter.lessons && (
+              <div className="mb-6 space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Lessons in this chapter</h4>
+                {lessonNodes}
+              </div>
+            )}
+          </>
+        ) : null}
 
         <div className="flex items-center justify-between">
           <button 
@@ -137,12 +130,239 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
 }
 
 export default function AdvancedJavaCoursePage() {
-  const [isReadMore, setIsReadMore] = useState(false);
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [price, setPrice] = useState<number | null>(null);
+  const [resources, setResources] = useState<{ totalChapters:number; totalVideos:number; totalQuizzes:number }>({ totalChapters:0, totalVideos:0, totalQuizzes:0 });
+
+  useEffect(() => {
+    const loadCourse = async () => {
+      const cacheKey = 'course:advanced-java';
+      try {
+        
+        const cachedStr = localStorage.getItem(cacheKey);
+        if (cachedStr) {
+          const cached = JSON.parse(cachedStr);
+          if (cached && cached.data) {
+            
+            if (cached.ts && (Date.now() - cached.ts < 60 * 1000)) {
+              setCourse(cached.data);
+              setLoading(false);
+            } else {
+              
+              setCourse(cached.data);
+            }
+          }
+        }
+      } catch (e) {
+        
+      }
+
+      try {
+        setError(null);
+        const response = await fetch('/api/courses/advanced-java');
+        if (!response.ok) throw new Error('Failed to load course data');
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        const courseObj = data.course || data;
+        setCourse(courseObj);
+        try {
+          const chapters = Array.isArray(courseObj.chapters) ? courseObj.chapters : [];
+          const totalChapters = chapters.length;
+          let totalVideos = 0;
+          let totalQuizzes = 0;
+          for (const ch of chapters) {
+            if (Array.isArray(ch.videos)) totalVideos += ch.videos.length;
+            if (Array.isArray(ch.quizzes)) totalQuizzes += ch.quizzes.length;
+          }
+          if (Array.isArray(courseObj.quizzes)) totalQuizzes += courseObj.quizzes.length;
+          // override for Advanced Java to match site content
+          const finalChapters = (courseObj.slug === 'advanced-java' && totalChapters === 23) ? 12 : totalChapters;
+          setResources({ totalChapters: finalChapters, totalVideos, totalQuizzes });
+        } catch (e) {
+          
+        }
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: courseObj }));
+        } catch (e) {
+          
+        }
+      } catch (err: any) {
+        console.error('Error loading course:', err);
+        setError(err.message || 'Failed to load course');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCourse();
+  }, []);
+
+  // Fetch price info from roadmaps endpoint (use internal proxy)
+  useEffect(() => {
+    let mounted = true;
+    const fetchPrice = async () => {
+      try {
+        const res = await fetch('/api/roadmaps');
+        if (!res.ok) return;
+        const d = await res.json();
+        const items = d.roadmaps || [];
+        // try to find roadmap that matches course title or slug
+        const match = items.find((r: any) => {
+          const title = (r.title || '').toLowerCase();
+          return title.includes('java') || title.includes('advanced');
+        }) || items[0];
+        if (match && mounted) {
+          const val = match.amount || match.price || match.cost || null;
+          if (val) setPrice(Number(val));
+        }
+      } catch (e) {
+        
+      }
+    };
+    fetchPrice();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-slate-300 border-t-[#13AECE] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading course...</p>
+        </div>
+      </div>
+    );  
+  }
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Oops!</h2>
+          <p className="text-slate-600 mb-6">{error || "Failed to load course data"}</p>
+          <Link href="/courses">
+            <Button className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white">
+              Back to Courses
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback data if API fails - should rarely be used now
+  const courseData = course || {
+    title: "Advanced Java",
+    slug: "advanced-java",
+    summary: "Advanced Java covers collections, I/O streams, build tools, and multithreading to help you build scalable, optimized applications.",
+    description: "<h2>Learn Advanced Java</h2><p>Master collections, I/O streams, build tools, and multithreading concepts.</p>",
+    banner: "https://pub-63da695b9ece47c5b3b49bd78b86d884.r2.dev/design-patterns-in-java.png",
+    preview: "1135011825",
+    totalDuration: 5,
+    totalStudents: 0,
+    chapters: [],
+    tags: ["Java", "Backend"]
+  };
+
+  // Cleaned full description and a short preview for Read More
+  let fullDescriptionRaw = stripHtml(courseData.description || courseData.summary || '');
+  // remove any leading 'Course Description:' label and unwanted long blocks
+  fullDescriptionRaw = fullDescriptionRaw.replace(/Course Description:\s*/gi, '').trim();
+  const filteredDescription = fullDescriptionRaw.replace(/In this course[\s\S]*/i, '').trim();
+  const fullDescription = filteredDescription || fullDescriptionRaw;
+  const sentenceMatches = fullDescription.match(/[^.!?]+[.!?]+(\s|$)/g) || [];
+  const shortDescription = sentenceMatches.length ? sentenceMatches.slice(0, 5).join(' ').trim() : fullDescription.split('\n')[0] || fullDescription.slice(0, 200);
+
+  const chaptersList = courseData.chapters && Array.isArray(courseData.chapters)
+    ? courseData.chapters.slice(0, 12).map((ch: any, i: number) => {
+        const rawDesc = ch.description || ch.summary || ch.content || '';
+        const desc = stripHtml(rawDesc) || 'Chapter content';
+        const firstVideo = (ch.videos && ch.videos[0]) || (ch.lessons && ch.lessons[0]) || (ch.items && ch.items[0]) || null;
+        const videoTitle = firstVideo ? (firstVideo.title || firstVideo.name || firstVideo.heading || stripHtml(firstVideo.summary || firstVideo.description || '')) : '';
+        const lessons = (ch.lessons || []).map((l: any) => stripHtml(l.title || l.name || l.summary || l.description || ''));
+        return {
+          num: i + 1,
+          title: ch.title || `Chapter ${i + 1}`,
+          desc,
+          lessons,
+          videoTitle
+        };
+      })
+    : [
+        {
+          num: 1, title: "Java Fundamentals",
+          desc: "Master core Java basics including syntax, variables, data types, and control flow mechanisms.",
+          lessons: ["Syntax Basics", "Variables & Data Types", "Control Flow", "Methods"],
+          videoTitle: "Intro to Java"
+        },
+        {
+          num: 2, title: "Collections Framework",
+          desc: "Explore Lists, Sets, Maps, and Queues. Learn how to efficiently store and manipulate data.",
+          lessons: ["Lists & ArrayLists", "Sets & HashSets", "Maps & HashMap", "Queues"],
+          videoTitle: "Collections Overview"
+        },
+        {
+          num: 3, title: "I/O Streams",
+          desc: "Learn file handling, byte streams, character streams, and serialization in Java.",
+          lessons: ["File Input/Output", "Byte Streams", "Character Streams", "Serialization"],
+          videoTitle: "File I/O Basics"
+        },
+        {
+          num: 4, title: "Multithreading",
+          desc: "Build concurrent applications using threads, synchronization, and thread management.",
+          lessons: ["Thread Basics", "Synchronization", "Thread Pools", "Concurrent Collections"],
+          videoTitle: "Threads & Concurrency"
+        },
+        {
+          num: 5, title: "Design Patterns",
+          desc: "Implement industry-standard design patterns for scalable and maintainable code.",
+          lessons: ["Singleton Pattern", "Factory Pattern", "Observer Pattern", "Strategy Pattern"],
+          videoTitle: "Design Patterns Overview"
+        },
+        {
+          num: 6, title: "Build Tools & Maven",
+          desc: "Master Maven for project management, dependency handling, and automated builds.",
+          lessons: ["Maven Setup", "POM Configuration", "Dependency Management", "Build Profiles"],
+          videoTitle: "Maven Basics"
+        }
+      ];
+
+  const learningOutcomes = [
+    "Master Advanced Java concepts including collections, I/O streams, and multithreading",
+    "Build scalable backend systems with performance optimization techniques",
+    "Implement industry-standard design patterns for production-ready code",
+    "Handle complex data structures and file operations efficiently",
+    "Create concurrent applications with proper thread synchronization"
+  ];
+
+  const faqs = [
+    {
+      question: "What prior knowledge do I need?",
+      answer: "Basic Java programming knowledge is recommended. You should be comfortable with classes, objects, and basic OOP concepts."
+    },
+    {
+      question: "How long does this course take?",
+      answer: `This course has ${courseData.totalDuration || 5} hours of content. Most students complete it in ${(courseData.totalDuration || 5) * 2}-${(courseData.totalDuration || 5) * 3} weeks depending on their pace.`
+    },
+    {
+      question: "Will I get a certificate?",
+      answer: "Yes! Upon completion, you'll receive a certificate of completion that you can add to your LinkedIn profile and resume."
+    },
+    {
+      question: "Can I download course materials?",
+      answer: "Yes, all course materials, code examples, and resources are available for download for offline access."
+    },
+    {
+      question: "Is there job support after the course?",
+      answer: "Yes, we provide career guidance, resume reviews, and mock interviews to help you land your next role."
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       <div className="relative overflow-hidden text-slate-50" style={{ backgroundColor: "#0e2036" }}>
-        {/* Subtle Grid Background */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -152,7 +372,6 @@ export default function AdvancedJavaCoursePage() {
           }}
         />
 
-        {/* Header */}
         <header className="relative z-10 container mx-auto px-6 py-4 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
             <img src="/masteringbackend_logo.png" alt="MasteringBackend" className="h-8 md:h-10" />
@@ -180,25 +399,16 @@ export default function AdvancedJavaCoursePage() {
           </div>
         </header>
 
-        {/* Hero Section */}
         <section className="relative z-10 container mx-auto px-6 pt-12 pb-24 md:pt-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <div className="text-[#13AECE] font-bold tracking-widest text-sm uppercase mb-3">COURSE</div>
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-4">
-                Advanced Java
+                {courseData.title}
               </h1>
-              
-              <div className="flex items-center gap-3 text-slate-300 text-sm font-medium mb-6">
-                <div className="flex items-center gap-1.5">
-                  <BarChart2 className="w-4 h-4" /> Basic
-                </div>
-                <span className="text-slate-600">|</span>
-                <span>Updated 02/2026</span>
-              </div>
 
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-                Learn Advanced Java (collections, I/O streams, build tools, and multithreading.
+                {stripHtml(courseData.summary || courseData.description)}
               </p>
 
               <Button 
@@ -209,55 +419,46 @@ export default function AdvancedJavaCoursePage() {
 
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50">Java</span>
-                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50">Programming</span>
-                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 5 hr</span>
-                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5"><Code className="w-3.5 h-3.5" /> 23 Chapters</span>
-                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> 36+</span>
-                </div>
-                <div className="flex">
+                  {courseData.tags?.map((tag: string, i: number) => (
+                    <span key={i} className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50">
+                      {tag}
+                    </span>
+                  )) || (
+                    <>
+                      <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50">Java</span>
+                      <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50">Backend</span>
+                    </>
+                  )}
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
-                    <Trophy className="w-3.5 h-3.5" /> Certificate on completion
+                    <Clock className="w-3.5 h-3.5" /> {courseData.totalDuration || 5} hr
+                  </span>
+                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
+                    <Code className="w-3.5 h-3.5" /> {(courseData.slug === 'advanced-java' && resources.totalChapters === 12) ? 12 : chaptersList.length} Chapters
+                  </span>
+                  <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5" /> Certificate
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="relative w-full max-w-[500px] mx-auto lg:ml-auto aspect-square">
-              <div className="absolute inset-0 border border-white/10 rounded-2xl p-4 lg:p-6 bg-white/[0.02] backdrop-blur-sm">
-                <div className="w-full h-full rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl overflow-hidden relative"
-                     style={{
-                       backgroundColor: 'rgba(255,255,255,0.05)',
-                     }}>
-                  <div className="absolute inset-0 bg-black flex items-center justify-center">
-                    <iframe 
-                      src={`https://player.vimeo.com/video/1135011825?h=7b9264c76b&badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0&dnt=1`} 
-                      frameBorder="0" 
-                      allow="autoplay; fullscreen; picture-in-picture" 
-                      className="absolute top-0 left-0 w-full h-full object-cover" 
-                      title="Advanced Java Preview"
-                    />
-                  </div>
-                  {/* Fallback for localhost tracking blocks or privacy errors */}
-                  <div className="absolute inset-0 hidden" id="preview-fallback" style={typeof window !== 'undefined' && window.location.hostname.includes('localhost') ? {display: 'block'} : {}}>
-                    <img 
-                      src="/editor-preview.png" 
-                      alt="Advanced Java Course Environment" 
-                      className="w-full h-full object-cover rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl" 
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="w-full max-w-[680px] mx-auto lg:ml-auto">
+              
+              <img
+                src={courseData.banner || '/become%20a%20java%20engineer.png'}
+                alt={courseData.title || 'Course banner'}
+                className="w-full rounded-2xl object-contain object-center"
+              />
             </div>
           </div>
         </section>
 
-        {/* Bottom Logos */}
+        
+        
         <section className="relative z-10 border-t border-white/5 py-8">
           <div className="container mx-auto px-6">
             <p className="text-slate-400 text-sm mb-6">Join <span className="text-white font-bold">500+</span> MasteringBackend students working at</p>
             <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
-              {/* Mocking generic logos with text and simple SVGs to mimic the design */}
               <div className="text-xl font-bold flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full bg-[#0e2036]"></div>
@@ -277,37 +478,31 @@ export default function AdvancedJavaCoursePage() {
         </section>
       </div>
 
-      {/* Main Content Section */}
       <section className="bg-[#f8fafc] text-slate-900 py-16">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid lg:grid-cols-3 gap-12 items-start">
             
-            {/* Left Column (Course Details) */}
+            
             <div className="lg:col-span-2 space-y-12">
               
-              {/* Course Description */}
               <div>
                 <h2 className="text-xl font-bold text-slate-900 mb-6">Course Description</h2>
                 <div className="space-y-4">
-                  <h3 className="font-bold text-slate-800">Learn R Programming</h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    R programming language is a useful tool for data scientists, analysts, and statisticians, especially those working in academic settings. R's ability to handle complex analyses such as machine learning, financial modeling, and more{isReadMore ? " advanced computational statistics makes it incredibly valuable for heavy data manipulation. In this course, you will dive deep into its core features, syntax, and statistical modeling capabilities to become a proficient R developer." : "..."}
+                    {shortDescription}
                   </p>
-                  <button onClick={() => setIsReadMore(!isReadMore)} className="text-[#13AECE] text-xs font-bold flex items-center gap-1 hover:text-[#0f8b9e] transition-colors">
-                    {isReadMore ? "Show Less" : "Read More"} {isReadMore ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
                 </div>
               </div>
 
-              {/* Interested CTA Banner */}
+              
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-                <h3 className="text-xl font-bold text-slate-800">Interested ?</h3>
+                <h3 className="text-xl font-bold text-slate-800">Interested?</h3>
                 <Button className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 px-8 rounded-md w-full sm:w-auto">
                   Start Course for Free
                 </Button>
               </div>
 
-              {/* What you'll learn */}
+              
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <div className="bg-slate-100 p-2 rounded-lg"><Trophy className="w-5 h-5 text-slate-700" /></div>
@@ -315,77 +510,23 @@ export default function AdvancedJavaCoursePage() {
                 </div>
                 
                 <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-bold text-slate-800">Identify</span> core R data types and recognize how variables store and manipulate values.
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-bold text-slate-800">Define and differentiate vector operations by creating, naming, subsetting, and comparing one-dimensional data.</span>
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-bold text-slate-800">Recognize matrix structures by constructing, naming, and operating on two-dimensional data, including arithmetic and summaries.</span>
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-bold text-slate-800">Differentiate nominal and ordinal factors and identify appropriate use of factor creation, level setting, and ordered comparisons.</span>
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-bold text-slate-800">Evaluate</span> outputs from vectors, matrices, and factors to assess totals, patterns, and logical conditions in R
-                    </p>
-                  </li>
+                  {learningOutcomes.map((outcome, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
+                      <p className="text-sm text-slate-600 leading-relaxed">{outcome}</p>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               {/* Chapters List */}
               <div className="space-y-4">
-                {[
-                  {
-                    num: 1, title: "Intro to basics", 
-                    desc: "Take your first steps with R. In this chapter, you will learn how to use the console as a calculator and how to assign variables. You will also get to know the basic data types in R. Let's get started.",
-                    lessons: ["Introduction to R", "Console as a calculator", "Variable assignment", "Basic data types in R"]
-                  },
-                  {
-                    num: 2, title: "Vectors", 
-                    desc: "We take you on a trip to Vegas, where you will learn how to analyze your gambling results using vectors in R. After completing this chapter, you will be able to create vectors in R, name them, select elements from them, and compare different vectors.",
-                    lessons: ["Creating vectors", "Naming a vector", "Calculating total winnings", "Comparing vectors"]
-                  },
-                  {
-                    num: 3, title: "Matrices", 
-                    desc: "In this chapter, you will learn how to work with matrices in R. By the end of the chapter, you will be able to create matrices and understand how to do basic computations with them. You will analyze the box office numbers of the Star Wars movies and learn how to use matrices in R. May the force be with you!",
-                    lessons: ["What's a matrix?", "Analyzing matrices", "Adding rows/columns to a matrix", "Matrix arithmetic"]
-                  },
-                  {
-                    num: 4, title: "Factors", 
-                    desc: "Data often falls into a limited number of categories. For example, human hair color can be categorized as black, brown, blond, red, grey, or white—and perhaps a few more options for people who color their hair. In R, categorical data is stored in factors. Factors are very important in data analysis, so start learning how to create, subset, and compare them now.",
-                    lessons: ["What's a factor and why use it?", "Factor levels", "Summarizing a factor", "Ordered factors"]
-                  },
-                  {
-                    num: 5, title: "Data frames", 
-                    desc: "Most datasets you will be working with will be stored as data frames. By the end of this chapter, you will be able to create a data frame, select interesting parts of a data frame, and order a data frame according to certain variables.",
-                    lessons: ["What's a data frame?", "Creating a data frame", "Selection of data frame elements", "Sorting"]
-                  },
-                  {
-                    num: 6, title: "Lists", 
-                    desc: "As opposed to vectors, lists can hold components of different types, just as your to-do lists can contain different categories of tasks. This chapter will teach you how to create, name, and subset these lists.",
-                    lessons: ["Why would you need a list?", "Creating a named list", "Selecting elements from a list", "Adding more information to the list"]
-                  }
-                ].map(chapter => (
+                <h3 className="text-xl font-bold text-slate-900 mb-6">Course Content</h3>
+                {chaptersList.map((chapter: any) => (
                   <ChapterCard key={chapter.num} chapter={chapter} />
                 ))}
               </div>
-
+              
               {/* Earn Certificate Banner */}
               <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-8 mt-8">
                 <div className="w-full md:w-1/3 aspect-[4/3] bg-slate-200 rounded-lg relative overflow-hidden border-[8px] border-slate-100 shadow-inner flex items-center justify-center">
@@ -435,24 +576,38 @@ export default function AdvancedJavaCoursePage() {
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200 shrink-0">
                     <img 
-                      src="/founder.jpg" 
-                      alt="Solomon Eseme" 
+                      src="/logo.png" 
+                      alt="masteringBackend" 
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex flex-col">
-                    <Link href="#" className="font-bold text-[#13AECE] text-[15px] hover:underline underline-offset-2">Solomon Eseme</Link>
-                    <span className="text-xs text-slate-500">Founder of MasteringBackend</span>
+                    <Link href="#" className="font-bold text-[#13AECE] text-[15px] hover:underline underline-offset-2">MasteringBackend</Link>
                   </div>
                 </div>
               </div>
 
               {/* Course Resource */}
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-4">
                   <FileText className="w-5 h-5 text-slate-700" />
                   <h3 className="font-bold text-slate-900 text-[15px]">Course Resource</h3>
                 </div>
+                <div className="grid grid-cols-3 gap-4 text-center mb-4">
+                  <div>
+                    <div className="text-2xl font-bold text-[#0B152A]">{resources.totalChapters}</div>
+                    <div className="text-xs text-slate-500">Chapters</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-[#0B152A]">{resources.totalVideos}</div>
+                    <div className="text-xs text-slate-500">Videos</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-[#0B152A]">{resources.totalQuizzes}</div>
+                    <div className="text-xs text-slate-500">Quizzes</div>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-600">Additional resources and downloads available in the course resource section.</div>
               </div>
 
             </div>
@@ -502,17 +657,17 @@ export default function AdvancedJavaCoursePage() {
               </ul>
 
               <div className="mt-auto">
-                <div className="flex items-end gap-2 mb-2">
+                  <div className="flex items-end gap-2 mb-2">
                   <div className="flex items-start">
                     <span className="text-xl font-bold text-[#0B152A] mt-1">$</span>
-                    <span className="text-[52px] font-black text-[#0B152A] leading-none tracking-tight">150</span>
+                    <span className="text-[52px] font-black text-[#0B152A] leading-none tracking-tight">{price ?? 150}</span>
                   </div>
-                  <span className="text-sm font-bold text-slate-400 line-through mb-2">$270</span>
+                  {price && <span className="text-sm font-bold text-slate-400 line-through mb-2">$270</span>}
                 </div>
                 <p className="text-[15px] text-slate-500 mb-8">one-time offer</p>
                 
                 <button className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-4 hover:bg-slate-100 transition-colors shadow-sm">
-                  Buy Now
+                  {price ? 'Buy Now' : 'Early Access'}
                 </button>
                 <p className="text-[11px] text-center italic text-slate-400">Note that more modules are coming soon</p>
               </div>
@@ -561,46 +716,7 @@ export default function AdvancedJavaCoursePage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 px-4 bg-[#F6F6F6]">
-        <div className="container mx-auto max-w-[1100px]">
-          <div className="mb-14">
-            <h2 className="text-[2.5rem] md:text-[3.25rem] tracking-tight font-bold text-[#0B152A] leading-[1.1]">
-              Real Numbers.<br />
-              Real Success Stories.
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
-                    <img 
-                      src={`https://i.pravatar.cc/150?img=${item * 11}`} 
-                      alt="Solomon Eseme" 
-                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#0B152A] text-lg">Solomon Eseme</span>
-                    <span className="text-sm text-slate-500">Backend engineer at Andela</span>
-                  </div>
-                </div>
-                <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
-                  “This is testimonial. Or should we call it a success story? Whatever, just be sure it conveys MB's real value and piques the ideal buyer to actually want to buy, Okay. This is testimonial. It's also a real success story”.
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-14 flex justify-center">
-            <button className="flex items-center gap-2 px-8 py-3 rounded-full border border-[#0B152A] text-[#0B152A] font-medium hover:bg-slate-100 transition-colors">
-              See more <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
       {/* FAQs Section */}
       <section className="py-24 px-4 bg-[#F6F6F6]">

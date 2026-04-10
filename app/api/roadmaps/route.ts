@@ -4,46 +4,34 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get("mb_token")?.value;
 
-    // If no token, return empty data (public users will use fallback from home.tsx)
-    if (!token) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-      });
-    }
-
-    const endpoint = "https://demo.masteringbackend.com/api/v3/roadmaps";
+    // Always use the public roadmaps endpoint now that it's available
+    const endpoint = "https://demo.masteringbackend.com/api/v3/public/roadmaps";
     
-    console.log("Fetching roadmaps from:", endpoint, "Token present:", !!token);
+    console.log("Fetching roadmaps from:", endpoint);
 
-    const response = await fetch(endpoint, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(endpoint);
 
     console.log("Roadmaps response status:", response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error("Roadmaps fetch error:", response.status, errorData);
-      // Return empty data on error as fallback
+      // Return empty data as fallback
       return NextResponse.json({
-        success: true,
-        data: [],
+        message: "Success",
+        roadmaps: [],
       });
     }
 
     const data = await response.json();
-    console.log("Roadmaps data received:", data);
+    console.log("Roadmaps data received, count:", data.roadmaps?.length);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching roadmaps via proxy:", error);
-    // Return empty data as fallback instead of error
+    // Return empty data as fallback
     return NextResponse.json({
-      success: true,
-      data: [],
+      message: "Success",
+      roadmaps: [],
     });
   }
 }

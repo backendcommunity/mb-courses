@@ -38,6 +38,7 @@ import {
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useEffect } from "react";
+import Testimonials from "@/components/testimonials";
 
 const pathList = ["Backend Engineering", "Cybersecurity for Engineers", "Product Engineering", "Blockchain Engineering", "AI Engineering", "Cloud Engineering", "DevOps Engineering", "Data Engineering", "Platform Engineering"];
 const categoryList = ["Backend", "Cybersecurity", "Product", "Blockchain", "AI", "Cloud", "DevOps", "Data", "Platform"];
@@ -52,9 +53,23 @@ const fallbackAdvancedJava = {
   category: "Software Development", 
   path: "Data Engineering", 
   hours: 5, 
-  chapters: 23,
+  chapters: 12,
   preview: "1135011825",
   banner: "https://pub-63da695b9ece47c5b3b49bd78b86d884.r2.dev/design-patterns-in-java.png"
+};
+
+// Utility function to strip HTML tags and decode entities
+const stripHtmlTags = (html: string): string => {
+  if (!html) return "";
+  // Remove HTML tags
+  const cleaned = html.replace(/<[^>]*>/g, "");
+  // Decode HTML entities
+  return cleaned
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .trim();
 };
 
 const faqs = [
@@ -132,58 +147,75 @@ export default function HomePage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [coursesList, setCoursesList] = useState<any[]>([]);
+  const [roadmapsList, setRoadmapsList] = useState<any[]>([]);
   const [apiPaths, setApiPaths] = useState<string[]>(pathList); // Default fallback
   const [isPathsLoaded, setIsPathsLoaded] = useState(false);
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
-    // 1. Fetch Paths First
-    fetch("/api/roadmaps")
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data && Array.isArray(data.data)) {
-          // Assuming roadmaps API returns an array in data.data
-          const loadedPaths = data.data.map((r: any) => r.title || r.name).filter(Boolean);
-          if (loadedPaths.length > 0) {
-            setApiPaths(loadedPaths);
+    // Attempt local cache first (fast), then background revalidate
+    const cacheKey = 'home:data';
+    try {
+      const cachedStr = localStorage.getItem(cacheKey);
+      if (cachedStr) {
+        const cached = JSON.parse(cachedStr);
+        if (cached && cached.ts && (Date.now() - cached.ts < 60 * 1000)) {
+          setRoadmapsList(cached.roadmaps || []);
+          setCoursesList(cached.courses || [fallbackAdvancedJava]);
+          setIsPathsLoaded(true);
+        } else if (cached) {
+          // show stale content while we revalidate
+          setRoadmapsList(cached.roadmaps || []);
+          setCoursesList(cached.courses || [fallbackAdvancedJava]);
+        }
+      }
+    } catch (e) {
+      // ignore cache errors
+    }
+
+    // fetch fresh data in background
+    Promise.all([
+      fetch('/api/roadmaps').then(res => res.json()).catch(() => ({})),
+      fetch('/api/courses').then(res => res.json()).catch(() => ({ courses: [] }))
+    ])
+      .then(([roadmapData, courseData]) => {
+        if (roadmapData && roadmapData.roadmaps && Array.isArray(roadmapData.roadmaps)) {
+          setRoadmapsList(roadmapData.roadmaps);
+        }
+
+        if (courseData && courseData.courses) {
+          const mappedCourses = courseData.courses.map((c: any) => ({
+            id: c.slug || c.id,
+            title: c.title,
+            level: c.level?.name || c.level || 'Intermediate',
+            users: c.totalStudents || Math.floor(Math.random() * 100) + 10,
+            desc: stripHtmlTags(c.summary || c.description || ''),
+            category: c.category?.name || c.category || 'Software Development',
+            path: c.path || 'Software Development',
+            hours: c.totalDuration || Math.floor(Math.random() * 10) + 1,
+            chapters: c.chapters?.length || 0,
+            slug: c.slug,
+            preview: c.preview,
+            banner: c.banner
+          }));
+
+          const finalCourses = [fallbackAdvancedJava, ...mappedCourses.filter((c: any) => c.slug !== 'advanced-java')];
+          setCoursesList(finalCourses);
+
+          // persist cache
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), roadmaps: roadmapData.roadmaps || [], courses: finalCourses }));
+          } catch (e) {
+            /* ignore */
           }
         }
       })
-      .catch(err => console.error("Failed to load roadmaps:", err))
+      .catch(err => {
+        console.error('Failed to load data:', err);
+        setCoursesList([fallbackAdvancedJava]);
+      })
       .finally(() => {
         setIsPathsLoaded(true);
-
-        // 2. Fetch Courses After Paths
-        fetch("/api/courses")
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.courses) {
-              // Map backend course structure to UI layout
-              const mappedCourses = data.courses.map((c: any) => ({
-                id: c.slug || c.id,
-                title: c.title,
-                level: c.level?.name || c.level || "Intermediate", // Fallbacks to ensure UI doesn't break
-                users: c.totalStudents || Math.floor(Math.random() * 100) + 10,
-                desc: c.summary || c.description,
-                category: c.category?.name || c.category || "Software Development",
-                path: c.path || "Software Development",
-                hours: c.totalDuration || Math.floor(Math.random() * 10) + 1,
-                chapters: c.chapters?.length || 0,
-                slug: c.slug,
-                preview: c.preview,
-                banner: c.banner
-              }));
-              
-              // Make sure Advanced Java is always at the top since we're focused on building that design
-              const finalCourses = [fallbackAdvancedJava, ...mappedCourses.filter((c: any) => c.slug !== "advanced-java")];
-              setCoursesList(finalCourses);
-            }
-          })
-          .catch(err => {
-            console.error("Failed to load courses:", err);
-            // Gracefully fail and just show Advanced Java
-            setCoursesList([fallbackAdvancedJava]);
-          });
       });
   }, []);
 
@@ -316,6 +348,76 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+
+      {/* Learning Paths Section */}
+      <section className="py-20 px-4 bg-white text-slate-900">
+        <div className="container mx-auto">
+          <div className="mb-12">
+            <h2 className="text-[2rem] font-extrabold text-[#0B152A] mb-4">Learning Paths</h2>
+            <p className="text-lg text-slate-600 max-w-2xl">
+              Choose a comprehensive learning path designed to take you from fundamentals to mastery. Each path includes structured courses, hands-on projects, and real-world practice.
+            </p>
+          </div>
+
+          {roadmapsList.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {roadmapsList.map((roadmap: any) => (
+                <Link href={`/roadmaps/${roadmap.slug}`} key={roadmap.id}>
+                  <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer group">
+                    {/* Banner Image */}
+                    <div className="relative h-48 overflow-hidden bg-slate-200">
+                      <img 
+                        src={roadmap.banner} 
+                        alt={roadmap.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {/* Premium Badge */}
+                      {roadmap.isPremium && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-[#A855F7] text-white border-0">Premium</Badge>
+                        </div>
+                      )}
+                      {/* Waiting Badge */}
+                      {roadmap.isWaiting && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-amber-500 text-white border-0">Coming Soon</Badge>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-lg font-bold text-[#0B152A] mb-3 leading-tight group-hover:text-[#13AECE] transition-colors line-clamp-2">
+                        {roadmap.title}
+                      </h3>
+                      
+                      <p className="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-3 flex-1">
+                        {roadmap.summary?.replace(/<[^>]*>/g, '') || 'Comprehensive learning path to master backend engineering'}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-2">
+                          {roadmap.preview && (
+                            <div className="flex items-center gap-1 text-xs font-medium text-slate-500">
+                              <Play className="w-3 h-3" />
+                              Video Preview
+                            </div>
+                          )}
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-[#13AECE] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-2 border-slate-300 border-t-[#13AECE] rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-slate-500">Loading learning paths...</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Browse Courses Section */}
       <section className="py-20 px-4 bg-[#F8FAFC] text-slate-900">
@@ -520,76 +622,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 px-4 bg-[#F6F6F6]">
-        <div className="container mx-auto max-w-[1100px]">
-          <div className="mb-14">
-            <h2 className="text-[2.5rem] md:text-[3.25rem] tracking-tight font-bold text-[#0B152A] leading-[1.1]">
-              Real Numbers.<br />
-              Real Success Stories.
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div key="agoro" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
-                  <img 
-                    src="/agoro1.jpeg" 
-                    alt="Agoro Adegbenga B" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-[#0B152A] text-lg">Agoro, Adegbenga. B</span>
-                  <span className="text-sm text-slate-500">CTO, Crenet</span>
-                </div>
-              </div>
-              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
-                "I strongly recommend exploring Mastering Backend as a resource for your personal and/or professional growth."
-              </p>
-            </div>
-
-            <div key="eshan" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
-                  <img 
-                    src="/eshan3.jpeg" 
-                    alt="Eshan Shafeeq" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-[#0B152A] text-lg">Eshan Shafeeq</span>
-                  <span className="text-sm text-slate-500">Blockchain & Web3 Engineer, Cake Defi</span>
-                </div>
-              </div>
-              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
-                "The course is an excellent resource for beginners. Your explanations of the basics are clear, making it easy for newcomers to grasp. I particularly enjoyed the task management application; it's a practical example that helps solidify the concepts."
-              </p>
-            </div>
-
-            <div key="daniel" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200">
-                  <img 
-                    src="/daniel2.jpg" 
-                    alt="Daniel Tinivella" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-[#0B152A] text-lg">Daniel Tinivella</span>
-                  <span className="text-sm text-slate-500">Software Engineer, Globant</span>
-                </div>
-              </div>
-              <p className="text-[#0B152A]/80 leading-relaxed text-[15px] flex-1">
-                "The practical examples and hands-on exercises were particularly beneficial. They not only reinforced the theoretical concepts but also allowed me to apply them in real-world scenarios. The inclusion of best practices and common pitfalls added a practical dimension to the learning process."
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
       {/* FAQs Section */}
       <section className="py-24 px-4 bg-[#F6F6F6]">
