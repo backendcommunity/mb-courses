@@ -9,7 +9,7 @@ export function Header() {
           <img
             src="/masteringbackend_logo.png"
             alt="MasteringBackend"
-            className="h-40 md:h-20"
+            className="md:h-12 w-auto object-contain"
           />
         </a>
       </div>
