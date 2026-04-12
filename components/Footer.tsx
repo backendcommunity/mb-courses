@@ -124,7 +124,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/community"
+                    href="https://masteringbackend.com/community"
                     className="hover:text-[#13AECE] transition-colors"
                   >
                     Community
@@ -139,7 +139,7 @@ export function Footer() {
               <ul className="space-y-5 text-[15px] text-[#0B152A]/80 font-medium">
                 <li>
                   <Link
-                    href="/about"
+                    href="https://masteringbackend.com/about"
                     className="hover:text-[#13AECE] transition-colors"
                   >
                     About
@@ -156,7 +156,7 @@ export function Footer() {
 
                 <li>
                   <Link
-                    href="/contact"
+                    href="https://masteringbackend.com/contact"
                     className="hover:text-[#13AECE] transition-colors"
                   >
                     Contact
