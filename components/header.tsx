@@ -14,19 +14,34 @@ export function Header() {
         </a>
       </div>
       <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <Link href="/courses" className="hover:text-white transition-colors">
+        <Link
+          href="https://courses.masteringbackend.com"
+          className="hover:text-white transition-colors"
+        >
           Learn
         </Link>
-        <Link href="/projects" className="hover:text-white transition-colors">
+        <Link
+          href="https://projects.masteringbackend.com/"
+          className="hover:text-white transition-colors"
+        >
           Build
         </Link>
-        <Link href="/roadmaps" className="hover:text-white transition-colors">
+        <Link
+          href="https://masteringbackend.com/interviews"
+          className="hover:text-white transition-colors"
+        >
           Grow
         </Link>
-        <Link href="/blog" className="hover:text-white transition-colors">
+        <Link
+          href="https://blog.masteringbackend.com/"
+          className="hover:text-white transition-colors"
+        >
           Blog
         </Link>
-        <Link href="/community" className="hover:text-white transition-colors">
+        <Link
+          href="https://masteringbackend.com/community"
+          className="hover:text-white transition-colors"
+        >
           Community
         </Link>
       </nav>
