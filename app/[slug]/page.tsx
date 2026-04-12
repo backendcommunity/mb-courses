@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Clock,
-  Code,
+  Layers,
   Trophy,
   Check,
   Users,
@@ -14,8 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import Testimonials from "@/components/testimonials";
 import { DescriptionSection } from "@/components/description-section";
-import { ChapterCard } from "@/components/chapter-card";
-import type { ProcessedChapter } from "@/components/chapter-card";
+import { ContentList } from "@/components/content-list";
+import type { ProcessedContentItem } from "@/components/content-list";
+import { PricingSection } from "@/components/pricing-section";
 import { FAQSection } from "@/components/faq-section";
 import { CertificatePreview } from "@/components/certificate-preview";
 import { Footer } from "@/components/Footer";
@@ -38,14 +39,14 @@ function stripHtml(html?: string): string {
     .trim();
 }
 
-async function getCourse(slug: string) {
+async function getRoadmap(slug: string) {
   try {
-    const res = await fetch(`${API_URL}/public/courses/${slug}`, {
-      next: { revalidate: 3600 }, // ISR — re-generate at most every hour
+    const res = await fetch(`${API_URL}/roadmap/${slug}`, {
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data?.course ?? data ?? null;
+    return data?.roadmap ?? data ?? null;
   } catch {
     return null;
   }
@@ -59,177 +60,136 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const course = await getCourse(slug);
-  if (!course) return { title: "Course Not Found" };
+  const roadmap = await getRoadmap(slug);
+  if (!roadmap) return { title: "Roadmap Not Found | MasteringBackend" };
 
-  const description = stripHtml(course.summary || course.description).slice(
+  const description = stripHtml(roadmap.summary || roadmap.description).slice(
     0,
     160,
   );
-  const url = `https://masteringbackend.com/courses/${slug}`;
-  const images = course.banner
-    ? [{ url: course.banner, width: 1200, height: 630, alt: course.title }]
+
+  const url = `https://masteringbackend.com/${slug}`;
+  const images = roadmap.banner
+    ? [{ url: roadmap.banner, width: 1200, height: 630, alt: roadmap.title }]
     : [];
 
   return {
-    title: course.title,
+    title: roadmap.title,
     description,
     keywords: [
-      course.title,
-      course.level,
-      course.category,
-      "backend engineering course",
-      "online coding course",
+      roadmap.title,
+      "learning path",
+      "backend engineering roadmap",
+      "tech career",
       "MasteringBackend",
-    ].filter(Boolean),
+    ],
     alternates: { canonical: url },
     openGraph: {
       type: "website",
       url,
-      title: course.title,
+      title: roadmap.title,
       description,
       images,
     },
     twitter: {
       card: "summary_large_image",
-      title: course.title,
+      title: roadmap.title,
       description,
-      images: course.banner ? [course.banner] : [],
+      images: roadmap.banner ? [roadmap.banner] : [],
     },
   };
 }
 
 // ─── page ────────────────────────────────────────────────────────────────────
 
-export default async function CourseDetailRoute({
+export default async function RoadmapDetailRoute({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const course = await getCourse(slug);
+  const roadmap = await getRoadmap(slug);
 
-  if (!course) notFound();
+  if (!roadmap) notFound();
 
-  // ── process data server-side so client components get plain JSON ──────────
+  const rawContents: any[] = Array.isArray(roadmap.contents)
+    ? roadmap.contents
+    : [];
 
-  const rawChapters = Array.isArray(course.chapters) ? course.chapters : [];
-
-  const chapters: ProcessedChapter[] = rawChapters
-    .slice(0, 12)
-    .map((ch: any, i: number) => {
-      const summary = stripHtml(
-        ch.description || ch.summary || ch.content || "",
-      );
-
-      const videos = Array.isArray(ch.videos)
-        ? ch.videos.map((v: any) => ({
-            title: stripHtml(v.title || v.name || v.heading || ""),
-            duration: v.duration || v.length || "",
-            mb: v.mb,
-          }))
-        : [];
-
-      const lessons = Array.isArray(ch.lessons)
-        ? ch.lessons.map((l: any) =>
-            typeof l === "string"
-              ? l
-              : stripHtml(
-                  l.title || l.name || l.summary || l.description || "",
-                ),
-          )
-        : [];
-      return {
-        num: i + 1,
-        title: ch.title || `Chapter ${i + 1}`,
-        summary,
-        videos,
-        lessons,
-      };
-    });
-
-  const totalVideos = rawChapters.reduce(
-    (acc: number, ch: any) =>
-      acc + (Array.isArray(ch.videos) ? ch.videos.length : 0),
-    0,
+  const contentItems: ProcessedContentItem[] = rawContents.map(
+    (c: any, i: number) => ({
+      num: i + 1,
+      title: c.title || "",
+      type: c.type || "course",
+      slug: c.slug || undefined,
+      summary:
+        stripHtml(c.summary || c.description || "").slice(0, 200) || undefined,
+      stageNum: c.topicNumber ?? 1,
+      stageTitle: c.topicTitle ?? "",
+    }),
   );
-  const totalQuizzes =
-    rawChapters.reduce(
-      (acc: number, ch: any) =>
-        acc + (Array.isArray(ch.quizzes) ? ch.quizzes.length : 0),
-      0,
-    ) + (Array.isArray(course.quizzes) ? course.quizzes.length : 0);
 
-  const fullDescription = stripHtml(course.description || course.summary || "")
-    .replace(/Course Description:\s*/gi, "")
-    .replace(/In this course[\s\S]*/i, "")
+  const totalCourses = contentItems.filter((i) => i.type === "course").length;
+  const totalQuizzes = contentItems.filter((i) => i.type === "quiz").length;
+
+  const fullDescription = (roadmap.description || roadmap.summary || "")
+    .replace(/Roadmap Description:\s*/gi, "")
     .trim();
 
-  const learningOutcomes: string[] = Array.isArray(course.learningOutcomes)
-    ? course.learningOutcomes
-    : Array.isArray(course.objectives)
-      ? course.objectives
+  const learningOutcomes: string[] = Array.isArray(roadmap.learningOutcomes)
+    ? roadmap.learningOutcomes
+    : Array.isArray(roadmap.skills)
+      ? roadmap.skills
       : [
-          `Master ${course.title} from fundamentals to advanced concepts`,
-          "Build real-world projects applying what you've learned",
-          "Understand best practices and industry standards",
-          "Gain confidence to work on production-level applications",
-          "Prepare for technical interviews and career advancement",
+          `Master ${roadmap.title} from fundamentals to advanced level`,
+          "Follow a structured, proven learning sequence",
+          "Build real-world projects along the way",
+          "Get career guidance and interview preparation",
+          "Earn a verified certificate upon completion",
         ];
 
-  const tags: string[] = Array.isArray(course.tags)
-    ? course.tags
-    : course.category
-      ? [course.category]
+  const tags: string[] = Array.isArray(roadmap.tags)
+    ? roadmap.tags
+    : roadmap.category
+      ? [roadmap.category]
       : [];
 
-  const coursePrice: number | null =
-    course.amount != null
-      ? Number(course.amount)
-      : course.price != null
-        ? Number(course.price)
-        : course.cost != null
-          ? Number(course.cost)
-          : null;
+  const levelLabel: string =
+    roadmap.level?.name ?? roadmap.level ?? roadmap.difficulty ?? null;
 
-  const levelLabel: string = course.level?.name ?? course.level ?? null;
-
-  // Canonical CTA destination — deep-links into the app with a referral back to this page
-  const courseAppUrl = `https://app.masteringbackend.com/courses/${course.slug ?? slug}?ref=${encodeURIComponent(`/courses/${slug}`)}`;
+  // Canonical CTA destination
+  const roadmapAppUrl = `https://app.masteringbackend.com/roadmaps/${roadmap.slug ?? slug}?ref=${encodeURIComponent(`/${slug}`)}`;
 
   const faqs = [
     {
-      question: "What prior knowledge do I need?",
+      question: "Who is this roadmap for?",
       answer:
-        stripHtml(course.prerequisites || "") ||
-        "Some programming experience is recommended. Check the course description for specific prerequisites.",
+        stripHtml(roadmap.prerequisites || "") ||
+        "This roadmap is designed for developers who want a structured path to mastering backend engineering.",
     },
     {
-      question: "How long does this course take?",
-      answer: `This course has ${course.totalDuration || course.duration || "several"} hours of content. Complete it at your own pace.`,
+      question: "How long does this roadmap take?",
+      answer: `Estimated time: ${roadmap.timeframe || roadmap.estimatedTime || "varies by pace"}. Most students complete it in a few months of consistent study.`,
     },
     {
       question: "Will I get a certificate?",
       answer:
-        "Yes! Upon completion you'll receive a certificate you can share on LinkedIn and your resume.",
+        "Yes! Upon completing all stages you'll receive a certificate you can add to your LinkedIn and resume.",
     },
     {
-      question: "Can I download course materials?",
+      question: "Can I skip stages?",
       answer:
-        "Yes, all code examples and resources are available for offline access.",
+        "We recommend following the sequence, but you can jump to any stage if you already have the prerequisite knowledge.",
     },
     {
-      question: "Is there career support after the course?",
+      question: "Is there community support?",
       answer:
-        "Yes — career guidance, resume reviews, and mock interviews are available through the platform.",
+        "Yes, you'll have access to our community of learners, Q&A forums, and mentorship sessions.",
     },
   ];
 
-  // ── render ────────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Hero ── */}
       <div
         className="relative overflow-hidden text-slate-50"
         style={{ backgroundColor: "#0e2036" }}
@@ -243,33 +203,34 @@ export default async function CourseDetailRoute({
           }}
         />
 
-        {/* Nav */}
         <Header />
 
-        {/* Hero body */}
         <section className="relative z-10 container mx-auto px-6 pt-12 pb-24 md:pt-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <div className="text-[#13AECE] font-bold tracking-widest text-sm uppercase mb-3">
-                COURSE
+                LEARNING PATH
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-4">
-                {course.title}
+                {roadmap.title}
               </h1>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-                {stripHtml(course.summary || course.description).slice(0, 200)}
+                {stripHtml(roadmap.summary || roadmap.description).slice(
+                  0,
+                  200,
+                )}
               </p>
               <div className="mb-10">
                 <Button
-                  className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px]  rounded-md shadow-lg shadow-[#13AECE]/20"
+                  className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
                   asChild
                 >
                   <Link
-                    href={courseAppUrl}
+                    href={roadmapAppUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Start Course for Free
+                    Start Path for Free
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
@@ -286,15 +247,16 @@ export default async function CourseDetailRoute({
                     {tag}
                   </span>
                 ))}
-                {(course.totalDuration || course.duration) && (
+                {(roadmap.timeframe || roadmap.estimatedTime) && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />{" "}
-                    {course.totalDuration || course.duration} hr
+                    {roadmap.timeframe || roadmap.estimatedTime}
                   </span>
                 )}
-                {chapters.length > 0 && (
+                {contentItems.length > 0 && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
-                    <Code className="w-3.5 h-3.5" /> {chapters.length} Chapters
+                    <Layers className="w-3.5 h-3.5" /> {contentItems.length}{" "}
+                    Items
                   </span>
                 )}
                 <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
@@ -304,22 +266,35 @@ export default async function CourseDetailRoute({
             </div>
 
             <div className="w-full max-w-[680px] mx-auto lg:ml-auto">
-              {course.banner || course.thumbnail ? (
+              {roadmap.banner ? (
                 <img
-                  src={course.banner || course.thumbnail}
-                  alt={course.title}
+                  src={roadmap.banner}
+                  alt={roadmap.title}
                   className="w-full rounded-2xl object-contain object-center"
                 />
               ) : (
                 <div className="w-full aspect-video rounded-2xl bg-slate-800/60 flex items-center justify-center">
-                  <Code className="w-16 h-16 text-slate-600" />
+                  <div className="space-y-4 w-3/4">
+                    {[1, 2, 3, 4].map((n) => (
+                      <div key={n} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#13AECE]/30 flex items-center justify-center shrink-0">
+                          <span className="text-[#13AECE] text-xs font-bold">
+                            {n}
+                          </span>
+                        </div>
+                        <div
+                          className="h-2 rounded-full bg-slate-700"
+                          style={{ width: `${100 - n * 12}%` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* Social proof strip */}
         <section className="relative z-10 border-t border-white/5 py-8">
           <div className="container mx-auto px-6">
             <p className="text-slate-400 text-sm mb-6">
@@ -336,36 +311,33 @@ export default async function CourseDetailRoute({
         </section>
       </div>
 
-      {/* ── Main content ── */}
       <section className="bg-[#f8fafc] text-slate-900 py-16">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid lg:grid-cols-3 gap-12 items-start">
             {/* Left column */}
             <div className="lg:col-span-2 space-y-12">
-              {/* Description with show-more (client) */}
               {fullDescription && (
                 <DescriptionSection fullText={fullDescription} />
               )}
 
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
                 <h3 className="text-xl font-bold text-slate-800">
-                  Ready to start?
+                  Ready to start your journey?
                 </h3>
                 <Button
                   className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 px-8 rounded-md w-full sm:w-auto"
                   asChild
                 >
                   <Link
-                    href={courseAppUrl}
+                    href={roadmapAppUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Start Course for Free
+                    Start Path for Free
                   </Link>
                 </Button>
               </div>
 
-              {/* Learning outcomes */}
               {learningOutcomes.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-6">
@@ -373,7 +345,7 @@ export default async function CourseDetailRoute({
                       <Trophy className="w-5 h-5 text-slate-700" />
                     </div>
                     <h2 className="text-xl font-bold text-slate-900">
-                      What you'll learn
+                      What you'll achieve
                     </h2>
                   </div>
                   <ul className="space-y-4">
@@ -389,54 +361,52 @@ export default async function CourseDetailRoute({
                 </div>
               )}
 
-              {/* Course content (chapters, client) */}
-              {chapters.length > 0 && (
+              {contentItems.length > 0 && (
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6">
-                    Course Content
-                  </h3>
-                  <div className="space-y-4">
-                    {chapters.map((chapter) => (
-                      <ChapterCard
-                        key={chapter.num}
-                        chapter={chapter}
-                        courseAppUrl={courseAppUrl}
-                      />
-                    ))}
+                  <ContentList
+                    items={contentItems}
+                    roadmapAppUrl={roadmapAppUrl}
+                  />
+
+                  <div className="flex gap-4 items-stretch mt-0">
+                    <div className="flex flex-col items-center shrink-0 w-[28px]">
+                      <div className="w-px flex-1 bg-[#13AECE]" />
+                    </div>
+
+                    <div className="flex-1 pt-4 pb-2">
+                      <div className="bg-white border-2 border-[#13AECE] rounded-xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-8">
+                        <div className="w-full md:w-1/3 shrink-0">
+                          <CertificatePreview courseTitle={roadmap.title} />
+                        </div>
+                        <div className="w-full md:w-2/3 flex flex-col gap-3">
+                          <h3 className="text-xl font-bold text-slate-800">
+                            Earn Certificate of Completion
+                          </h3>
+                          <p className="text-sm text-slate-600 mb-4">
+                            Add this credential to your LinkedIn profile,
+                            resume, or CV. Share it on social media and in your
+                            performance review.
+                          </p>
+                          <Button
+                            className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 w-full rounded-md h-11"
+                            asChild
+                          >
+                            <Link
+                              href={roadmapAppUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Enroll Now
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
-
-              {/* Certificate banner */}
-              <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-8">
-                <div className="w-full md:w-1/3 shrink-0">
-                  <CertificatePreview courseTitle={course.title} />
-                </div>
-                <div className="w-full md:w-2/3 flex flex-col gap-3">
-                  <h3 className="text-xl font-bold text-slate-800">
-                    Earn Certificate of Completion
-                  </h3>
-                  <p className="text-sm text-slate-600 mb-4">
-                    Add this credential to your LinkedIn profile, resume, or CV.
-                    Share it on social media and in your performance review.
-                  </p>
-                  <Button
-                    className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 w-full rounded-md h-11"
-                    asChild
-                  >
-                    <Link
-                      href={courseAppUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Enroll Now
-                    </Link>
-                  </Button>
-                </div>
-              </div>
             </div>
 
-            {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
@@ -459,7 +429,7 @@ export default async function CourseDetailRoute({
                     </span>
                     {levelLabel && (
                       <span className="text-xs text-slate-500 capitalize mt-0.5">
-                        {levelLabel} course
+                        {levelLabel} level
                       </span>
                     )}
                   </div>
@@ -470,68 +440,56 @@ export default async function CourseDetailRoute({
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="w-5 h-5 text-slate-700" />
                   <h3 className="font-bold text-slate-900 text-[15px]">
-                    Course Resources
+                    Path Overview
                   </h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center mb-4">
                   <div>
                     <div className="text-2xl font-bold text-[#0B152A]">
-                      {chapters.length}
+                      {contentItems.length}
                     </div>
-                    <div className="text-xs text-slate-500">Chapters</div>
+                    <div className="text-xs text-slate-500">Items</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-[#0B152A]">
-                      {totalVideos}
+                      {totalCourses || "—"}
                     </div>
-                    <div className="text-xs text-slate-500">Videos</div>
+                    <div className="text-xs text-slate-500">Courses</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-[#0B152A]">
-                      {totalQuizzes}
+                      {totalQuizzes || "—"}
                     </div>
                     <div className="text-xs text-slate-500">Quizzes</div>
                   </div>
                 </div>
                 <p className="text-sm text-slate-600">
-                  Additional resources and downloads available inside the
-                  course.
+                  A structured path from beginner to production-ready engineer.
                 </p>
               </div>
 
-              {(levelLabel ||
-                course.totalDuration ||
-                course.duration ||
-                course.totalStudents) && (
+              {(levelLabel || roadmap.timeframe || roadmap.estimatedTime) && (
                 <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart2 className="w-5 h-5 text-slate-700" />
                     <h3 className="font-bold text-slate-900 text-[15px]">
-                      Course Details
+                      Path Details
                     </h3>
                   </div>
                   <dl className="space-y-3 text-sm">
                     {levelLabel && (
                       <div className="flex justify-between">
-                        <dt className="text-slate-500">Level</dt>
+                        <dt className="text-slate-500">Difficulty</dt>
                         <dd className="font-medium text-slate-800 capitalize">
                           {levelLabel}
                         </dd>
                       </div>
                     )}
-                    {(course.totalDuration || course.duration) && (
+                    {(roadmap.timeframe || roadmap.estimatedTime) && (
                       <div className="flex justify-between">
                         <dt className="text-slate-500">Duration</dt>
                         <dd className="font-medium text-slate-800">
-                          {course.totalDuration || course.duration} hrs
-                        </dd>
-                      </div>
-                    )}
-                    {course.totalStudents > 0 && (
-                      <div className="flex justify-between">
-                        <dt className="text-slate-500">Students</dt>
-                        <dd className="font-medium text-slate-800">
-                          {Number(course.totalStudents).toLocaleString()}
+                          {roadmap.timeframe || roadmap.estimatedTime}
                         </dd>
                       </div>
                     )}
@@ -543,15 +501,15 @@ export default async function CourseDetailRoute({
         </div>
       </section>
 
-      {/* ── Pricing (client — has toggle) ── */}
-      {/* <PricingSection coursePrice={coursePrice} courseTitle={course.title} courseAppUrl={courseAppUrl} /> */}
+      <PricingSection
+        courseTitle={roadmap.title}
+        courseAppUrl={roadmapAppUrl}
+        coursePrice={roadmap.amount ?? roadmap.price ?? null}
+      />
 
       <Testimonials />
 
-      {/* ── FAQs (client — has accordion) ── */}
       <FAQSection faqs={faqs} />
-
-      {/* ── Footer ── */}
       <Footer />
     </div>
   );
