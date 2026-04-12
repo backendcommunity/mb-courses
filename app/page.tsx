@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Clock, Code, Layout } from "lucide-react";
 import { HeroIllustration } from "@/components/hero-illustration";
 import Testimonials from "@/components/testimonials";

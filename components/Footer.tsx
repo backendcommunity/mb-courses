@@ -99,14 +99,6 @@ export function Footer() {
                     MB Lands
                   </Link>
                 </li>
-                {/* <li>
-                  <Link
-                    href="https://projects.masteringbackend.com"
-                    className="hover:text-[#13AECE] transition-colors"
-                  >
-                    Portfolio
-                  </Link>
-                </li> */}
               </ul>
             </div>
             <div className="flex flex-col">
@@ -114,14 +106,6 @@ export function Footer() {
                 Grow
               </h3>
               <ul className="space-y-5 text-[15px] text-[#0B152A]/80 font-medium">
-                {/* <li>
-                  <Link
-                    href="https://masteringbackend.com/interviews"
-                    className="hover:text-[#13AECE] transition-colors"
-                  >
-                    MB Interviews
-                  </Link>
-                </li> */}
                 <li>
                   <Link
                     href="https://masteringbackend.com/interviews"
@@ -169,14 +153,7 @@ export function Footer() {
                     Blog
                   </Link>
                 </li>
-                {/* <li>
-                  <Link
-                    href="/contact"
-                    className="hover:text-[#13AECE] transition-colors"
-                  >
-                    Careers
-                  </Link>
-                </li> */}
+
                 <li>
                   <Link
                     href="/contact"
@@ -191,22 +168,25 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6 text-[15px] font-medium text-[#0B152A]">
-          <p>&copy; 2026 Masteringbackend. All Rights Reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} Masteringbackend. All Rights
+            Reserved.
+          </p>
           <div className="flex items-center flex-wrap justify-center gap-x-12 gap-y-4">
             <Link
-              href="/privacy"
+              href="https://masteringbackend.com/privacy-policy"
               className="hover:text-[#13AECE] transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
-              href="/cookie"
+              href="https://masteringbackend.com/disclaimer"
               className="hover:text-[#13AECE] transition-colors"
             >
-              Cookie Policy
+              Disclaimer
             </Link>
             <Link
-              href="/terms"
+              href="https://masteringbackend.com/terms-and-conditions"
               className="hover:text-[#13AECE] transition-colors"
             >
               Terms Of Service
