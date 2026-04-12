@@ -42,7 +42,7 @@ function stripHtml(html?: string): string {
 async function getRoadmap(slug: string) {
   try {
     const res = await fetch(`${API_URL}/public/roadmaps/${slug}`, {
-      next: { revalidate: 3600 },
+      // next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
     const data = await res.json();
