@@ -160,10 +160,13 @@ export default async function CourseDetailRoute({
       0,
     ) + (Array.isArray(course.quizzes) ? course.quizzes.length : 0);
 
-  const fullDescription = stripHtml(course.description || course.summary || "")
-    .replace(/Course Description:\s*/gi, "")
-    .replace(/In this course[\s\S]*/i, "")
-    .trim();
+  const fullDescription =
+    course.description ||
+    course.summary ||
+    ""
+      .replace(/Course Description:\s*/gi, "")
+      .replace(/In this course[\s\S]*/i, "")
+      .trim();
 
   const learningOutcomes: string[] = Array.isArray(course.learningOutcomes)
     ? course.learningOutcomes
