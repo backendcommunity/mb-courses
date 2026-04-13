@@ -232,7 +232,10 @@ function PromoCard({
           lastName: trimmed.split("@")[0],
           email: trimmed,
         },
-        amount: 5000000, // ₦50,000 in kobo
+        amount: 50000, // ₦50,000 in naira
+        metadata: {
+          course: courseTitle || "Unknown Course",
+        },
         onSuccess: () => {
           setLoading(false);
           onPaymentSuccess();
