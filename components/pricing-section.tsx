@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Check, Zap } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PricingSectionProps {
   coursePrice?: number | null;
@@ -11,6 +13,8 @@ interface PricingSectionProps {
   courseAppUrl?: string;
   detectedCountry?: string;
 }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SUBSCRIPTION_FEATURES = [
   "Unlimited access to all courses & paths",
@@ -21,136 +25,151 @@ const SUBSCRIPTION_FEATURES = [
   "Cancel anytime — no lock-in",
 ];
 
-const PROMO_FEATURES = [
-  "Unlimited access to all courses & paths",
-  "Every new course added automatically",
-  "Community forum & peer support",
-  "Project submission & mentor feedback",
-  "Certificate on every completion",
-  "Cancel anytime — no lock-in",
-];
-
-// African ISO 3166-1 alpha-2 country codes
+// All African ISO 3166-1 alpha-2 country codes
 const AFRICA_CODES = new Set([
-  "NG",
-  "GH",
-  "KE",
-  "ZA",
-  "ET",
-  "EG",
-  "TZ",
-  "UG",
-  "CM",
-  "SN",
-  "RW",
-  "CI",
-  "AO",
-  "MZ",
-  "MG",
-  "BF",
-  "ML",
-  "MW",
-  "NE",
-  "ZM",
-  "TD",
-  "SO",
-  "ZW",
-  "GN",
-  "SS",
-  "BJ",
-  "TN",
-  "BI",
-  "SL",
-  "TG",
-  "LY",
-  "ER",
-  "MR",
-  "CF",
-  "NA",
-  "GM",
-  "BW",
-  "LS",
-  "GW",
-  "LR",
-  "SZ",
-  "DJ",
-  "KM",
-  "CV",
-  "ST",
-  "SC",
-  "MU",
-  "RE",
-  "YT",
-  "EH",
-  "SD",
-  "CG",
-  "CD",
-  "GQ",
-  "GA",
+  "NG","GH","KE","ZA","ET","EG","TZ","UG","CM","SN","RW","CI","AO","MZ",
+  "MG","BF","ML","MW","NE","ZM","TD","SO","ZW","GN","SS","BJ","TN","BI",
+  "SL","TG","LY","ER","MR","CF","NA","GM","BW","LS","GW","LR","SZ","DJ",
+  "KM","CV","ST","SC","MU","RE","YT","EH","SD","CG","CD","GQ","GA",
 ]);
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function isAfrican(countryCode?: string) {
-  console.log(
-    "Checking if country is African. Detected country code:",
-    countryCode,
-  );
   return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
 }
+
+function pathFeatures(pathName: string) {
+  return [
+    `Lifetime access to ${pathName}`,
+    "All course materials & code samples",
+    "Certificate of completion",
+    "Free updates forever",
+    "Community access included",
+  ];
+}
+
+// ─── Countdown hook ───────────────────────────────────────────────────────────
+
+function useCountdown(seconds: number) {
+  const [remaining, setRemaining] = useState(seconds);
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    ref.current = setInterval(() => {
+      setRemaining((s) => (s <= 1 ? seconds : s - 1));
+    }, 1000);
+    return () => {
+      if (ref.current) clearInterval(ref.current);
+    };
+  }, [seconds]);
+
+  return {
+    h: String(Math.floor(remaining / 3600)).padStart(2, "0"),
+    m: String(Math.floor((remaining % 3600) / 60)).padStart(2, "0"),
+    s: String(remaining % 60).padStart(2, "0"),
+  };
+}
+
+// ─── PromoCard ────────────────────────────────────────────────────────────────
 
 function PromoCard({
   isNaira,
   price,
+  courseTitle,
   courseAppUrl,
 }: {
   isNaira: boolean;
   price: number;
+  courseTitle?: string;
   courseAppUrl?: string;
 }) {
-  console.log("Rendering PromoCard with price:", price, "isNaira:", isNaira);
-  return (
-    <div className="max-w-[480px] mx-auto w-full">
-      <div className="relative bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-2xl border border-[#13AECE]/30 overflow-hidden">
-        {/* Glow accent */}
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-[#13AECE]/10 blur-3xl pointer-events-none" />
+  const pathName = courseTitle || "this learning path";
+  const { h, m, s } = useCountdown(4 * 60 * 60);
+  const features = pathFeatures(pathName);
 
-        {/* Limited offer badge */}
-        <div className="flex items-center gap-2 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1.5 rounded-full mb-6">
+  const segments = [
+    { val: h, label: "HRS" },
+    { val: m, label: "MIN" },
+    { val: s, label: "SEC" },
+  ];
+
+  return (
+    <div className="max-w-[520px] mx-auto w-full">
+      <div className="relative bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-2xl border border-[#13AECE]/30 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#13AECE]/10 blur-3xl pointer-events-none" />
+
+        {/* Badge */}
+        <div className="flex items-center gap-1.5 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1.5 rounded-full mb-5">
           <Zap className="w-3 h-3" />
           Limited Time Offer
         </div>
 
-        <h3 className="text-[26px] font-bold text-white leading-tight mb-2">
-          Full Platform Access
+        {/* Countdown timer */}
+        <div className="flex items-center gap-2 mb-6">
+          {segments.map(({ val, label }, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className="flex flex-col items-center">
+                <div className="bg-white/[0.07] border border-white/10 rounded-lg px-3 py-2 min-w-[52px] text-center">
+                  <span className="text-[28px] font-black text-white leading-none tabular-nums font-mono">
+                    {val}
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold text-slate-500 tracking-widest mt-1">
+                  {label}
+                </span>
+              </div>
+              {i < 2 && (
+                <span className="text-[22px] font-black text-[#13AECE] leading-none mb-4">
+                  :
+                </span>
+              )}
+            </div>
+          ))}
+          <p className="text-slate-400 text-[12px] leading-tight ml-1 self-start mt-1">
+            Offer ends<br />in this session
+          </p>
+        </div>
+
+        {/* Path label */}
+        <p className="text-[#13AECE] text-[11px] font-bold uppercase tracking-widest mb-2">
+          {pathName}
+        </p>
+
+        <h3 className="text-[26px] font-bold text-white leading-tight mb-3">
+          Get lifetime access to this path at a special price
         </h3>
         <p className="text-slate-400 text-[14px] mb-8 leading-relaxed">
-          Everything you need to go from beginner to production-ready backend
-          engineer.
+          One payment. No subscription. Everything inside{" "}
+          <span className="text-slate-200 font-medium">{pathName}</span> is
+          yours to keep — including all future updates.
         </p>
 
         <ul className="space-y-3 mb-10">
-          {PROMO_FEATURES.map((f, i) => (
-            <li key={i} className="flex items-start gap-3">
+          {features.map((f) => (
+            <li key={f} className="flex items-start gap-3">
               <Check className="w-4 h-4 text-[#13AECE] shrink-0 mt-0.5" />
-              <span className="text-[14px] text-slate-300 leading-relaxed">
-                {f}
-              </span>
+              <span className="text-[14px] text-slate-300 leading-relaxed">{f}</span>
             </li>
           ))}
         </ul>
 
         <div className="mt-auto">
+          <p className="text-[13px] text-slate-500 mb-1">
+            Regular price:{" "}
+            <span className="line-through">{isNaira ? "₦150,000" : "$150"}</span>
+          </p>
           <div className="flex items-end gap-1 mb-1">
-            <span className="text-xl font-bold text-white self-start mt-3">
+            <span className="text-2xl font-bold text-white self-start mt-2">
               {isNaira ? "₦" : "$"}
             </span>
-            <span className="text-[56px] font-black text-white leading-none tracking-tight">
+            <span className="text-[60px] font-black text-white leading-none tracking-tight">
               {isNaira ? "50,000" : price.toLocaleString()}
             </span>
           </div>
-          <p className="text-[13px] text-slate-400 mb-6">
-            {isNaira
-              ? "one-time · promo price"
-              : "one-time payment · promo price"}
+          <p className="text-[13px] text-slate-400 mb-7">
+            one-time · promo price · yours forever
           </p>
 
           <Link
@@ -158,18 +177,20 @@ function PromoCard({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20">
+            <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 text-[15px]">
               Claim This Offer
             </button>
           </Link>
           <p className="text-[11px] text-center italic text-slate-500">
-            Promo pricing. Limited availability.
+            Promo pricing. Limited availability. No subscription needed.
           </p>
         </div>
       </div>
     </div>
   );
 }
+
+// ─── PricingSection ───────────────────────────────────────────────────────────
 
 export function PricingSection({
   coursePrice,
@@ -180,40 +201,33 @@ export function PricingSection({
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const searchParams = useSearchParams();
 
-  const mode = searchParams.get("mode");
+  const isPromo = searchParams.get("mode") === "promo";
   const promoPrice = Number(searchParams.get("price") ?? 150);
-  const isPromo = mode === "promo";
 
-  // country query param overrides server-detected country (useful for ad testing)
+  // ?country= overrides server-detected country (useful for ad targeting tests)
   const effectiveCountry = searchParams.get("country") || detectedCountry;
   const isNaira = isPromo && isAfrican(effectiveCountry);
 
-  const onetimeFeatures = [
-    `Lifetime access to ${courseTitle || "this course"}`,
-    "All course materials & code samples",
-    "Certificate of completion",
-    "Free updates forever",
-    "Community access included",
-  ];
-
   const yearlySavings = (19.99 * 12 - 199).toFixed(0);
+  const onetimeFeatures = pathFeatures(courseTitle || "this course");
 
   if (isPromo) {
     return (
       <section className="py-24 px-4 bg-[#F6F6F6]">
         <div className="container mx-auto max-w-[900px]">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
               Special Offer Just for You
             </h2>
-            <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              We&apos;ve unlocked exclusive pricing for your region. Don&apos;t
-              miss it.
+            <p className="text-slate-600 max-w-xl mx-auto leading-relaxed">
+              We&apos;ve unlocked a special price for your region. One payment,
+              lifetime access — no subscription.
             </p>
           </div>
           <PromoCard
             isNaira={isNaira}
             price={promoPrice}
+            courseTitle={courseTitle}
             courseAppUrl={courseAppUrl}
           />
         </div>
@@ -235,14 +249,12 @@ export function PricingSection({
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-[850px] mx-auto items-stretch">
-          {/* ── Box 1: Subscription (dark) ── */}
+          {/* ── Subscription (dark) ── */}
           <div className="bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-xl">
             <div className="flex items-start justify-between gap-4 mb-2">
               <h3 className="text-[24px] font-bold text-white leading-tight">
                 Subscription
               </h3>
-
-              {/* Billing toggle */}
               <div className="flex bg-white/[0.07] rounded-full p-1 border border-white/10 shrink-0">
                 <button
                   onClick={() => setBilling("monthly")}
@@ -275,12 +287,10 @@ export function PricingSection({
 
             <div className="flex-1 mt-4 mb-8">
               <ul className="space-y-3">
-                {SUBSCRIPTION_FEATURES.map((f, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                {SUBSCRIPTION_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-3">
                     <Check className="w-4 h-4 text-[#13AECE] shrink-0 mt-0.5" />
-                    <span className="text-[14px] text-slate-300 leading-relaxed">
-                      {f}
-                    </span>
+                    <span className="text-[14px] text-slate-300 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -288,16 +298,12 @@ export function PricingSection({
 
             <div className="mt-auto">
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-xl font-bold text-white self-start mt-3">
-                  $
-                </span>
+                <span className="text-xl font-bold text-white self-start mt-3">$</span>
                 <span className="text-[56px] font-black text-white leading-none tracking-tight">
                   {billing === "monthly" ? "19" : "199"}
                 </span>
                 {billing === "monthly" && (
-                  <span className="text-xl font-bold text-white self-start mt-3">
-                    .99
-                  </span>
+                  <span className="text-xl font-bold text-white self-start mt-3">.99</span>
                 )}
                 {billing === "yearly" && (
                   <span className="text-sm font-bold text-slate-500 line-through self-end mb-2 ml-1">
@@ -308,12 +314,7 @@ export function PricingSection({
               <p className="text-[13px] text-slate-400 mb-6">
                 {billing === "monthly" ? "per month" : "per year, billed once"}
               </p>
-
-              <Link
-                href={courseAppUrl ?? "/auth/register"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link href={courseAppUrl ?? "/auth/register"} target="_blank" rel="noopener noreferrer">
                 <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20">
                   Get Started
                 </button>
@@ -324,7 +325,7 @@ export function PricingSection({
             </div>
           </div>
 
-          {/* ── Box 2: One-time (white) ── */}
+          {/* ── Lifetime Access (light) ── */}
           <div className="bg-white border border-slate-200 rounded-[2rem] p-10 flex flex-col shadow-sm hover:shadow-lg transition-shadow">
             <h3 className="text-[24px] font-bold text-[#0B152A] leading-tight mb-6">
               Lifetime Access
@@ -332,12 +333,10 @@ export function PricingSection({
 
             <div className="flex-1 mb-8">
               <ul className="space-y-3">
-                {onetimeFeatures.map((f, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                {onetimeFeatures.map((f) => (
+                  <li key={f} className="flex items-start gap-3">
                     <Check className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-[14px] text-slate-500 leading-relaxed">
-                      {f}
-                    </span>
+                    <span className="text-[14px] text-slate-500 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -347,16 +346,12 @@ export function PricingSection({
               {coursePrice ? (
                 <>
                   <div className="flex items-end gap-1 mb-1">
-                    <span className="text-xl font-bold text-[#0B152A] self-start mt-3">
-                      $
-                    </span>
+                    <span className="text-xl font-bold text-[#0B152A] self-start mt-3">$</span>
                     <span className="text-[56px] font-black text-[#0B152A] leading-none tracking-tight">
                       {coursePrice}
                     </span>
                   </div>
-                  <p className="text-[13px] text-slate-500 mb-6">
-                    one-time payment
-                  </p>
+                  <p className="text-[13px] text-slate-500 mb-6">one-time payment</p>
                 </>
               ) : (
                 <div className="mb-8">
@@ -368,12 +363,7 @@ export function PricingSection({
                   </p>
                 </div>
               )}
-
-              <Link
-                href={courseAppUrl ?? "/auth/register"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link href={courseAppUrl ?? "/auth/register"} target="_blank" rel="noopener noreferrer">
                 <button className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors">
                   {coursePrice ? "Buy Now" : "Contact Us"}
                 </button>
