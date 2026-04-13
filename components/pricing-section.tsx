@@ -18,12 +18,23 @@ interface PricingSectionProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PADDLE_MONTHLY_ID = "pri_01k13rejzzwb1pawgtrqcjyzca";
-const PADDLE_YEARLY_ID = "pri_01k13rh3kr5y95cy9c5njy0w5k";
+const PADDLE_MONTHLY_ID =
+  process.env.NEXT_PUBLIC_PADDLE_MONTHLY_ID ?? "pri_01k13rejzzwb1pawgtrqcjyzca";
+const PADDLE_YEARLY_ID =
+  process.env.NEXT_PUBLIC_PADDLE_YEARLY_ID ?? "pri_01k13rh3kr5y95cy9c5njy0w5k";
+const ASYNCPAY_MONTHLY_ID =
+  process.env.NEXT_PUBLIC_ASYNCPAY_MONTHLY_PRO_PLAN_UUID ??
+  "762245c5-8755-11f0-ac87-92433b0171f7";
+const ASYNCPAY_YEARLY_ID =
+  process.env.NEXT_PUBLIC_ASYNCPAY_YEARLY_PRO_PLAN_UUID ??
+  "1fbd2c4d-8755-11f0-ac87-92433b0171f7";
 
 const SUBSCRIPTION_FEATURES = [
-  "Unlimited access to all courses & paths",
+  "Unlimited access to all premium courses & paths",
   "Every new course added automatically",
+  "Unlimited project access",
+  "Unlimited land access",
+  "4 Mock Interview preparation",
   "Community forum & peer support",
   "Project submission & mentor feedback",
   "Certificate on every completion",
@@ -398,7 +409,7 @@ export function PricingSection({
 
   async function runAsyncPay(
     email: string,
-    amountNaira: number,
+    amountNairaOrPlan: number | string,
     meta?: Record<string, string>,
   ) {
     setLoading(true);
@@ -411,7 +422,10 @@ export function PricingSection({
           lastName: email.split("@")[0],
           email,
         },
-        amount: amountNaira,
+        amount:
+          typeof amountNairaOrPlan === "number" ? amountNairaOrPlan : undefined,
+        subscriptionPlanUUID:
+          typeof amountNairaOrPlan === "string" ? amountNairaOrPlan : undefined,
         ...(meta ? { metadata: meta } : {}),
         onSuccess: () => {
           setLoading(false);
@@ -426,10 +440,13 @@ export function PricingSection({
   }
 
   // Collect email then fire AsyncPay
-  function promptAsyncPay(amountNaira: number, meta?: Record<string, string>) {
+  function promptAsyncPay(
+    amountNairaOrPlan: number | string,
+    meta?: Record<string, string>,
+  ) {
     setEmailModal(() => (email: string) => {
       setEmailModal(null);
-      runAsyncPay(email, amountNaira, meta);
+      runAsyncPay(email, amountNairaOrPlan, meta);
     });
   }
 
@@ -465,8 +482,9 @@ export function PricingSection({
 
   function handleSubscription() {
     if (isNaira) {
-      const amount = billing === "monthly" ? 15000 : 150000;
-      promptAsyncPay(amount, { ...meta, plan: billing });
+      const amountOrPlan =
+        billing === "monthly" ? ASYNCPAY_MONTHLY_ID : ASYNCPAY_YEARLY_ID;
+      promptAsyncPay(amountOrPlan, { ...meta, plan: billing });
     } else {
       const priceId =
         billing === "monthly" ? PADDLE_MONTHLY_ID : PADDLE_YEARLY_ID;
