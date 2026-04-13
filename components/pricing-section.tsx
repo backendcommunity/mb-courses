@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Check, Loader2, Zap } from "lucide-react";
-import Link from "next/link";
+import { Check, Loader2, X, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 
@@ -13,11 +12,14 @@ interface PricingSectionProps {
   courseTitle?: string;
   courseAppUrl?: string;
   detectedCountry?: string;
-  /** Paddle price ID for the promo offer (international users) */
+  /** Paddle price ID for one-time / promo offers (from roadmap.paddle_price_id) */
   paddlePromoId?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
+
+const PADDLE_MONTHLY_ID = "pri_01k13rejzzwb1pawgtrqcjyzca";
+const PADDLE_YEARLY_ID = "pri_01k13rh3kr5y95cy9c5njy0w5k";
 
 const SUBSCRIPTION_FEATURES = [
   "Unlimited access to all courses & paths",
@@ -129,22 +131,95 @@ function useCountdown(seconds: number) {
   };
 }
 
+// ─── Email modal (AsyncPay only) ──────────────────────────────────────────────
+
+function EmailModal({
+  onSubmit,
+  onClose,
+  loading,
+}: {
+  onSubmit: (email: string) => void;
+  onClose: () => void;
+  loading: boolean;
+}) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  function handleSubmit() {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError("Email is required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    onSubmit(trimmed);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <h3 className="text-[18px] font-bold text-[#0B152A] mb-1">
+          One last step
+        </h3>
+        <p className="text-slate-500 text-[13px] mb-6">
+          Enter your email to receive your access after payment.
+        </p>
+
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+          }}
+          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          placeholder="you@example.com"
+          autoFocus
+          className="w-full border border-slate-200 text-[#0B152A] placeholder-slate-400 text-[14px] rounded-xl px-4 py-3 outline-none focus:border-[#13AECE] focus:ring-2 focus:ring-[#13AECE]/20 transition-colors mb-2"
+        />
+        {error && <p className="text-red-500 text-[12px] mb-3">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 text-white font-bold py-3 rounded-xl mt-2 transition-colors flex items-center justify-center gap-2"
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          Continue to Payment
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── PromoCard ────────────────────────────────────────────────────────────────
 
 function PromoCard({
   isNaira,
   price,
   courseTitle,
-  courseAppUrl,
-  paddlePromoId,
-  couponCode,
+  loading,
+  onClaim,
 }: {
   isNaira: boolean;
   price: number;
   courseTitle?: string;
-  courseAppUrl?: string;
-  paddlePromoId?: string;
-  couponCode?: string;
+  loading: boolean;
+  onClaim: () => void;
 }) {
   const pathName = courseTitle || "this learning path";
   const { h, m, s } = useCountdown(4 * 60 * 60);
@@ -154,99 +229,6 @@ function PromoCard({
     { val: m, label: "MIN" },
     { val: s, label: "SEC" },
   ];
-
-  const paddle = useRef<Paddle | null>(null);
-  const [loading, setLoading] = useState(false);
-  // AsyncPay email modal state
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-
-  // Initialize Paddle for international users
-  useEffect(() => {
-    if (isNaira) return;
-    const token = process.env.NEXT_PUBLIC_PADDLE_TOKEN;
-    if (!token) return;
-
-    initializePaddle({
-      token,
-      environment: isDev() ? "sandbox" : "production",
-      eventCallback(event) {
-        if (event.name === "checkout.completed") onPaymentSuccess();
-        if (event.name === "checkout.closed") setLoading(false);
-      },
-    }).then((instance) => {
-      if (instance) paddle.current = instance;
-    });
-  }, [isNaira]);
-
-  function onPaymentSuccess() {
-    const returnUrl = courseAppUrl ?? "https://app.masteringbackend.com";
-    const separator = returnUrl.includes("?") ? "&" : "?";
-    window.location.href = `${returnUrl}${separator}payment=true`;
-  }
-
-  function handleCTAClick() {
-    if (isNaira) {
-      // AsyncPay needs email first — show modal
-      setShowEmailModal(true);
-    } else {
-      // Paddle — open checkout directly, no email needed
-      handlePaddleCheckout();
-    }
-  }
-
-  function handlePaddleCheckout() {
-    if (!paddlePromoId) {
-      window.location.href = courseAppUrl ?? "https://app.masteringbackend.com";
-      return;
-    }
-    setLoading(true);
-    paddle.current?.Checkout.open({
-      discountCode: couponCode || "PRESALE",
-      items: [{ priceId: paddlePromoId, quantity: 1 }],
-    });
-  }
-
-  async function handleAsyncPay() {
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setEmailError("Email is required.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setEmailError("Enter a valid email address.");
-      return;
-    }
-
-    setEmailError("");
-    setLoading(true);
-    setShowEmailModal(false);
-
-    try {
-      const { AsyncpayCheckout } = await import("@asyncpay/checkout");
-      AsyncpayCheckout({
-        publicKey: process.env.NEXT_PUBLIC_ASYNCPAY_KEY ?? "",
-        customer: {
-          firstName: trimmed.split("@")[0],
-          lastName: trimmed.split("@")[0],
-          email: trimmed,
-        },
-        amount: 50000, // ₦50,000 in naira
-        metadata: {
-          course: courseTitle || "Unknown Course",
-        },
-        onSuccess: () => {
-          setLoading(false);
-          onPaymentSuccess();
-        },
-        onCancel: () => setLoading(false),
-        onClose: () => setLoading(false),
-      });
-    } catch {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="max-w-[520px] mx-auto w-full">
@@ -328,12 +310,12 @@ function PromoCard({
               {isNaira ? "50,000" : price.toLocaleString()}
             </span>
           </div>
-          <p className="text-[13px] text-slate-400 mb-6">
+          <p className="text-[13px] text-slate-400 mb-7">
             one-time · promo price · yours forever
           </p>
 
           <button
-            onClick={handleCTAClick}
+            onClick={onClaim}
             disabled={loading}
             className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 text-[15px] flex items-center justify-center gap-2"
           >
@@ -347,53 +329,6 @@ function PromoCard({
           </p>
         </div>
       </div>
-
-      {/* AsyncPay email modal */}
-      {showEmailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowEmailModal(false)}
-          />
-          <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
-            <h3 className="text-[18px] font-bold text-[#0B152A] mb-1">
-              One last step
-            </h3>
-            <p className="text-slate-500 text-[13px] mb-6">
-              Enter your email to receive your access after payment.
-            </p>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setEmailError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleAsyncPay()}
-              placeholder="you@example.com"
-              autoFocus
-              className="w-full border border-slate-200 text-[#0B152A] placeholder-slate-400 text-[14px] rounded-xl px-4 py-3 outline-none focus:border-[#13AECE] focus:ring-2 focus:ring-[#13AECE]/20 transition-colors mb-2"
-            />
-            {emailError && (
-              <p className="text-red-500 text-[12px] mb-3">{emailError}</p>
-            )}
-            <button
-              onClick={handleAsyncPay}
-              disabled={loading}
-              className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 text-white font-bold py-3 rounded-xl mt-2 transition-colors flex items-center justify-center gap-2"
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Continue to Payment
-            </button>
-            <button
-              onClick={() => setShowEmailModal(false)}
-              className="w-full text-slate-400 text-[13px] mt-3 hover:text-slate-600 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -401,25 +336,157 @@ function PromoCard({
 // ─── PricingSection ───────────────────────────────────────────────────────────
 
 export function PricingSection({
-  coursePrice,
   courseTitle,
   courseAppUrl,
   detectedCountry,
   paddlePromoId,
 }: PricingSectionProps) {
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const searchParams = useSearchParams();
 
   const isPromo = searchParams.get("mode") === "promo";
   const promoPrice = Number(searchParams.get("price") ?? 150);
-  const couponCode = searchParams.get("coupon") ?? undefined;
+  const coupon = searchParams.get("coupon") ?? undefined;
 
-  // ?country= overrides server-detected country (useful for ad targeting tests)
   const effectiveCountry = searchParams.get("country") || detectedCountry;
-  const isNaira = isPromo && isAfrican(effectiveCountry);
+  const african = isAfrican(effectiveCountry);
+  const isNaira = african;
 
-  const yearlySavings = (19.99 * 12 - 199).toFixed(0);
-  const onetimeFeatures = pathFeatures(courseTitle || "this course");
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [loading, setLoading] = useState(false);
+  const [emailModal, setEmailModal] = useState<
+    ((email: string) => void) | null
+  >(null);
+
+  const paddle = useRef<Paddle | null>(null);
+
+  // ── Paddle init ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (african) return; // African users pay via AsyncPay
+    const token = process.env.NEXT_PUBLIC_PADDLE_TOKEN;
+    if (!token) return;
+
+    initializePaddle({
+      token,
+      environment: isDev() ? "sandbox" : "production",
+      eventCallback(event) {
+        if (event.name === "checkout.completed") onPaymentSuccess();
+        if (event.name === "checkout.closed") setLoading(false);
+      },
+    }).then((instance) => {
+      if (instance) paddle.current = instance;
+    });
+  }, [african]);
+
+  // ── Shared helpers ───────────────────────────────────────────────────────────
+
+  function onPaymentSuccess() {
+    const base = courseAppUrl ?? "https://app.masteringbackend.com";
+    window.location.href = `${base}${base.includes("?") ? "&" : "?"}payment=true`;
+  }
+
+  function openPaddle(priceId: string, discountCode?: string) {
+    setLoading(true);
+    const options: Parameters<
+      NonNullable<typeof paddle.current>["Checkout"]["open"]
+    >[0] = {
+      items: [{ priceId, quantity: 1 }],
+    };
+    if (discountCode) options.discountCode = discountCode;
+    paddle.current?.Checkout.open(options);
+  }
+
+  async function runAsyncPay(
+    email: string,
+    amountNaira: number,
+    meta?: Record<string, string>,
+  ) {
+    setLoading(true);
+    try {
+      const { AsyncpayCheckout } = await import("@asyncpay/checkout");
+      AsyncpayCheckout({
+        publicKey: process.env.NEXT_PUBLIC_ASYNCPAY_KEY ?? "",
+        customer: {
+          firstName: email.split("@")[0],
+          lastName: email.split("@")[0],
+          email,
+        },
+        amount: amountNaira,
+        ...(meta ? { metadata: meta } : {}),
+        onSuccess: () => {
+          setLoading(false);
+          onPaymentSuccess();
+        },
+        onCancel: () => setLoading(false),
+        onClose: () => setLoading(false),
+      });
+    } catch {
+      setLoading(false);
+    }
+  }
+
+  // Collect email then fire AsyncPay
+  function promptAsyncPay(amountNaira: number, meta?: Record<string, string>) {
+    setEmailModal(() => (email: string) => {
+      setEmailModal(null);
+      runAsyncPay(email, amountNaira, meta);
+    });
+  }
+
+  // ── Payment handlers ─────────────────────────────────────────────────────────
+
+  const meta = { course: courseTitle ?? "Unknown" };
+
+  function handlePromo() {
+    if (isNaira) {
+      promptAsyncPay(50000, meta);
+    } else {
+      if (!paddlePromoId) {
+        window.location.href =
+          courseAppUrl ?? "https://app.masteringbackend.com";
+        return;
+      }
+      openPaddle(paddlePromoId, coupon ?? "PRESALE");
+    }
+  }
+
+  function handleLifetime() {
+    if (isNaira) {
+      promptAsyncPay(150000, meta);
+    } else {
+      if (!paddlePromoId) {
+        window.location.href =
+          courseAppUrl ?? "https://app.masteringbackend.com";
+        return;
+      }
+      openPaddle(paddlePromoId, coupon ?? "PRESALE");
+    }
+  }
+
+  function handleSubscription() {
+    if (isNaira) {
+      const amount = billing === "monthly" ? 15000 : 150000;
+      promptAsyncPay(amount, { ...meta, plan: billing });
+    } else {
+      const priceId =
+        billing === "monthly" ? PADDLE_MONTHLY_ID : PADDLE_YEARLY_ID;
+      openPaddle(priceId); // no discount on subscriptions
+    }
+  }
+
+  // ── Pricing display ──────────────────────────────────────────────────────────
+
+  const subMonthlyPrice = isNaira ? "₦15,000" : "$19.99";
+  const subYearlyPrice = isNaira ? "₦150,000" : "$199";
+  const subYearlySavings = isNaira
+    ? "₦30,000"
+    : `$${(19.99 * 12 - 199).toFixed(0)}`;
+  const subOriginalYearly = isNaira ? "₦180,000" : "$240";
+
+  const lifetimeNowPrice = isNaira ? "₦150,000" : "$150";
+  const lifetimeRegularPrice = isNaira ? "₦250,000" : "$250";
+
+  // ── Promo layout ─────────────────────────────────────────────────────────────
 
   if (isPromo) {
     return (
@@ -434,18 +501,30 @@ export function PricingSection({
               lifetime access — no subscription.
             </p>
           </div>
+
           <PromoCard
             isNaira={isNaira}
             price={promoPrice}
             courseTitle={courseTitle}
-            courseAppUrl={courseAppUrl}
-            paddlePromoId={paddlePromoId}
-            couponCode={couponCode}
+            loading={loading}
+            onClaim={handlePromo}
           />
         </div>
+
+        {emailModal && (
+          <EmailModal
+            loading={loading}
+            onSubmit={emailModal}
+            onClose={() => setEmailModal(null)}
+          />
+        )}
       </section>
     );
   }
+
+  // ── Default layout ────────────────────────────────────────────────────────────
+
+  const onetimeFeatures = pathFeatures(courseTitle || "this course");
 
   return (
     <section className="py-24 px-4 bg-[#F6F6F6]">
@@ -493,7 +572,7 @@ export function PricingSection({
 
             {billing === "yearly" && (
               <div className="mb-4 mt-2 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1 rounded-full">
-                Save ${yearlySavings} vs monthly
+                Save {subYearlySavings} vs monthly
               </div>
             )}
 
@@ -512,35 +591,26 @@ export function PricingSection({
 
             <div className="mt-auto">
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-xl font-bold text-white self-start mt-3">
-                  $
-                </span>
                 <span className="text-[56px] font-black text-white leading-none tracking-tight">
-                  {billing === "monthly" ? "19" : "199"}
+                  {billing === "monthly" ? subMonthlyPrice : subYearlyPrice}
                 </span>
-                {billing === "monthly" && (
-                  <span className="text-xl font-bold text-white self-start mt-3">
-                    .99
-                  </span>
-                )}
                 {billing === "yearly" && (
-                  <span className="text-sm font-bold text-slate-500 line-through self-end mb-2 ml-1">
-                    $240
+                  <span className="text-sm font-bold text-slate-500 line-through self-end mb-2 ml-2">
+                    {subOriginalYearly}
                   </span>
                 )}
               </div>
               <p className="text-[13px] text-slate-400 mb-6">
                 {billing === "monthly" ? "per month" : "per year, billed once"}
               </p>
-              <Link
-                href={courseAppUrl ?? "https://app.masteringbackend.com"}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleSubscription}
+                disabled={loading}
+                className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 flex items-center justify-center gap-2"
               >
-                <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20">
-                  Get Started
-                </button>
-              </Link>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading ? "Processing..." : "Get Started"}
+              </button>
               <p className="text-[11px] text-center italic text-slate-500">
                 Cancel anytime. No questions asked.
               </p>
@@ -567,48 +637,42 @@ export function PricingSection({
             </div>
 
             <div className="mt-auto">
-              {coursePrice ? (
-                <>
-                  <div className="flex items-end gap-1 mb-1">
-                    <span className="text-xl font-bold text-[#0B152A] self-start mt-3">
-                      $
-                    </span>
-                    <span className="text-[56px] font-black text-[#0B152A] leading-none tracking-tight">
-                      {coursePrice}
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-slate-500 mb-6">
-                    one-time payment
-                  </p>
-                </>
-              ) : (
-                <div className="mb-8">
-                  <p className="text-[15px] text-slate-500 leading-relaxed mb-2">
-                    Prefer to own just this course?
-                  </p>
-                  <p className="text-[13px] text-slate-400">
-                    Contact us for individual course pricing.
-                  </p>
-                </div>
-              )}
-              <Link
-                href={courseAppUrl ?? "https://app.masteringbackend.com"}
-                target="_blank"
-                rel="noopener noreferrer"
+              <p className="text-[13px] text-slate-400 mb-1">
+                Regular price:{" "}
+                <span className="line-through">{lifetimeRegularPrice}</span>
+              </p>
+              <div className="flex items-end gap-1 mb-1">
+                <span className="text-[56px] font-black text-[#0B152A] leading-none tracking-tight">
+                  {lifetimeNowPrice}
+                </span>
+              </div>
+              <p className="text-[13px] text-slate-500 mb-6">
+                one-time payment
+              </p>
+
+              <button
+                onClick={handleLifetime}
+                disabled={loading}
+                className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
               >
-                <button className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors">
-                  {coursePrice ? "Buy Now" : "Contact Us"}
-                </button>
-              </Link>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading ? "Processing..." : "Buy Now"}
+              </button>
               <p className="text-[11px] text-center italic text-slate-400">
-                {coursePrice
-                  ? "One-time payment. Yours forever."
-                  : "We'll get back to you within 24 hours."}
+                One-time payment. Yours forever.
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {emailModal && (
+        <EmailModal
+          loading={loading}
+          onSubmit={emailModal}
+          onClose={() => setEmailModal(null)}
+        />
+      )}
     </section>
   );
 }
