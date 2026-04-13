@@ -61,6 +61,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+        {/* <!-- Google tag (gtag.js) --> */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-7HSJ01FVPX"
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+
+window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7HSJ01FVPX');
+  
+`,
+          }}
+        ></script>
+      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
@@ -72,6 +96,10 @@ export default function RootLayout({
           {/* <Toaster /> */}
           <ErrorBoundary>{children}</ErrorBoundary>
         </ThemeProvider>
+        <script
+          src="https://topbanner.app/api/embed/6a6dfdfb3e33ef4a0e9849a687351ed1.js"
+          async
+        ></script>
       </body>
     </html>
   );
