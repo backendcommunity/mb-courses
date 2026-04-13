@@ -176,7 +176,7 @@ export default async function RoadmapDetailRoute({
     roadmap.level?.name ?? roadmap.level ?? roadmap.difficulty ?? null;
 
   // Canonical CTA destination
-  const roadmapAppUrl = `https://app.masteringbackend.com/roadmaps/${roadmap.slug ?? slug}?ref=${encodeURIComponent(`/${slug}`)}`;
+  const roadmapAppUrl = `https://app.masteringbackend.com/paths/${roadmap.slug ?? slug}?ref=${encodeURIComponent(`/${slug}`)}`;
 
   const faqs = [
     {
