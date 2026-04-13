@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -23,6 +24,20 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+
+function resolveCountryCode(
+  h: Awaited<ReturnType<typeof headers>>,
+): string | undefined {
+  return (
+    (h.get("x-vercel-ip-country") || // Vercel edge
+      h.get("cf-ipcountry") || // Cloudflare
+      h.get("cloudfront-viewer-country") || // AWS CloudFront
+      h.get("x-country-code") || // generic CDN/proxy
+      h.get("x-country") || // generic CDN/proxy
+      undefined) ??
+    undefined
+  );
+}
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://demo.masteringbackend.com/api/v3";
@@ -108,6 +123,9 @@ export default async function RoadmapDetailRoute({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const headersList = await headers();
+  const detectedCountry = resolveCountryCode(headersList);
+
   const roadmap = await getRoadmap(slug);
 
   if (!roadmap) notFound();
@@ -505,6 +523,7 @@ export default async function RoadmapDetailRoute({
         courseTitle={roadmap.title}
         courseAppUrl={roadmapAppUrl}
         coursePrice={roadmap.amount ?? roadmap.price ?? null}
+        detectedCountry={detectedCountry}
       />
 
       <Testimonials />

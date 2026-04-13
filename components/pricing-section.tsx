@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Zap } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 interface PricingSectionProps {
   coursePrice?: number | null;
   courseTitle?: string;
   courseAppUrl?: string;
+  detectedCountry?: string;
 }
 
 const SUBSCRIPTION_FEATURES = [
@@ -19,12 +21,172 @@ const SUBSCRIPTION_FEATURES = [
   "Cancel anytime — no lock-in",
 ];
 
+const PROMO_FEATURES = [
+  "Unlimited access to all courses & paths",
+  "Every new course added automatically",
+  "Community forum & peer support",
+  "Project submission & mentor feedback",
+  "Certificate on every completion",
+  "Cancel anytime — no lock-in",
+];
+
+// African ISO 3166-1 alpha-2 country codes
+const AFRICA_CODES = new Set([
+  "NG",
+  "GH",
+  "KE",
+  "ZA",
+  "ET",
+  "EG",
+  "TZ",
+  "UG",
+  "CM",
+  "SN",
+  "RW",
+  "CI",
+  "AO",
+  "MZ",
+  "MG",
+  "BF",
+  "ML",
+  "MW",
+  "NE",
+  "ZM",
+  "TD",
+  "SO",
+  "ZW",
+  "GN",
+  "SS",
+  "BJ",
+  "TN",
+  "BI",
+  "SL",
+  "TG",
+  "LY",
+  "ER",
+  "MR",
+  "CF",
+  "NA",
+  "GM",
+  "BW",
+  "LS",
+  "GW",
+  "LR",
+  "SZ",
+  "DJ",
+  "KM",
+  "CV",
+  "ST",
+  "SC",
+  "MU",
+  "RE",
+  "YT",
+  "EH",
+  "SD",
+  "CG",
+  "CD",
+  "GQ",
+  "GA",
+]);
+
+function isAfrican(countryCode?: string) {
+  console.log(
+    "Checking if country is African. Detected country code:",
+    countryCode,
+  );
+  return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
+}
+
+function PromoCard({
+  isNaira,
+  price,
+  courseAppUrl,
+}: {
+  isNaira: boolean;
+  price: number;
+  courseAppUrl?: string;
+}) {
+  console.log("Rendering PromoCard with price:", price, "isNaira:", isNaira);
+  return (
+    <div className="max-w-[480px] mx-auto w-full">
+      <div className="relative bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-2xl border border-[#13AECE]/30 overflow-hidden">
+        {/* Glow accent */}
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-[#13AECE]/10 blur-3xl pointer-events-none" />
+
+        {/* Limited offer badge */}
+        <div className="flex items-center gap-2 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1.5 rounded-full mb-6">
+          <Zap className="w-3 h-3" />
+          Limited Time Offer
+        </div>
+
+        <h3 className="text-[26px] font-bold text-white leading-tight mb-2">
+          Full Platform Access
+        </h3>
+        <p className="text-slate-400 text-[14px] mb-8 leading-relaxed">
+          Everything you need to go from beginner to production-ready backend
+          engineer.
+        </p>
+
+        <ul className="space-y-3 mb-10">
+          {PROMO_FEATURES.map((f, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <Check className="w-4 h-4 text-[#13AECE] shrink-0 mt-0.5" />
+              <span className="text-[14px] text-slate-300 leading-relaxed">
+                {f}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-auto">
+          <div className="flex items-end gap-1 mb-1">
+            <span className="text-xl font-bold text-white self-start mt-3">
+              {isNaira ? "₦" : "$"}
+            </span>
+            <span className="text-[56px] font-black text-white leading-none tracking-tight">
+              {isNaira ? "50,000" : price.toLocaleString()}
+            </span>
+          </div>
+          <p className="text-[13px] text-slate-400 mb-6">
+            {isNaira
+              ? "one-time · promo price"
+              : "one-time payment · promo price"}
+          </p>
+
+          <Link
+            href={courseAppUrl ?? "https://app.masteringbackend.com"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20">
+              Claim This Offer
+            </button>
+          </Link>
+          <p className="text-[11px] text-center italic text-slate-500">
+            Promo pricing. Limited availability.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PricingSection({
   coursePrice,
   courseTitle,
   courseAppUrl,
+  detectedCountry,
 }: PricingSectionProps) {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const searchParams = useSearchParams();
+
+  const mode = searchParams.get("mode");
+  const promoPrice = Number(searchParams.get("price") ?? 150);
+  const isPromo = mode === "promo";
+
+  // country query param overrides server-detected country (useful for ad testing)
+  const effectiveCountry = searchParams.get("country") || detectedCountry;
+  const isNaira = isPromo && isAfrican(effectiveCountry);
 
   const onetimeFeatures = [
     `Lifetime access to ${courseTitle || "this course"}`,
@@ -35,6 +197,29 @@ export function PricingSection({
   ];
 
   const yearlySavings = (19.99 * 12 - 199).toFixed(0);
+
+  if (isPromo) {
+    return (
+      <section className="py-24 px-4 bg-[#F6F6F6]">
+        <div className="container mx-auto max-w-[900px]">
+          <div className="text-center mb-16">
+            <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
+              Special Offer Just for You
+            </h2>
+            <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              We&apos;ve unlocked exclusive pricing for your region. Don&apos;t
+              miss it.
+            </p>
+          </div>
+          <PromoCard
+            isNaira={isNaira}
+            price={promoPrice}
+            courseAppUrl={courseAppUrl}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 px-4 bg-[#F6F6F6]">
@@ -124,7 +309,11 @@ export function PricingSection({
                 {billing === "monthly" ? "per month" : "per year, billed once"}
               </p>
 
-              <Link href={courseAppUrl ?? "/auth/register"} target="_blank" rel="noopener noreferrer">
+              <Link
+                href={courseAppUrl ?? "/auth/register"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <button className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20">
                   Get Started
                 </button>
@@ -180,7 +369,11 @@ export function PricingSection({
                 </div>
               )}
 
-              <Link href={courseAppUrl ?? "/auth/register"} target="_blank" rel="noopener noreferrer">
+              <Link
+                href={courseAppUrl ?? "/auth/register"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <button className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors">
                   {coursePrice ? "Buy Now" : "Contact Us"}
                 </button>
