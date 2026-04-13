@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@asyncpay/checkout": "^0.0.38",
     "@next/bundle-analyzer": "^15.5.4",
+    "@paddle/paddle-js": "^1.6.2",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

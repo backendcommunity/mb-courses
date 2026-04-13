@@ -524,6 +524,7 @@ export default async function RoadmapDetailRoute({
         courseAppUrl={roadmapAppUrl}
         coursePrice={roadmap.amount ?? roadmap.price ?? null}
         detectedCountry={detectedCountry}
+        paddlePromoId={roadmap.paddle_price_id ?? undefined}
       />
 
       <Testimonials />
