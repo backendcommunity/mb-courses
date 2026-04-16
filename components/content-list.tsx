@@ -5,6 +5,7 @@ import Link from "next/link";
 export interface ProcessedContentItem {
   num: number;
   title: string;
+  name?: string;
   type:
     | "course"
     | "quiz"
@@ -119,7 +120,7 @@ export function ContentList({
                     </div>
                   )}
                   <h4 className="font-bold text-slate-800 text-[14px] leading-snug group-hover:text-[#13AECE] transition-colors">
-                    {item.title}
+                    {item?.title ?? item.name}
                   </h4>
                 </div>
 
