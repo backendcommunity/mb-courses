@@ -85,7 +85,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="https://python30.masteringbackend.com/project30"
+                    href="https://python30.masteringbackend.com/?ref=course.masteringbackend.com"
                     className="hover:text-[#13AECE] transition-colors"
                   >
                     Project30
