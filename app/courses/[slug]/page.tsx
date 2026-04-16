@@ -115,38 +115,32 @@ export default async function CourseDetailRoute({
 
   const rawChapters = Array.isArray(course.chapters) ? course.chapters : [];
 
-  const chapters: ProcessedChapter[] = rawChapters
-    .slice(0, 12)
-    .map((ch: any, i: number) => {
-      const summary = stripHtml(
-        ch.description || ch.summary || ch.content || "",
-      );
+  const chapters: ProcessedChapter[] = rawChapters.map((ch: any, i: number) => {
+    const summary = stripHtml(ch.description || ch.summary || ch.content || "");
 
-      const videos = Array.isArray(ch.videos)
-        ? ch.videos.map((v: any) => ({
-            title: stripHtml(v.title || v.name || v.heading || ""),
-            duration: v.duration || v.length || "",
-            mb: v.mb,
-          }))
-        : [];
+    const videos = Array.isArray(ch.videos)
+      ? ch.videos.map((v: any) => ({
+          title: stripHtml(v.title || v.name || v.heading || ""),
+          duration: v.duration || v.length || "",
+          mb: v.mb,
+        }))
+      : [];
 
-      const lessons = Array.isArray(ch.lessons)
-        ? ch.lessons.map((l: any) =>
-            typeof l === "string"
-              ? l
-              : stripHtml(
-                  l.title || l.name || l.summary || l.description || "",
-                ),
-          )
-        : [];
-      return {
-        num: i + 1,
-        title: ch.title || `Chapter ${i + 1}`,
-        summary,
-        videos,
-        lessons,
-      };
-    });
+    const lessons = Array.isArray(ch.lessons)
+      ? ch.lessons.map((l: any) =>
+          typeof l === "string"
+            ? l
+            : stripHtml(l.title || l.name || l.summary || l.description || ""),
+        )
+      : [];
+    return {
+      num: i + 1,
+      title: ch.title || `Chapter ${i + 1}`,
+      summary,
+      videos,
+      lessons,
+    };
+  });
 
   const totalVideos = rawChapters.reduce(
     (acc: number, ch: any) =>
