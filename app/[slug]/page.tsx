@@ -137,7 +137,7 @@ export default async function RoadmapDetailRoute({
   const contentItems: ProcessedContentItem[] = rawContents.map(
     (c: any, i: number) => ({
       num: i + 1,
-      title: c.title || "",
+      title: c.title || c.name || "",
       type: c.type || "course",
       slug: c.slug || undefined,
       summary: stripHtml(c.summary || c.description || "") || undefined,

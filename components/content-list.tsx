@@ -132,7 +132,7 @@ export function ContentList({
                       <h4
                         className={`font-bold text-[14px] leading-snug transition-colors ${isOpen ? "text-[#13AECE]" : "text-slate-800"}`}
                       >
-                        {item.title ?? item.name}
+                        {item.title}
                       </h4>
                     </div>
                   </div>
