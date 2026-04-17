@@ -5,7 +5,7 @@ export function Header() {
   return (
     <header className="relative z-10 container mx-auto px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-        <a href="/" className="flex items-center gap-2">
+        <a href="https://masteringbackend.com?ref=learn" className="flex items-center gap-2">
           <img
             src="/masteringbackend_logo.png"
             alt="MasteringBackend"
