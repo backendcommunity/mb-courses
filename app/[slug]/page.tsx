@@ -140,7 +140,8 @@ export default async function RoadmapDetailRoute({
       title: c.title || c.name || "",
       type: c.type || "course",
       slug: c.slug || undefined,
-      summary: stripHtml(c.summary || c.description || "") || undefined,
+      summary:
+        stripHtml(c.summary || c.description || c.content || "") || undefined,
       stageNum: c.topicNumber ?? 1,
       stageTitle: c.topicTitle ?? "",
     }),
