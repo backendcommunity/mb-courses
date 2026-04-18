@@ -1,0 +1,131 @@
+﻿
+> my-v0-project@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.2.6
+   - Experiments (use with caution):
+     ┬╖ clientTraceMetadata
+
+   Creating an optimized production build ...
+node.exe : <w> [webpack.cache.PackFileCacheStrategy] 
+Serializing big strings (188kiB) impacts deserialization 
+performance (consider using Buffer instead and decode when 
+needed)
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<w> [webpack.ca.  
+  ..de when needed):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big 
+strings (139kiB) impacts deserialization performance (consider 
+using Buffer instead and decode when needed)
+ Γ£ô Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/33) ...
+   Generating static pages (8/33) 
+   Generating static pages (16/33) 
+   Generating static pages (24/33) 
+ Γ£ô Generating static pages (33/33)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                                             Size  First Load JS
+Γöî Γùï /                                                                                5.04 kB         324 kB
+Γö£ Γùï /_not-found                                                                      1.15 kB         221 kB
+Γö£ ╞Æ /ai/payment                                                                       4.1 kB         277 kB
+Γö£ Γùï /auth/email/verify                                                               7.39 kB         267 kB
+Γö£ Γùï /auth/login                                                                      6.09 kB         266 kB
+Γö£ Γùï /auth/password/forgot                                                            7.08 kB         267 kB
+Γö£ Γùï /auth/password/reset                                                             5.44 kB         265 kB
+Γö£ Γùï /auth/register                                                                   7.01 kB         267 kB
+Γö£ Γùï /bootcamps                                                                       4.03 kB         333 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]                                                          6.54 kB         350 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]/[cohort]/weeks/[weekId]                                  3.15 kB         323 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]/[cohort]/weeks/[weekId]/[slug]                           11.1 kB         382 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]/certificate                                              4.13 kB         493 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]/dashboard                                                4.93 kB         324 kB
+Γö£ ╞Æ /bootcamps/[bootcampId]/leaderboard                                              4.14 kB         324 kB
+Γö£ Γùï /certifications                                                                  4.36 kB         327 kB
+Γö£ Γùï /checkout                                                                        9.03 kB         343 kB
+Γö£ Γùï /community                                                                       2.33 kB         322 kB
+Γö£ Γùï /courses                                                                         4.95 kB         337 kB
+Γö£ ╞Æ /courses/[slug]                                                                  7.55 kB         352 kB
+Γö£ ╞Æ /courses/[slug]/certificate                                                      4.15 kB         493 kB
+Γö£ ╞Æ /courses/[slug]/exercises                                                        2.83 kB         322 kB
+Γö£ ╞Æ /courses/[slug]/exercises/[exerciseId]                                           3.53 kB         326 kB
+Γö£ ╞Æ /courses/[slug]/playgrounds                                                      2.61 kB         322 kB
+Γö£ ╞Æ /courses/[slug]/playgrounds/[playgroundId]                                       3.03 kB         322 kB
+Γö£ ╞Æ /courses/[slug]/preview                                                          6.45 kB         363 kB
+Γö£ ╞Æ /courses/[slug]/projects                                                         3.32 kB         323 kB
+Γö£ ╞Æ /courses/[slug]/projects/[projectId]                                             4.93 kB         327 kB
+Γö£ ╞Æ /courses/[slug]/quizzes                                                          3.01 kB         336 kB
+Γö£ ╞Æ /courses/[slug]/quizzes/[quizId]                                                   890 B         329 kB
+Γö£ ╞Æ /courses/[slug]/watch/[chapterId]/[videoId]                                      12.1 kB         380 kB
+Γö£ Γùï /interviews                                                                      7.25 kB         339 kB
+Γö£ ╞Æ /interviews/[interviewId]                                                        5.01 kB         324 kB
+Γö£ ╞Æ /interviews/[interviewId]/algorithm                                              7.45 kB         353 kB
+Γö£ ╞Æ /interviews/[interviewId]/project                                                12.2 kB         362 kB
+Γö£ ╞Æ /interviews/[interviewId]/results                                                7.44 kB         330 kB
+Γö£ Γùï /lands                                                                           2.27 kB         322 kB
+Γö£ ╞Æ /lands/[landId]                                                                  3.27 kB         329 kB
+Γö£ ╞Æ /lands/[landId]/stages/[stageId]                                                 3.35 kB         326 kB
+Γö£ ╞Æ /lands/[landId]/stages/[stageId]/challenges/[challengeId]                        13.3 kB         372 kB
+Γö£ Γùï /leaderboard                                                                     3.57 kB         326 kB
+Γö£ Γùï /mock-interviews                                                                 12.8 kB         345 kB
+Γö£ ╞Æ /mock-interviews/[id]                                                             144 kB         476 kB
+Γö£ ╞Æ /mock-interviews/[id]/results                                                     519 kB         841 kB
+Γö£ Γùï /onboarding                                                                      12.4 kB         276 kB
+Γö£ Γùï /paths                                                                           2.31 kB         322 kB
+Γö£ ╞Æ /paths/[pathId]                                                                  3.18 kB         326 kB
+Γö£ ╞Æ /paths/[pathId]/continue                                                         2.99 kB         322 kB
+Γö£ ╞Æ /portfolios/[userId]                                                              115 kB         456 kB
+Γö£ Γùï /profile                                                                         6.71 kB         326 kB
+Γö£ Γùï /project30                                                                       5.71 kB         337 kB
+Γö£ ╞Æ /project30/[slug]                                                                9.87 kB         353 kB
+Γö£ ╞Æ /project30/[slug]/certificate                                                    4.09 kB         493 kB
+Γö£ ╞Æ /project30/[slug]/community                                                       4.9 kB         327 kB
+Γö£ ╞Æ /project30/[slug]/day/[dayNumber]                                                6.64 kB         345 kB
+Γö£ ╞Æ /project30/[slug]/leaderboard                                                    3.61 kB         326 kB
+Γö£ Γùï /projects                                                                        3.92 kB         333 kB
+Γö£ ╞Æ /projects/[slug]                                                                 7.83 kB         356 kB
+Γö£ ╞Æ /projects/[slug]/leaderboard                                                     3.61 kB         326 kB
+Γö£ ╞Æ /projects/[slug]/playground                                                      93.5 kB         464 kB
+Γö£ ╞Æ /projects/[slug]/tasks                                                           4.49 kB         328 kB
+Γö£ Γùï /projects/leaderboard                                                            4.73 kB         333 kB
+Γö£ Γùï /projects/submissions                                                            7.81 kB         337 kB
+Γö£ Γùï /recover-account                                                                 6.73 kB         275 kB
+Γö£ Γùï /roadmaps                                                                        3.13 kB         323 kB
+Γö£ ╞Æ /roadmaps/[slug]                                                                 8.37 kB         519 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]                                                6.72 kB         326 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]                               8.92 kB         354 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/[chapterId]/videos/[videoId]  8.79 kB         376 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/exercises                     3.81 kB         323 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/exercises/[exerciseId]        3.95 kB         326 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/playgrounds                   2.72 kB         322 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/playgrounds/[playgroundId]    3.46 kB         326 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/projects                      3.17 kB         323 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/projects/[projectId]          4.36 kB         327 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/quizzes                       3.58 kB         323 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/quizzes/[quizId]              4.72 kB         328 kB
+Γö£ ╞Æ /roadmaps/[slug]/topics/[topicId]/courses/[course]/watch/[chapterId]             4.35 kB         324 kB
+Γö£ Γùï /settings                                                                        16.8 kB         346 kB
+Γö£ Γùï /subscription/management                                                         9.94 kB         342 kB
+Γö£ Γùï /subscription/plans                                                              3.53 kB         331 kB
+Γö£ Γùï /xp-store                                                                         5.8 kB         328 kB
+Γöö Γùï /xpayment                                                                        4.46 kB         280 kB
++ First Load JS shared by all                                                         220 kB
+  Γö£ chunks/48-c7dcc5479e936a7b.js                                                     125 kB
+  Γö£ chunks/4bd1b696-f69f89ef36cb498a.js                                              53.4 kB
+  Γö£ chunks/52774a7f-7e2b9f13db72cddb.js                                              37.4 kB
+  Γöö other shared chunks (total)                                                      3.94 kB
+
+
+╞Æ Middleware                                                                         95.6 kB
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
