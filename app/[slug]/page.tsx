@@ -119,10 +119,14 @@ export async function generateMetadata({
 
 export default async function RoadmapDetailRoute({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ mode?: string; price?: string; coupon?: string; country?: string }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const isPromo = sp.mode === "promo";
   const headersList = await headers();
   const detectedCountry = resolveCountryCode(headersList);
 
@@ -227,33 +231,30 @@ export default async function RoadmapDetailRoute({
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <div className="text-[#13AECE] font-bold tracking-widest text-sm uppercase mb-3">
-                LEARNING PATH
+                {isPromo ? "⚡ LIMITED OFFER" : "LEARNING PATH"}
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-4">
                 {roadmap.title}
               </h1>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-                {stripHtml(roadmap.summary || roadmap.description).slice(
-                  0,
-                  200,
-                )}
+                {isPromo
+                  ? `Get lifetime access to ${roadmap.title} at a special one-time price. No subscription. No recurring fees. Yours forever.`
+                  : stripHtml(roadmap.summary || roadmap.description).slice(0, 200)}
               </p>
               <div className="mb-10">
                 <Button
                   className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
                   asChild
                 >
-                  <Link
-                    href={roadmapAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Start Path for Free
+                  <Link href={isPromo ? "#pricing" : roadmapAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
+                    {isPromo ? "Claim Limited Offer →" : "Start Path for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
                   <CheckCircle className="w-4 h-4 inline mr-2" />
-                  Included with Pro, Enterprise, or One-time payment
+                  {isPromo
+                    ? "Limited time · One payment · Lifetime access"
+                    : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -338,20 +339,16 @@ export default async function RoadmapDetailRoute({
                 <DescriptionSection fullText={fullDescription} />
               )}
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className={`bg-white border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 ${isPromo ? "border-[#13AECE]/30 bg-[#13AECE]/5" : "border-slate-100"}`}>
                 <h3 className="text-xl font-bold text-slate-800">
-                  Ready to start your journey?
+                  {isPromo ? "⚡ Limited offer — grab it before it expires" : "Ready to start your journey?"}
                 </h3>
                 <Button
-                  className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 px-8 rounded-md w-full sm:w-auto"
+                  className={`text-white border-0 px-8 rounded-md w-full sm:w-auto ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                   asChild
                 >
-                  <Link
-                    href={roadmapAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Start Path for Free
+                  <Link href={isPromo ? "#pricing" : roadmapAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
+                    {isPromo ? "Claim This Offer →" : "Start Path for Free"}
                   </Link>
                 </Button>
               </div>
@@ -401,20 +398,16 @@ export default async function RoadmapDetailRoute({
                             Earn Certificate of Completion
                           </h3>
                           <p className="text-sm text-slate-600 mb-4">
-                            Add this credential to your LinkedIn profile,
-                            resume, or CV. Share it on social media and in your
-                            performance review.
+                            {isPromo
+                              ? "Enroll now at the promo price and earn a verified certificate you can add to LinkedIn and your resume."
+                              : "Add this credential to your LinkedIn profile, resume, or CV. Share it on social media and in your performance review."}
                           </p>
                           <Button
-                            className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 w-full rounded-md h-11"
+                            className={`text-white border-0 w-full rounded-md h-11 ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                             asChild
                           >
-                            <Link
-                              href={roadmapAppUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Enroll Now
+                            <Link href={isPromo ? "#pricing" : roadmapAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
+                              {isPromo ? "Claim This Offer →" : "Enroll Now"}
                             </Link>
                           </Button>
                         </div>

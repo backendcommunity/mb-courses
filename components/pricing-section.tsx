@@ -355,7 +355,7 @@ export function PricingSection({
   const searchParams = useSearchParams();
 
   const isPromo = searchParams.get("mode") === "promo";
-  const promoPrice = Number(searchParams.get("price") ?? 150);
+  const promoPrice = Number(searchParams.get("price") ?? 99.99);
   const coupon = searchParams.get("coupon") ?? undefined;
 
   const effectiveCountry = searchParams.get("country") || detectedCountry;
@@ -508,7 +508,7 @@ export function PricingSection({
 
   if (isPromo) {
     return (
-      <section className="py-24 px-4 bg-[#F6F6F6]">
+      <section id="pricing" className="py-24 px-4 bg-[#F6F6F6]">
         <div className="container mx-auto max-w-[900px]">
           <div className="text-center mb-12">
             <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
@@ -545,7 +545,7 @@ export function PricingSection({
   const onetimeFeatures = pathFeatures(courseTitle || "this course");
 
   return (
-    <section className="py-24 px-4 bg-[#F6F6F6]">
+    <section id="pricing" className="py-24 px-4 bg-[#F6F6F6]">
       <div className="container mx-auto max-w-[900px]">
         <div className="text-center mb-16">
           <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
