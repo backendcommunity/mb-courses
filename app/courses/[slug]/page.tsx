@@ -106,7 +106,12 @@ export default async function CourseDetailRoute({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ mode?: string; price?: string; coupon?: string; country?: string }>;
+  searchParams: Promise<{
+    mode?: string;
+    price?: string;
+    coupon?: string;
+    country?: string;
+  }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -260,15 +265,26 @@ export default async function CourseDetailRoute({
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
                 {isPromo
                   ? `Get lifetime access to ${course.title} at a special one-time price. No subscription. No recurring fees. Yours forever.`
-                  : stripHtml(course.summary || course.description).slice(0, 200)}
+                  : stripHtml(course.summary || course.description).slice(
+                      0,
+                      200,
+                    )}
               </p>
               <div className="mb-10">
                 <Button
                   className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
                   asChild
                 >
-                  <Link href={isPromo ? "#pricing" : courseAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
-                    {isPromo ? "Claim Limited Offer →" : "Start Course for Free"}
+                  <Link
+                    href={isPromo ? "#pricing" : courseAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
+                  >
+                    {isPromo
+                      ? "Claim Limited Offer →"
+                      : "Start Course for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
@@ -348,15 +364,25 @@ export default async function CourseDetailRoute({
                 <DescriptionSection fullText={fullDescription} />
               )}
 
-              <div className={`bg-white border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 ${isPromo ? "border-[#13AECE]/30 bg-[#13AECE]/5" : "border-slate-100"}`}>
+              <div
+                className={`bg-white border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 ${isPromo ? "border-[#13AECE]/30 bg-[#13AECE]/5" : "border-slate-100"}`}
+              >
                 <h3 className="text-xl font-bold text-slate-800">
-                  {isPromo ? "⚡ Limited offer — grab it before it expires" : "Ready to start?"}
+                  {isPromo
+                    ? "⚡ Limited offer — grab it before it expires"
+                    : "Ready to start?"}
                 </h3>
                 <Button
                   className={`text-white border-0 px-8 rounded-md w-full sm:w-auto ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                   asChild
                 >
-                  <Link href={isPromo ? "#pricing" : courseAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
+                  <Link
+                    href={isPromo ? "#pricing" : courseAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
+                  >
                     {isPromo ? "Claim This Offer →" : "Start Course for Free"}
                   </Link>
                 </Button>
@@ -422,7 +448,13 @@ export default async function CourseDetailRoute({
                     className={`text-white border-0 w-full rounded-md h-11 ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                     asChild
                   >
-                    <Link href={isPromo ? "#pricing" : courseAppUrl} {...(!isPromo && { target: "_blank", rel: "noopener noreferrer" })}>
+                    <Link
+                      href={isPromo ? "#pricing" : courseAppUrl}
+                      {...(!isPromo && {
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                      })}
+                    >
                       {isPromo ? "Claim This Offer →" : "Enroll Now"}
                     </Link>
                   </Button>
@@ -538,7 +570,7 @@ export default async function CourseDetailRoute({
       </section>
 
       {/* ── Pricing (client — has toggle) ── */}
-      {/* <PricingSection coursePrice={coursePrice} courseTitle={course.title} courseAppUrl={courseAppUrl} /> */}
+      {/* <PricingSection coursePrice={coursePrice} courseTitle={course.title} slug={course.slug}  type="roadmap" courseAppUrl={courseAppUrl} /> */}
 
       <Testimonials />
 

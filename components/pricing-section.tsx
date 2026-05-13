@@ -10,10 +10,13 @@ import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 interface PricingSectionProps {
   coursePrice?: number | null;
   courseTitle?: string;
+  slug: string;
+  type: string;
   courseAppUrl?: string;
   detectedCountry?: string;
   /** Paddle price ID for one-time / promo offers (from roadmap.paddle_price_id) */
   paddlePromoId?: string;
+  showPayment?: boolean;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -349,8 +352,11 @@ function PromoCard({
 export function PricingSection({
   courseTitle,
   courseAppUrl,
+  slug,
+  type,
   detectedCountry,
   paddlePromoId,
+  showPayment = false,
 }: PricingSectionProps) {
   const searchParams = useSearchParams();
 
@@ -452,7 +458,11 @@ export function PricingSection({
 
   // ── Payment handlers ─────────────────────────────────────────────────────────
 
-  const meta = { course: courseTitle ?? "Unknown" };
+  const meta = {
+    slug,
+    type,
+    isExternal: "true",
+  };
 
   function handlePromo() {
     if (isNaira) {
@@ -544,153 +554,161 @@ export function PricingSection({
 
   const onetimeFeatures = pathFeatures(courseTitle || "this course");
 
-  return (
-    <section id="pricing" className="py-24 px-4 bg-[#F6F6F6]">
-      <div className="container mx-auto max-w-[900px]">
-        <div className="text-center mb-16">
-          <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
-            Start learning today
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Full platform access or just this course — pick the plan that works
-            for you.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 max-w-[850px] mx-auto items-stretch">
-          {/* ── Subscription (dark) ── */}
-          <div className="bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-xl">
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h3 className="text-[24px] font-bold text-white leading-tight">
-                Subscription
-              </h3>
-              <div className="flex bg-white/[0.07] rounded-full p-1 border border-white/10 shrink-0">
-                <button
-                  onClick={() => setBilling("monthly")}
-                  className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-all ${
-                    billing === "monthly"
-                      ? "bg-[#13AECE] text-white shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBilling("yearly")}
-                  className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-all ${
-                    billing === "yearly"
-                      ? "bg-[#13AECE] text-white shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Yearly
-                </button>
-              </div>
+  if (showPayment) {
+    return (
+      <section id="pricing" className="py-24 px-4 bg-[#F6F6F6]">
+        <span>
+          <div className="container mx-auto max-w-[900px]">
+            <div className="text-center mb-16">
+              <h2 className="text-[2.5rem] md:text-[3rem] font-bold text-[#0B152A] mb-4">
+                Start learning today
+              </h2>
+              <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                Full platform access or just this course — pick the plan that
+                works for you.
+              </p>
             </div>
 
-            {billing === "yearly" && (
-              <div className="mb-4 mt-2 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1 rounded-full">
-                Save {subYearlySavings} vs monthly
-              </div>
-            )}
+            <div className="grid md:grid-cols-2 gap-8 max-w-[850px] mx-auto items-stretch">
+              {/* ── Subscription (dark) ── */}
+              <div className="bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-xl">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h3 className="text-[24px] font-bold text-white leading-tight">
+                    Subscription
+                  </h3>
+                  <div className="flex bg-white/[0.07] rounded-full p-1 border border-white/10 shrink-0">
+                    <button
+                      onClick={() => setBilling("monthly")}
+                      className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-all ${
+                        billing === "monthly"
+                          ? "bg-[#13AECE] text-white shadow"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setBilling("yearly")}
+                      className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-all ${
+                        billing === "yearly"
+                          ? "bg-[#13AECE] text-white shadow"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                </div>
 
-            <div className="flex-1 mt-4 mb-8">
-              <ul className="space-y-3">
-                {SUBSCRIPTION_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-3">
-                    <Check className="w-4 h-4 text-[#13AECE] shrink-0 mt-0.5" />
-                    <span className="text-[14px] text-slate-300 leading-relaxed">
-                      {f}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-auto">
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-[56px] font-black text-white leading-none tracking-tight">
-                  {billing === "monthly" ? subMonthlyPrice : subYearlyPrice}
-                </span>
                 {billing === "yearly" && (
-                  <span className="text-sm font-bold text-slate-500 line-through self-end mb-2 ml-2">
-                    {subOriginalYearly}
-                  </span>
+                  <div className="mb-4 mt-2 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1 rounded-full">
+                    Save {subYearlySavings} vs monthly
+                  </div>
                 )}
-              </div>
-              <p className="text-[13px] text-slate-400 mb-6">
-                {billing === "monthly" ? "per month" : "per year, billed once"}
-              </p>
-              <button
-                onClick={handleSubscription}
-                disabled={loading}
-                className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 flex items-center justify-center gap-2"
-              >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {loading ? "Processing..." : "Get Started"}
-              </button>
-              <p className="text-[11px] text-center italic text-slate-500">
-                Cancel anytime. No questions asked.
-              </p>
-            </div>
-          </div>
 
-          {/* ── Lifetime Access (light) ── */}
-          <div className="bg-white border border-slate-200 rounded-[2rem] p-10 flex flex-col shadow-sm hover:shadow-lg transition-shadow">
-            <h3 className="text-[24px] font-bold text-[#0B152A] leading-tight mb-6">
-              Lifetime Access
-            </h3>
+                <div className="flex-1 mt-4 mb-8">
+                  <ul className="space-y-3">
+                    {SUBSCRIPTION_FEATURES.map((f) => (
+                      <li key={f} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-[#13AECE] shrink-0 mt-0.5" />
+                        <span className="text-[14px] text-slate-300 leading-relaxed">
+                          {f}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-            <div className="flex-1 mb-8">
-              <ul className="space-y-3">
-                {onetimeFeatures.map((f) => (
-                  <li key={f} className="flex items-start gap-3">
-                    <Check className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-[14px] text-slate-500 leading-relaxed">
-                      {f}
+                <div className="mt-auto">
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-[56px] font-black text-white leading-none tracking-tight">
+                      {billing === "monthly" ? subMonthlyPrice : subYearlyPrice}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-auto">
-              <p className="text-[13px] text-slate-400 mb-1">
-                Regular price:{" "}
-                <span className="line-through">{lifetimeRegularPrice}</span>
-              </p>
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-[56px] font-black text-[#0B152A] leading-none tracking-tight">
-                  {lifetimeNowPrice}
-                </span>
+                    {billing === "yearly" && (
+                      <span className="text-sm font-bold text-slate-500 line-through self-end mb-2 ml-2">
+                        {subOriginalYearly}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-slate-400 mb-6">
+                    {billing === "monthly"
+                      ? "per month"
+                      : "per year, billed once"}
+                  </p>
+                  <button
+                    onClick={handleSubscription}
+                    disabled={loading}
+                    className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 flex items-center justify-center gap-2"
+                  >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading ? "Processing..." : "Get Started"}
+                  </button>
+                  <p className="text-[11px] text-center italic text-slate-500">
+                    Cancel anytime. No questions asked.
+                  </p>
+                </div>
               </div>
-              <p className="text-[13px] text-slate-500 mb-6">
-                one-time payment
-              </p>
 
-              <button
-                onClick={handleLifetime}
-                disabled={loading}
-                className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
-              >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {loading ? "Processing..." : "Buy Now"}
-              </button>
-              <p className="text-[11px] text-center italic text-slate-400">
-                One-time payment. Yours forever.
-              </p>
+              {/* ── Lifetime Access (light) ── */}
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-10 flex flex-col shadow-sm hover:shadow-lg transition-shadow">
+                <h3 className="text-[24px] font-bold text-[#0B152A] leading-tight mb-6">
+                  Lifetime Access
+                </h3>
+
+                <div className="flex-1 mb-8">
+                  <ul className="space-y-3">
+                    {onetimeFeatures.map((f) => (
+                      <li key={f} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="text-[14px] text-slate-500 leading-relaxed">
+                          {f}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-auto">
+                  <p className="text-[13px] text-slate-400 mb-1">
+                    Regular price:{" "}
+                    <span className="line-through">{lifetimeRegularPrice}</span>
+                  </p>
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-[56px] font-black text-[#0B152A] leading-none tracking-tight">
+                      {lifetimeNowPrice}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-slate-500 mb-6">
+                    one-time payment
+                  </p>
+
+                  <button
+                    onClick={handleLifetime}
+                    disabled={loading}
+                    className="w-full bg-[#f4f6f8] border border-[#0B152A] text-[#0B152A] font-bold py-4 rounded-xl mb-3 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading ? "Processing..." : "Buy Now"}
+                  </button>
+                  <p className="text-[11px] text-center italic text-slate-400">
+                    One-time payment. Yours forever.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {emailModal && (
-        <EmailModal
-          loading={loading}
-          onSubmit={emailModal}
-          onClose={() => setEmailModal(null)}
-        />
-      )}
-    </section>
-  );
+          {emailModal && (
+            <EmailModal
+              loading={loading}
+              onSubmit={emailModal}
+              onClose={() => setEmailModal(null)}
+            />
+          )}
+        </span>
+      </section>
+    );
+  }
+
+  return <></>;
 }
