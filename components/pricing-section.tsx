@@ -106,7 +106,7 @@ const AFRICA_CODES = new Set([
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isAfrican(countryCode?: string) {
-  return !(!!countryCode && AFRICA_CODES.has(countryCode.toUpperCase()));
+  return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
 }
 
 function pathFeatures(pathName: string) {
