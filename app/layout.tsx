@@ -84,6 +84,11 @@ window.dataLayer = window.dataLayer || [];
 `,
           }}
         ></script>
+        <script
+          async
+          src="https://affiliate-management-web-app.vercel.app/affizy.js"
+          data-affizy="pk_e67f269c44c9c827ac27e274"
+        ></script>
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider
