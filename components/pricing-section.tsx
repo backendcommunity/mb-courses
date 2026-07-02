@@ -313,7 +313,7 @@ function PromoCard({
           <p className="text-[13px] text-slate-500 mb-1">
             Regular price:{" "}
             <span className="line-through">
-              {isNaira ? "₦150,000" : "$150"}
+              {isNaira ? "₦250,000" : "$150"}
             </span>
           </p>
           <div className="flex items-end gap-1 mb-1">
@@ -321,7 +321,7 @@ function PromoCard({
               {isNaira ? "₦" : "$"}
             </span>
             <span className="text-[60px] font-black text-white leading-none tracking-tight">
-              {isNaira ? "50,000" : price.toLocaleString()}
+              {isNaira ? "100,000" : price.toLocaleString()}
             </span>
           </div>
           <p className="text-[13px] text-slate-400 mb-7">
@@ -481,7 +481,7 @@ export function PricingSection({
 
   function handleLifetime() {
     if (isNaira) {
-      promptAsyncPay(150000, meta);
+      promptAsyncPay(250000, meta);
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -507,13 +507,13 @@ export function PricingSection({
   // ── Pricing display ──────────────────────────────────────────────────────────
 
   const subMonthlyPrice = isNaira ? "₦15,000" : "$19.99";
-  const subYearlyPrice = isNaira ? "₦150,000" : "$199";
+  const subYearlyPrice = isNaira ? "₦250,000" : "$199";
   const subYearlySavings = isNaira
     ? "₦30,000"
     : `$${(19.99 * 12 - 199).toFixed(0)}`;
   const subOriginalYearly = isNaira ? "₦180,000" : "$240";
 
-  const lifetimeNowPrice = isNaira ? "₦150,000" : "$150";
+  const lifetimeNowPrice = isNaira ? "₦250,000" : "$150";
   const lifetimeRegularPrice = isNaira ? "₦250,000" : "$250";
 
   // ── Promo layout ─────────────────────────────────────────────────────────────
