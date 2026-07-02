@@ -408,7 +408,7 @@ export function PricingSection({
       NonNullable<typeof paddle.current>["Checkout"]["open"]
     >[0] = {
       items: [{ priceId, quantity: 1 }],
-      customData: { code: (window as any)?.Affizy?.getReferral() || undefined },
+      customData: { code: (window as any)?.Affizy?.getReferral() || "" },
     };
     if (discountCode) options.discountCode = discountCode;
     paddle.current?.Checkout.open(options);
@@ -458,17 +458,24 @@ export function PricingSection({
   }
 
   // ── Payment handlers ─────────────────────────────────────────────────────────
-
-  const meta = {
+  // Read the affiliate referral at pay time, not during render: `window` is
+  // undefined during SSR (crashes), and the Affizy snippet loads async, so at
+  // first client render getReferral() may not be ready yet. Building meta inside
+  // the handlers (which only run on click, client-side) captures the real code.
+  const buildMeta = (extra: Record<string, string> = {}): Record<string, string> => ({
     slug,
     type,
     isExternal: "true",
-    code: (window as any)?.Affizy?.getReferral() || undefined,
-  };
+    code:
+      typeof window !== "undefined"
+        ? (window as any)?.Affizy?.getReferral() || ""
+        : "",
+    ...extra,
+  });
 
   function handlePromo() {
     if (isNaira) {
-      promptAsyncPay(100000, meta);
+      promptAsyncPay(100000, buildMeta());
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -481,7 +488,7 @@ export function PricingSection({
 
   function handleLifetime() {
     if (isNaira) {
-      promptAsyncPay(250000, meta);
+      promptAsyncPay(250000, buildMeta());
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -496,7 +503,7 @@ export function PricingSection({
     if (isNaira) {
       const amountOrPlan =
         billing === "monthly" ? ASYNCPAY_MONTHLY_ID : ASYNCPAY_YEARLY_ID;
-      promptAsyncPay(amountOrPlan, { ...meta, plan: billing });
+      promptAsyncPay(amountOrPlan, buildMeta({ plan: billing }));
     } else {
       const priceId =
         billing === "monthly" ? PADDLE_MONTHLY_ID : PADDLE_YEARLY_ID;
