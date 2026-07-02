@@ -408,6 +408,7 @@ export function PricingSection({
       NonNullable<typeof paddle.current>["Checkout"]["open"]
     >[0] = {
       items: [{ priceId, quantity: 1 }],
+      customData: { code: (window as any)?.Affizy?.getReferral() || undefined },
     };
     if (discountCode) options.discountCode = discountCode;
     paddle.current?.Checkout.open(options);
@@ -462,6 +463,7 @@ export function PricingSection({
     slug,
     type,
     isExternal: "true",
+    code: (window as any)?.Affizy?.getReferral() || undefined,
   };
 
   function handlePromo() {
