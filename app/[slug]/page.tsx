@@ -261,13 +261,13 @@ export default async function RoadmapDetailRoute({
                       rel: "noopener noreferrer",
                     })}
                   >
-                    {isPromo ? "Claim Limited Offer →" : "Start Path for Free"}
+                    {isPromo ? "Register Now →" : "Start Path for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
                   <CheckCircle className="w-4 h-4 inline mr-2" />
                   {isPromo
-                    ? "Limited time · One payment · Lifetime access"
+                    ? "Exclusive discount through selected creators and partners"
                     : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
@@ -372,7 +372,7 @@ export default async function RoadmapDetailRoute({
                       rel: "noopener noreferrer",
                     })}
                   >
-                    {isPromo ? "Claim This Offer →" : "Start Path for Free"}
+                    {isPromo ? "Register Now →" : "Start Path for Free"}
                   </Link>
                 </Button>
               </div>
@@ -437,7 +437,7 @@ export default async function RoadmapDetailRoute({
                                 rel: "noopener noreferrer",
                               })}
                             >
-                              {isPromo ? "Claim This Offer →" : "Enroll Now"}
+                              {isPromo ? "Register Now →" : "Enroll Now"}
                             </Link>
                           </Button>
                         </div>

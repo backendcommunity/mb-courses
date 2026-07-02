@@ -106,7 +106,7 @@ const AFRICA_CODES = new Set([
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isAfrican(countryCode?: string) {
-  return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
+  return !(!!countryCode && AFRICA_CODES.has(countryCode.toUpperCase()));
 }
 
 function pathFeatures(pathName: string) {
@@ -244,18 +244,27 @@ function PromoCard({
     { val: s, label: "SEC" },
   ];
 
+  const referralCode =
+    typeof window !== "undefined"
+      ? (window as any)?.Affizy?.getReferral() || ""
+      : "";
+
+  const promoPrice = isNaira
+    ? referralCode
+      ? "₦50,000"
+      : "₦100,000"
+    : price.toFixed(2);
+
   return (
     <div className="max-w-[520px] mx-auto w-full">
       <div className="relative bg-[#111A2C] rounded-[2rem] p-10 flex flex-col shadow-2xl border border-[#13AECE]/30 overflow-hidden">
         {/* Background glow */}
         <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#13AECE]/10 blur-3xl pointer-events-none" />
-
         {/* Badge */}
         <div className="flex items-center gap-1.5 w-fit bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-3 py-1.5 rounded-full mb-5">
           <Zap className="w-3 h-3" />
           Limited Time Offer
         </div>
-
         {/* Countdown timer */}
         <div className="flex items-center gap-2 mb-6">
           {segments.map(({ val, label }, i) => (
@@ -283,12 +292,10 @@ function PromoCard({
             in this session
           </p>
         </div>
-
         {/* Path label */}
         <p className="text-[#13AECE] text-[11px] font-bold uppercase tracking-widest mb-2">
           {pathName}
         </p>
-
         <h3 className="text-[26px] font-bold text-white leading-tight mb-3">
           Get lifetime access to this path at a special price
         </h3>
@@ -297,7 +304,6 @@ function PromoCard({
           <span className="text-slate-200 font-medium">{pathName}</span> is
           yours to keep — including all future updates.
         </p>
-
         <ul className="space-y-3 mb-10">
           {features.map((f) => (
             <li key={f} className="flex items-start gap-3">
@@ -308,12 +314,16 @@ function PromoCard({
             </li>
           ))}
         </ul>
-
+        {/* // Your referral code is already applied here */}
+        <p className="text-lg text-slate-500 italic pb-5 border-b border-white/10 mb-7 text-red-400">
+          Your referral code <span className="font-bold">{referralCode}</span>{" "}
+          is already applied!
+        </p>
         <div className="mt-auto">
           <p className="text-[13px] text-slate-500 mb-1">
             Regular price:{" "}
             <span className="line-through">
-              {isNaira ? "₦250,000" : "$150"}
+              {isNaira ? "₦150,000" : "$150"}
             </span>
           </p>
           <div className="flex items-end gap-1 mb-1">
@@ -321,7 +331,7 @@ function PromoCard({
               {isNaira ? "₦" : "$"}
             </span>
             <span className="text-[60px] font-black text-white leading-none tracking-tight">
-              {isNaira ? "100,000" : price.toLocaleString()}
+              {promoPrice}
             </span>
           </div>
           <p className="text-[13px] text-slate-400 mb-7">
@@ -334,7 +344,7 @@ function PromoCard({
             className="w-full bg-[#1EAEDB] hover:bg-[#1a9bc4] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl mb-3 transition-colors shadow-lg shadow-[#1EAEDB]/20 text-[15px] flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {loading ? "Processing..." : "Claim This Offer"}
+            {loading ? "Processing..." : "Register Now →"}
           </button>
 
           <p className="text-[11px] text-center italic text-slate-500">
@@ -462,20 +472,26 @@ export function PricingSection({
   // undefined during SSR (crashes), and the Affizy snippet loads async, so at
   // first client render getReferral() may not be ready yet. Building meta inside
   // the handlers (which only run on click, client-side) captures the real code.
-  const buildMeta = (extra: Record<string, string> = {}): Record<string, string> => ({
+
+  const referralCode =
+    typeof window !== "undefined"
+      ? (window as any)?.Affizy?.getReferral() || ""
+      : "";
+
+  const buildMeta = (
+    extra: Record<string, string> = {},
+  ): Record<string, string> => ({
     slug,
     type,
     isExternal: "true",
-    code:
-      typeof window !== "undefined"
-        ? (window as any)?.Affizy?.getReferral() || ""
-        : "",
+    code: referralCode,
     ...extra,
   });
 
   function handlePromo() {
     if (isNaira) {
-      promptAsyncPay(100000, buildMeta());
+      const amount = referralCode ? 50000 : 100000;
+      promptAsyncPay(amount, buildMeta());
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -488,7 +504,8 @@ export function PricingSection({
 
   function handleLifetime() {
     if (isNaira) {
-      promptAsyncPay(250000, buildMeta());
+      const amount = referralCode ? 150000 : 150000;
+      promptAsyncPay(amount, buildMeta());
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -520,8 +537,8 @@ export function PricingSection({
     : `$${(19.99 * 12 - 199).toFixed(0)}`;
   const subOriginalYearly = isNaira ? "₦180,000" : "$240";
 
-  const lifetimeNowPrice = isNaira ? "₦250,000" : "$150";
-  const lifetimeRegularPrice = isNaira ? "₦250,000" : "$250";
+  const lifetimeNowPrice = isNaira ? "₦100,000" : "$150";
+  const lifetimeRegularPrice = isNaira ? "₦150,000" : "$250";
 
   // ── Promo layout ─────────────────────────────────────────────────────────────
 

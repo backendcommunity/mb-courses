@@ -282,9 +282,7 @@ export default async function CourseDetailRoute({
                       rel: "noopener noreferrer",
                     })}
                   >
-                    {isPromo
-                      ? "Claim Limited Offer →"
-                      : "Start Course for Free"}
+                    {isPromo ? "Register Now →" : "Start Course for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
@@ -383,7 +381,7 @@ export default async function CourseDetailRoute({
                       rel: "noopener noreferrer",
                     })}
                   >
-                    {isPromo ? "Claim This Offer →" : "Start Course for Free"}
+                    {isPromo ? "Register Now →" : "Start Course for Free"}
                   </Link>
                 </Button>
               </div>
@@ -455,7 +453,7 @@ export default async function CourseDetailRoute({
                         rel: "noopener noreferrer",
                       })}
                     >
-                      {isPromo ? "Claim This Offer →" : "Enroll Now"}
+                      {isPromo ? "Register Now →" : "Enroll Now"}
                     </Link>
                   </Button>
                 </div>
