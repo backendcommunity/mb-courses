@@ -468,7 +468,7 @@ export function PricingSection({
 
   function handlePromo() {
     if (isNaira) {
-      promptAsyncPay(50000, meta);
+      promptAsyncPay(100000, meta);
     } else {
       if (!paddlePromoId) {
         window.location.href =
