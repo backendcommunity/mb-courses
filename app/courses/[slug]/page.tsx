@@ -184,8 +184,6 @@ export default async function CourseDetailRoute({
           "Prepare for technical interviews and career advancement",
         ];
 
-  console.log(course); // Debugging line
-
   const tags: string[] = Array.isArray(course.tags)
     ? course.tags
     : course.category
