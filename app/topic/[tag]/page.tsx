@@ -12,8 +12,7 @@ import { CourseCard, TrackCard, type CourseCardData, type TrackCardData } from "
 import {
   buildTopics, findTopic, matchCourses, matchTracks, matchProjects,
   relatedTopics, topicIntro, topicMetaDescription, topicFaqs, emptyCopy,
-  slugify,
-  type RawCourse, type RawRoadmap, type RawProject, type Topic,
+  type RawCourse, type RawRoadmap, type RawProject,
 } from "@/lib/topics";
 
 const API_URL =
