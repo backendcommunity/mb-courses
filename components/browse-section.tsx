@@ -60,6 +60,7 @@ function mapCourse(c: any) {
     chapters: c.chapters?.length || 0,
     banner: c.banner,
     isPremium: c.isPremium,
+    tags: Array.isArray(c.tags) ? c.tags : [],
   };
 }
 

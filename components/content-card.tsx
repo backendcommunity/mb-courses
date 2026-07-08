@@ -5,11 +5,26 @@ import { stripHtml } from "@/lib/utils";
 import { BarChart2, Users, BookOpen, Target, ArrowRight } from "lucide-react";
 
 export interface CourseCardData {
-  slug: string; title: string; level: string; users: number; desc: string;
-  category: string; hours: number; chapters: number; banner?: string; isPremium?: boolean;
+  slug: string;
+  title: string;
+  level: string;
+  users: number;
+  desc: string;
+  category: string;
+  hours: number;
+  chapters: number;
+  banner?: string;
+  isPremium?: boolean;
+  tags?: string[];
 }
 
-export function CourseCard({ course, href }: { course: CourseCardData; href?: string }) {
+export function CourseCard({
+  course,
+  href,
+}: {
+  course: CourseCardData;
+  href?: string;
+}) {
   return (
     <Link href={href ?? `/courses/${course.slug ?? (course as any).id ?? ""}`}>
       <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md cursor-pointer group">
@@ -33,11 +48,19 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
           <p className="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-3 flex-1">
             {course.desc}
           </p>
-          <div className="text-xs text-slate-400">{course.category}</div>
+          <div className="text-xs text-slate-400">
+            <a href={`/topic/${course.category?.toLowerCase()}`}>
+              {course.category}
+            </a>
+          </div>
         </div>
         <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-            <img src="/logo.png" alt="mb" className="w-full h-full object-contain rounded-full" />
+            <img
+              src="/logo.png"
+              alt="mb"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
             <span>{course.hours} hrs</span>
@@ -51,11 +74,23 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
 }
 
 export interface TrackCardData {
-  id: string; slug?: string; title: string; summary?: string; description?: string;
-  banner?: string; totalContent?: number; isWaiting?: boolean;
+  id: string;
+  slug?: string;
+  title: string;
+  summary?: string;
+  description?: string;
+  banner?: string;
+  totalContent?: number;
+  isWaiting?: boolean;
 }
 
-export function TrackCard({ roadmap, href }: { roadmap: TrackCardData; href?: string }) {
+export function TrackCard({
+  roadmap,
+  href,
+}: {
+  roadmap: TrackCardData;
+  href?: string;
+}) {
   return (
     <Link href={href ?? `/${roadmap.slug ?? roadmap.id}`}>
       <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer group">
@@ -84,7 +119,11 @@ export function TrackCard({ roadmap, href }: { roadmap: TrackCardData; href?: st
             {roadmap.title}
           </h4>
           <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 flex-1 mb-4">
-            {stripHtml(roadmap.summary ?? roadmap.description ?? "Comprehensive learning roadmap")}
+            {stripHtml(
+              roadmap.summary ??
+                roadmap.description ??
+                "Comprehensive learning roadmap",
+            )}
           </p>
           <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-400">
             <span className="flex items-center gap-1">

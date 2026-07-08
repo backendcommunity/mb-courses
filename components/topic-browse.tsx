@@ -1,23 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { CourseCard, TrackCard, type CourseCardData, type TrackCardData } from "@/components/content-card";
+import {
+  CourseCard,
+  TrackCard,
+  type CourseCardData,
+  type TrackCardData,
+} from "@/components/content-card";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 
 const LEVELS = ["Basic", "Intermediate", "Advanced"];
 const PER_PAGE = 6;
-const norm = (s?: string) => String(s ?? "").trim().toLowerCase();
+const norm = (s?: string) =>
+  String(s ?? "")
+    .trim()
+    .toLowerCase();
 
 export function TopicBrowse({
-  tagLabel, courses, tracks,
-}: { tagLabel: string; courses: CourseCardData[]; tracks: TrackCardData[] }) {
+  tagLabel,
+  courses,
+  tracks,
+}: {
+  tagLabel: string;
+  courses: CourseCardData[];
+  tracks: TrackCardData[];
+}) {
   const [levels, setLevels] = useState<string[]>([]);
+  const [cats, setCats] = useState<string[]>([]);
   const [minH, setMinH] = useState<number | "">("");
   const [maxH, setMaxH] = useState<number | "">("");
   const [page, setPage] = useState(1);
 
+  const allCategories = [...new Set(courses.map((c) => c.category).filter(Boolean))].sort();
+
   const filtered = courses.filter((c) => {
-    if (levels.length && !levels.some((l) => norm(c.level).startsWith(norm(l)))) return false;
+    if (levels.length && !levels.some((l) => norm(c.level).startsWith(norm(l))))
+      return false;
+    if (cats.length && !cats.some((cat) => norm(c.category) === norm(cat)))
+      return false;
     if (minH !== "" && c.hours < Number(minH)) return false;
     if (maxH !== "" && c.hours > Number(maxH)) return false;
     return true;
@@ -27,7 +47,15 @@ export function TopicBrowse({
   const pageCourses = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const toggleLevel = (l: string) =>
     setLevels((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]));
-  const clear = () => { setLevels([]); setMinH(""); setMaxH(""); setPage(1); };
+  const toggleCat = (c: string) =>
+    setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
+  const clear = () => {
+    setLevels([]);
+    setCats([]);
+    setMinH("");
+    setMaxH("");
+    setPage(1);
+  };
 
   return (
     <section className="bg-[#F8FAFC] text-slate-900 py-16">
@@ -45,14 +73,22 @@ export function TopicBrowse({
             </button>
             <div className="space-y-8 bg-white border border-slate-200 rounded-xl p-5">
               <div>
-                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">Skill Level</h3>
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">
+                  Skill Level
+                </h3>
                 <div className="space-y-3">
                   {LEVELS.map((l) => (
-                    <label key={l} className="flex items-center gap-3 cursor-pointer">
+                    <label
+                      key={l}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={levels.includes(l)}
-                        onChange={() => { toggleLevel(l); setPage(1); }}
+                        onChange={() => {
+                          toggleLevel(l);
+                          setPage(1);
+                        }}
                         className="w-4 h-4 rounded border-slate-300 accent-[#0A101D]"
                       />
                       <span className="text-sm text-slate-600">{l}</span>
@@ -60,19 +96,60 @@ export function TopicBrowse({
                   ))}
                 </div>
               </div>
+              {allCategories.length > 1 && (
+                <>
+                  <hr className="border-slate-100" />
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">
+                      Category
+                    </h3>
+                    <div className="space-y-3">
+                      {allCategories.map((cat) => (
+                        <label key={cat} className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cats.includes(cat)}
+                            onChange={() => { toggleCat(cat); setPage(1); }}
+                            className="w-4 h-4 rounded border-slate-300 accent-[#0A101D]"
+                          />
+                          <span className="text-sm text-slate-600">{cat}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
               <hr className="border-slate-100" />
               <div>
-                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">Duration (hours)</h3>
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-4">
+                  Duration (hours)
+                </h3>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number" min={0} placeholder="min" value={minH}
-                    onChange={(e) => { setMinH(e.target.value === "" ? "" : Number(e.target.value)); setPage(1); }}
+                    type="number"
+                    min={0}
+                    placeholder="min"
+                    value={minH}
+                    onChange={(e) => {
+                      setMinH(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      );
+                      setPage(1);
+                    }}
                     className="w-20 px-2 py-1.5 border border-slate-200 rounded text-sm"
                   />
                   <span className="text-slate-400">–</span>
                   <input
-                    type="number" min={0} placeholder="max" value={maxH}
-                    onChange={(e) => { setMaxH(e.target.value === "" ? "" : Number(e.target.value)); setPage(1); }}
+                    type="number"
+                    min={0}
+                    placeholder="max"
+                    value={maxH}
+                    onChange={(e) => {
+                      setMaxH(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      );
+                      setPage(1);
+                    }}
                     className="w-20 px-2 py-1.5 border border-slate-200 rounded text-sm"
                   />
                 </div>
@@ -83,17 +160,30 @@ export function TopicBrowse({
           <div className="flex-1 min-w-0 space-y-8">
             {tracks.length > 0 && (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {tracks.map((t) => <TrackCard key={t.id} roadmap={t} />)}
+                {tracks.map((t) => (
+                  <TrackCard key={t.id} roadmap={t} />
+                ))}
+              </div>
+            )}
+            {tracks.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-bold text-[#0B152A] uppercase tracking-widest whitespace-nowrap">
+                  All {tagLabel} Courses
+                </span>
+                <hr className="flex-1 border-slate-200" />
               </div>
             )}
             {pageCourses.length === 0 ? (
               <p className="text-center py-12 text-slate-400 text-sm">
-                No {tagLabel} courses match these filters — clear filters to see all.
+                No {tagLabel} courses match these filters — clear filters to see
+                all.
               </p>
             ) : (
               <>
                 <div className="grid md:grid-cols-2 gap-5">
-                  {pageCourses.map((c) => <CourseCard key={c.slug} course={c} />)}
+                  {pageCourses.map((c) => (
+                    <CourseCard key={c.slug} course={c} />
+                  ))}
                 </div>
                 {totalPages > 1 && (
                   <div className="flex items-center justify-center gap-1 mt-8">
@@ -104,18 +194,22 @@ export function TopicBrowse({
                     >
                       <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium ${p === page ? "bg-[#0B152A] text-white" : "text-slate-600 hover:bg-slate-100"}`}
-                      >
-                        {p}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (p) => (
+                        <button
+                          key={p}
+                          onClick={() => setPage(p)}
+                          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium ${p === page ? "bg-[#0B152A] text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                        >
+                          {p}
+                        </button>
+                      ),
+                    )}
                     <button
                       disabled={page === totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       className="flex items-center text-sm font-semibold text-[#13AECE] ml-3 hover:text-[#0f8b9e] disabled:opacity-40"
                     >
                       Next <ChevronRight className="w-4 h-4 ml-1" />
