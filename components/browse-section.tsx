@@ -14,8 +14,6 @@ import {
   ChevronRight,
   SlidersHorizontal,
 } from "lucide-react";
-import Link from "next/link";
-import { RoadmapBanner } from "@/components/roadmap-banner";
 import { CourseCard, TrackCard } from "@/components/content-card";
 
 const API_URL =

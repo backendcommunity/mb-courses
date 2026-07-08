@@ -11,7 +11,7 @@ export interface CourseCardData {
 
 export function CourseCard({ course, href }: { course: CourseCardData; href?: string }) {
   return (
-    <Link href={href ?? `/courses/${course.slug}`}>
+    <Link href={href ?? `/courses/${course.slug ?? (course as any).id ?? ""}`}>
       <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md cursor-pointer group">
         <div className="p-6 flex-1 flex flex-col">
           <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
