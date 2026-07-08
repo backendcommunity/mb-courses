@@ -20,6 +20,7 @@ import type { ProcessedContentItem } from "@/components/content-list";
 import { PricingSection } from "@/components/pricing-section";
 import { FAQSection } from "@/components/faq-section";
 import { CertificatePreview } from "@/components/certificate-preview";
+import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
 
@@ -273,12 +274,13 @@ export default async function RoadmapDetailRoute({
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {tags.map((tag: string, i: number) => (
-                  <span
+                  <Link
                     key={i}
-                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50"
+                    href={`/topic/${slugify(tag)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
                 {(roadmap.timeframe || roadmap.estimatedTime) && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
@@ -531,6 +533,32 @@ export default async function RoadmapDetailRoute({
                         <dt className="text-slate-500">Duration</dt>
                         <dd className="font-medium text-slate-800">
                           {roadmap.timeframe || roadmap.estimatedTime}
+                        </dd>
+                      </div>
+                    )}
+                    {roadmap.category && (
+                      <div className="flex justify-between">
+                        <dt className="text-slate-500">Category</dt>
+                        <dd className="font-medium text-slate-800">
+                          <Link href={`/topic/${slugify(roadmap.category)}`} className="text-[#13AECE] hover:underline">
+                            {roadmap.category}
+                          </Link>
+                        </dd>
+                      </div>
+                    )}
+                    {tags.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <dt className="text-slate-500">Tags</dt>
+                        <dd className="flex flex-wrap gap-1.5">
+                          {tags.map((tag: string, i: number) => (
+                            <Link
+                              key={i}
+                              href={`/topic/${slugify(tag)}`}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-[#13AECE]/10 hover:text-[#13AECE] transition-colors"
+                            >
+                              {tag}
+                            </Link>
+                          ))}
                         </dd>
                       </div>
                     )}

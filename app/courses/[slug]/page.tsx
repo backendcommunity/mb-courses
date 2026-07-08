@@ -18,6 +18,7 @@ import { ChapterCard } from "@/components/chapter-card";
 import type { ProcessedChapter } from "@/components/chapter-card";
 import { FAQSection } from "@/components/faq-section";
 import { CertificatePreview } from "@/components/certificate-preview";
+import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
 
@@ -183,6 +184,8 @@ export default async function CourseDetailRoute({
           "Prepare for technical interviews and career advancement",
         ];
 
+  console.log(course); // Debugging line
+
   const tags: string[] = Array.isArray(course.tags)
     ? course.tags
     : course.category
@@ -293,13 +296,22 @@ export default async function CourseDetailRoute({
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {course.category && (
+                  <Link
+                    href={`/topic/${slugify(course.category)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
+                  >
+                    {course.category}
+                  </Link>
+                )}
                 {tags.map((tag: string, i: number) => (
-                  <span
+                  <Link
                     key={i}
-                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50"
+                    href={`/topic/${slugify(tag)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
                 {(course.totalDuration || course.duration) && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
@@ -556,6 +568,35 @@ export default async function CourseDetailRoute({
                         <dt className="text-slate-500">Students</dt>
                         <dd className="font-medium text-slate-800">
                           {Number(course.totalStudents).toLocaleString()}
+                        </dd>
+                      </div>
+                    )}
+                    {course.category && (
+                      <div className="flex justify-between">
+                        <dt className="text-slate-500">Category</dt>
+                        <dd className="font-medium text-slate-800">
+                          <Link
+                            href={`/topic/${slugify(course.category)}`}
+                            className="text-[#13AECE] hover:underline"
+                          >
+                            {course.category}
+                          </Link>
+                        </dd>
+                      </div>
+                    )}
+                    {tags.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <dt className="text-slate-500">Tags</dt>
+                        <dd className="flex flex-wrap gap-1.5">
+                          {tags.map((tag: string, i: number) => (
+                            <Link
+                              key={i}
+                              href={`/topic/${slugify(tag)}`}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-[#13AECE]/10 hover:text-[#13AECE] transition-colors"
+                            >
+                              {tag}
+                            </Link>
+                          ))}
                         </dd>
                       </div>
                     )}
