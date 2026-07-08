@@ -5,22 +5,18 @@ import { Button } from "@/components/ui/button";
 import { stripHtml } from "@/lib/utils";
 import {
   BookOpen,
-  Code,
-  ArrowRight,
   Target,
   Search,
   X,
   ChevronDown,
   ChevronUp,
-  BarChart2,
   ChevronLeft,
   ChevronRight,
-  Users,
-  Layers,
   SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { RoadmapBanner } from "@/components/roadmap-banner";
+import { CourseCard, TrackCard } from "@/components/content-card";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://demo.masteringbackend.com/api/v3";
@@ -508,65 +504,7 @@ export function BrowseSection({
                 <>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {paginatedRoadmaps.map((roadmap: any) => (
-                      <Link
-                        href={`/${roadmap.slug ?? roadmap.id}`}
-                        key={roadmap.id}
-                      >
-                        <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer group">
-                          <div className="relative h-44 overflow-hidden bg-slate-100">
-                            {roadmap.banner ? (
-                              <img
-                                src={roadmap.banner}
-                                alt={roadmap.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0e2036] to-[#13AECE]/30">
-                                <Target className="w-12 h-12 text-white/30" />
-                              </div>
-                            )}
-                            {/* <div className="absolute top-3 left-3">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#13AECE] text-white text-[10px] font-bold tracking-wide uppercase">
-                                <Layers className="w-3 h-3" />
-                                Roadmap
-                              </span>
-                            </div> */}
-                            {/* {roadmap.isPremium && (
-                              <div className="absolute top-3 right-3">
-                                <span className="px-2 py-1 rounded-md bg-[#A855F7] text-white text-[10px] font-bold tracking-wide uppercase">
-                                  Premium
-                                </span>
-                              </div>
-                            )} */}
-                            {roadmap.isWaiting && (
-                              <div className="absolute top-3 right-3">
-                                <span className="px-2 py-1 rounded-md bg-amber-500 text-white text-[10px] font-bold tracking-wide uppercase">
-                                  Coming Soon
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-5 flex-1 flex flex-col">
-                            <h4 className="text-base font-bold text-[#0B152A] mb-2 leading-tight group-hover:text-[#13AECE] transition-colors line-clamp-2">
-                              {roadmap.title}
-                            </h4>
-                            <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 flex-1 mb-4">
-                              {stripHtml(
-                                roadmap.summary ??
-                                  roadmap.description ??
-                                  "Comprehensive learning roadmap",
-                              )}
-                            </p>
-                            <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <BookOpen className="w-3.5 h-3.5" />
-                                {roadmap.totalContent ?? 0} courses
-                              </span>
-                              <ArrowRight className="w-4 h-4 text-[#13AECE] group-hover:translate-x-1 transition-transform" />
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
+                      <TrackCard key={roadmap.id} roadmap={roadmap} />
                     ))}
                   </div>
                   <PaginationBar
@@ -625,52 +563,7 @@ export function BrowseSection({
                 <>
                   <div className="grid md:grid-cols-2 gap-5">
                     {paginatedCourses.map((course: any, idx: number) => (
-                      <Link
-                        href={`/courses/${course.slug ?? course.id}`}
-                        key={course.id ?? idx}
-                      >
-                        <div className="bg-white h-full rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-shadow hover:shadow-md cursor-pointer group">
-                          <div className="p-6 flex-1 flex flex-col">
-                            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
-                              Course
-                            </span>
-                            <h4 className="text-xl font-bold text-[#0B152A] mb-3 leading-tight group-hover:text-[#13AECE] transition-colors line-clamp-2">
-                              {course.title}
-                            </h4>
-                            <div className="flex items-center gap-4 mb-4">
-                              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                                <BarChart2 className="w-4 h-4" />
-                                {course.level}
-                              </div>
-                              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                                <Users className="w-4 h-4" />
-                                {course.users?.toLocaleString?.() ??
-                                  course.users}
-                              </div>
-                            </div>
-                            <p className="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-3 flex-1">
-                              {course.desc}
-                            </p>
-                            <div className="text-xs text-slate-400">
-                              {course.category}
-                            </div>
-                          </div>
-                          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                              <img
-                                src="/logo.png"
-                                alt="mb"
-                                className="w-full h-full object-contain rounded-full"
-                              />
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                              <span>{course.hours} hrs</span>
-                              <span className="text-slate-300">|</span>
-                              <span>{course.chapters ?? 0} chapters</span>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
+                      <CourseCard key={course.id ?? idx} course={course} />
                     ))}
                   </div>
                   <PaginationBar
