@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Loader2, X, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
+import { isAfrican } from "@/lib/geo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,70 +45,7 @@ const SUBSCRIPTION_FEATURES = [
   "Cancel anytime — no lock-in",
 ];
 
-// All African ISO 3166-1 alpha-2 country codes
-const AFRICA_CODES = new Set([
-  "NG",
-  "GH",
-  "KE",
-  "ZA",
-  "ET",
-  "EG",
-  "TZ",
-  "UG",
-  "CM",
-  "SN",
-  "RW",
-  "CI",
-  "AO",
-  "MZ",
-  "MG",
-  "BF",
-  "ML",
-  "MW",
-  "NE",
-  "ZM",
-  "TD",
-  "SO",
-  "ZW",
-  "GN",
-  "SS",
-  "BJ",
-  "TN",
-  "BI",
-  "SL",
-  "TG",
-  "LY",
-  "ER",
-  "MR",
-  "CF",
-  "NA",
-  "GM",
-  "BW",
-  "LS",
-  "GW",
-  "LR",
-  "SZ",
-  "DJ",
-  "KM",
-  "CV",
-  "ST",
-  "SC",
-  "MU",
-  "RE",
-  "YT",
-  "EH",
-  "SD",
-  "CG",
-  "CD",
-  "GQ",
-  "GA",
-]);
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function isAfrican(countryCode?: string) {
-  return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
-}
 
 function pathFeatures(pathName: string) {
   return [
