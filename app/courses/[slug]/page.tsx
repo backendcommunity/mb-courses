@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -21,6 +22,10 @@ import { CertificatePreview } from "@/components/certificate-preview";
 import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
+import { TrustStrip } from "@/components/trust-strip";
+import { CurriculumSection } from "@/components/curriculum-section";
+import { HeroPrice } from "@/components/hero-price";
+import { PricingSection } from "@/components/pricing-section";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -37,6 +42,20 @@ function stripHtml(html?: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function resolveCountryCode(
+  h: Awaited<ReturnType<typeof headers>>,
+): string | undefined {
+  return (
+    (h.get("x-vercel-ip-country") ||
+      h.get("cf-ipcountry") ||
+      h.get("cloudfront-viewer-country") ||
+      h.get("x-country-code") ||
+      h.get("x-country") ||
+      undefined) ??
+    undefined
+  );
 }
 
 async function getCourse(slug: string) {
@@ -117,6 +136,8 @@ export default async function CourseDetailRoute({
   const { slug } = await params;
   const sp = await searchParams;
   const isPromo = sp.mode === "promo";
+  const headersList = await headers();
+  const detectedCountry = resolveCountryCode(headersList);
   const course = await getCourse(slug);
 
   if (!course) notFound();
@@ -271,6 +292,7 @@ export default async function CourseDetailRoute({
                       200,
                     )}
               </p>
+              {isPromo && <HeroPrice detectedCountry={detectedCountry} />}
               <div className="mb-10">
                 <Button
                   className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
@@ -344,21 +366,7 @@ export default async function CourseDetailRoute({
           </div>
         </section>
 
-        {/* Social proof strip */}
-        <section className="relative z-10 border-t border-white/5 py-8">
-          <div className="container mx-auto px-6">
-            <p className="text-slate-400 text-sm mb-6">
-              Loved by learners at thousands of companies
-            </p>
-            <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
-              <div className="text-xl font-bold">Razorpay</div>
-              <div className="text-xl font-bold">Salesforce</div>
-              <div className="text-xl font-black tracking-widest">Amazon</div>
-              <div className="text-xl font-bold">Protocloud</div>
-              <div className="text-xl font-bold">SentinelOne</div>
-            </div>
-          </div>
-        </section>
+        <TrustStrip studentCount={course.students} />
       </div>
 
       {/* ── Main content ── */}
@@ -422,10 +430,10 @@ export default async function CourseDetailRoute({
 
               {/* Course content (chapters, client) */}
               {chapters.length > 0 && (
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6">
-                    Course Content
-                  </h3>
+                <CurriculumSection
+                  heading="Course Content"
+                  meta={`${chapters.length} chapters · ${totalVideos} videos · ${totalQuizzes} quizzes`}
+                >
                   <div className="space-y-4">
                     {chapters.map((chapter) => (
                       <ChapterCard
@@ -435,7 +443,7 @@ export default async function CourseDetailRoute({
                       />
                     ))}
                   </div>
-                </div>
+                </CurriculumSection>
               )}
 
               {/* Certificate banner */}
@@ -536,7 +544,7 @@ export default async function CourseDetailRoute({
               {(levelLabel ||
                 course.totalDuration ||
                 course.duration ||
-                course.totalStudents) && (
+                course.students) && (
                 <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart2 className="w-5 h-5 text-slate-700" />
@@ -561,11 +569,11 @@ export default async function CourseDetailRoute({
                         </dd>
                       </div>
                     )}
-                    {course.totalStudents > 0 && (
+                    {course.students > 0 && (
                       <div className="flex justify-between">
                         <dt className="text-slate-500">Students</dt>
                         <dd className="font-medium text-slate-800">
-                          {Number(course.totalStudents).toLocaleString()}
+                          {Number(course.students).toLocaleString()}
                         </dd>
                       </div>
                     )}
@@ -607,7 +615,15 @@ export default async function CourseDetailRoute({
       </section>
 
       {/* ── Pricing (client — has toggle) ── */}
-      {/* <PricingSection coursePrice={coursePrice} courseTitle={course.title} slug={course.slug}  type="roadmap" courseAppUrl={courseAppUrl} /> */}
+      <PricingSection
+        coursePrice={coursePrice}
+        courseTitle={course.title}
+        slug={course.slug ?? slug}
+        type="course"
+        courseAppUrl={courseAppUrl}
+        detectedCountry={detectedCountry}
+        paddlePromoId={course.paddle_price_id ?? undefined}
+      />
 
       <Testimonials />
 
