@@ -5,6 +5,8 @@ import { Check, Loader2, X, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { isAfrican } from "@/lib/geo";
+import { useReferralCode } from "@/components/use-referral-code";
+import { getPromoPricing } from "@/lib/promo-pricing";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -182,16 +184,12 @@ function PromoCard({
     { val: s, label: "SEC" },
   ];
 
-  const referralCode =
-    typeof window !== "undefined"
-      ? (window as any)?.Affizy?.getReferral() || ""
-      : "";
-
-  const promoPrice = isNaira
-    ? referralCode
-      ? "₦50,000"
-      : "₦100,000"
-    : price.toFixed(2);
+  const { referralCode, ready: referralReady } = useReferralCode();
+  const pricing = getPromoPricing({
+    isNaira,
+    hasReferral: !!referralCode,
+    usdPromoPrice: price,
+  });
 
   return (
     <div className="max-w-[520px] mx-auto w-full">
@@ -252,24 +250,22 @@ function PromoCard({
             </li>
           ))}
         </ul>
-        {/* // Your referral code is already applied here */}
-        <p className="text-lg text-slate-500 italic pb-5 border-b border-white/10 mb-7 text-red-400">
-          Your referral code <span className="font-bold">{referralCode}</span>{" "}
-          is already applied!
-        </p>
+        {referralReady && referralCode && (
+          <p className="text-lg text-slate-500 italic pb-5 border-b border-white/10 mb-7 text-red-400">
+            Your referral code <span className="font-bold">{referralCode}</span>{" "}
+            is already applied!
+          </p>
+        )}
         <div className="mt-auto">
           <p className="text-[13px] text-slate-500 mb-1">
-            Regular price:{" "}
-            <span className="line-through">
-              {isNaira ? "₦150,000" : "$150"}
-            </span>
+            Regular price: <span className="line-through">{pricing.regular}</span>
           </p>
           <div className="flex items-end gap-1 mb-1">
             <span className="text-2xl font-bold text-white self-start mt-2">
-              {isNaira ? "₦" : "$"}
+              {pricing.currencySymbol}
             </span>
             <span className="text-[60px] font-black text-white leading-none tracking-tight">
-              {promoPrice}
+              {pricing.discounted}
             </span>
           </div>
           <p className="text-[13px] text-slate-400 mb-7">
