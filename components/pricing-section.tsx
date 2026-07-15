@@ -418,7 +418,7 @@ export function PricingSection({
   function handlePromo() {
     if (isNaira) {
       const amount = referralCode ? 50000 : 100000;
-      promptAsyncPay(amount, buildMeta());
+      promptAsyncPay(amount, buildMeta({ flow: "promo" }));
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -432,7 +432,7 @@ export function PricingSection({
   function handleLifetime() {
     if (isNaira) {
       const amount = referralCode ? 150000 : 150000;
-      promptAsyncPay(amount, buildMeta());
+      promptAsyncPay(amount, buildMeta({ flow: "lifetime" }));
     } else {
       if (!paddlePromoId) {
         window.location.href =
