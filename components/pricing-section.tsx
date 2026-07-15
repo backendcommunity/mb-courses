@@ -320,6 +320,8 @@ export function PricingSection({
 
   const paddle = useRef<Paddle | null>(null);
 
+  const { referralCode } = useReferralCode();
+
   // ── Paddle init ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -402,15 +404,6 @@ export function PricingSection({
   }
 
   // ── Payment handlers ─────────────────────────────────────────────────────────
-  // Read the affiliate referral at pay time, not during render: `window` is
-  // undefined during SSR (crashes), and the Affizy snippet loads async, so at
-  // first client render getReferral() may not be ready yet. Building meta inside
-  // the handlers (which only run on click, client-side) captures the real code.
-
-  const referralCode =
-    typeof window !== "undefined"
-      ? (window as any)?.Affizy?.getReferral() || ""
-      : "";
 
   const buildMeta = (
     extra: Record<string, string> = {},
