@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Loader2, X, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
+import { isAfrican } from "@/lib/geo";
+import { useReferralCode } from "@/components/use-referral-code";
+import { getPromoPricing } from "@/lib/promo-pricing";
+import { CountdownBadge } from "@/components/countdown-badge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,70 +48,7 @@ const SUBSCRIPTION_FEATURES = [
   "Cancel anytime — no lock-in",
 ];
 
-// All African ISO 3166-1 alpha-2 country codes
-const AFRICA_CODES = new Set([
-  "NG",
-  "GH",
-  "KE",
-  "ZA",
-  "ET",
-  "EG",
-  "TZ",
-  "UG",
-  "CM",
-  "SN",
-  "RW",
-  "CI",
-  "AO",
-  "MZ",
-  "MG",
-  "BF",
-  "ML",
-  "MW",
-  "NE",
-  "ZM",
-  "TD",
-  "SO",
-  "ZW",
-  "GN",
-  "SS",
-  "BJ",
-  "TN",
-  "BI",
-  "SL",
-  "TG",
-  "LY",
-  "ER",
-  "MR",
-  "CF",
-  "NA",
-  "GM",
-  "BW",
-  "LS",
-  "GW",
-  "LR",
-  "SZ",
-  "DJ",
-  "KM",
-  "CV",
-  "ST",
-  "SC",
-  "MU",
-  "RE",
-  "YT",
-  "EH",
-  "SD",
-  "CG",
-  "CD",
-  "GQ",
-  "GA",
-]);
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function isAfrican(countryCode?: string) {
-  return !!countryCode && AFRICA_CODES.has(countryCode.toUpperCase());
-}
 
 function pathFeatures(pathName: string) {
   return [
@@ -121,28 +62,6 @@ function pathFeatures(pathName: string) {
 
 function isDev() {
   return process.env.NODE_ENV !== "production";
-}
-
-// ─── Countdown hook ───────────────────────────────────────────────────────────
-
-function useCountdown(seconds: number) {
-  const [remaining, setRemaining] = useState(seconds);
-  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    ref.current = setInterval(() => {
-      setRemaining((s) => (s <= 1 ? seconds : s - 1));
-    }, 1000);
-    return () => {
-      if (ref.current) clearInterval(ref.current);
-    };
-  }, [seconds]);
-
-  return {
-    h: String(Math.floor(remaining / 3600)).padStart(2, "0"),
-    m: String(Math.floor((remaining % 3600) / 60)).padStart(2, "0"),
-    s: String(remaining % 60).padStart(2, "0"),
-  };
 }
 
 // ─── Email modal (AsyncPay only) ──────────────────────────────────────────────
@@ -236,24 +155,14 @@ function PromoCard({
   onClaim: () => void;
 }) {
   const pathName = courseTitle || "this learning path";
-  const { h, m, s } = useCountdown(4 * 60 * 60);
   const features = pathFeatures(pathName);
-  const segments = [
-    { val: h, label: "HRS" },
-    { val: m, label: "MIN" },
-    { val: s, label: "SEC" },
-  ];
 
-  const referralCode =
-    typeof window !== "undefined"
-      ? (window as any)?.Affizy?.getReferral() || ""
-      : "";
-
-  const promoPrice = isNaira
-    ? referralCode
-      ? "₦50,000"
-      : "₦100,000"
-    : price.toFixed(2);
+  const { referralCode, ready: referralReady } = useReferralCode();
+  const pricing = getPromoPricing({
+    isNaira,
+    hasReferral: !!referralCode,
+    usdPromoPrice: price,
+  });
 
   return (
     <div className="max-w-[520px] mx-auto w-full">
@@ -266,31 +175,8 @@ function PromoCard({
           Limited Time Offer
         </div>
         {/* Countdown timer */}
-        <div className="flex items-center gap-2 mb-6">
-          {segments.map(({ val, label }, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <div className="flex flex-col items-center">
-                <div className="bg-white/[0.07] border border-white/10 rounded-lg px-3 py-2 min-w-[52px] text-center">
-                  <span className="text-[28px] font-black text-white leading-none tabular-nums font-mono">
-                    {val}
-                  </span>
-                </div>
-                <span className="text-[9px] font-bold text-slate-500 tracking-widest mt-1">
-                  {label}
-                </span>
-              </div>
-              {i < 2 && (
-                <span className="text-[22px] font-black text-[#13AECE] leading-none mb-4">
-                  :
-                </span>
-              )}
-            </div>
-          ))}
-          <p className="text-slate-400 text-[12px] leading-tight ml-1 self-start mt-1">
-            Offer ends
-            <br />
-            in this session
-          </p>
+        <div className="mb-6">
+          <CountdownBadge variant="full" />
         </div>
         {/* Path label */}
         <p className="text-[#13AECE] text-[11px] font-bold uppercase tracking-widest mb-2">
@@ -314,24 +200,22 @@ function PromoCard({
             </li>
           ))}
         </ul>
-        {/* // Your referral code is already applied here */}
-        <p className="text-lg text-slate-500 italic pb-5 border-b border-white/10 mb-7 text-red-400">
-          Your referral code <span className="font-bold">{referralCode}</span>{" "}
-          is already applied!
-        </p>
+        {referralReady && referralCode && (
+          <p className="text-lg text-slate-500 italic pb-5 border-b border-white/10 mb-7 text-red-400">
+            Your referral code <span className="font-bold">{referralCode}</span>{" "}
+            is already applied!
+          </p>
+        )}
         <div className="mt-auto">
           <p className="text-[13px] text-slate-500 mb-1">
-            Regular price:{" "}
-            <span className="line-through">
-              {isNaira ? "₦150,000" : "$150"}
-            </span>
+            Regular price: <span className="line-through">{pricing.regular}</span>
           </p>
           <div className="flex items-end gap-1 mb-1">
             <span className="text-2xl font-bold text-white self-start mt-2">
-              {isNaira ? "₦" : "$"}
+              {pricing.currencySymbol}
             </span>
             <span className="text-[60px] font-black text-white leading-none tracking-tight">
-              {promoPrice}
+              {pricing.discounted}
             </span>
           </div>
           <p className="text-[13px] text-slate-400 mb-7">
@@ -385,6 +269,8 @@ export function PricingSection({
   >(null);
 
   const paddle = useRef<Paddle | null>(null);
+
+  const { referralCode } = useReferralCode();
 
   // ── Paddle init ──────────────────────────────────────────────────────────────
 
@@ -468,15 +354,6 @@ export function PricingSection({
   }
 
   // ── Payment handlers ─────────────────────────────────────────────────────────
-  // Read the affiliate referral at pay time, not during render: `window` is
-  // undefined during SSR (crashes), and the Affizy snippet loads async, so at
-  // first client render getReferral() may not be ready yet. Building meta inside
-  // the handlers (which only run on click, client-side) captures the real code.
-
-  const referralCode =
-    typeof window !== "undefined"
-      ? (window as any)?.Affizy?.getReferral() || ""
-      : "";
 
   const buildMeta = (
     extra: Record<string, string> = {},
@@ -491,7 +368,7 @@ export function PricingSection({
   function handlePromo() {
     if (isNaira) {
       const amount = referralCode ? 50000 : 100000;
-      promptAsyncPay(amount, buildMeta());
+      promptAsyncPay(amount, buildMeta({ flow: "promo" }));
     } else {
       if (!paddlePromoId) {
         window.location.href =
@@ -505,7 +382,7 @@ export function PricingSection({
   function handleLifetime() {
     if (isNaira) {
       const amount = referralCode ? 150000 : 150000;
-      promptAsyncPay(amount, buildMeta());
+      promptAsyncPay(amount, buildMeta({ flow: "lifetime" }));
     } else {
       if (!paddlePromoId) {
         window.location.href =

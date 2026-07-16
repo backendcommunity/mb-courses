@@ -23,6 +23,10 @@ import { CertificatePreview } from "@/components/certificate-preview";
 import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
+import { TrustStrip } from "@/components/trust-strip";
+import { CurriculumSection } from "@/components/curriculum-section";
+import { HeroPrice } from "@/components/hero-price";
+import { HeroTestimonial } from "@/components/hero-testimonial";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -231,7 +235,7 @@ export default async function RoadmapDetailRoute({
           }}
         />
 
-        <Header />
+        {!isPromo && <Header />}
 
         <section className="relative z-10 container mx-auto px-6 pt-12 pb-24 md:pt-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
@@ -250,6 +254,7 @@ export default async function RoadmapDetailRoute({
                       200,
                     )}
               </p>
+              {isPromo && <HeroPrice detectedCountry={detectedCountry} />}
               <div className="mb-10">
                 <Button
                   className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
@@ -272,6 +277,11 @@ export default async function RoadmapDetailRoute({
                     : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
+              {isPromo && (
+                <div className="mb-10">
+                  <HeroTestimonial />
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-3">
                 {tags.map((tag: string, i: number) => (
                   <Link
@@ -330,20 +340,24 @@ export default async function RoadmapDetailRoute({
           </div>
         </section>
 
-        <section className="relative z-10 border-t border-white/5 py-8">
-          <div className="container mx-auto px-6">
-            <p className="text-slate-400 text-sm mb-6">
-              Loved by learners at thousands of companies
-            </p>
-            <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
-              <div className="text-xl font-bold">Razorpay</div>
-              <div className="text-xl font-bold">Salesforce</div>
-              <div className="text-xl font-black tracking-widest">Amazon</div>
-              <div className="text-xl font-bold">Protocloud</div>
-              <div className="text-xl font-bold">SentinelOne</div>
+        {isPromo ? (
+          <TrustStrip studentCount={roadmap.students} />
+        ) : (
+          <section className="relative z-10 border-t border-white/5 py-8">
+            <div className="container mx-auto px-6">
+              <p className="text-slate-400 text-sm mb-6">
+                Loved by learners at thousands of companies
+              </p>
+              <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
+                <div className="text-xl font-bold">Razorpay</div>
+                <div className="text-xl font-bold">Salesforce</div>
+                <div className="text-xl font-black tracking-widest">Amazon</div>
+                <div className="text-xl font-bold">Protocloud</div>
+                <div className="text-xl font-bold">SentinelOne</div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
 
       <section className="bg-[#f8fafc] text-slate-900 py-16">
@@ -404,12 +418,34 @@ export default async function RoadmapDetailRoute({
 
               {contentItems.length > 0 && (
                 <div>
-                  <ContentList
-                    items={contentItems}
-                    roadmapAppUrl={roadmapAppUrl}
-                  />
+                  {isPromo ? (
+                    <>
+                      <div className="mb-4">
+                        <ContentList
+                          items={contentItems.slice(0, 1)}
+                          roadmapAppUrl={roadmapAppUrl}
+                          hideTerminal
+                        />
+                      </div>
+                      <CurriculumSection
+                        heading="Course Content"
+                        meta={`${contentItems.length} items · ${totalCourses} courses`}
+                        modalSubtitle="Complete all items to earn your certificate"
+                      >
+                        <ContentList
+                          items={contentItems}
+                          roadmapAppUrl={roadmapAppUrl}
+                        />
+                      </CurriculumSection>
+                    </>
+                  ) : (
+                    <ContentList
+                      items={contentItems}
+                      roadmapAppUrl={roadmapAppUrl}
+                    />
+                  )}
 
-                  <div className="flex gap-4 items-stretch mt-0">
+                  <div className={`flex gap-4 items-stretch ${isPromo ? "mt-6" : "mt-0"}`}>
                     <div className="flex flex-col items-center shrink-0 w-[28px]">
                       <div className="w-px flex-1 bg-[#13AECE]" />
                     </div>
