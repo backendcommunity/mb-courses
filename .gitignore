@@ -30,3 +30,5 @@ next-env.d.ts
 .env.sentry-build-plugin
 .gstack/
 docs/
+
+.claude/
