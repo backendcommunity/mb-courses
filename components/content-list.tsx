@@ -132,7 +132,7 @@ export function ContentList({
                       <h4
                         className={`font-bold text-[14px] leading-snug transition-colors ${isOpen ? "text-[#13AECE]" : "text-slate-800"}`}
                       >
-                        {item.title ?? item.name}
+                        {item.title}
                       </h4>
                     </div>
                   </div>
@@ -161,7 +161,9 @@ export function ContentList({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#13AECE] hover:text-[#1a9bc4] transition-colors"
                     >
-                      Start {label.charAt(0) + label.slice(1).toLowerCase()}
+                      {item.type === "resource"
+                        ? "Open Resource"
+                        : `Start ${label.charAt(0) + label.slice(1).toLowerCase()}`}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
                   </div>

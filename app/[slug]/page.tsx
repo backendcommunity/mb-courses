@@ -20,8 +20,12 @@ import type { ProcessedContentItem } from "@/components/content-list";
 import { PricingSection } from "@/components/pricing-section";
 import { FAQSection } from "@/components/faq-section";
 import { CertificatePreview } from "@/components/certificate-preview";
+import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
+import { TrustStrip } from "@/components/trust-strip";
+import { CurriculumSection } from "@/components/curriculum-section";
+import { HeroPrice } from "@/components/hero-price";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -119,10 +123,19 @@ export async function generateMetadata({
 
 export default async function RoadmapDetailRoute({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    mode?: string;
+    price?: string;
+    coupon?: string;
+    country?: string;
+  }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const isPromo = sp.mode === "promo";
   const headersList = await headers();
   const detectedCountry = resolveCountryCode(headersList);
 
@@ -137,10 +150,11 @@ export default async function RoadmapDetailRoute({
   const contentItems: ProcessedContentItem[] = rawContents.map(
     (c: any, i: number) => ({
       num: i + 1,
-      title: c.title || "",
+      title: c.title || c.name || "",
       type: c.type || "course",
       slug: c.slug || undefined,
-      summary: stripHtml(c.summary || c.description || "") || undefined,
+      summary:
+        stripHtml(c.summary || c.description || c.content || "") || undefined,
       stageNum: c.topicNumber ?? 1,
       stageTitle: c.topicTitle ?? "",
     }),
@@ -226,43 +240,51 @@ export default async function RoadmapDetailRoute({
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <div className="text-[#13AECE] font-bold tracking-widest text-sm uppercase mb-3">
-                LEARNING PATH
+                {isPromo ? "⚡ LIMITED OFFER" : "LEARNING PATH"}
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-4">
                 {roadmap.title}
               </h1>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-                {stripHtml(roadmap.summary || roadmap.description).slice(
-                  0,
-                  200,
-                )}
+                {isPromo
+                  ? `Get lifetime access to ${roadmap.title} at a special one-time price. No subscription. No recurring fees. Yours forever.`
+                  : stripHtml(roadmap.summary || roadmap.description).slice(
+                      0,
+                      200,
+                    )}
               </p>
+              {isPromo && <HeroPrice detectedCountry={detectedCountry} />}
               <div className="mb-10">
                 <Button
                   className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
                   asChild
                 >
                   <Link
-                    href={roadmapAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={isPromo ? "#pricing" : roadmapAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
                   >
-                    Start Path for Free
+                    {isPromo ? "Register Now →" : "Start Path for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
                   <CheckCircle className="w-4 h-4 inline mr-2" />
-                  Included with Pro, Enterprise, or One-time payment
+                  {isPromo
+                    ? "Exclusive discount through selected creators and partners"
+                    : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {tags.map((tag: string, i: number) => (
-                  <span
+                  <Link
                     key={i}
-                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50"
+                    href={`/topic/${slugify(tag)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
                 {(roadmap.timeframe || roadmap.estimatedTime) && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
@@ -312,20 +334,7 @@ export default async function RoadmapDetailRoute({
           </div>
         </section>
 
-        <section className="relative z-10 border-t border-white/5 py-8">
-          <div className="container mx-auto px-6">
-            <p className="text-slate-400 text-sm mb-6">
-              Loved by learners at thousands of companies
-            </p>
-            <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
-              <div className="text-xl font-bold">Razorpay</div>
-              <div className="text-xl font-bold">Salesforce</div>
-              <div className="text-xl font-black tracking-widest">Amazon</div>
-              <div className="text-xl font-bold">Protocloud</div>
-              <div className="text-xl font-bold">SentinelOne</div>
-            </div>
-          </div>
-        </section>
+        <TrustStrip studentCount={roadmap.students} />
       </div>
 
       <section className="bg-[#f8fafc] text-slate-900 py-16">
@@ -337,20 +346,26 @@ export default async function RoadmapDetailRoute({
                 <DescriptionSection fullText={fullDescription} />
               )}
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div
+                className={`bg-white border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 ${isPromo ? "border-[#13AECE]/30 bg-[#13AECE]/5" : "border-slate-100"}`}
+              >
                 <h3 className="text-xl font-bold text-slate-800">
-                  Ready to start your journey?
+                  {isPromo
+                    ? "⚡ Limited offer — grab it before it expires"
+                    : "Ready to start your journey?"}
                 </h3>
                 <Button
-                  className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 px-8 rounded-md w-full sm:w-auto"
+                  className={`text-white border-0 px-8 rounded-md w-full sm:w-auto ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                   asChild
                 >
                   <Link
-                    href={roadmapAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={isPromo ? "#pricing" : roadmapAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
                   >
-                    Start Path for Free
+                    {isPromo ? "Register Now →" : "Start Path for Free"}
                   </Link>
                 </Button>
               </div>
@@ -380,12 +395,18 @@ export default async function RoadmapDetailRoute({
 
               {contentItems.length > 0 && (
                 <div>
-                  <ContentList
-                    items={contentItems}
-                    roadmapAppUrl={roadmapAppUrl}
-                  />
+                  <CurriculumSection
+                    heading="Course Content"
+                    meta={`${contentItems.length} items · ${totalCourses} courses`}
+                    modalSubtitle="Complete all items to earn your certificate"
+                  >
+                    <ContentList
+                      items={contentItems}
+                      roadmapAppUrl={roadmapAppUrl}
+                    />
+                  </CurriculumSection>
 
-                  <div className="flex gap-4 items-stretch mt-0">
+                  <div className="flex gap-4 items-stretch mt-6">
                     <div className="flex flex-col items-center shrink-0 w-[28px]">
                       <div className="w-px flex-1 bg-[#13AECE]" />
                     </div>
@@ -400,20 +421,22 @@ export default async function RoadmapDetailRoute({
                             Earn Certificate of Completion
                           </h3>
                           <p className="text-sm text-slate-600 mb-4">
-                            Add this credential to your LinkedIn profile,
-                            resume, or CV. Share it on social media and in your
-                            performance review.
+                            {isPromo
+                              ? "Enroll now at the promo price and earn a verified certificate you can add to LinkedIn and your resume."
+                              : "Add this credential to your LinkedIn profile, resume, or CV. Share it on social media and in your performance review."}
                           </p>
                           <Button
-                            className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 w-full rounded-md h-11"
+                            className={`text-white border-0 w-full rounded-md h-11 ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                             asChild
                           >
                             <Link
-                              href={roadmapAppUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={isPromo ? "#pricing" : roadmapAppUrl}
+                              {...(!isPromo && {
+                                target: "_blank",
+                                rel: "noopener noreferrer",
+                              })}
                             >
-                              Enroll Now
+                              {isPromo ? "Register Now →" : "Enroll Now"}
                             </Link>
                           </Button>
                         </div>
@@ -510,6 +533,32 @@ export default async function RoadmapDetailRoute({
                         </dd>
                       </div>
                     )}
+                    {roadmap.category && (
+                      <div className="flex justify-between">
+                        <dt className="text-slate-500">Category</dt>
+                        <dd className="font-medium text-slate-800">
+                          <Link href={`/topic/${slugify(roadmap.category)}`} className="text-[#13AECE] hover:underline">
+                            {roadmap.category}
+                          </Link>
+                        </dd>
+                      </div>
+                    )}
+                    {tags.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <dt className="text-slate-500">Tags</dt>
+                        <dd className="flex flex-wrap gap-1.5">
+                          {tags.map((tag: string, i: number) => (
+                            <Link
+                              key={i}
+                              href={`/topic/${slugify(tag)}`}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-[#13AECE]/10 hover:text-[#13AECE] transition-colors"
+                            >
+                              {tag}
+                            </Link>
+                          ))}
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 </div>
               )}
@@ -521,6 +570,8 @@ export default async function RoadmapDetailRoute({
       <PricingSection
         courseTitle={roadmap.title}
         courseAppUrl={roadmapAppUrl}
+        slug={slug}
+        type="roadmap"
         coursePrice={roadmap.amount ?? roadmap.price ?? null}
         detectedCountry={detectedCountry}
         paddlePromoId={roadmap.paddle_price_id ?? undefined}

@@ -65,7 +65,11 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-
+        <script
+          async
+          src="https://affiliates.masteringbackend.com/affizy.js"
+          data-affizy="pk_172f7f7c0fb2d67959652cd2"
+        ></script>
         {/* <!-- Google tag (gtag.js) --> */}
         <script
           async

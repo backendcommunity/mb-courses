@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -18,8 +19,13 @@ import { ChapterCard } from "@/components/chapter-card";
 import type { ProcessedChapter } from "@/components/chapter-card";
 import { FAQSection } from "@/components/faq-section";
 import { CertificatePreview } from "@/components/certificate-preview";
+import { slugify } from "@/lib/topics";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/header";
+import { TrustStrip } from "@/components/trust-strip";
+import { CurriculumSection } from "@/components/curriculum-section";
+import { HeroPrice } from "@/components/hero-price";
+import { PricingSection } from "@/components/pricing-section";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -36,6 +42,20 @@ function stripHtml(html?: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function resolveCountryCode(
+  h: Awaited<ReturnType<typeof headers>>,
+): string | undefined {
+  return (
+    (h.get("x-vercel-ip-country") ||
+      h.get("cf-ipcountry") ||
+      h.get("cloudfront-viewer-country") ||
+      h.get("x-country-code") ||
+      h.get("x-country") ||
+      undefined) ??
+    undefined
+  );
 }
 
 async function getCourse(slug: string) {
@@ -103,10 +123,21 @@ export async function generateMetadata({
 
 export default async function CourseDetailRoute({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    mode?: string;
+    price?: string;
+    coupon?: string;
+    country?: string;
+  }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const isPromo = sp.mode === "promo";
+  const headersList = await headers();
+  const detectedCountry = resolveCountryCode(headersList);
   const course = await getCourse(slug);
 
   if (!course) notFound();
@@ -115,38 +146,32 @@ export default async function CourseDetailRoute({
 
   const rawChapters = Array.isArray(course.chapters) ? course.chapters : [];
 
-  const chapters: ProcessedChapter[] = rawChapters
-    .slice(0, 12)
-    .map((ch: any, i: number) => {
-      const summary = stripHtml(
-        ch.description || ch.summary || ch.content || "",
-      );
+  const chapters: ProcessedChapter[] = rawChapters.map((ch: any, i: number) => {
+    const summary = stripHtml(ch.description || ch.summary || ch.content || "");
 
-      const videos = Array.isArray(ch.videos)
-        ? ch.videos.map((v: any) => ({
-            title: stripHtml(v.title || v.name || v.heading || ""),
-            duration: v.duration || v.length || "",
-            mb: v.mb,
-          }))
-        : [];
+    const videos = Array.isArray(ch.videos)
+      ? ch.videos.map((v: any) => ({
+          title: stripHtml(v.title || v.name || v.heading || ""),
+          duration: v.duration || v.length || "",
+          mb: v.mb,
+        }))
+      : [];
 
-      const lessons = Array.isArray(ch.lessons)
-        ? ch.lessons.map((l: any) =>
-            typeof l === "string"
-              ? l
-              : stripHtml(
-                  l.title || l.name || l.summary || l.description || "",
-                ),
-          )
-        : [];
-      return {
-        num: i + 1,
-        title: ch.title || `Chapter ${i + 1}`,
-        summary,
-        videos,
-        lessons,
-      };
-    });
+    const lessons = Array.isArray(ch.lessons)
+      ? ch.lessons.map((l: any) =>
+          typeof l === "string"
+            ? l
+            : stripHtml(l.title || l.name || l.summary || l.description || ""),
+        )
+      : [];
+    return {
+      num: i + 1,
+      title: ch.title || `Chapter ${i + 1}`,
+      summary,
+      videos,
+      lessons,
+    };
+  });
 
   const totalVideos = rawChapters.reduce(
     (acc: number, ch: any) =>
@@ -254,40 +279,59 @@ export default async function CourseDetailRoute({
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <div className="text-[#13AECE] font-bold tracking-widest text-sm uppercase mb-3">
-                COURSE
+                {isPromo ? "⚡ LIMITED OFFER" : "COURSE"}
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-4">
                 {course.title}
               </h1>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-                {stripHtml(course.summary || course.description).slice(0, 200)}
+                {isPromo
+                  ? `Get lifetime access to ${course.title} at a special one-time price. No subscription. No recurring fees. Yours forever.`
+                  : stripHtml(course.summary || course.description).slice(
+                      0,
+                      200,
+                    )}
               </p>
+              {isPromo && <HeroPrice detectedCountry={detectedCountry} />}
               <div className="mb-10">
                 <Button
-                  className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px]  rounded-md shadow-lg shadow-[#13AECE]/20"
+                  className="bg-gradient-to-r from-[#13AECE] to-[#3b82f6] hover:from-[#0f8b9e] hover:to-[#2563eb] text-white border-0 h-12 px-8 font-semibold text-[15px] rounded-md shadow-lg shadow-[#13AECE]/20"
                   asChild
                 >
                   <Link
-                    href={courseAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={isPromo ? "#pricing" : courseAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
                   >
-                    Start Course for Free
+                    {isPromo ? "Register Now →" : "Start Course for Free"}
                   </Link>
                 </Button>
                 <p className="text-slate-400 text-sm pt-2">
                   <CheckCircle className="w-4 h-4 inline mr-2" />
-                  Included with Pro, Enterprise, or One-time payment
+                  {isPromo
+                    ? "Limited time · One payment · Lifetime access"
+                    : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {course.category && (
+                  <Link
+                    href={`/topic/${slugify(course.category)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
+                  >
+                    {course.category}
+                  </Link>
+                )}
                 {tags.map((tag: string, i: number) => (
-                  <span
+                  <Link
                     key={i}
-                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50"
+                    href={`/topic/${slugify(tag)}`}
+                    className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 hover:bg-slate-700/60 hover:text-white transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
                 {(course.totalDuration || course.duration) && (
                   <span className="bg-slate-800/60 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-700/50 flex items-center gap-1.5">
@@ -322,21 +366,7 @@ export default async function CourseDetailRoute({
           </div>
         </section>
 
-        {/* Social proof strip */}
-        <section className="relative z-10 border-t border-white/5 py-8">
-          <div className="container mx-auto px-6">
-            <p className="text-slate-400 text-sm mb-6">
-              Loved by learners at thousands of companies
-            </p>
-            <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
-              <div className="text-xl font-bold">Razorpay</div>
-              <div className="text-xl font-bold">Salesforce</div>
-              <div className="text-xl font-black tracking-widest">Amazon</div>
-              <div className="text-xl font-bold">Protocloud</div>
-              <div className="text-xl font-bold">SentinelOne</div>
-            </div>
-          </div>
-        </section>
+        <TrustStrip studentCount={course.students} />
       </div>
 
       {/* ── Main content ── */}
@@ -350,20 +380,26 @@ export default async function CourseDetailRoute({
                 <DescriptionSection fullText={fullDescription} />
               )}
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div
+                className={`bg-white border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 ${isPromo ? "border-[#13AECE]/30 bg-[#13AECE]/5" : "border-slate-100"}`}
+              >
                 <h3 className="text-xl font-bold text-slate-800">
-                  Ready to start?
+                  {isPromo
+                    ? "⚡ Limited offer — grab it before it expires"
+                    : "Ready to start?"}
                 </h3>
                 <Button
-                  className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 px-8 rounded-md w-full sm:w-auto"
+                  className={`text-white border-0 px-8 rounded-md w-full sm:w-auto ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                   asChild
                 >
                   <Link
-                    href={courseAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={isPromo ? "#pricing" : courseAppUrl}
+                    {...(!isPromo && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
                   >
-                    Start Course for Free
+                    {isPromo ? "Register Now →" : "Start Course for Free"}
                   </Link>
                 </Button>
               </div>
@@ -394,10 +430,10 @@ export default async function CourseDetailRoute({
 
               {/* Course content (chapters, client) */}
               {chapters.length > 0 && (
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6">
-                    Course Content
-                  </h3>
+                <CurriculumSection
+                  heading="Course Content"
+                  meta={`${chapters.length} chapters · ${totalVideos} videos · ${totalQuizzes} quizzes`}
+                >
                   <div className="space-y-4">
                     {chapters.map((chapter) => (
                       <ChapterCard
@@ -407,7 +443,7 @@ export default async function CourseDetailRoute({
                       />
                     ))}
                   </div>
-                </div>
+                </CurriculumSection>
               )}
 
               {/* Certificate banner */}
@@ -420,19 +456,22 @@ export default async function CourseDetailRoute({
                     Earn Certificate of Completion
                   </h3>
                   <p className="text-sm text-slate-600 mb-4">
-                    Add this credential to your LinkedIn profile, resume, or CV.
-                    Share it on social media and in your performance review.
+                    {isPromo
+                      ? "Enroll now at the promo price and earn a verified certificate you can add to LinkedIn and your resume."
+                      : "Add this credential to your LinkedIn profile, resume, or CV. Share it on social media and in your performance review."}
                   </p>
                   <Button
-                    className="bg-[#13AECE] hover:bg-[#0f8b9e] text-white border-0 w-full rounded-md h-11"
+                    className={`text-white border-0 w-full rounded-md h-11 ${"bg-[#13AECE] hover:bg-[#0f8b9e]"}`}
                     asChild
                   >
                     <Link
-                      href={courseAppUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={isPromo ? "#pricing" : courseAppUrl}
+                      {...(!isPromo && {
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                      })}
                     >
-                      Enroll Now
+                      {isPromo ? "Register Now →" : "Enroll Now"}
                     </Link>
                   </Button>
                 </div>
@@ -505,7 +544,7 @@ export default async function CourseDetailRoute({
               {(levelLabel ||
                 course.totalDuration ||
                 course.duration ||
-                course.totalStudents) && (
+                course.students) && (
                 <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart2 className="w-5 h-5 text-slate-700" />
@@ -530,11 +569,40 @@ export default async function CourseDetailRoute({
                         </dd>
                       </div>
                     )}
-                    {course.totalStudents > 0 && (
+                    {course.students > 0 && (
                       <div className="flex justify-between">
                         <dt className="text-slate-500">Students</dt>
                         <dd className="font-medium text-slate-800">
-                          {Number(course.totalStudents).toLocaleString()}
+                          {Number(course.students).toLocaleString()}
+                        </dd>
+                      </div>
+                    )}
+                    {course.category && (
+                      <div className="flex justify-between">
+                        <dt className="text-slate-500">Category</dt>
+                        <dd className="font-medium text-slate-800">
+                          <Link
+                            href={`/topic/${slugify(course.category)}`}
+                            className="text-[#13AECE] hover:underline"
+                          >
+                            {course.category}
+                          </Link>
+                        </dd>
+                      </div>
+                    )}
+                    {tags.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <dt className="text-slate-500">Tags</dt>
+                        <dd className="flex flex-wrap gap-1.5">
+                          {tags.map((tag: string, i: number) => (
+                            <Link
+                              key={i}
+                              href={`/topic/${slugify(tag)}`}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-[#13AECE]/10 hover:text-[#13AECE] transition-colors"
+                            >
+                              {tag}
+                            </Link>
+                          ))}
                         </dd>
                       </div>
                     )}
@@ -547,7 +615,15 @@ export default async function CourseDetailRoute({
       </section>
 
       {/* ── Pricing (client — has toggle) ── */}
-      {/* <PricingSection coursePrice={coursePrice} courseTitle={course.title} courseAppUrl={courseAppUrl} /> */}
+      <PricingSection
+        coursePrice={coursePrice}
+        courseTitle={course.title}
+        slug={course.slug ?? slug}
+        type="course"
+        courseAppUrl={courseAppUrl}
+        detectedCountry={detectedCountry}
+        paddlePromoId={course.paddle_price_id ?? undefined}
+      />
 
       <Testimonials />
 
