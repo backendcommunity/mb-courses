@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useReferralCode } from "@/components/use-referral-code";
 import { getPromoPricing } from "@/lib/promo-pricing";
 import { isAfrican } from "@/lib/geo";
+import { CountdownBadge } from "@/components/countdown-badge";
 
 export function HeroPrice({ detectedCountry }: { detectedCountry?: string }) {
   const searchParams = useSearchParams();
@@ -30,6 +31,7 @@ export function HeroPrice({ detectedCountry }: { detectedCountry?: string }) {
         <span className="bg-[#13AECE]/15 border border-[#13AECE]/30 text-[#13AECE] text-[11px] font-bold px-2.5 py-1 rounded-full">
           {pricing.savingsLabel}
         </span>
+        <CountdownBadge variant="compact" />
       </div>
       {ready && referralCode && (
         <p className="text-emerald-400 text-xs mt-2">

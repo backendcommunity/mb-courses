@@ -77,9 +77,11 @@ function getTypeConfig(type: string): TypeConfig {
 export function ContentList({
   items,
   roadmapAppUrl,
+  hideTerminal = false,
 }: {
   items: ProcessedContentItem[];
   roadmapAppUrl?: string;
+  hideTerminal?: boolean;
 }) {
   const [openNum, setOpenNum] = useState<number | null>(null);
 
@@ -185,14 +187,16 @@ export function ContentList({
       })}
 
       {/* Terminal dot */}
-      <div className="flex gap-4 items-start">
-        <div className="flex flex-col items-center shrink-0">
-          <div className="w-5 h-5 rounded-full bg-[#13AECE] ring-4 ring-white shrink-0 mt-3 z-10 shadow-sm shadow-[#13AECE]/30" />
+      {!hideTerminal && (
+        <div className="flex gap-4 items-start">
+          <div className="flex flex-col items-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-[#13AECE] ring-4 ring-white shrink-0 mt-3 z-10 shadow-sm shadow-[#13AECE]/30" />
+          </div>
+          <p className="text-[11px] font-bold text-[#13AECE] uppercase tracking-[0.14em] mt-3.5">
+            Complete all items to earn your certificate
+          </p>
         </div>
-        <p className="text-[11px] font-bold text-[#13AECE] uppercase tracking-[0.14em] mt-3.5">
-          Complete all items to earn your certificate
-        </p>
-      </div>
+      )}
     </div>
   );
 }

@@ -25,6 +25,7 @@ import { Header } from "@/components/header";
 import { TrustStrip } from "@/components/trust-strip";
 import { CurriculumSection } from "@/components/curriculum-section";
 import { HeroPrice } from "@/components/hero-price";
+import { HeroTestimonial } from "@/components/hero-testimonial";
 import { PricingSection } from "@/components/pricing-section";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -272,7 +273,7 @@ export default async function CourseDetailRoute({
         />
 
         {/* Nav */}
-        <Header />
+        {!isPromo && <Header />}
 
         {/* Hero body */}
         <section className="relative z-10 container mx-auto px-6 pt-12 pb-24 md:pt-20">
@@ -315,6 +316,11 @@ export default async function CourseDetailRoute({
                     : "Included with Pro, Enterprise, or One-time payment"}
                 </p>
               </div>
+              {isPromo && (
+                <div className="mb-10">
+                  <HeroTestimonial />
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-3">
                 {course.category && (
                   <Link
@@ -366,7 +372,24 @@ export default async function CourseDetailRoute({
           </div>
         </section>
 
-        <TrustStrip studentCount={course.students} />
+        {isPromo ? (
+          <TrustStrip studentCount={course.students} />
+        ) : (
+          <section className="relative z-10 border-t border-white/5 py-8">
+            <div className="container mx-auto px-6">
+              <p className="text-slate-400 text-sm mb-6">
+                Loved by learners at thousands of companies
+              </p>
+              <div className="flex flex-wrap items-center gap-8 md:gap-12 opacity-40 grayscale">
+                <div className="text-xl font-bold">Razorpay</div>
+                <div className="text-xl font-bold">Salesforce</div>
+                <div className="text-xl font-black tracking-widest">Amazon</div>
+                <div className="text-xl font-bold">Protocloud</div>
+                <div className="text-xl font-bold">SentinelOne</div>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* ── Main content ── */}
@@ -430,20 +453,47 @@ export default async function CourseDetailRoute({
 
               {/* Course content (chapters, client) */}
               {chapters.length > 0 && (
-                <CurriculumSection
-                  heading="Course Content"
-                  meta={`${chapters.length} chapters · ${totalVideos} videos · ${totalQuizzes} quizzes`}
-                >
-                  <div className="space-y-4">
-                    {chapters.map((chapter) => (
-                      <ChapterCard
-                        key={chapter.num}
-                        chapter={chapter}
-                        courseAppUrl={courseAppUrl}
-                      />
-                    ))}
-                  </div>
-                </CurriculumSection>
+                <>
+                  {isPromo ? (
+                    <>
+                      <div className="space-y-4 mb-4">
+                        <ChapterCard
+                          chapter={chapters[0]}
+                          courseAppUrl={courseAppUrl}
+                        />
+                      </div>
+                      <CurriculumSection
+                        heading="Course Content"
+                        meta={`${chapters.length} chapters · ${totalVideos} videos · ${totalQuizzes} quizzes`}
+                      >
+                        <div className="space-y-4">
+                          {chapters.map((chapter) => (
+                            <ChapterCard
+                              key={chapter.num}
+                              chapter={chapter}
+                              courseAppUrl={courseAppUrl}
+                            />
+                          ))}
+                        </div>
+                      </CurriculumSection>
+                    </>
+                  ) : (
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-6">
+                        Course Content
+                      </h3>
+                      <div className="space-y-4">
+                        {chapters.map((chapter) => (
+                          <ChapterCard
+                            key={chapter.num}
+                            chapter={chapter}
+                            courseAppUrl={courseAppUrl}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Certificate banner */}
