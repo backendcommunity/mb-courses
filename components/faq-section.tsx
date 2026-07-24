@@ -20,9 +20,9 @@ function FAQItem({ question, answer }: FAQ) {
           {question}
         </span>
         {isOpen ? (
-          <Minus className="w-5 h-5 text-[#A855F7] flex-shrink-0" />
+          <Minus className="w-5 h-5 text-[#13AECE] flex-shrink-0" />
         ) : (
-          <Plus className="w-5 h-5 text-[#A855F7] flex-shrink-0" />
+          <Plus className="w-5 h-5 text-[#13AECE] flex-shrink-0" />
         )}
       </button>
       <div

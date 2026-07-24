@@ -277,7 +277,7 @@ export function BrowseSection({
     selectedLevels.length > 0;
 
   return (
-    <section className="py-20 px-4 bg-[#F8FAFC] text-slate-900">
+    <section id="courses" className="py-20 px-4 bg-[#F8FAFC] text-slate-900">
       <div className="container mx-auto">
         <div className="mb-10">
           <h2 className="text-[2rem] font-extrabold text-[#0B152A] mb-3">
@@ -286,7 +286,7 @@ export function BrowseSection({
           <p className="text-slate-500 text-base max-w-2xl">
             Structured learning paths to guide your tech engineering career
             transformation. Each learning path is defense-based, practical, and
-            designed for a transformation.
+            built to get you job-ready.
           </p>
         </div>
 
