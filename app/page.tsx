@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Clock, Code, Layout } from "lucide-react";
-import { HeroIllustration } from "@/components/hero-illustration";
+import { HeroVideo } from "@/components/hero-video";
+import { CompanyMarquee } from "@/components/company-marquee";
 import Testimonials from "@/components/testimonials";
 import { FAQSection } from "@/components/faq-section";
 import { Footer } from "@/components/Footer";
@@ -55,6 +57,21 @@ export const metadata: Metadata = {
     images: ["/home-image.png"],
   },
 };
+
+const ALUMNI_COMPANIES = [
+  "Kuda",
+  "Paystack",
+  "Cowrywise",
+  "Flutterwave",
+  "Andela",
+  "Amazon",
+  "Google",
+  "Meta",
+  "Netflix",
+  "Shopify",
+  "Stripe",
+  "Uber",
+].map((name) => ({ name }));
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -146,7 +163,7 @@ export default async function HomePage() {
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden text-slate-50"
-        style={{ backgroundColor: "#0e2036" }}
+        style={{ backgroundColor: "#0B152A" }}
       >
         {/* Grid background */}
         <div
@@ -161,18 +178,18 @@ export default async function HomePage() {
         <Header />
 
         <section className="relative z-10 container mx-auto px-6 pt-8 pb-24 md:pt-14 lg:pt-20">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="max-w-2xl">
               <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.15] font-bold text-white mb-6">
                 Backend, AI, and <br className="hidden md:block" />
                 <span className="text-[#98D4E3]">Engineering Courses</span>
               </h1>
               <p className="text-lg md:text-xl text-slate-400 mb-10 leading-relaxed max-w-lg">
-                Whether you&apos;re new to Backend, AI, Product, Cybersecurity,
-                Cloud Engineering, or want to scale up — this is your home for
-                your tech engineering career transformation.
+                Watch short lessons from real engineers, then build. Every
+                course pairs video walkthroughs with hands-on exercises you run
+                right in your browser.
               </p>
-              <ul className="space-y-4 text-slate-200">
+              <ul className="space-y-4 text-slate-200 mb-10">
                 <li className="flex items-center gap-4">
                   <Clock className="w-5 h-5 text-slate-300" />
                   <span className="text-lg">Learn on your schedule</span>
@@ -190,13 +207,62 @@ export default async function HomePage() {
                   </span>
                 </li>
               </ul>
+              <div className="flex flex-col sm:flex-row gap-4 ">
+                <Link
+                  href="https://app.masteringbackend.com/courses?ref=course-hero"
+                  className="px-8 py-3 rounded-full bg-[#13AECE] text-white font-semibold text-center hover:bg-[#0f8b9e] transition-colors"
+                >
+                  Get started
+                </Link>
+                <a
+                  href="#courses"
+                  className="px-8 py-3 rounded-full border border-white/20 text-white font-semibold text-center hover:bg-white/10 transition-colors"
+                >
+                  Browse Courses
+                </a>
+              </div>
+
+              <p className="text-sm text-slate-400 mt-10 mb-4">
+                Join thousands of MasteringBackend learners working at
+              </p>
+              <div className="flex items-center gap-6 flex-wrap opacity-50">
+                {[
+                  "Kuda",
+                  "SentinelOne",
+                  "Paystack",
+                  "Salesforce",
+                  "Flutterwave",
+                ].map((label, i) => (
+                  <span
+                    key={i}
+                    className="text-lg font-bold tracking-tight text-slate-300"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="relative w-full max-w-[500px] mx-auto lg:ml-auto aspect-square">
-              <HeroIllustration />
+            <div className="relative">
+              <div
+                className="absolute -inset-8 rounded-[2rem] bg-[#13AECE] opacity-[0.18] blur-3xl pointer-events-none"
+                aria-hidden="true"
+              />
+              <HeroVideo
+                videoId="ww8xjVPqLBg"
+                title="MasteringBackend Courses overview"
+                size="lg"
+                browserChrome
+              />
             </div>
           </div>
         </section>
       </div>
+
+      {/* ── We've helped developers launch careers at (trust marquee) ───────── */}
+      <CompanyMarquee
+        label="We've helped developers launch careers at"
+        companies={ALUMNI_COMPANIES}
+      />
 
       {/* ── Browse (client — search, filters, pagination) ───────────────────── */}
       <BrowseSection initialRoadmaps={roadmaps} initialCourses={courses} />
