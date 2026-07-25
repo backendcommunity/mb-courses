@@ -124,7 +124,7 @@ async function getInitialData() {
   try {
     const [roadmapsRes, coursesRes] = await Promise.all([
       fetch(`${API_URL}/public/roadmaps`, { next: { revalidate: 3600 } }),
-      fetch(`${API_URL}/public/courses`, { next: { revalidate: 3600 } }),
+      fetch(`${API_URL}/public/courses`, {}),
     ]);
 
     const roadmapsData = roadmapsRes.ok ? await roadmapsRes.json() : {};
