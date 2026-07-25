@@ -40,10 +40,12 @@ export function CourseCard({
               <BarChart2 className="w-4 h-4" />
               {course.level}
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-              <Users className="w-4 h-4" />
-              {course.users?.toLocaleString?.() ?? course.users}
-            </div>
+            {course.users > 1000 && (
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                <Users className="w-4 h-4" />
+                {course.users.toLocaleString()}
+              </div>
+            )}
           </div>
           <p className="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-3 flex-1">
             {course.desc}
